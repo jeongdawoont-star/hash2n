@@ -331,11 +331,7 @@ body {
   grid-template-columns: repeat(var(--board-columns, 2), minmax(0, 1fr));
 }
 .mission-board.board-3 {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-template-rows: repeat(2, minmax(0, 1fr));
-}
-.mission-board.board-3 .mission-tile:nth-child(3) {
-  grid-column: 1 / span 2;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 .mission-board.board-4 {
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -545,6 +541,17 @@ body {
   .mission-board {
     height: 100%;
     gap: 5px;
+  }
+  .mission-board.board-2,
+  .mission-board.board-3,
+  .mission-board.board-4,
+  .mission-board.board-many {
+    grid-template-columns: repeat(var(--board-columns, 1), minmax(0, 1fr));
+    grid-template-rows: 1fr;
+    grid-auto-rows: 1fr;
+  }
+  .mission-board.board-3 .mission-tile:nth-child(3) {
+    grid-column: auto;
   }
   .mission-tile {
     border-radius: 10px;
@@ -1129,8 +1136,18 @@ function formatMissionName(name, layoutClass) {
   const text = (name || '').trim();
   if (!text) return '';
   const plain = text.replace(/\s+/g, '');
-  if ((layoutClass === 'board-1' || layoutClass === 'board-4') && plain.length === 4 && plain === text) {
-    return { html: `${plain.slice(0, 2)}<br>${plain.slice(2)}`, breakClass: 'break-2x2' };
+  const needsTwoLines = plain.length >= 4;
+  if (needsTwoLines) {
+    if (text.includes(' ')) {
+      const words = text.split(/\s+/).filter(Boolean);
+      if (words.length >= 2) {
+        const firstLine = words.slice(0, Math.ceil(words.length / 2)).join(' ');
+        const secondLine = words.slice(Math.ceil(words.length / 2)).join(' ');
+        return { html: `${firstLine}<br>${secondLine}`, breakClass: 'break-2x2' };
+      }
+    }
+    const cut = Math.ceil(plain.length / 2);
+    return { html: `${plain.slice(0, cut)}<br>${plain.slice(cut)}`, breakClass: 'break-2x2' };
   }
   return { html: text, breakClass: '' };
 }
@@ -1278,7 +1295,7 @@ function renderStudents(scores) {
 
     const board = document.createElement('div');
     board.className = `mission-board ${boardClass}`;
-    if (boardClass === 'board-2' || boardClass === 'board-3') {
+    if (activeMissions.length > 1) {
       board.style.setProperty('--board-columns', String(activeMissions.length));
     }
 
@@ -1293,9 +1310,7 @@ function renderStudents(scores) {
         const inspected = !!(inspectionMap[s.id] && inspectionMap[s.id][m.id]);
         const locked = m.lockTime && new Date(m.lockTime) < new Date();
         const pendingKey = `${s.id}:${m.id}`;
-        const shapeClass = boardClass === 'board-1' || boardClass === 'board-4'
-          ? 'square'
-          : (boardClass === 'board-3' ? (idx < 2 ? 'square' : 'rect') : 'rect');
+        const shapeClass = boardClass === 'board-1' ? 'square' : 'rect';
         const tile = document.createElement('div');
         tile.className = `mission-tile ${done ? (inspected ? 'inspected' : 'done') : 'pending'}${locked ? ' locked' : ''}${pendingTiles.has(pendingKey) ? ' saving' : ''} ${shapeClass}`;
 
