@@ -290,6 +290,15 @@ document.getElementById('sname').textContent = SNAME;
 
 let db, missions = [], myScores = {};
 
+function isBooleanLikeMissionName(name) {
+  const n = (name || '').toString().trim().toLowerCase();
+  return n === 'true' || n === 'false';
+}
+
+function getActiveMissions() {
+  return (missions || []).filter(m => !m.completed && !isBooleanLikeMissionName(m.name));
+}
+
 // ── Firebase 초기화 ─────────────────────────────────────────
 const fbCfg = {
   apiKey: AKEY, projectId: PID,
@@ -305,7 +314,7 @@ db = getFirestore(app);
 async function init() {
   const [mSnap] = await Promise.all([getDoc(doc(db, 'config', 'missions'))]);
   missions = mSnap.exists() ? (mSnap.data().list || []) : [];
-  document.getElementById('mcnt').textContent = `${missions.length}개`;
+  document.getElementById('mcnt').textContent = `${getActiveMissions().length}개`;
 
   // 실시간 점수 구독
   onSnapshot(doc(db, 'scores', 'current'), snap => {
@@ -321,8 +330,9 @@ function render() {
   const grid = document.getElementById('grid');
   grid.innerHTML = '';
   const now = new Date();
+  const activeMissions = getActiveMissions();
 
-  missions.forEach(m => {
+  activeMissions.forEach(m => {
     const done = (myScores[m.id] || 0) > 0;
     const locked = m.lockTime && new Date(m.lockTime) < now;
 
@@ -387,12 +397,13 @@ async function tap(m, cardEl, wasDone) {
 // ── 점수 바 ─────────────────────────────────────────────────
 function updateBar() {
   const total = Object.values(myScores).reduce((a,b)=>a+(Number(b)||0),0);
-  const done  = Object.values(myScores).filter(v=>v>0).length;
-  const pct   = missions.length ? (done/missions.length*100) : 0;
+  const activeMissions = getActiveMissions();
+  const done  = activeMissions.filter(m => (Number(myScores[m.id]) || 0) > 0).length;
+  const pct   = activeMissions.length ? (done/activeMissions.length*100) : 0;
 
   document.getElementById('totVal').textContent   = total;
   document.getElementById('sscore').textContent   = `⭐ ${total}점`;
-  document.getElementById('progTxt').textContent  = `${done} / ${missions.length} 완료`;
+  document.getElementById('progTxt').textContent  = `${done} / ${activeMissions.length} 완료`;
   document.getElementById('progFill').style.width = `${pct}%`;
 }
 

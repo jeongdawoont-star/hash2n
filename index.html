@@ -52,6 +52,13 @@ body {
   min-height: 100vh;
 }
 
+@media (min-width: 768px) {
+  .container {
+    max-width: 1100px;
+    padding: 0 24px 120px;
+  }
+}
+
 /* 헤더 */
 .header {
   padding: 52px 0 28px;
@@ -141,6 +148,21 @@ body {
   transition: all 0.15s;
 }
 .sync-btn:active { background: rgba(255,107,53,0.08); transform: scale(0.95); }
+.status-actions { display: flex; align-items: center; gap: 8px; }
+
+.muted-btn {
+  background: #F9FAFB; border: 1px solid var(--border); border-radius: 8px;
+  padding: 6px 12px; font-size: 12px; font-weight: 600;
+  color: var(--text-dim); cursor: pointer; font-family: 'Noto Sans KR', sans-serif;
+  transition: all 0.15s;
+}
+.muted-btn:active { transform: scale(0.95); }
+
+.muted-btn.active-inspector {
+  background: #FFF3E8;
+  border-color: #FDBA74;
+  color: #C2410C;
+}
 
 /* 섹션 헤더 */
 .sec-title {
@@ -156,48 +178,149 @@ body {
 
 /* 학생 그리드 */
 .students-grid {
-  display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px;
+}
+@media (min-width: 768px) {
+  .students-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+  }
+}
+@media (min-width: 1024px) {
+  .students-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
 }
 .student-card {
   background: var(--card); border-radius: var(--radius);
-  padding: 20px 14px; text-align: center;
-  cursor: pointer; transition: all 0.2s;
-  box-shadow: var(--shadow); border: 2px solid transparent;
+  padding: 10px; text-align: left;
+  transition: all 0.2s;
+  box-shadow: var(--shadow); border: 2px solid #F1F5F9;
   position: relative; overflow: hidden;
+  min-height: 210px;
+  display: flex; flex-direction: column; gap: 8px;
+  aspect-ratio: 1 / 1;
 }
-.student-card::before {
-  content: ''; position: absolute; inset: 0;
-  opacity: 0; transition: opacity 0.2s;
+.student-card:hover { transform: translateY(-2px); }
+
+.student-card.inspector-mode {
+  cursor: pointer;
 }
-.student-card:hover { transform: translateY(-4px); border-color: var(--accent); }
-.student-card:active { transform: scale(0.95); }
 
-/* 아바타 색상 순환 */
-.student-card:nth-child(4n+1) .avatar { background: linear-gradient(135deg, #FF6B35, #FF8E53); }
-.student-card:nth-child(4n+2) .avatar { background: linear-gradient(135deg, #4ECDC4, #2BB5AC); }
-.student-card:nth-child(4n+3) .avatar { background: linear-gradient(135deg, #A855F7, #9333EA); }
-.student-card:nth-child(4n+4) .avatar { background: linear-gradient(135deg, #F59E0B, #D97706); }
+.student-card.inspector-mode .mission-tile {
+  cursor: default;
+}
 
-.avatar {
-  width: 56px; height: 56px; border-radius: 50%;
+.student-top {
   display: flex; align-items: center; justify-content: center;
-  font-size: 22px; font-weight: 900; color: white;
-  margin: 0 auto 10px;
-  font-family: 'Gaegu', cursive;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  gap: 8px;
 }
-.s-name { font-size: 15px; font-weight: 700; color: var(--text); }
-.s-score {
-  font-size: 12px; font-weight: 700; margin-top: 5px;
-  color: var(--accent);
+.s-name {
+  font-size: clamp(15px, 1.5vw, 21px);
+  font-weight: 800; color: var(--text); line-height: 1.05;
+  letter-spacing: -0.4px;
+  word-break: keep-all;
+  text-align: center;
 }
-.s-progress {
-  height: 4px; background: #F3F4F6; border-radius: 2px;
-  margin-top: 8px; overflow: hidden;
+.student-count-pill {
+  flex-shrink: 0;
+  min-width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: #FFF1CC;
+  color: #A16207;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 900;
 }
-.s-progress-fill {
-  height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2));
-  border-radius: 2px; transition: width 0.5s ease;
+
+.mission-board {
+  flex: 1;
+  display: grid;
+  gap: 4px;
+  min-height: 0;
+}
+.mission-board.board-1 {
+  grid-template-columns: 1fr;
+}
+.mission-board.board-2 {
+  grid-template-columns: repeat(var(--board-columns, 2), minmax(0, 1fr));
+}
+.mission-board.board-3 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: minmax(0, 1fr) minmax(0, 0.78fr);
+}
+.mission-board.board-3 .mission-tile:nth-child(3) {
+  grid-column: 1 / span 2;
+}
+.mission-board.board-4 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.mission-board.board-many {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-rows: 1fr;
+}
+.mission-tile {
+  border: 2px solid #E5E7EB;
+  border-radius: 12px;
+  background: #FFFFFF;
+  color: #111827;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 4px;
+  min-height: 0;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.15s, background 0.15s, color 0.15s, border-color 0.15s;
+}
+.mission-tile:active {
+  transform: scale(0.97);
+}
+.mission-tile.done {
+  background: #22C55E;
+  border-color: #16A34A;
+  color: #FFFFFF;
+}
+.mission-tile.inspected {
+  background: #FB923C;
+  border-color: #EA580C;
+  color: #FFFFFF;
+}
+.mission-tile.pending {
+  background: #FFFFFF;
+  color: #111827;
+  border-color: #D1D5DB;
+}
+.mission-tile.locked {
+  background: #E5E7EB;
+  color: #6B7280;
+  border-color: #CBD5E1;
+  cursor: not-allowed;
+}
+.mission-tile.saving {
+  opacity: 0.7;
+}
+.mission-tile-label {
+  font-size: clamp(10px, 1.25vw, 16px);
+  font-weight: 900;
+  line-height: 1.15;
+  word-break: keep-all;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.mission-tile.square .mission-tile-label.break-2x2 {
+  line-height: 1.05;
+}
+
+@media (min-width: 768px) {
+  .student-card {
+    min-height: 250px;
+    padding: 10px;
+  }
 }
 
 /* 관리자 버튼 */
@@ -284,6 +407,7 @@ body {
       </div>
     </div>
     <button class="connect-btn" id="connectBtn" onclick="connectApp()">🚀 시작하기</button>
+    <button class="muted-btn" id="cancelEditBtn" onclick="cancelConfigEdit()" style="width:100%;margin-top:10px;display:none;">취소</button>
   </div>
 
   <!-- 메인 콘텐츠 -->
@@ -293,7 +417,11 @@ body {
         <div class="dot"></div>
         <span class="status-text" id="statusText">연결됨</span>
       </div>
-      <button class="sync-btn" onclick="syncFromSheets()">🔄 시트 동기화</button>
+      <div class="status-actions">
+        <button class="sync-btn" onclick="syncFromSheets()">🔄 시트 동기화</button>
+        <button class="muted-btn" id="inspectorBtn" onclick="toggleInspectorMode()">🧪 검사 모드 OFF</button>
+        <button class="muted-btn" onclick="openConfigEditor()">✏️ 설정</button>
+      </div>
     </div>
 
     <div class="sec-title">
@@ -317,7 +445,65 @@ body {
 import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-let db, missions = [], students = [];
+let db, missions = [], students = [], currentScores = {}, inspectionMap = {};
+let isEditingConfig = false;
+let isInspectorMode = false;
+const INSPECTOR_PIN = '3393';
+const pendingTiles = new Set();
+let scoreUnsub = null;
+let inspectionUnsub = null;
+let autoSyncTimer = null;
+let autoSyncFocusHandler = null;
+let lastSyncSignature = '';
+
+function setupAutoSync(cfg) {
+  if (autoSyncTimer) {
+    clearInterval(autoSyncTimer);
+    autoSyncTimer = null;
+  }
+  if (!cfg || !cfg.sheetsId) return;
+
+  // 미션 시트를 컨트롤 타워로 사용: 빠른 주기로 변경 반영
+  autoSyncTimer = setInterval(() => {
+    syncFromSheets(true).catch(console.warn);
+  }, 10000);
+
+  // 탭으로 다시 돌아오면 즉시 1회 반영
+  if (autoSyncFocusHandler) {
+    window.removeEventListener('focus', autoSyncFocusHandler);
+  }
+  autoSyncFocusHandler = () => {
+    syncFromSheets(true).catch(console.warn);
+  };
+  window.addEventListener('focus', autoSyncFocusHandler);
+}
+
+function normalizeSheetsId(value) {
+  const raw = (value || '').trim();
+  if (!raw) return '';
+  const match = raw.match(/\/d\/([a-zA-Z0-9-_]+)/);
+  return match ? match[1] : raw.replace(/[#?].*$/, '').trim();
+}
+
+function loadConfigFromUrl() {
+  const p = new URLSearchParams(location.search);
+  const cfg = {
+    projectId: (p.get('pid') || '').trim(),
+    apiKey: (p.get('akey') || '').trim(),
+    sheetsId: normalizeSheetsId(p.get('sheets') || ''),
+    scriptUrl: (p.get('script') || '').trim(),
+  };
+  if (!cfg.projectId || !cfg.apiKey) return {};
+  return cfg;
+}
+
+function pickNameCell(row) {
+  if (!Array.isArray(row)) return '';
+  const cleaned = row.map(v => (v || '').toString().trim()).filter(Boolean);
+  if (!cleaned.length) return '';
+  if (cleaned.length >= 2 && /^\d+$/.test(cleaned[0])) return cleaned[1];
+  return cleaned[0];
+}
 
 // ── 설정 저장/로드 ──────────────────────────────────────────
 function saveConfig(cfg) { localStorage.setItem('tracker_cfg', JSON.stringify(cfg)); }
@@ -325,17 +511,62 @@ function loadConfig() {
   try { return JSON.parse(localStorage.getItem('tracker_cfg')) || {}; } catch { return {}; }
 }
 
+async function loadHostedConfig() {
+  try {
+    const res = await fetch('./tracker-config.json', { cache: 'no-store' });
+    if (!res.ok) return {};
+    const raw = await res.json();
+    const cfg = {
+      projectId: (raw.projectId || '').trim(),
+      apiKey: (raw.apiKey || '').trim(),
+      sheetsId: normalizeSheetsId(raw.sheetsId || ''),
+      scriptUrl: (raw.scriptUrl || '').trim(),
+    };
+    if (!cfg.projectId || !cfg.apiKey) return {};
+    return cfg;
+  } catch {
+    return {};
+  }
+}
+
 // ── 앱 연결 ─────────────────────────────────────────────────
 window.connectApp = async function() {
   const cfg = {
     projectId: document.getElementById('projectId').value.trim(),
     apiKey: document.getElementById('apiKey').value.trim(),
-    sheetsId: document.getElementById('sheetsId').value.trim(),
+    sheetsId: normalizeSheetsId(document.getElementById('sheetsId').value),
     scriptUrl: document.getElementById('scriptUrl').value.trim(),
   };
   if (!cfg.projectId || !cfg.apiKey) { alert('프로젝트 ID와 API Key를 입력하세요.'); return; }
+  isEditingConfig = false;
+  document.getElementById('cancelEditBtn').style.display = 'none';
+  document.getElementById('connectBtn').textContent = '🚀 시작하기';
   saveConfig(cfg);
   await initApp(cfg);
+};
+
+window.openConfigEditor = function() {
+  const cfg = window._cfg || loadConfig();
+  document.getElementById('projectId').value = cfg.projectId || '';
+  document.getElementById('apiKey').value = cfg.apiKey || '';
+  document.getElementById('sheetsId').value = cfg.sheetsId || '';
+  document.getElementById('scriptUrl').value = cfg.scriptUrl || '';
+
+  isEditingConfig = true;
+  document.getElementById('connectBtn').textContent = '💾 설정 저장';
+  document.getElementById('cancelEditBtn').style.display = 'block';
+  document.getElementById('loadingSection').style.display = 'none';
+  document.getElementById('mainContent').style.display = 'none';
+  document.getElementById('setupSection').style.display = 'block';
+};
+
+window.cancelConfigEdit = function() {
+  isEditingConfig = false;
+  document.getElementById('connectBtn').textContent = '🚀 시작하기';
+  document.getElementById('cancelEditBtn').style.display = 'none';
+  document.getElementById('setupSection').style.display = 'none';
+  document.getElementById('loadingSection').style.display = 'none';
+  document.getElementById('mainContent').style.display = 'block';
 };
 
 async function initApp(cfg) {
@@ -360,14 +591,19 @@ async function initApp(cfg) {
     window._db = db;
     window._cfg = cfg;
 
-    // Firestore에 설정 없으면 Sheets에서 최초 동기화
-    const mDoc = await getDoc(doc(db, 'config', 'missions'));
-    if (!mDoc.exists() && cfg.sheetsId) await syncFromSheets(true);
+    // 앱 시작 시 Sheets를 기준으로 항상 1회 동기화(삭제/체크 반영)
+    if (cfg.sheetsId) await syncFromSheets(true);
     else await loadStudents();
+
+    // 주기 + 포커스 복귀 동기화
+    setupAutoSync(cfg);
 
     document.getElementById('loadingSection').style.display = 'none';
     document.getElementById('mainContent').style.display = 'block';
     document.getElementById('statusText').textContent = cfg.projectId;
+    if (btn) { btn.disabled = false; btn.textContent = '🚀 시작하기'; }
+    document.getElementById('cancelEditBtn').style.display = 'none';
+    isEditingConfig = false;
 
   } catch (err) {
     document.getElementById('loadingSection').style.display = 'none';
@@ -379,16 +615,48 @@ async function initApp(cfg) {
 
 // ── Google Sheets CSV 파싱 ───────────────────────────────────
 async function fetchSheet(sheetsId, sheetName) {
-  const url = `https://docs.google.com/spreadsheets/d/${sheetsId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
+  const text = await fetchSheetText(sheetsId, sheetName);
+  return parseCSV(text);
+}
+
+async function fetchSheetText(sheetsId, sheetName) {
+  const normalizedId = normalizeSheetsId(sheetsId);
+  const url = `https://docs.google.com/spreadsheets/d/${normalizedId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error(`시트 로드 실패: ${sheetName}`);
   const text = await res.text();
-  return parseCSV(text);
+  if (/<!doctype html|<html/i.test(text)) throw new Error(`시트 ID 또는 공유 설정을 확인하세요: ${sheetName}`);
+  return text;
+}
+
+function parseCSVLine(line) {
+  const cols = [];
+  let cur = '', inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') { inQ = !inQ; continue; }
+    if (ch === ',' && !inQ) { cols.push(cur.trim()); cur = ''; continue; }
+    cur += ch;
+  }
+  cols.push(cur.trim());
+  return cols;
+}
+
+async function fetchScoreMissionNames(sheetsId) {
+  try {
+    const text = await fetchSheetText(sheetsId, 'scores');
+    const firstLine = (text || '').split('\n')[0] || '';
+    const headers = parseCSVLine(firstLine).map(v => (v || '').toString().trim());
+    const reserved = new Set(['학생이름', '합계', '마지막 업데이트']);
+    return headers.filter(h => h && !reserved.has(h));
+  } catch {
+    return [];
+  }
 }
 
 function parseCSV(text) {
   const lines = text.trim().split('\n');
-  return lines.slice(1).map(line => {
+  const rows = lines.map(line => {
     const cols = [];
     let cur = '', inQ = false;
     for (let i = 0; i < line.length; i++) {
@@ -398,7 +666,97 @@ function parseCSV(text) {
     }
     cols.push(cur.trim());
     return cols;
-  }).filter(r => r[0]);
+  }).filter(r => r.some(cell => (cell || '').trim()));
+
+  if (!rows.length) return [];
+
+  const firstRow = rows[0].map(cell => (cell || '').toString().trim().toLowerCase());
+  const hasHeader = firstRow.some(cell =>
+    cell.includes('학생') || cell.includes('이름') || cell.includes('미션') ||
+    cell.includes('과제') || cell.includes('lock') || cell.includes('description')
+  );
+
+  return hasHeader ? rows.slice(1) : rows;
+}
+
+function migrateScoresByMissionName(oldMissions, newMissions, allScores) {
+  const oldIdToName = {};
+  (oldMissions || []).forEach(m => {
+    if (!m || !m.id) return;
+    oldIdToName[m.id] = (m.name || '').toString().trim();
+  });
+
+  const newNameToId = {};
+  (newMissions || []).forEach(m => {
+    const key = (m.name || '').toString().trim();
+    if (!key || newNameToId[key]) return;
+    newNameToId[key] = m.id;
+  });
+
+  const migrated = {};
+
+  Object.entries(allScores || {}).forEach(([sid, scoreObj]) => {
+    const src = scoreObj || {};
+    const dst = {};
+
+    Object.entries(src).forEach(([mid, value]) => {
+      const n = Number(value) || 0;
+      if (!n) return;
+
+      let targetId = null;
+      const oldName = oldIdToName[mid];
+      if (oldName && newNameToId[oldName]) {
+        targetId = newNameToId[oldName];
+      }
+
+      if (targetId) dst[targetId] = Math.max(Number(dst[targetId]) || 0, n);
+    });
+
+    migrated[sid] = dst;
+  });
+
+  return migrated;
+}
+
+function migrateInspectionByMissionName(oldMissions, newMissions, allInspection) {
+  const oldIdToName = {};
+  (oldMissions || []).forEach(m => {
+    if (!m || !m.id) return;
+    oldIdToName[m.id] = (m.name || '').toString().trim();
+  });
+
+  const newNameToId = {};
+  (newMissions || []).forEach(m => {
+    const key = (m.name || '').toString().trim();
+    if (!key || newNameToId[key]) return;
+    newNameToId[key] = m.id;
+  });
+
+  const migrated = {};
+  Object.entries(allInspection || {}).forEach(([sid, row]) => {
+    const src = row || {};
+    const dst = {};
+    Object.entries(src).forEach(([mid, value]) => {
+      if (!value) return;
+      const oldName = oldIdToName[mid];
+      const newId = oldName ? newNameToId[oldName] : null;
+      if (newId) dst[newId] = true;
+    });
+    migrated[sid] = dst;
+  });
+
+  return migrated;
+}
+
+function missionNameList(missions) {
+  return (missions || [])
+    .map(function(m) { return (m && m.name ? m.name : '').toString().trim(); })
+    .filter(Boolean);
+}
+
+function isBooleanLikeMissionName(name) {
+  const n = (name || '').toString().trim().toLowerCase();
+  return n === 'true' || n === 'false';
 }
 
 // ── Sheets → Firestore 동기화 ────────────────────────────────
@@ -417,19 +775,108 @@ window.syncFromSheets = async function(silent = false) {
       fetchSheet(cfg.sheetsId, 'students')
     ]);
 
-    const missionList = mRows.map((r, i) => ({
-      id: `m${i+1}`, name: r[0],
-      lockTime: r[1] ? parseKorDate(r[1]) : null,
-      description: r[2] || '', order: i+1
-    }));
-    const studentList = sRows.map((r, i) => ({
-      id: `s${i+1}`, name: r[0], order: i+1
+    const usesCheckboxColumn = (mRows || []).some(r => {
+      const c0 = (r[0] || '').toString().trim().toLowerCase();
+      const c1 = (r[1] || '').toString().trim();
+      return c1 || c0 === 'true' || c0 === 'false' || c0 === '1' || c0 === '0' || c0 === '완료' || c0 === 'x';
+    });
+
+    const missionList = [];
+    mRows.forEach(r => {
+      const col0 = (r[0] || '').toString().trim();
+      const col1 = (r[1] || '').toString().trim();
+      const name = usesCheckboxColumn ? col1 : col0;
+      if (!name) return;
+      if (isBooleanLikeMissionName(name)) return;
+
+      const completed = usesCheckboxColumn && (col0.toLowerCase() === 'true' || col0 === '1' || col0 === '완료' || col0.toLowerCase() === 'x');
+      const lockRaw = usesCheckboxColumn ? r[2] : r[1];
+      const descRaw = usesCheckboxColumn ? r[3] : r[2];
+
+      missionList.push({
+        id: `m${missionList.length + 1}`,
+        name,
+        completed,
+        lockTime: lockRaw ? parseKorDate(lockRaw) : null,
+        description: descRaw || '',
+        order: missionList.length + 1
+      });
+    });
+
+    const missionMetaByName = new Map(missionList.map(m => [m.name, m]));
+    const seenMissionNames = new Set();
+    const sourceNames = missionList.map(m => (m.name || '').toString().trim()).filter(Boolean);
+
+    seenMissionNames.clear();
+    const normalizedMissionList = [];
+    sourceNames.forEach((name) => {
+      const n = (name || '').toString().trim();
+      if (!n || seenMissionNames.has(n)) return;
+      seenMissionNames.add(n);
+      const prev = missionMetaByName.get(n);
+      normalizedMissionList.push({
+        id: `m${normalizedMissionList.length + 1}`,
+        name: n,
+        completed: prev ? !!prev.completed : false,
+        lockTime: prev ? prev.lockTime : null,
+        description: prev ? (prev.description || '') : '',
+        order: normalizedMissionList.length + 1
+      });
+    });
+
+    // missions 시트가 비어 있으면 트래커에서도 미션이 없도록 그대로 반영
+
+    const studentNames = sRows.map(pickNameCell).filter(Boolean);
+    const studentList = studentNames.map((name, i) => ({
+      id: `s${i+1}`, name, order: i+1
     }));
 
-    await Promise.all([
-      setDoc(doc(db, 'config', 'missions'), { list: missionList, updatedAt: new Date().toISOString() }),
-      setDoc(doc(db, 'config', 'students'), { list: studentList, updatedAt: new Date().toISOString() })
+    const nextSignature = JSON.stringify({
+      m: normalizedMissionList.map(m => ({ name: m.name, completed: !!m.completed, lockTime: m.lockTime || null, description: m.description || '' })),
+      s: studentList.map(s => s.name)
+    });
+    const unchanged = nextSignature === lastSyncSignature;
+    if (silent && unchanged) {
+      return;
+    }
+
+    const [oldMissionSnap, scoreSnap, inspectionSnap] = await Promise.all([
+      getDoc(doc(db, 'config', 'missions')),
+      getDoc(doc(db, 'scores', 'current')),
+      getDoc(doc(db, 'scores', 'inspection'))
     ]);
+    const oldMissions = oldMissionSnap.exists() ? (oldMissionSnap.data().list || []) : [];
+    const oldScores = scoreSnap.exists() ? scoreSnap.data() : {};
+    const oldInspection = inspectionSnap.exists() ? (inspectionSnap.data() || {}) : {};
+
+    const beforeNames = missionNameList(oldMissions);
+    const afterNames = missionNameList(normalizedMissionList);
+    const missionChanged = JSON.stringify(beforeNames) !== JSON.stringify(afterNames);
+    const hasScoreData = Object.keys(oldScores || {}).length > 0;
+
+    if (missionChanged && hasScoreData) {
+      const archiveId = 'sync_' + Date.now();
+      await setDoc(doc(db, 'backups', archiveId), {
+        type: 'mission_sync_archive',
+        createdAt: new Date().toISOString(),
+        fromMissions: beforeNames,
+        toMissions: afterNames,
+        missions: oldMissions,
+        scores: oldScores
+      });
+    }
+
+    const migratedScores = migrateScoresByMissionName(oldMissions, normalizedMissionList, oldScores);
+    const migratedInspection = migrateInspectionByMissionName(oldMissions, normalizedMissionList, oldInspection);
+
+    await Promise.all([
+      setDoc(doc(db, 'config', 'missions'), { list: normalizedMissionList, updatedAt: new Date().toISOString() }),
+      setDoc(doc(db, 'config', 'students'), { list: studentList, updatedAt: new Date().toISOString() }),
+      setDoc(doc(db, 'scores', 'current'), migratedScores),
+      setDoc(doc(db, 'scores', 'inspection'), migratedInspection)
+    ]);
+
+    lastSyncSignature = nextSignature;
 
     await loadStudents();
     if (!silent) showToast('✅ 동기화 완료!');
@@ -463,14 +910,133 @@ async function loadStudents() {
   document.getElementById('studentCount').textContent = `${students.length}명`;
 
   // 실시간 점수 구독
-  onSnapshot(doc(db, 'scores', 'current'), snap => {
-    const scores = snap.exists() ? snap.data() : {};
-    renderStudents(scores);
+  if (scoreUnsub) scoreUnsub();
+  scoreUnsub = onSnapshot(doc(db, 'scores', 'current'), snap => {
+    currentScores = snap.exists() ? snap.data() : {};
+    renderStudents(currentScores);
   });
+
+  if (inspectionUnsub) inspectionUnsub();
+  inspectionUnsub = onSnapshot(doc(db, 'scores', 'inspection'), snap => {
+    inspectionMap = snap.exists() ? (snap.data() || {}) : {};
+    renderStudents(currentScores);
+  });
+}
+
+function getMissionBoardClass(count) {
+  if (count <= 1) return 'board-1';
+  if (count === 2) return 'board-2';
+  if (count === 3) return 'board-3';
+  if (count === 4) return 'board-4';
+  return 'board-many';
+}
+
+function formatMissionName(name, layoutClass) {
+  const text = (name || '').trim();
+  if (!text) return '';
+  const plain = text.replace(/\s+/g, '');
+  if ((layoutClass === 'board-1' || layoutClass === 'board-4') && plain.length === 4 && plain === text) {
+    return { html: `${plain.slice(0, 2)}<br>${plain.slice(2)}`, breakClass: 'break-2x2' };
+  }
+  return { html: text, breakClass: '' };
+}
+
+async function writeToSheets(allScores, inspection) {
+  const cfg = window._cfg || loadConfig();
+  if (!cfg.scriptUrl) return;
+  await fetch(cfg.scriptUrl, {
+    method: 'POST', mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ type: 'scores', data: allScores, inspection: inspection || {} })
+  });
+}
+
+window.toggleInspectorMode = function() {
+  if (!isInspectorMode) {
+    const pin = prompt('관리자 비밀번호를 입력하세요');
+    if ((pin || '').trim() !== INSPECTOR_PIN) {
+      showToast('비밀번호가 올바르지 않습니다');
+      return;
+    }
+  }
+  isInspectorMode = !isInspectorMode;
+  const btn = document.getElementById('inspectorBtn');
+  if (btn) {
+    btn.textContent = isInspectorMode ? '🧪 검사 모드 ON' : '🧪 검사 모드 OFF';
+    btn.classList.toggle('active-inspector', isInspectorMode);
+  }
+  renderStudents(currentScores);
+};
+
+async function toggleInspection(studentId, missionId, done) {
+  if (!done) {
+    showToast('제출(초록)된 과제만 검사완료 처리할 수 있어요');
+    return;
+  }
+
+  const student = students.find(s => s.id === studentId);
+  const mission = missions.find(m => m.id === missionId);
+  if (!student || !mission) return;
+
+  const next = Object.assign({}, inspectionMap);
+  const row = Object.assign({}, next[studentId] || {});
+  const was = !!row[missionId];
+  row[missionId] = !was;
+  next[studentId] = row;
+
+  try {
+    await setDoc(doc(db, 'scores', 'inspection'), next);
+    inspectionMap = next;
+    renderStudents(currentScores);
+    writeToSheets(currentScores, inspectionMap).catch(console.warn);
+    showToast(`${student.name} · ${mission.name} 검사 ${was ? '해제' : '완료'}`);
+  } catch (err) {
+    showError('검사 저장 실패: ' + err.message);
+  }
+}
+
+async function toggleMission(studentId, missionId) {
+  const key = `${studentId}:${missionId}`;
+  if (pendingTiles.has(key)) return;
+
+  const mission = missions.find(m => m.id === missionId);
+  const student = students.find(s => s.id === studentId);
+  if (!mission || !student) return;
+
+  const now = new Date();
+  if (mission.lockTime && new Date(mission.lockTime) < now) {
+    showToast(`⏰ ${mission.name} 과제는 마감됨`);
+    return;
+  }
+
+  pendingTiles.add(key);
+  renderStudents(currentScores);
+
+  try {
+    const ref = doc(db, 'scores', 'current');
+    const snap = await getDoc(ref);
+    const all = snap.exists() ? snap.data() : {};
+    if (!all[studentId]) all[studentId] = {};
+
+    const wasDone = Number(all[studentId][missionId]) > 0;
+    all[studentId][missionId] = wasDone ? 0 : 1;
+
+    await setDoc(ref, all);
+    currentScores = all;
+    renderStudents(currentScores);
+    writeToSheets(all, inspectionMap).catch(console.warn);
+    showToast(`${student.name} · ${mission.name} ${wasDone ? '취소' : '제출 완료'}`);
+  } catch (err) {
+    showError('저장 실패: ' + err.message);
+  } finally {
+    pendingTiles.delete(key);
+    renderStudents(currentScores);
+  }
 }
 
 function renderStudents(scores) {
   const grid = document.getElementById('studentsGrid');
+  const activeMissions = missions.filter(m => !m.completed && !isBooleanLikeMissionName(m.name));
   if (!students.length) {
     grid.innerHTML = '<p style="grid-column:span 2;text-align:center;color:var(--text-dim);padding:30px;">학생 데이터 없음<br><small>Google Sheets를 동기화하세요</small></p>';
     return;
@@ -478,32 +1044,74 @@ function renderStudents(scores) {
   grid.innerHTML = '';
   students.forEach(s => {
     const sc = scores[s.id] || {};
-    const total = Object.values(sc).reduce((a,b)=>a+(Number(b)||0),0);
-    const done = Object.values(sc).filter(v=>v>0).length;
-    const pct = missions.length ? (done/missions.length*100) : 0;
+    const doneCount = activeMissions.filter(m => Number(sc[m.id]) > 0).length;
+    const boardClass = getMissionBoardClass(activeMissions.length);
 
     const card = document.createElement('div');
-    card.className = 'student-card';
-    card.innerHTML = `
-      <div class="avatar">${s.name.charAt(0)}</div>
-      <div class="s-name">${s.name}</div>
-      <div class="s-score">⭐ ${total}점</div>
-      <div class="s-progress"><div class="s-progress-fill" style="width:${pct}%"></div></div>
-    `;
-    card.onclick = () => openTracker(s);
+    card.className = `student-card${isInspectorMode ? ' inspector-mode' : ''}`;
+
+    const top = document.createElement('div');
+    top.className = 'student-top';
+
+    const nameEl = document.createElement('div');
+    nameEl.className = 's-name';
+    nameEl.textContent = s.name;
+
+    const countEl = document.createElement('div');
+    countEl.className = 'student-count-pill';
+    countEl.textContent = `${doneCount}`;
+
+    top.appendChild(nameEl);
+    top.appendChild(countEl);
+
+    const board = document.createElement('div');
+    board.className = `mission-board ${boardClass}`;
+    if (boardClass === 'board-2' || boardClass === 'board-3') {
+      board.style.setProperty('--board-columns', String(activeMissions.length));
+    }
+
+    if (!activeMissions.length) {
+      const emptyTile = document.createElement('div');
+      emptyTile.className = 'mission-tile locked';
+      emptyTile.innerHTML = '<div class="mission-tile-label">과제 없음</div>';
+      board.appendChild(emptyTile);
+    } else {
+      activeMissions.forEach((m, idx) => {
+        const done = Number(sc[m.id]) > 0;
+        const inspected = !!(inspectionMap[s.id] && inspectionMap[s.id][m.id]);
+        const locked = m.lockTime && new Date(m.lockTime) < new Date();
+        const pendingKey = `${s.id}:${m.id}`;
+        const shapeClass = boardClass === 'board-1' || boardClass === 'board-4'
+          ? 'square'
+          : (boardClass === 'board-3' ? (idx < 2 ? 'square' : 'rect') : 'rect');
+        const tile = document.createElement('div');
+        tile.className = `mission-tile ${done ? (inspected ? 'inspected' : 'done') : 'pending'}${locked ? ' locked' : ''}${pendingTiles.has(pendingKey) ? ' saving' : ''} ${shapeClass}`;
+
+        const label = document.createElement('div');
+        const formatted = formatMissionName(m.name, boardClass);
+        label.className = `mission-tile-label${formatted.breakClass ? ' ' + formatted.breakClass : ''}`;
+        label.innerHTML = formatted.html;
+        tile.appendChild(label);
+
+        if (isInspectorMode) {
+          tile.addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            toggleInspection(s.id, m.id, done);
+          });
+        } else if (!locked) {
+          tile.addEventListener('click', () => toggleMission(s.id, m.id));
+        }
+
+        board.appendChild(tile);
+      });
+    }
+
+    card.appendChild(top);
+    card.appendChild(board);
+
     grid.appendChild(card);
   });
 }
-
-window.openTracker = function(s) {
-  const cfg = window._cfg || loadConfig();
-  const p = new URLSearchParams({
-    sid: s.id, sname: s.name,
-    pid: cfg.projectId, akey: cfg.apiKey,
-    sheets: cfg.sheetsId, script: cfg.scriptUrl || ''
-  });
-  location.href = `tracker.html?${p}`;
-};
 
 window.goAdmin = function() {
   const cfg = loadConfig();
@@ -532,14 +1140,25 @@ window.showToast = function(msg) {
 };
 
 // 자동 로드
-const saved = loadConfig();
-if (saved.projectId && saved.apiKey) {
-  document.getElementById('projectId').value = saved.projectId;
-  document.getElementById('apiKey').value = saved.apiKey;
-  if (saved.sheetsId) document.getElementById('sheetsId').value = saved.sheetsId;
-  if (saved.scriptUrl) document.getElementById('scriptUrl').value = saved.scriptUrl;
-  initApp(saved);
-}
+(async function boot() {
+  const urlCfg = loadConfigFromUrl();
+  const saved = loadConfig();
+  const hosted = await loadHostedConfig();
+  const bootCfg = (urlCfg.projectId && urlCfg.apiKey)
+    ? urlCfg
+    : ((hosted.projectId && hosted.apiKey) ? hosted : saved);
+
+  if (bootCfg.projectId && bootCfg.apiKey) {
+    document.getElementById('projectId').value = bootCfg.projectId;
+    document.getElementById('apiKey').value = bootCfg.apiKey;
+    if (bootCfg.sheetsId) document.getElementById('sheetsId').value = bootCfg.sheetsId;
+    if (bootCfg.scriptUrl) document.getElementById('scriptUrl').value = bootCfg.scriptUrl;
+    saveConfig(bootCfg);
+    initApp(bootCfg);
+  } else {
+    document.getElementById('setupSection').style.display = 'block';
+  }
+})();
 </script>
 </body>
 </html>

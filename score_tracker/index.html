@@ -454,6 +454,7 @@ let scoreUnsub = null;
 let inspectionUnsub = null;
 let autoSyncTimer = null;
 let autoSyncFocusHandler = null;
+let lastSyncSignature = '';
 
 function setupAutoSync(cfg) {
   if (autoSyncTimer) {
@@ -484,6 +485,18 @@ function normalizeSheetsId(value) {
   return match ? match[1] : raw.replace(/[#?].*$/, '').trim();
 }
 
+function loadConfigFromUrl() {
+  const p = new URLSearchParams(location.search);
+  const cfg = {
+    projectId: (p.get('pid') || '').trim(),
+    apiKey: (p.get('akey') || '').trim(),
+    sheetsId: normalizeSheetsId(p.get('sheets') || ''),
+    scriptUrl: (p.get('script') || '').trim(),
+  };
+  if (!cfg.projectId || !cfg.apiKey) return {};
+  return cfg;
+}
+
 function pickNameCell(row) {
   if (!Array.isArray(row)) return '';
   const cleaned = row.map(v => (v || '').toString().trim()).filter(Boolean);
@@ -496,6 +509,24 @@ function pickNameCell(row) {
 function saveConfig(cfg) { localStorage.setItem('tracker_cfg', JSON.stringify(cfg)); }
 function loadConfig() {
   try { return JSON.parse(localStorage.getItem('tracker_cfg')) || {}; } catch { return {}; }
+}
+
+async function loadHostedConfig() {
+  try {
+    const res = await fetch('./tracker-config.json', { cache: 'no-store' });
+    if (!res.ok) return {};
+    const raw = await res.json();
+    const cfg = {
+      projectId: (raw.projectId || '').trim(),
+      apiKey: (raw.apiKey || '').trim(),
+      sheetsId: normalizeSheetsId(raw.sheetsId || ''),
+      scriptUrl: (raw.scriptUrl || '').trim(),
+    };
+    if (!cfg.projectId || !cfg.apiKey) return {};
+    return cfg;
+  } catch {
+    return {};
+  }
 }
 
 // ── 앱 연결 ─────────────────────────────────────────────────
@@ -821,6 +852,15 @@ window.syncFromSheets = async function(silent = false) {
       id: `s${i+1}`, name, order: i+1
     }));
 
+    const nextSignature = JSON.stringify({
+      m: normalizedMissionList.map(m => ({ name: m.name, completed: !!m.completed, lockTime: m.lockTime || null, description: m.description || '' })),
+      s: studentList.map(s => s.name)
+    });
+    const unchanged = nextSignature === lastSyncSignature;
+    if (silent && unchanged) {
+      return;
+    }
+
     const [oldMissionSnap, scoreSnap, inspectionSnap] = await Promise.all([
       getDoc(doc(db, 'config', 'missions')),
       getDoc(doc(db, 'scores', 'current')),
@@ -856,6 +896,8 @@ window.syncFromSheets = async function(silent = false) {
       setDoc(doc(db, 'scores', 'current'), migratedScores),
       setDoc(doc(db, 'scores', 'inspection'), migratedInspection)
     ]);
+
+    lastSyncSignature = nextSignature;
 
     await loadStudents();
     if (!silent) showToast('✅ 동기화 완료!');
@@ -1119,16 +1161,25 @@ window.showToast = function(msg) {
 };
 
 // 자동 로드
-const saved = loadConfig();
-if (saved.projectId && saved.apiKey) {
-  document.getElementById('projectId').value = saved.projectId;
-  document.getElementById('apiKey').value = saved.apiKey;
-  if (saved.sheetsId) document.getElementById('sheetsId').value = saved.sheetsId;
-  if (saved.scriptUrl) document.getElementById('scriptUrl').value = saved.scriptUrl;
-  initApp(saved);
-} else {
-  document.getElementById('setupSection').style.display = 'block';
-}
+(async function boot() {
+  const urlCfg = loadConfigFromUrl();
+  const saved = loadConfig();
+  const hosted = await loadHostedConfig();
+  const bootCfg = (urlCfg.projectId && urlCfg.apiKey)
+    ? urlCfg
+    : ((hosted.projectId && hosted.apiKey) ? hosted : saved);
+
+  if (bootCfg.projectId && bootCfg.apiKey) {
+    document.getElementById('projectId').value = bootCfg.projectId;
+    document.getElementById('apiKey').value = bootCfg.apiKey;
+    if (bootCfg.sheetsId) document.getElementById('sheetsId').value = bootCfg.sheetsId;
+    if (bootCfg.scriptUrl) document.getElementById('scriptUrl').value = bootCfg.scriptUrl;
+    saveConfig(bootCfg);
+    initApp(bootCfg);
+  } else {
+    document.getElementById('setupSection').style.display = 'block';
+  }
+})();
 </script>
 </body>
 </html>
