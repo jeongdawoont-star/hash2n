@@ -497,25 +497,24 @@ function writeScoresToSheet(allScores, inspectionMap) {
   scoresSheet.setFrozenRows(1);
   scoresSheet.setFrozenColumns(1);
 
-  // 과제 열이 너무 좁아지지 않도록 이름 길이에 맞춰 최소 폭을 보장
-  function calcMissionWidth(missions) {
-    var longestLen = missions.reduce(function(maxLen, name) {
-      var len = (name || '').toString().trim().length;
-      return Math.max(maxLen, len);
-    }, 0);
-    return Math.max(120, Math.min(200, 72 + longestLen * 10));
+  // 열 너비는 실제 표시 문자열 기준으로 자동 최적화하고, 너무 좁거나 넓은 값만 보정한다.
+  scoresSheet.autoResizeColumns(1, headers.length);
+
+  function clampColumnWidth(col, minWidth, maxWidth) {
+    var current = scoresSheet.getColumnWidth(col);
+    var next = Math.max(minWidth, Math.min(maxWidth, current));
+    if (next !== current) scoresSheet.setColumnWidth(col, next);
   }
 
-  var activeMissionWidth = calcMissionWidth(missionNames);
-  var completedMissionWidth = calcMissionWidth(completedMissionNames);
-
-  scoresSheet.setColumnWidth(1, 150); // 학생이름
-  if (missionNames.length) scoresSheet.setColumnWidths(2, missionNames.length, activeMissionWidth);
   var completedStartCol = 2 + missionNames.length;
-  if (completedMissionNames.length) scoresSheet.setColumnWidths(completedStartCol, completedMissionNames.length, completedMissionWidth);
   var totalCol = completedStartCol + completedMissionNames.length;
-  scoresSheet.setColumnWidth(totalCol, 85);  // 합계
-  scoresSheet.setColumnWidth(totalCol + 1, 210); // 마지막 업데이트
+
+  clampColumnWidth(1, 90, 150); // 학생이름
+  for (var col = 2; col < totalCol; col++) {
+    clampColumnWidth(col, 72, 160); // 과제명/점수 열
+  }
+  clampColumnWidth(totalCol, 60, 90); // 합계
+  clampColumnWidth(totalCol + 1, 135, 220); // 마지막 업데이트
   if (rows.length) scoresSheet.setRowHeights(2, rows.length, 36);
 }
 
