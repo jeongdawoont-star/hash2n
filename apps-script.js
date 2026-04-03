@@ -8,6 +8,10 @@ function doGet() {
   return jsonResponse({ ok: true, message: 'tracker sheet writer is running' });
 }
 
+function formatSheetTimestamp_(date) {
+  return Utilities.formatDate(date, Session.getScriptTimeZone(), 'MM.dd HH:mm');
+}
+
 function doPost(e) {
   try {
     const raw = e && e.postData ? e.postData.contents : '{}';
@@ -429,7 +433,7 @@ function writeScoresToSheet(allScores, inspectionMap) {
     });
     
     const total = activeCells.concat(completedCells).reduce(function(sum, v) { return sum + v; }, 0);
-    return [name].concat(activeCells, completedCells, [total, new Date().toLocaleString('ko-KR')]);
+    return [name].concat(activeCells, completedCells, [total, formatSheetTimestamp_(new Date())]);
   });
 
   scoresSheet.clear();
@@ -442,9 +446,11 @@ function writeScoresToSheet(allScores, inspectionMap) {
     .setFontWeight('bold');
 
   scoresSheet.getRange(1, 1, rows.length + 1, headers.length)
-    .setWrap(true)
+    .setWrap(false)
     .setVerticalAlignment('middle')
     .setHorizontalAlignment('center');
+
+  scoresSheet.getRange(1, 1, 1, headers.length).setWrap(true);
 
   scoresSheet.getRange(2, 1, rows.length, 1).setHorizontalAlignment('left');
 
@@ -514,8 +520,9 @@ function writeScoresToSheet(allScores, inspectionMap) {
     clampColumnWidth(col, 72, 160); // 과제명/점수 열
   }
   clampColumnWidth(totalCol, 60, 90); // 합계
-  clampColumnWidth(totalCol + 1, 135, 220); // 마지막 업데이트
-  if (rows.length) scoresSheet.setRowHeights(2, rows.length, 36);
+  clampColumnWidth(totalCol + 1, 88, 120); // 마지막 업데이트
+  scoresSheet.setRowHeight(1, 34);
+  if (rows.length) scoresSheet.setRowHeights(2, rows.length, 26);
 }
 
 // 미션 시트에 체크박스 추가 (A열)
