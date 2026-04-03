@@ -64,6 +64,24 @@ body {
   padding: 52px 0 28px;
   text-align: center;
 }
+.header-toolbar {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 8px;
+}
+.header-actions-left {
+  justify-self: start;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.header-title-wrap {
+  justify-self: center;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 .header .emoji-row {
   font-size: 52px;
   display: block;
@@ -85,6 +103,19 @@ body {
   color: rgba(255,255,255,0.85);
   font-size: 14px; margin-top: 4px;
 }
+.header-menu-btn {
+  background: rgba(255,255,255,0.92);
+  border: 1px solid rgba(255,255,255,0.95);
+  border-radius: 10px;
+  padding: 7px 9px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #C2410C;
+  cursor: pointer;
+  font-family: 'Noto Sans KR', sans-serif;
+  white-space: nowrap;
+}
+.header-menu-btn:active { transform: scale(0.96); }
 
 /* 설정 카드 */
 .setup-card {
@@ -134,7 +165,7 @@ body {
 .status-bar {
   background: var(--card); border-radius: 14px;
   padding: 12px 16px; margin-bottom: 20px;
-  display: flex; align-items: center; justify-content: space-between;
+  display: flex; align-items: center; justify-content: flex-start;
   box-shadow: var(--shadow); border: 1px solid var(--border);
 }
 .status-left { display: flex; align-items: center; gap: 8px; }
@@ -388,19 +419,20 @@ body {
   .header {
     flex-shrink: 0;
     padding: 6px 0 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
   }
   .header .emoji-row { font-size: 24px; margin: 0; display: inline; animation: none; }
   .header h1 { font-size: 20px; }
   .header p { display: none; }
+  .header-menu-btn {
+    padding: 6px 8px;
+    font-size: 10px;
+  }
   #mainContent {
     flex: 1;
     min-height: 0;
     display: flex !important;
     flex-direction: column;
+    overflow: hidden;
   }
   .status-bar {
     flex-shrink: 0;
@@ -420,6 +452,9 @@ body {
     grid-auto-rows: 1fr;
     align-content: stretch;
     gap: 8px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px;
   }
   .student-card {
     aspect-ratio: unset !important;
@@ -438,8 +473,18 @@ body {
 
 <div class="container">
   <div class="header">
-    <span class="emoji-row">🎯</span>
-    <h1>활동 트래커</h1>
+    <div class="header-toolbar">
+      <div class="header-actions-left">
+        <button class="header-menu-btn sync-btn" onclick="syncFromSheets()">🔄 동기화</button>
+        <button class="header-menu-btn" id="inspectorBtn" onclick="toggleInspectorMode()">🧪 OFF</button>
+        <button class="header-menu-btn" onclick="openConfigEditor()">✏️ 설정</button>
+      </div>
+      <div class="header-title-wrap">
+        <span class="emoji-row">🎯</span>
+        <h1>활동 트래커</h1>
+      </div>
+      <button class="header-menu-btn" id="fullscreenBtn" onclick="toggleFullscreen()">⛶ 전체</button>
+    </div>
     <p>오늘도 열심히 해보자!</p>
   </div>
 
@@ -477,11 +522,6 @@ body {
       <div class="status-left">
         <div class="dot"></div>
         <span class="status-text" id="statusText">연결됨</span>
-      </div>
-      <div class="status-actions">
-        <button class="sync-btn" onclick="syncFromSheets()">🔄 시트 동기화</button>
-        <button class="muted-btn" id="inspectorBtn" onclick="toggleInspectorMode()">🧪 검사 모드 OFF</button>
-        <button class="muted-btn" onclick="openConfigEditor()">✏️ 설정</button>
       </div>
     </div>
 
@@ -1044,11 +1084,35 @@ window.toggleInspectorMode = function() {
   isInspectorMode = !isInspectorMode;
   const btn = document.getElementById('inspectorBtn');
   if (btn) {
-    btn.textContent = isInspectorMode ? '🧪 검사 모드 ON' : '🧪 검사 모드 OFF';
+    btn.textContent = isInspectorMode ? '🧪 ON' : '🧪 OFF';
     btn.classList.toggle('active-inspector', isInspectorMode);
   }
   renderStudents(currentScores);
 };
+
+window.toggleFullscreen = async function() {
+  try {
+    if (!document.fullscreenElement) {
+      if (!document.documentElement.requestFullscreen) {
+        showToast('이 브라우저는 전체화면을 지원하지 않아요');
+        return;
+      }
+      await document.documentElement.requestFullscreen();
+    } else if (document.exitFullscreen) {
+      await document.exitFullscreen();
+    }
+  } catch (err) {
+    showToast('전체화면 전환 실패: ' + (err && err.message ? err.message : err));
+  }
+};
+
+function refreshFullscreenButton() {
+  const btn = document.getElementById('fullscreenBtn');
+  if (!btn) return;
+  btn.textContent = document.fullscreenElement ? '🗗 종료' : '⛶ 전체';
+}
+
+document.addEventListener('fullscreenchange', refreshFullscreenButton);
 
 async function toggleInspection(studentId, missionId, done) {
   if (!done) {
