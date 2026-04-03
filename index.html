@@ -82,6 +82,18 @@ body {
   align-items: center;
   gap: 8px;
 }
+.header-project-id {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.62);
+  letter-spacing: 0.2px;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .header .emoji-row {
   font-size: 52px;
   display: block;
@@ -116,6 +128,15 @@ body {
   white-space: nowrap;
 }
 .header-menu-btn:active { transform: scale(0.96); }
+.header-icon-btn {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
 
 /* 설정 카드 */
 .setup-card {
@@ -179,6 +200,11 @@ body {
   transition: all 0.15s;
 }
 .sync-btn:active { background: rgba(255,107,53,0.08); transform: scale(0.95); }
+.header-menu-btn.sync-btn {
+  background: rgba(255,255,255,0.92);
+  border-color: rgba(255,255,255,0.95);
+  color: #C2410C;
+}
 .status-actions { display: flex; align-items: center; gap: 8px; }
 
 .muted-btn {
@@ -482,8 +508,9 @@ body {
       <div class="header-title-wrap">
         <span class="emoji-row">🎯</span>
         <h1>활동 트래커</h1>
+        <span class="header-project-id" id="headerProjectId">연결대기</span>
       </div>
-      <button class="header-menu-btn" id="fullscreenBtn" onclick="toggleFullscreen()">⛶ 전체</button>
+      <button class="header-menu-btn header-icon-btn" id="fullscreenBtn" onclick="toggleFullscreen()" aria-label="전체화면">⛶</button>
     </div>
     <p>오늘도 열심히 해보자!</p>
   </div>
@@ -701,7 +728,9 @@ async function initApp(cfg) {
 
     document.getElementById('loadingSection').style.display = 'none';
     document.getElementById('mainContent').style.display = 'block';
-    document.getElementById('statusText').textContent = cfg.projectId;
+    document.getElementById('statusText').textContent = '연결됨';
+    const projectEl = document.getElementById('headerProjectId');
+    if (projectEl) projectEl.textContent = cfg.projectId || '';
     if (btn) { btn.disabled = false; btn.textContent = '🚀 시작하기'; }
     document.getElementById('cancelEditBtn').style.display = 'none';
     isEditingConfig = false;
@@ -1088,7 +1117,7 @@ window.toggleFullscreen = async function() {
 function refreshFullscreenButton() {
   const btn = document.getElementById('fullscreenBtn');
   if (!btn) return;
-  btn.textContent = document.fullscreenElement ? '🗗 종료' : '⛶ 전체';
+  btn.textContent = document.fullscreenElement ? '🗗' : '⛶';
 }
 
 document.addEventListener('fullscreenchange', refreshFullscreenButton);
