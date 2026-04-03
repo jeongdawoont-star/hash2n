@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>조형 요소와 조형 원리</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700;900&family=Black+Han+Sans&display=swap');
+
+  :root {
+    --bg: #0f0e17;
+    --surface: #1a1929;
+    --accent1: #ff6b6b;
+    --accent2: #ffd93d;
+    --accent3: #6bcb77;
+    --accent4: #4d96ff;
+    --accent5: #ff9a3c;
+    --text: #fffffe;
+    --subtext: #a7a9be;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    overflow: hidden;
+    cursor: pointer;
+  }
+
+  /* START SCREEN */
+  #start-screen {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    gap: 2rem;
+  }
+
+  .start-title {
+    font-family: 'Black Han Sans', sans-serif;
+    font-size: clamp(2rem, 6vw, 4.5rem);
+    text-align: center;
+    line-height: 1.2;
+    background: linear-gradient(135deg, var(--accent2), var(--accent1), var(--accent4));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .start-sub {
+    color: var(--subtext);
+    font-size: 1.1rem;
+    text-align: center;
+  }
+
+  .start-btn {
+    margin-top: 1rem;
+    padding: 1.2rem 3rem;
+    font-family: 'Black Han Sans', sans-serif;
+    font-size: 1.4rem;
+    background: linear-gradient(135deg, var(--accent1), var(--accent5));
+    color: white;
+    border: none;
+    border-radius: 100px;
+    cursor: pointer;
+    box-shadow: 0 0 40px rgba(255,107,107,0.4);
+    animation: pulse 2s ease-in-out infinite;
+    transition: transform 0.2s;
+  }
+
+  .start-btn:hover { transform: scale(1.05); }
+
+  .voice-toggle-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-top: 0.5rem;
+    color: var(--subtext);
+    font-size: 1rem;
+  }
+
+  .toggle-switch {
+    position: relative;
+    width: 52px;
+    height: 28px;
+    cursor: pointer;
+  }
+
+  .toggle-switch input { opacity: 0; width: 0; height: 0; }
+
+  .toggle-track {
+    position: absolute;
+    inset: 0;
+    background: #333;
+    border-radius: 28px;
+    transition: background 0.3s;
+  }
+
+  .toggle-switch input:checked + .toggle-track { background: var(--accent3); }
+
+  .toggle-track::after {
+    content: '';
+    position: absolute;
+    top: 3px; left: 3px;
+    width: 22px; height: 22px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.3s;
+  }
+
+  .toggle-switch input:checked + .toggle-track::after { transform: translateX(24px); }
+
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 30px rgba(255,107,107,0.4); }
+    50% { box-shadow: 0 0 60px rgba(255,107,107,0.7); }
+  }
+
+  .deco-circles {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  .deco-circle {
+    position: absolute;
+    border-radius: 50%;
+    opacity: 0.08;
+    animation: float linear infinite;
+  }
+
+  @keyframes float {
+    from { transform: translateY(110vh) rotate(0deg); }
+    to { transform: translateY(-110vh) rotate(360deg); }
+  }
+
+  /* SLIDE */
+  #slide-container {
+    position: fixed;
+    inset: 0;
+    display: none;
+  }
+
+  .slide {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 4vw 6vw;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+    pointer-events: none;
+  }
+
+  .slide.active {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  /* SECTION HEADER SLIDE */
+  .slide.section-header {
+    background: var(--bg);
+  }
+
+  .section-label {
+    font-size: clamp(0.9rem, 2vw, 1.2rem);
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--subtext);
+    margin-bottom: 1.5rem;
+  }
+
+  .section-title {
+    font-family: 'Black Han Sans', sans-serif;
+    font-size: clamp(3rem, 10vw, 8rem);
+    text-align: center;
+    line-height: 1.1;
+  }
+
+  .section-desc {
+    margin-top: 2rem;
+    font-size: clamp(1rem, 2.5vw, 1.5rem);
+    color: var(--subtext);
+    text-align: center;
+  }
+
+  /* CONTENT SLIDE */
+  .slide.content-slide {
+    background: var(--surface);
+    flex-direction: row;
+    gap: 4vw;
+    text-align: left;
+  }
+
+  .slide-left {
+    flex: 0 0 auto;
+    width: clamp(120px, 22vw, 280px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+  }
+
+  .slide-icon {
+    font-size: clamp(4rem, 10vw, 9rem);
+    line-height: 1;
+    filter: drop-shadow(0 0 20px currentColor);
+  }
+
+  .slide-tag {
+    font-family: 'Black Han Sans', sans-serif;
+    font-size: clamp(1.6rem, 4vw, 3rem);
+    text-align: center;
+  }
+
+  .slide-en {
+    font-size: clamp(0.75rem, 1.5vw, 1rem);
+    color: var(--subtext);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    text-align: center;
+  }
+
+  .slide-right {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 1.2vw;
+  }
+
+  .slide-title {
+    font-family: 'Black Han Sans', sans-serif;
+    font-size: clamp(1.8rem, 4.5vw, 4rem);
+    line-height: 1.1;
+  }
+
+  .slide-body {
+    font-size: clamp(0.95rem, 1.8vw, 1.4rem);
+    line-height: 1.8;
+    color: #d4d5e8;
+    max-width: 70ch;
+  }
+
+  .highlight {
+    color: var(--accent2);
+    font-weight: 700;
+  }
+
+  .slide-divider {
+    width: 60px;
+    height: 4px;
+    border-radius: 2px;
+    margin: 0.5vw 0;
+  }
+
+  /* PROGRESS BAR */
+  #progress-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    height: 5px;
+    background: linear-gradient(90deg, var(--accent1), var(--accent2));
+    transition: width 0.5s ease;
+    z-index: 200;
+  }
+
+  /* SLIDE COUNTER */
+  #slide-counter {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 2rem;
+    font-size: 0.9rem;
+    color: var(--subtext);
+    z-index: 200;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* CONTROL BUTTONS */
+  #controls {
+    position: fixed;
+    bottom: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: none;
+    gap: 1rem;
+    z-index: 200;
+  }
+
+  .ctrl-btn {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: white;
+    padding: 0.5rem 1.4rem;
+    border-radius: 100px;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 0.9rem;
+    cursor: pointer;
+    backdrop-filter: blur(10px);
+    transition: background 0.2s;
+  }
+
+  .ctrl-btn:hover { background: rgba(255,255,255,0.2); }
+
+  /* BG PATTERNS per slide */
+  .bg-dots {
+    background-image: radial-gradient(circle, rgba(255,255,255,0.05) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  .bg-lines {
+    background-image: repeating-linear-gradient(
+      0deg, transparent, transparent 39px, rgba(255,255,255,0.03) 39px, rgba(255,255,255,0.03) 40px
+    );
+  }
+
+  /* SPEAKING INDICATOR */
+  #speaking-indicator {
+    position: fixed;
+    top: 1.5rem;
+    right: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--subtext);
+    font-size: 0.85rem;
+    z-index: 200;
+  }
+
+  .wave-bars {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    height: 20px;
+  }
+
+  .wave-bar {
+    width: 3px;
+    background: var(--accent3);
+    border-radius: 2px;
+    animation: wave 0.8s ease-in-out infinite;
+  }
+
+  .wave-bar:nth-child(1) { animation-delay: 0s; }
+  .wave-bar:nth-child(2) { animation-delay: 0.1s; }
+  .wave-bar:nth-child(3) { animation-delay: 0.2s; }
+  .wave-bar:nth-child(4) { animation-delay: 0.3s; }
+
+  @keyframes wave {
+    0%, 100% { height: 4px; }
+    50% { height: 18px; }
+  }
+
+  .wave-bars.paused .wave-bar { animation-play-state: paused; height: 4px; }
+
+  /* SLIDE ENTRANCE ANIMATION */
+  .slide.active .slide-left {
+    animation: slideInLeft 0.5s ease forwards;
+  }
+  .slide.active .slide-right {
+    animation: slideInRight 0.5s ease 0.1s forwards;
+    opacity: 0;
+  }
+  @keyframes slideInLeft {
+    from { transform: translateX(-30px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+  @keyframes slideInRight {
+    from { transform: translateX(30px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+
+  .slide.active .section-title,
+  .slide.active .section-label,
+  .slide.active .section-desc {
+    animation: fadeUp 0.6s ease forwards;
+    opacity: 0;
+  }
+  .slide.active .section-label { animation-delay: 0s; }
+  .slide.active .section-title { animation-delay: 0.1s; }
+  .slide.active .section-desc { animation-delay: 0.3s; }
+
+  @keyframes fadeUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  /* GRADIENT ACCENTS */
+  .grad1 { background: linear-gradient(135deg, #ff6b6b, #ffd93d); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .grad2 { background: linear-gradient(135deg, #4d96ff, #6bcb77); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .grad3 { background: linear-gradient(135deg, #ff9a3c, #ff6b6b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .grad4 { background: linear-gradient(135deg, #c77dff, #4d96ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+  /* SIDEBAR BG COLOR ACCENT */
+  .accent-bg-red { background: linear-gradient(160deg, rgba(255,107,107,0.15), transparent); border-left: 4px solid var(--accent1); }
+  .accent-bg-yellow { background: linear-gradient(160deg, rgba(255,217,61,0.12), transparent); border-left: 4px solid var(--accent2); }
+  .accent-bg-green { background: linear-gradient(160deg, rgba(107,203,119,0.12), transparent); border-left: 4px solid var(--accent3); }
+  .accent-bg-blue { background: linear-gradient(160deg, rgba(77,150,255,0.12), transparent); border-left: 4px solid var(--accent4); }
+  .accent-bg-orange { background: linear-gradient(160deg, rgba(255,154,60,0.12), transparent); border-left: 4px solid var(--accent5); }
+  .accent-bg-purple { background: linear-gradient(160deg, rgba(199,125,255,0.12), transparent); border-left: 4px solid #c77dff; }
+
+</style>
+</head>
+<body>
+
+<!-- START SCREEN -->
+<div id="start-screen">
+  <div class="deco-circles" id="deco"></div>
+  <div class="section-label" style="color:#a7a9be;">5학년 미술 수업</div>
+  <div class="start-title">조형 요소와<br>조형 원리</div>
+  <div class="start-sub">화면을 클릭하면 음성과 함께 수업이 시작됩니다</div>
+  <button class="start-btn" id="start-btn">▶ 수업 시작하기</button>
+  <div class="voice-toggle-wrap">
+    <label class="toggle-switch">
+      <input type="checkbox" id="voice-toggle">
+      <div class="toggle-track"></div>
+    </label>
+    <span id="voice-label">음성 OFF — 슬라이드만 자동 진행</span>
+  </div>
+</div>
+
+<!-- SLIDE CONTAINER -->
+<div id="slide-container"></div>
+
+<!-- UI -->
+<div id="progress-bar" style="width:0%"></div>
+<div id="slide-counter"></div>
+<div id="speaking-indicator">
+  <div class="wave-bars paused" id="wave-bars">
+    <div class="wave-bar"></div>
+    <div class="wave-bar"></div>
+    <div class="wave-bar"></div>
+    <div class="wave-bar"></div>
+  </div>
+  <span id="speaking-text">대기 중</span>
+</div>
+<div id="controls">
+  <button class="ctrl-btn" id="btn-prev">◀ 이전</button>
+  <button class="ctrl-btn" id="btn-pause">⏸ 일시정지</button>
+  <button class="ctrl-btn" id="btn-next">다음 ▶</button>
+  <button class="ctrl-btn" id="btn-voice-toggle">🔇 음성 OFF</button>
+</div>
+
+<script>
+const slides = [
+  {
+    type: 'section',
+    grad: 'grad1',
+    accent: '#ff6b6b',
+    label: '미술의 기본 재료',
+    title: '조형 요소',
+    desc: '모든 미술 작품을 만드는 9가지 재료',
+    speech: `미술 작품은 그냥 뚝딱 만들어지는 게 아니에요. 미술에도 재료가 있는데, 그걸 조형 요소라고 해요. 요리로 치면 밀가루, 달걀, 설탕 같은 재료들이죠. 지금부터 하나씩 살펴볼게요.`
+  },
+  {
+    type: 'content',
+    bg: 'bg-dots accent-bg-yellow',
+    icon: '•',
+    tag: '점',
+    en: 'Point',
+    color: '#ffd93d',
+    title: '점 (Point)',
+    body: `점은 미술에서 <span class="highlight">가장 작고 기본적인 단위</span>예요. 연필로 종이에 살짝 찍으면 생기는 그 작은 자국이 바로 점이에요.<br><br>밤하늘의 별도 점이고, 해변의 모래알도 점이에요. 점이 수천 개 모이면 완전한 그림이 돼요. 이걸 <span class="highlight">점묘법</span>이라고 해요.`,
+    speech: `점은 미술에서 가장 작고 기본적인 단위예요. 연필로 종이에 살짝 찍으면 생기는 그 작은 자국이 바로 점이에요. 밤하늘의 별도 점이고, 해변의 모래알도 점이에요. 점 하나는 작고 단순해 보이지만, 점이 많이 모이면 선도 되고 면도 되고 심지어 그림도 만들 수 있어요. 점묘법이라고 들어봤나요? 점만 수천 개, 수만 개 찍어서 사람 얼굴이나 풍경을 그리는 기법이에요. 가까이서 보면 점들만 보이지만, 멀리서 보면 완전한 그림이 나타나요.`
+  },
+  {
+    type: 'content',
+    bg: 'bg-lines accent-bg-blue',
+    icon: '〰',
+    tag: '선',
+    en: 'Line',
+    color: '#4d96ff',
+    title: '선 (Line)',
+    body: `선은 <span class="highlight">점이 이동한 자국</span>이에요. 종류에 따라 느낌이 완전히 달라요.<br><br>• 곧은 직선 → 단단하고 강한 느낌<br>• 부드러운 곡선 → 편안하고 따뜻한 느낌<br>• 지그재그 선 → 날카롭고 긴장된 느낌`,
+    speech: `선은 점이 이동한 자국이에요. 점이 한 방향으로 계속 움직이면 선이 되는 거예요. 선은 종류에 따라 느낌이 완전히 달라요. 곧은 직선은 단단하고 강하고 딱딱한 느낌을 줘요. 부드럽게 출렁이는 곡선은 편안하고 따뜻하고 자연스러운 느낌을 줘요. 지그재그 선은 날카롭고 긴장된 느낌을 주고요. 그래서 화가들은 선을 선택할 때도 신중하게 생각해요. 이 부분을 딱딱하게 표현할까, 부드럽게 표현할까 하고요.`
+  },
+  {
+    type: 'content',
+    bg: 'accent-bg-orange',
+    icon: '▭',
+    tag: '면',
+    en: 'Plane',
+    color: '#ff9a3c',
+    title: '면 (Plane)',
+    body: `<span class="highlight">선들이 만나서 닫히면 면이 생겨요.</span><br><br>선 세 개가 삼각형 모양으로 만나면, 그 안에 넓은 면이 생기죠. 면은 넓이를 가지고 있어요. 직사각형, 원, 삼각형 모두 면이에요.<br><br>면에 색을 칠하면 넓이감이 더 잘 느껴져요.`,
+    speech: `선들이 만나서 닫히면 면이 생겨요. 예를 들어 선 세 개가 삼각형 모양으로 만나면, 그 안에 넓은 면이 생기죠. 면은 넓이를 가지고 있어요. 직사각형, 원, 삼각형 모두 면이에요. 면에 색을 칠하면 넓이감이 더 잘 느껴져요. 노란색으로 가득 칠한 정사각형을 보면, 아, 이게 면이구나 하고 바로 느낄 수 있어요.`
+  },
+  {
+    type: 'content',
+    bg: 'accent-bg-red',
+    icon: '★',
+    tag: '형',
+    en: 'Shape / Form',
+    color: '#ff6b6b',
+    title: '형 (Shape / Form)',
+    body: `형은 선이나 면이 모여서 만들어진 <span class="highlight">겉모습, 즉 모양</span>이에요.<br><br>• <span class="highlight">기하학적 형</span>: 원, 삼각형처럼 수학적으로 딱 떨어지는 모양<br>• <span class="highlight">자연적 형</span>: 나뭇잎, 구름처럼 자연 속 불규칙한 모양`,
+    speech: `형은 선이나 면이 모여서 만들어진 겉모습, 즉 모양이에요. 사과 모양, 별 모양, 세모 모양처럼 테두리가 있는 구체적인 형태를 말해요. 형에는 두 가지가 있어요. 기하학적 형은 원, 삼각형, 사각형처럼 수학적으로 딱 떨어지는 정확한 모양이에요. 자연적 형은 나뭇잎, 구름, 사람 얼굴처럼 자연에서 볼 수 있는 불규칙한 모양이에요. 여러분이 그림을 그릴 때 이건 사과야라고 알아볼 수 있는 건, 사과의 형이 잘 표현됐기 때문이에요.`
+  },
+  {
+    type: 'content',
+    bg: 'accent-bg-purple',
+    icon: '🎨',
+    tag: '색',
+    en: 'Color',
+    color: '#c77dff',
+    title: '색 (Color)',
+    body: `색은 <span class="highlight">빛에 의해 나타나는 시각적인 느낌</span>이에요. 빛이 없으면 색도 없어요.<br><br>• <span class="highlight">색상</span>: 빨강, 파랑처럼 색의 이름<br>• <span class="highlight">명도</span>: 색의 밝고 어두운 정도<br>• <span class="highlight">채도</span>: 색이 얼마나 선명하고 진한가`,
+    speech: `색은 빛에 의해 나타나는 시각적인 느낌이에요. 빛이 없으면 색도 없어요. 어두운 방에서는 아무것도 안 보이잖아요. 빛이 물체에 닿고 우리 눈에 들어올 때 비로소 색을 느낄 수 있어요. 색에는 세 가지 중요한 성질이 있어요. 색상은 빨강, 파랑, 노랑처럼 색의 이름이에요. 명도는 색의 밝고 어두운 정도이고, 채도는 색이 얼마나 선명하고 진한가를 말해요. 연한 핑크색 하트와 진한 빨간색 하트를 나란히 놓으면, 같은 빨간 계열이지만 완전히 다른 분위기가 느껴져요.`
+  },
+  {
+    type: 'content',
+    bg: 'accent-bg-green',
+    icon: '🪨',
+    tag: '질감',
+    en: 'Texture',
+    color: '#6bcb77',
+    title: '질감 (Texture)',
+    body: `질감은 물체 표면에서 느껴지는 <span class="highlight">거칠거나 부드러운 느낌</span>이에요.<br><br>실제로 만져서 느끼는 질감도 있고, 눈으로 봐서 느끼는 <span class="highlight">시각적 질감</span>도 있어요. 그림에서는 주로 눈으로 느끼는 질감을 표현해요.`,
+    speech: `질감은 물체 표면에서 느껴지는 거칠거나 부드러운 느낌이에요. 영어로는 텍스처라고도 해요. 실제로 손으로 만져서 느끼는 질감도 있고, 눈으로 봐서 저건 거칠겠다고 느끼는 시각적 질감도 있어요. 그림에서는 주로 눈으로 느끼는 질감을 표현해요. 나무껍질은 울퉁불퉁하고 거칠죠. 솜은 폭신폭신하고 부드럽죠. 이 두 가지를 나란히 그려놓으면 같은 그림 안에서도 완전히 다른 촉감이 느껴져요.`
+  },
+  {
+    type: 'content',
+    bg: 'accent-bg-blue',
+    icon: '⚽',
+    tag: '양감',
+    en: 'Volume',
+    color: '#4d96ff',
+    title: '양감 (Volume)',
+    body: `양감은 물체가 가진 <span class="highlight">덩어리감, 즉 부피감</span>이에요.<br><br>동그라미 하나에 밝은 부분, 어두운 부분, 반사광을 넣으면 갑자기 <span class="highlight">공처럼 둥글고 무거워 보여요.</span> 이게 바로 양감이에요.`,
+    speech: `양감은 물체가 가진 덩어리감이에요. 2D, 즉 평평한 그림 속에서도 무언가가 묵직하고 둥글고 부피감이 있어 보이게 하는 것이 바로 양감 표현이에요. 동그라미 하나를 그렸을 때, 그냥 선만 그리면 납작한 원처럼 보여요. 하지만 여기에 빛이 닿는 부분은 밝게, 그늘진 부분은 어둡게, 그리고 가장자리에 반사광을 살짝 넣으면 갑자기 공처럼 둥글고 무거워 보이기 시작해요. 이게 양감이에요.`
+  },
+  {
+    type: 'content',
+    bg: 'accent-bg-orange',
+    icon: '🌓',
+    tag: '명암',
+    en: 'Value',
+    color: '#ff9a3c',
+    title: '명암 (Value)',
+    body: `명암은 빛에 의해 생기는 <span class="highlight">밝음과 어두움의 단계</span>예요.<br><br>밝은 흰색 → 연한 회색 → 중간 회색 → 진한 회색 → 어두운 검정<br><br>명암이 없으면 만화처럼 평평하고, 명암이 있으면 사진처럼 입체적이에요.`,
+    speech: `명암은 빛에 의해 생기는 밝음과 어두움의 단계예요. 빛을 받는 쪽은 밝고, 빛을 못 받는 쪽은 어둡죠. 이 밝고 어두움의 차이를 잘 표현하면 그림이 입체적으로 보여요. 명암을 5단계로 나눠보면, 아주 밝은 흰색에서 연한 회색, 중간 회색, 진한 회색, 아주 어두운 검정 순이에요. 이 단계가 자연스럽게 이어질수록 그림이 더 사실적이고 입체적으로 보여요. 명암이 없는 그림은 만화처럼 평평해 보이고, 명암을 잘 넣은 그림은 사진처럼 살아있어 보여요.`
+  },
+  {
+    type: 'content',
+    bg: 'bg-dots accent-bg-green',
+    icon: '🌲',
+    tag: '공간감',
+    en: 'Space',
+    color: '#6bcb77',
+    title: '공간감 (Space)',
+    body: `공간감은 그림 속에서 <span class="highlight">멀고 가까운 거리나 깊이</span>가 느껴지는 것이에요.<br><br>• 가까운 것 → <span class="highlight">크게, 아래쪽, 선명하게</span><br>• 먼 것 → <span class="highlight">작게, 위쪽, 흐릿하게</span><br><br>2D 그림에서 3D 공간을 표현하는 비법이에요!`,
+    speech: `공간감은 그림 속에서 멀고 가까운 거리나 깊이감이 느껴지는 것이에요. 실제 세상은 3D인데, 그림은 2D 평면이잖아요. 그래서 화가들은 여러 가지 방법으로 공간감을 만들어요. 가까운 것은 크게, 먼 것은 작게 그려요. 가까운 것은 아래쪽, 먼 것은 위쪽에 배치해요. 가까운 것은 선명하게, 먼 것은 흐릿하게 표현해요. 앞에 있는 커다란 나무와 멀리 보이는 아주 작은 나무를 함께 그리면, 보는 사람이 자연스럽게 아, 저 나무는 멀리 있구나 라고 느끼게 돼요.`
+  },
+  {
+    type: 'section',
+    grad: 'grad2',
+    accent: '#4d96ff',
+    label: '미술의 레시피',
+    title: '조형 원리',
+    desc: '재료를 어떻게 배치할까? 11가지 원리',
+    speech: `조형 요소가 재료라면, 조형 원리는 그 재료들을 어떻게 배치하고 조합하느냐의 방법이에요. 같은 재료라도 레시피가 다르면 완전히 다른 요리가 나오죠? 미술도 마찬가지예요. 지금부터 11가지 조형 원리를 배워볼게요.`
+  },
+  {
+    type: 'content',
+    bg: 'accent-bg-blue',
+    icon: '⚖️',
+    tag: '균형',
+    en: 'Balance',
+    color: '#4d96ff',
+    title: '균형 (Balance)',
+    body: `균형은 그림을 봤을 때 <span class="highlight">안정적이고 편안한 느낌</span>이 드는 상태예요.<br><br>• <span class="highlight">대칭 균형</span>: 좌우가 똑같은 완벽한 균형<br>• <span class="highlight">비대칭 균형</span>: 다르지만 시각적 무게가 비슷한 균형<br><br>시소가 수평을 이루는 것처럼요!`,
+    speech: `균형은 그림을 봤을 때 안정적이고 편안한 느낌이 드는 상태예요. 시소를 생각해보세요. 양쪽 무게가 비슷하면 수평을 이루죠. 그림도 마찬가지예요. 한쪽이 너무 무거워 보이거나 너무 비어 보이면 불안정하고 어색해 보여요. 균형에는 두 종류가 있어요. 대칭 균형은 좌우가 똑같은 완벽한 균형이고, 비대칭 균형은 좌우가 똑같지 않지만 시각적으로 무게감이 비슷한 균형이에요. 비대칭 균형이 더 자연스럽고 생동감 있어 보여요.`
+  },
+  {
+    type: 'content',
+    bg: 'accent-bg-green',
+    icon: '🔷',
+    tag: '통일',
+    en: 'Unity',
+    color: '#6bcb77',
+    title: '통일 (Unity)',
+    body: `통일은 작품 전체가 <span class="highlight">하나로 어울려 조화롭게</span> 느껴지는 것이에요.<br><br>같은 크기의 세모 여섯 개를 일정한 간격으로 배치하면, 전체가 하나의 묶음처럼 느껴져요. <span class="highlight">깔끔하고 정돈된 느낌</span>을 줘요.`,
+    speech: `통일은 작품 전체가 하나로 어울려 조화롭게 느껴지는 것이에요. 같은 크기의 세모 여섯 개를 일정한 간격으로 나란히 배치하면, 전체가 하나의 묶음처럼 느껴지죠. 색깔, 모양, 크기 등이 비슷한 요소들을 모으면 통일감이 생겨요. 통일감이 있는 작품은 보기에 깔끔하고 정돈된 느낌을 줘요.`
+  },
+  {
+    type: 'content',
+    bg: 'accent-bg-red',
+    icon: '🔺',
+    tag: '변화',
+    en: 'Variety',
+    color: '#ff6b6b',
+    title: '변화 (Variety)',
+    body: `변화는 통일 속에 <span class="highlight">살짝 다른 요소를 넣는</span> 거예요.<br><br>똑같은 세모들 사이에 빨간 세모 하나만 넣으면? 그 하나가 눈에 확 들어와요!<br><br>통일 + 변화 = <span class="highlight">안정감 + 생동감</span>`,
+    speech: `변화는 통일 속에 살짝 다른 요소를 넣어주는 거예요. 통일만 있으면 지루할 수 있어요. 똑같은 세모들만 있으면 아, 그냥 세모네 하고 넘어가게 되죠. 그런데 그 중 하나만 빨간색으로 바꾸면? 갑자기 그 하나가 눈에 확 들어와요! 통일과 변화는 함께 쓸 때 더 효과적이에요. 통일이 안정감을 주고, 변화가 생동감을 더해줘요.`
+  },
+  {
+    type: 'content',
+    bg: 'accent-bg-purple',
+    icon: '🦋',
+    tag: '대칭',
+    en: 'Symmetry',
+    color: '#c77dff',
+    title: '대칭 (Symmetry)',
+    body: `대칭은 중심을 기준으로 <span class="highlight">좌우나 위아래가 거울처럼 똑같은</span> 상태예요.<br><br>나비 날개, 사람 얼굴, 하트 모양 모두 대칭이에요.<br><br>안정적이고 완벽한 느낌을 주지만, 자연 속 대칭은 대부분 살짝 차이가 있어요.`,
+    speech: `대칭은 중심을 기준으로 좌우나 위아래가 거울에 비친 것처럼 똑같은 상태예요. 나비 날개를 생각해보세요. 가운데를 중심으로 왼쪽 날개와 오른쪽 날개가 완벽하게 같은 모양이죠. 사람 얼굴도, 눈사람도, 하트도 대칭이에요. 대칭은 안정적이고 완벽한 느낌을 줘요. 하지만 너무 완벽한 대칭은 오히려 어색해 보이기도 해서, 자연 속에 있는 대칭은 대부분 약간씩 차이가 있어요.`
+  },
+  {
+    type: 'content',
+    bg: 'accent-bg-yellow',
+    icon: '⬆',
+    tag: '점증',
+    en: 'Gradation',
+    color: '#ffd93d',
+    title: '점증 (Gradation)',
+    body: `점증은 어떤 요소가 <span class="highlight">단계적으로 조금씩 변해가는</span> 것이에요. 그라데이션이라고도 해요.<br><br>작은 원 → 조금 큰 원 → 더 큰 원 → 매우 큰 원<br><br>크기, 색, 방향 등이 서서히 변하면 <span class="highlight">깊이감과 리듬감</span>이 생겨요.`,
+    speech: `점증은 어떤 요소가 단계적으로 조금씩 변해가는 것이에요. 그라데이션이라고도 해요. 아주 작은 점에서 시작해서 점점 커지는 원들이 계단처럼 늘어선 걸 상상해보세요. 색이 하늘색에서 점점 진한 파란색으로 바뀌는 하늘도 점증이에요. 크기, 색, 방향 등이 서서히 변하면 자연스럽고 부드러운 느낌을 줘요. 점증을 잘 활용하면 그림에 깊이감과 리듬감이 생겨요.`
+  },
+  {
+    type: 'content',
+    bg: 'bg-lines accent-bg-blue',
+    icon: '🌊',
+    tag: '율동',
+    en: 'Rhythm',
+    color: '#4d96ff',
+    title: '율동 (Rhythm)',
+    body: `율동은 그림을 보는데 <span class="highlight">마치 음악처럼 리듬감이 느껴지는</span> 것이에요.<br><br>구불구불한 물결선 여러 개가 겹치면, 물이 흐르는 것처럼 눈이 자연스럽게 따라가요. <span class="highlight">생기 있고 활기차 보여요.</span>`,
+    speech: `율동은 그림을 보는데 마치 음악처럼 리듬감이 느껴지는 것이에요. 구불구불한 물결선 여러 개가 겹치면서 반복되면, 물이 흐르는 것처럼 눈이 자연스럽게 따라가게 돼요. 그 흐름이 바로 율동이에요. 음악에서 박자가 반복되며 리듬이 생기듯, 미술에서도 요소들이 반복되고 변화하면서 시각적인 리듬이 생겨요. 율동이 있는 그림은 생기 있고 활기차 보여요.`
+  },
+  {
+    type: 'content',
+    bg: 'accent-bg-orange',
+    icon: '🧱',
+    tag: '반복',
+    en: 'Repetition',
+    color: '#ff9a3c',
+    title: '반복 (Repetition)',
+    body: `반복은 같은 요소가 <span class="highlight">계속해서 이어지는</span> 것이에요.<br><br>벽돌 무늬, 바닥 타일, 체크무늬 셔츠, 줄무늬 양말 — 모두 반복이에요.<br><br>반복은 <span class="highlight">패턴</span>을 만들고, <span class="highlight">안정감과 질서감</span>을 줘요.`,
+    speech: `반복은 같은 요소가 계속해서 이어지는 것이에요. 벽돌 무늬를 생각해보세요. 같은 직사각형이 계속 이어지죠. 바닥 타일, 체크무늬 셔츠, 줄무늬 양말 모두 반복이에요. 반복은 패턴을 만들어요. 반복은 안정감과 질서감을 주고, 규칙적인 아름다움을 표현해요. 도배지 무늬, 직물 무늬, 포장지 무늬가 모두 반복의 원리를 활용한 거예요.`
+  },
+  {
+    type: 'content',
+    bg: 'accent-bg-green',
+    icon: '🤲',
+    tag: '비례',
+    en: 'Proportion',
+    color: '#6bcb77',
+    title: '비례 (Proportion)',
+    body: `비례는 <span class="highlight">크기의 관계</span>예요. 어떤 것이 다른 것에 비해 얼마나 크거나 작은가예요.<br><br>어른 손 옆에 아기 손을 나란히 그리면 크기 차이가 확 느껴지죠. 비례가 맞지 않으면 어색하고, 일부러 과장하면 <span class="highlight">캐릭터처럼 재미있어요.</span>`,
+    speech: `비례는 크기의 관계예요. 어떤 것이 다른 것에 비해 얼마나 크거나 작은가를 말해요. 커다란 어른 손 옆에 아주 작은 아기 손을 나란히 그리면, 크기의 차이가 확 느껴지죠. 이게 비례예요. 미술에서 비례는 아주 중요해요. 사람을 그릴 때 머리가 너무 크거나, 팔이 너무 길면 이상해 보이죠? 그건 비례가 맞지 않아서예요. 반대로 일부러 비례를 과장하면 캐릭터나 만화처럼 재미있는 느낌을 줄 수 있어요.`
+  },
+  {
+    type: 'content',
+    bg: 'accent-bg-red',
+    icon: '◑',
+    tag: '대비',
+    en: 'Contrast',
+    color: '#ff6b6b',
+    title: '대비 (Contrast)',
+    body: `대비는 <span class="highlight">서로 반대되는 성질</span>이 강하게 부딪혀 차이가 확실한 것이에요.<br><br>• <span class="highlight">색 대비</span>: 검정 vs 하양<br>• <span class="highlight">크기 대비</span>: 아주 큰 것 vs 아주 작은 것<br>• <span class="highlight">질감 대비</span>: 거친 것 vs 부드러운 것`,
+    speech: `대비는 서로 반대되는 성질이 강하게 부딪혀서 차이가 확실하게 느껴지는 것이에요. 가장 쉬운 예가 검정과 하양이에요. 칸을 반으로 나눠서 한쪽은 완전히 검게, 다른 쪽은 완전히 하얗게 칠하면, 그 경계에서 강렬한 대비가 생겨요. 대비는 색만 있는 게 아니에요. 크기 대비는 아주 큰 것과 아주 작은 것, 질감 대비는 거친 것과 부드러운 것, 형태 대비는 각진 것과 둥근 것이에요. 대비를 잘 쓰면 그림이 훨씬 강렬하고 인상적이 돼요.`
+  },
+  {
+    type: 'content',
+    bg: 'accent-bg-yellow',
+    icon: '⭐',
+    tag: '강조',
+    en: 'Emphasis',
+    color: '#ffd93d',
+    title: '강조 (Emphasis)',
+    body: `강조는 특정 부분을 <span class="highlight">유독 돋보이게</span> 만드는 거예요.<br><br>흐린 회색 원들 사이에 크고 진한 빨간 별 하나 — 눈이 자연스럽게 별로 향해요!<br><br>좋은 그림에는 보통 <span class="highlight">강조점 하나</span>가 있어요.`,
+    speech: `강조는 특정한 부분을 유독 돋보이게 만드는 거예요. 그림에서 여기를 봐! 하고 시선을 끄는 부분이에요. 작고 흐린 회색 원들이 흩어져 있는데, 그 한가운데에 크고 진한 빨간색 별이 하나 있다면? 눈이 자연스럽게 그 빨간 별로 향하게 되죠. 강조는 색, 크기, 위치, 모양 등 다양한 방법으로 만들 수 있어요. 좋은 그림에는 보통 강조점, 즉 가장 중요한 부분 하나가 있어요.`
+  },
+  {
+    type: 'content',
+    bg: 'accent-bg-orange',
+    icon: '🏃',
+    tag: '동세',
+    en: 'Movement',
+    color: '#ff9a3c',
+    title: '동세 (Movement)',
+    body: `동세는 그림 속 대상이 <span class="highlight">움직이는 것처럼 느껴지게</span> 표현하는 거예요.<br><br>달리는 사람을 그릴 때 몸을 기울이고, 팔다리를 힘차게 뻗고, 머리카락이 날리게 그리면 — 정지된 그림인데도 달리는 느낌이 나요!`,
+    speech: `동세는 그림 속 대상이 움직이는 것처럼 느껴지게 표현하는 거예요. 사진을 찍으면 순간이 멈추잖아요. 그런데 달리는 사람을 그릴 때 몸을 앞으로 기울이고, 팔다리를 힘차게 뻗고, 머리카락이 뒤로 날리는 것처럼 그리면, 정지된 그림인데도 달리고 있다는 느낌이 강하게 와요. 동세를 잘 표현하면 그림에 생동감과 에너지가 넘쳐흘러요. 스포츠 선수, 춤추는 사람, 나는 새를 그릴 때 동세를 특히 신경 써야 해요.`
+  },
+  {
+    type: 'section',
+    grad: 'grad3',
+    accent: '#ff9a3c',
+    label: '수업 마무리',
+    title: '오늘 배운 것',
+    desc: '조형 요소 9가지 + 조형 원리 11가지 = 미술의 모든 것',
+    speech: `오늘 배운 조형 요소 9가지와 조형 원리 11가지, 이게 바로 모든 미술 작품의 기초예요. 앞으로 그림을 그리거나 작품을 감상할 때, 오늘 배운 것들을 하나씩 찾아보면 미술이 훨씬 더 재미있어질 거예요. 수고했어요!`
+  }
+];
+
+let currentIdx = 0;
+let synth = window.speechSynthesis;
+let utterance = null;
+let isPaused = false;
+let isStarted = false;
+let voiceOn = false; // default OFF
+let autoTimer = null;
+
+// Slide display duration (ms) when voice is off
+const SLIDE_DURATION = 8000;
+
+// DECORATIVE CIRCLES
+const deco = document.getElementById('deco');
+const colors = ['#ff6b6b','#ffd93d','#6bcb77','#4d96ff','#ff9a3c','#c77dff'];
+for (let i = 0; i < 12; i++) {
+  const c = document.createElement('div');
+  c.className = 'deco-circle';
+  const size = 60 + Math.random() * 200;
+  c.style.cssText = `
+    width: ${size}px; height: ${size}px;
+    background: ${colors[i % colors.length]};
+    left: ${Math.random() * 100}%;
+    animation-duration: ${8 + Math.random() * 12}s;
+    animation-delay: ${-Math.random() * 20}s;
+  `;
+  deco.appendChild(c);
+}
+
+// BUILD SLIDES
+const container = document.getElementById('slide-container');
+
+slides.forEach((s, i) => {
+  const div = document.createElement('div');
+  if (s.type === 'section') {
+    div.className = 'slide section-header';
+    div.style.background = `radial-gradient(ellipse at 30% 50%, ${s.accent}22 0%, transparent 60%), var(--bg)`;
+    div.innerHTML = `
+      <div class="section-label">${s.label}</div>
+      <div class="section-title ${s.grad}">${s.title}</div>
+      <div class="section-desc">${s.desc}</div>
+    `;
+  } else {
+    div.className = `slide content-slide ${s.bg || ''}`;
+    div.innerHTML = `
+      <div class="slide-left">
+        <div class="slide-icon" style="color:${s.color}">${s.icon}</div>
+        <div class="slide-tag" style="color:${s.color}">${s.tag}</div>
+        <div class="slide-en">${s.en}</div>
+      </div>
+      <div class="slide-right">
+        <div class="slide-title" style="color:${s.color}">${s.title}</div>
+        <div class="slide-divider" style="background:${s.color}44"></div>
+        <div class="slide-body">${s.body}</div>
+      </div>
+    `;
+  }
+  div.dataset.idx = i;
+  container.appendChild(div);
+});
+
+function getSlideEls() {
+  return container.querySelectorAll('.slide');
+}
+
+function showSlide(idx) {
+  const els = getSlideEls();
+  els.forEach((el, i) => {
+    el.classList.remove('active');
+  });
+  if (els[idx]) els[idx].classList.add('active');
+  
+  const total = slides.length;
+  document.getElementById('progress-bar').style.width = ((idx+1)/total*100) + '%';
+  document.getElementById('slide-counter').textContent = `${idx+1} / ${total}`;
+}
+
+function clearAutoTimer() {
+  if (autoTimer) { clearTimeout(autoTimer); autoTimer = null; }
+}
+
+function autoAdvance(idx) {
+  clearAutoTimer();
+  autoTimer = setTimeout(() => {
+    if (!isPaused && idx < slides.length - 1) {
+      currentIdx = idx + 1;
+      showSlide(currentIdx);
+      goSlide(currentIdx);
+    }
+  }, SLIDE_DURATION);
+}
+
+function goSlide(idx) {
+  if (voiceOn) {
+    speakSlide(idx);
+  } else {
+    synth.cancel();
+    document.getElementById('wave-bars').classList.add('paused');
+    document.getElementById('speaking-text').textContent = '음성 OFF';
+    autoAdvance(idx);
+  }
+}
+
+function speakSlide(idx) {
+  if (!synth) return;
+  clearAutoTimer();
+  synth.cancel();
+  const text = slides[idx].speech;
+  utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = 'ko-KR';
+  utterance.rate = 0.92;
+  utterance.pitch = 1.05;
+
+  const voices = synth.getVoices();
+  const koVoice = voices.find(v => v.lang.startsWith('ko'));
+  if (koVoice) utterance.voice = koVoice;
+
+  utterance.onstart = () => {
+    document.getElementById('wave-bars').classList.remove('paused');
+    document.getElementById('speaking-text').textContent = '음성 재생 중';
+  };
+  utterance.onend = () => {
+    document.getElementById('wave-bars').classList.add('paused');
+    document.getElementById('speaking-text').textContent = '완료';
+    if (idx < slides.length - 1) {
+      setTimeout(() => {
+        currentIdx = idx + 1;
+        showSlide(currentIdx);
+        goSlide(currentIdx);
+      }, 800);
+    }
+  };
+  utterance.onerror = () => {
+    document.getElementById('wave-bars').classList.add('paused');
+    document.getElementById('speaking-text').textContent = '오류';
+  };
+  synth.speak(utterance);
+  isPaused = false;
+  document.getElementById('btn-pause').textContent = '⏸ 일시정지';
+}
+
+function updateVoiceUI() {
+  const btn = document.getElementById('btn-voice-toggle');
+  if (voiceOn) {
+    btn.textContent = '🔊 음성 ON';
+    btn.style.background = 'rgba(107,203,119,0.25)';
+    document.getElementById('speaking-text').textContent = '음성 재생 중';
+  } else {
+    btn.textContent = '🔇 음성 OFF';
+    btn.style.background = 'rgba(255,255,255,0.1)';
+    document.getElementById('speaking-text').textContent = '음성 OFF';
+  }
+}
+
+function startPresentation() {
+  voiceOn = document.getElementById('voice-toggle').checked;
+  document.getElementById('start-screen').style.display = 'none';
+  document.getElementById('slide-container').style.display = 'block';
+  document.getElementById('controls').style.display = 'flex';
+  updateVoiceUI();
+  isStarted = true;
+  currentIdx = 0;
+  showSlide(0);
+
+  if (voiceOn) {
+    const trySpeak = () => { speakSlide(0); };
+    if (synth.getVoices().length > 0) trySpeak();
+    else synth.onvoiceschanged = trySpeak;
+  } else {
+    autoAdvance(0);
+  }
+}
+
+// Voice toggle on start screen
+document.getElementById('voice-toggle').addEventListener('change', function() {
+  const label = document.getElementById('voice-label');
+  label.textContent = this.checked
+    ? '음성 ON — 슬라이드+음성 자동 진행'
+    : '음성 OFF — 슬라이드만 자동 진행';
+});
+
+document.getElementById('start-btn').addEventListener('click', (e) => {
+  e.stopPropagation();
+  startPresentation();
+});
+
+document.getElementById('btn-prev').addEventListener('click', (e) => {
+  e.stopPropagation();
+  if (currentIdx > 0) {
+    clearAutoTimer();
+    currentIdx--;
+    showSlide(currentIdx);
+    goSlide(currentIdx);
+  }
+});
+
+document.getElementById('btn-next').addEventListener('click', (e) => {
+  e.stopPropagation();
+  if (currentIdx < slides.length - 1) {
+    clearAutoTimer();
+    synth.cancel();
+    currentIdx++;
+    showSlide(currentIdx);
+    goSlide(currentIdx);
+  }
+});
+
+document.getElementById('btn-pause').addEventListener('click', (e) => {
+  e.stopPropagation();
+  if (!isPaused) {
+    if (voiceOn) synth.pause();
+    clearAutoTimer();
+    isPaused = true;
+    document.getElementById('btn-pause').textContent = '▶ 계속';
+    document.getElementById('wave-bars').classList.add('paused');
+    document.getElementById('speaking-text').textContent = '일시정지';
+  } else {
+    if (voiceOn) {
+      synth.resume();
+      document.getElementById('wave-bars').classList.remove('paused');
+      document.getElementById('speaking-text').textContent = '음성 재생 중';
+    } else {
+      autoAdvance(currentIdx);
+      document.getElementById('speaking-text').textContent = '음성 OFF';
+    }
+    isPaused = false;
+    document.getElementById('btn-pause').textContent = '⏸ 일시정지';
+  }
+});
+
+document.getElementById('btn-voice-toggle').addEventListener('click', (e) => {
+  e.stopPropagation();
+  voiceOn = !voiceOn;
+  updateVoiceUI();
+  clearAutoTimer();
+  synth.cancel();
+  isPaused = false;
+  document.getElementById('btn-pause').textContent = '⏸ 일시정지';
+  goSlide(currentIdx);
+});
+</script>
+</body>
+</html>
