@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>미션 트래커</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FFF9F0;
+  --card: #FFFFFF;
+  --accent: #FF6B35;
+  --teal: #4ECDC4;
+  --green: #22C55E;
+  --yellow: #FFE66D;
+  --red: #EF4444;
+  --locked: #94A3B8;
+  --text: #1A1A2E;
+  --text-dim: #6B7280;
+  --border: #E5E7EB;
+  --radius: 18px;
+}
+* { box-sizing: border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+body {
+  font-family: 'Noto Sans KR', sans-serif;
+  background: var(--bg); color: var(--text);
+  min-height: 100vh; overflow-x: hidden;
+}
+
+/* ── 상단 바 ── */
+.top-bar {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(255,249,240,0.95);
+  backdrop-filter: blur(12px);
+  border-bottom: 2px solid var(--border);
+  padding: 12px 14px;
+  display: flex; align-items: center; gap: 10px;
+}
+.back-btn {
+  background: var(--card); border: 2px solid var(--border);
+  border-radius: 12px; width: 40px; height: 40px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; cursor: pointer; transition: all 0.15s; flex-shrink: 0;
+}
+.back-btn:active { background: var(--border); transform: scale(0.92); }
+.info { flex: 1; min-width: 0; }
+.info .sname {
+  font-family: 'Gaegu', cursive; font-size: 20px; font-weight: 700;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.info .sscore { font-size: 12px; color: var(--accent); font-weight: 700; margin-top: 1px; }
+.rollback-btn {
+  background: var(--card); border: 2px solid var(--border);
+  border-radius: 10px; padding: 8px 11px;
+  font-size: 11px; font-weight: 700; color: var(--text-dim);
+  cursor: pointer; font-family: 'Noto Sans KR', sans-serif; flex-shrink: 0;
+  transition: all 0.15s;
+}
+.rollback-btn:hover { border-color: var(--accent); color: var(--accent); }
+.rollback-btn:active { transform: scale(0.94); }
+
+/* ── 미션 컨테이너 ── */
+.missions-wrap { padding: 16px 14px 120px; }
+.sec-title {
+  font-size: 12px; font-weight: 700; color: var(--text-dim);
+  letter-spacing: 1.5px; text-transform: uppercase;
+  margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
+}
+.missions-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 11px;
+}
+
+/* ── 미션 카드 ── */
+.mc {
+  background: var(--card); border: 2.5px solid var(--border);
+  border-radius: var(--radius); padding: 16px 13px 14px;
+  cursor: pointer; transition: all 0.18s;
+  position: relative; overflow: hidden;
+  min-height: 110px; display: flex; flex-direction: column;
+  justify-content: space-between; user-select: none; -webkit-user-select: none;
+}
+.mc:not(.locked):not(.done):hover { border-color: var(--accent); transform: translateY(-3px); box-shadow: 0 8px 20px rgba(255,107,53,0.15); }
+.mc:not(.locked):not(.done):active { transform: scale(0.94); }
+
+/* 완료 */
+.mc.done {
+  background: linear-gradient(135deg, #F0FDF4, #DCFCE7);
+  border-color: #86EFAC;
+}
+.mc.done::after {
+  content: '✓'; position: absolute; top: 10px; right: 12px;
+  font-size: 20px; font-weight: 900; color: var(--green); opacity: 0.7;
+}
+
+/* 잠금 */
+.mc.locked {
+  background: #F8FAFC; border-color: #E2E8F0;
+  opacity: 0.6; cursor: not-allowed;
+}
+.mc.locked::after {
+  content: '🔒'; position: absolute; top: 10px; right: 12px; font-size: 16px;
+}
+
+/* 카드 내용 */
+.mc-name {
+  font-size: 14px; font-weight: 700; line-height: 1.4;
+  word-break: keep-all; margin-bottom: 10px;
+  padding-right: 24px;
+}
+.mc.done .mc-name { color: var(--green); }
+.mc.locked .mc-name { color: var(--text-dim); }
+
+.mc-foot { display: flex; align-items: center; gap: 7px; }
+.mc-dot {
+  width: 22px; height: 22px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; flex-shrink: 0;
+}
+.mc-dot.empty { border: 2.5px dashed #D1D5DB; }
+.mc-dot.check { background: var(--green); color: white; font-weight: 900; font-size: 13px; }
+.mc-dot.lock-icon { background: #CBD5E1; font-size: 10px; }
+.mc-sub { font-size: 11px; color: var(--text-dim); }
+.mc-lock-time { font-size: 10px; color: var(--red); margin-top: 3px; font-weight: 600; }
+
+/* 완료 팝 애니메이션 */
+@keyframes pop {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.06); }
+  70% { transform: scale(0.97); }
+  100% { transform: scale(1); }
+}
+.mc.pop { animation: pop 0.35s ease; }
+
+/* 별 파티클 */
+.star-burst {
+  position: absolute; top: 50%; left: 50%;
+  pointer-events: none; z-index: 10;
+}
+.star-burst span {
+  position: absolute; font-size: 16px;
+  animation: burst 0.6s ease-out forwards;
+  transform-origin: center;
+}
+@keyframes burst {
+  0%{opacity:1;transform:translate(-50%,-50%) scale(0)}
+  50%{opacity:1}
+  100%{opacity:0;transform:translate(var(--tx),var(--ty)) scale(1)}
+}
+
+/* ── 점수 바 ── */
+.score-bar {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: rgba(255,249,240,0.97); backdrop-filter: blur(16px);
+  border-top: 2px solid var(--border); padding: 14px 18px;
+  display: flex; align-items: center; gap: 14px; z-index: 99;
+}
+.sc-left { flex-shrink: 0; }
+.sc-label { font-size: 11px; color: var(--text-dim); font-weight: 600; }
+.sc-val {
+  font-family: 'Gaegu', cursive; font-size: 34px; font-weight: 700;
+  color: var(--accent); line-height: 1;
+}
+.sc-mid { flex: 1; }
+.prog { height: 10px; background: #F3F4F6; border-radius: 5px; overflow: hidden; }
+.prog-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--teal));
+  border-radius: 5px; transition: width 0.5s cubic-bezier(0.34,1.56,0.64,1);
+}
+.prog-txt { font-size: 11px; color: var(--text-dim); margin-top: 4px; text-align: right; font-weight: 600; }
+
+/* ── 롤백 모달 ── */
+.overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+  z-index: 200; display: flex; align-items: flex-end;
+  animation: fadein 0.2s;
+}
+@keyframes fadein { from{opacity:0} to{opacity:1} }
+.modal {
+  background: var(--card); border-radius: 24px 24px 0 0;
+  padding: 24px 18px 40px; width: 100%;
+  animation: slideup 0.25s ease; max-height: 72vh; overflow-y: auto;
+}
+@keyframes slideup { from{transform:translateY(100%)} to{transform:translateY(0)} }
+.modal h3 { font-size: 18px; font-weight: 800; margin-bottom: 6px; }
+.modal p { font-size: 13px; color: var(--text-dim); margin-bottom: 20px; }
+.bk-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; }
+.bk-item {
+  background: #F9FAFB; border: 2px solid var(--border);
+  border-radius: 14px; padding: 14px 16px;
+  cursor: pointer; transition: all 0.15s;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.bk-item:hover { border-color: var(--accent); }
+.bk-item:active { transform: scale(0.97); }
+.bk-time { font-size: 14px; font-weight: 700; }
+.bk-detail { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+.bk-tag {
+  background: rgba(255,107,53,0.1); color: var(--accent);
+  font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px;
+  white-space: nowrap;
+}
+.modal-close {
+  width: 100%; background: #F3F4F6; border: none; border-radius: 12px;
+  padding: 14px; color: var(--text-dim); font-size: 15px; font-weight: 700;
+  cursor: pointer; font-family: 'Noto Sans KR', sans-serif;
+}
+
+/* ── 토스트 ── */
+.toast {
+  position: fixed; top: 70px; left: 50%;
+  transform: translateX(-50%) translateY(-12px);
+  background: var(--text); color: #fff; border-radius: 100px;
+  padding: 10px 20px; font-size: 14px; font-weight: 700;
+  z-index: 300; opacity: 0; transition: all 0.25s; white-space: nowrap;
+  pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.ok { background: var(--green); }
+.toast.err { background: var(--red); }
+
+/* 로딩 */
+.loading { display:flex;flex-direction:column;align-items:center;padding:60px 20px;gap:14px;color:var(--text-dim); }
+.spin { width:34px;height:34px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite; }
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<!-- 상단 바 -->
+<div class="top-bar">
+  <button class="back-btn" onclick="history.back()">←</button>
+  <div class="info">
+    <div class="sname" id="sname">-</div>
+    <div class="sscore" id="sscore">⭐ 0점</div>
+  </div>
+  <button class="rollback-btn" onclick="openRollback()">⏪ 되돌리기</button>
+</div>
+
+<!-- 미션 -->
+<div class="missions-wrap">
+  <div class="sec-title">🎯 미션 <span id="mcnt" style="background:#FFE66D;border-radius:6px;padding:2px 8px;font-size:11px;color:var(--text)">-</span></div>
+  <div id="grid" class="missions-grid">
+    <div class="loading" style="grid-column:span 2"><div class="spin"></div><span>로딩 중...</span></div>
+  </div>
+</div>
+
+<!-- 점수 바 -->
+<div class="score-bar">
+  <div class="sc-left">
+    <div class="sc-label">총 점수</div>
+    <div class="sc-val" id="totVal">0</div>
+  </div>
+  <div class="sc-mid">
+    <div class="prog"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
+    <div class="prog-txt" id="progTxt">0 / 0 완료</div>
+  </div>
+</div>
+
+<!-- 롤백 모달 -->
+<div class="overlay" id="rollbackOverlay" style="display:none;" onclick="closeOverlay(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <h3>⏪ 되돌리기</h3>
+    <p>실수로 누른 경우 이전 상태로 복원할 수 있어요.</p>
+    <div class="bk-list" id="bkList"><div class="loading"><div class="spin"></div></div></div>
+    <button class="modal-close" onclick="document.getElementById('rollbackOverlay').style.display='none'">닫기</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import {
+  getFirestore, doc, getDoc, setDoc, onSnapshot,
+  collection, addDoc, query, orderBy, limit, getDocs, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+// ── URL 파라미터 ────────────────────────────────────────────
+const P = new URLSearchParams(location.search);
+const SID   = P.get('sid')    || 's1';
+const SNAME = P.get('sname')  || '학생';
+const PID   = P.get('pid')    || '';
+const AKEY  = P.get('akey')   || '';
+const SHEETS_ID  = P.get('sheets') || '';
+const SCRIPT_URL = P.get('script') || '';
+
+document.getElementById('sname').textContent = SNAME;
+
+let db, missions = [], myScores = {};
+
+// ── Firebase 초기화 ─────────────────────────────────────────
+const fbCfg = {
+  apiKey: AKEY, projectId: PID,
+  authDomain: `${PID}.firebaseapp.com`,
+  storageBucket: `${PID}.appspot.com`,
+  messagingSenderId: '0', appId: '1:0:web:0'
+};
+const apps = getApps();
+const app = apps.length ? apps[0] : initializeApp(fbCfg);
+db = getFirestore(app);
+
+// ── 초기화 ──────────────────────────────────────────────────
+async function init() {
+  const [mSnap] = await Promise.all([getDoc(doc(db, 'config', 'missions'))]);
+  missions = mSnap.exists() ? (mSnap.data().list || []) : [];
+  document.getElementById('mcnt').textContent = `${missions.length}개`;
+
+  // 실시간 점수 구독
+  onSnapshot(doc(db, 'scores', 'current'), snap => {
+    const all = snap.exists() ? snap.data() : {};
+    myScores = all[SID] || {};
+    render();
+    updateBar();
+  });
+}
+
+// ── 렌더 ────────────────────────────────────────────────────
+function render() {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+  const now = new Date();
+
+  missions.forEach(m => {
+    const done = (myScores[m.id] || 0) > 0;
+    const locked = m.lockTime && new Date(m.lockTime) < now;
+
+    const card = document.createElement('div');
+    card.className = `mc${done?' done':''}${locked?' locked':''}`;
+    card.id = 'c_' + m.id;
+
+    let foot = '';
+    if (locked) {
+      foot = `<div class="mc-foot"><div class="mc-dot lock-icon">🔒</div><span class="mc-sub">마감됨</span></div>`;
+    } else if (done) {
+      foot = `<div class="mc-foot"><div class="mc-dot check">✓</div><span class="mc-sub" style="color:var(--green);font-weight:700">완료!</span></div>`;
+    } else {
+      const lt = m.lockTime ? `<div class="mc-lock-time">⏰ ${fmtTime(m.lockTime)} 마감</div>` : '';
+      foot = `<div class="mc-foot"><div class="mc-dot empty"></div><span class="mc-sub">터치하세요</span></div>${lt}`;
+    }
+
+    card.innerHTML = `<div class="mc-name">${m.name}</div>${foot}`;
+    if (!locked) card.addEventListener('click', ()=> tap(m, card, done));
+    grid.appendChild(card);
+  });
+}
+
+// ── 터치 처리 ────────────────────────────────────────────────
+async function tap(m, cardEl, wasDone) {
+  const now = new Date();
+  if (m.lockTime && new Date(m.lockTime) < now) {
+    showToast('⏰ 마감된 미션이에요!', 'err'); return;
+  }
+
+  const newVal = wasDone ? 0 : 1;
+
+  try {
+    // 백업
+    await saveBackup();
+
+    // Firestore 업데이트
+    const ref = doc(db, 'scores', 'current');
+    const snap = await getDoc(ref);
+    const all = snap.exists() ? snap.data() : {};
+    if (!all[SID]) all[SID] = {};
+    all[SID][m.id] = newVal;
+    await setDoc(ref, all);
+
+    // Apps Script로 Sheets 역기록
+    if (SCRIPT_URL) writeToSheets(all).catch(console.warn);
+
+    // 애니
+    if (newVal === 1) {
+      cardEl.classList.add('pop');
+      setTimeout(()=> cardEl.classList.remove('pop'), 400);
+      spawnStars(cardEl);
+      showToast(`🎉 ${m.name} 완료!`, 'ok');
+    } else {
+      showToast(`↩️ ${m.name} 취소`, '');
+    }
+  } catch (err) {
+    showToast('저장 실패: ' + err.message, 'err');
+  }
+}
+
+// ── 점수 바 ─────────────────────────────────────────────────
+function updateBar() {
+  const total = Object.values(myScores).reduce((a,b)=>a+(Number(b)||0),0);
+  const done  = Object.values(myScores).filter(v=>v>0).length;
+  const pct   = missions.length ? (done/missions.length*100) : 0;
+
+  document.getElementById('totVal').textContent   = total;
+  document.getElementById('sscore').textContent   = `⭐ ${total}점`;
+  document.getElementById('progTxt').textContent  = `${done} / ${missions.length} 완료`;
+  document.getElementById('progFill').style.width = `${pct}%`;
+}
+
+// ── 별 파티클 ────────────────────────────────────────────────
+function spawnStars(el) {
+  const burst = document.createElement('div');
+  burst.className = 'star-burst';
+  el.appendChild(burst);
+  ['⭐','✨','🌟','💫'].forEach((s, i) => {
+    const span = document.createElement('span');
+    span.textContent = s;
+    const angle = (i / 4) * Math.PI * 2;
+    span.style.setProperty('--tx', `${Math.cos(angle)*50}px`);
+    span.style.setProperty('--ty', `${Math.sin(angle)*50}px`);
+    span.style.animationDelay = `${i*0.05}s`;
+    burst.appendChild(span);
+  });
+  setTimeout(()=> el.contains(burst) && el.removeChild(burst), 700);
+}
+
+// ── 백업 저장 ─────────────────────────────────────────────────
+async function saveBackup() {
+  try {
+    const snap = await getDoc(doc(db, 'scores', 'current'));
+    const all  = snap.exists() ? snap.data() : {};
+    await addDoc(collection(db, 'backups'), {
+      studentId: SID, studentName: SNAME,
+      timestamp: new Date().toISOString(),
+      serverTime: serverTimestamp(),
+      data: JSON.stringify(all)
+    });
+  } catch(e) { console.warn('백업 실패:', e); }
+}
+
+// ── Sheets 역기록 (Apps Script 웹앱 호출) ─────────────────────
+async function writeToSheets(allScores) {
+  if (!SCRIPT_URL) return;
+  await fetch(SCRIPT_URL, {
+    method: 'POST', mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ type: 'scores', data: allScores })
+  });
+}
+
+// ── 롤백 ─────────────────────────────────────────────────────
+window.openRollback = async function() {
+  document.getElementById('rollbackOverlay').style.display = 'flex';
+  const list = document.getElementById('bkList');
+  list.innerHTML = '<div class="loading"><div class="spin"></div></div>';
+
+  try {
+    const q  = query(collection(db,'backups'), orderBy('timestamp','desc'), limit(30));
+    const qs = await getDocs(q);
+    const mine = [];
+    qs.forEach(d => { if (d.data().studentId === SID) mine.push({id:d.id,...d.data()}); });
+
+    if (!mine.length) { list.innerHTML = '<p style="text-align:center;color:var(--text-dim);padding:24px;">백업 없음</p>'; return; }
+    list.innerHTML = '';
+    mine.slice(0,12).forEach(bk => {
+      const ts   = new Date(bk.timestamp);
+      const tstr = ts.toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'});
+      let data; try{ data=JSON.parse(bk.data); }catch{data={};}
+      const myD  = data[SID]||{};
+      const cnt  = Object.values(myD).filter(v=>v>0).length;
+
+      const item = document.createElement('div');
+      item.className = 'bk-item';
+      item.innerHTML = `
+        <div><div class="bk-time">${tstr}</div><div class="bk-detail">완료 ${cnt}개</div></div>
+        <div class="bk-tag">이 시점으로</div>`;
+      item.onclick = ()=> restoreBackup(bk);
+      list.appendChild(item);
+    });
+  } catch(e) {
+    list.innerHTML = `<p style="text-align:center;color:var(--red);padding:20px;">로드 실패: ${e.message}</p>`;
+  }
+};
+
+async function restoreBackup(bk) {
+  const ts = new Date(bk.timestamp).toLocaleString('ko-KR');
+  if (!confirm(`"${ts}" 시점으로 복원할까요?`)) return;
+  try {
+    const data = JSON.parse(bk.data);
+    await setDoc(doc(db,'scores','current'), data);
+    if (SCRIPT_URL) writeToSheets(data).catch(console.warn);
+    document.getElementById('rollbackOverlay').style.display = 'none';
+    showToast('✅ 복원 완료!', 'ok');
+  } catch(e) { showToast('복원 실패: '+e.message,'err'); }
+}
+
+window.closeOverlay = function(e) {
+  if (e.target.id === 'rollbackOverlay')
+    document.getElementById('rollbackOverlay').style.display = 'none';
+};
+
+// ── 유틸 ────────────────────────────────────────────────────
+function fmtTime(iso) {
+  return new Date(iso).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
+}
+let _tt;
+function showToast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = `toast${type?' '+type:''} show`;
+  clearTimeout(_tt);
+  _tt = setTimeout(()=>{ t.className = `toast${type?' '+type:''}`; }, 2400);
+}
+
+// 미션 잠금 자동 갱신
+setInterval(render, 60000);
+init();
+</script>
+</body>
+</html>
