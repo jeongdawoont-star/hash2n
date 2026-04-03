@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>주간학습 & 알림장 자동화</title>
+  <style>
+    :root {
+      --green: #1a7a3c;
+      --green-light: #e8f5ec;
+      --green-mid: #2fa155;
+      --accent: #217346;
+      --excel-border: #d0d0d0;
+      --excel-header: #f3f3f3;
+      --excel-active: #d6e4f0;
+      --tab-active: #ffffff;
+      --tab-inactive: #d8d8d8;
+      --text-dark: #1e1e1e;
+      --text-mid: #444;
+      --text-light: #888;
+      --shadow: 0 4px 24px rgba(0,0,0,0.10);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+      background: #f0f2f5;
+      color: var(--text-dark);
+    }
+
+    /* ── HERO ── */
+    .hero {
+      background: linear-gradient(135deg, #1a7a3c 0%, #217346 60%, #155a2e 100%);
+      color: #fff;
+      padding: 64px 24px 56px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    .hero-icon { font-size: 52px; margin-bottom: 16px; }
+    .hero h1 { font-size: clamp(24px, 5vw, 40px); font-weight: 800; line-height: 1.2; margin-bottom: 12px; }
+    .hero h1 span { color: #a8f0c0; }
+    .hero p { font-size: 16px; opacity: 0.88; max-width: 520px; margin: 0 auto; line-height: 1.7; }
+
+    /* ── SECTION ── */
+    .section {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+    .section-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--green-mid);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .section-heading {
+      font-size: clamp(20px, 3.5vw, 28px);
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+    .section-sub {
+      font-size: 15px;
+      color: var(--text-mid);
+      margin-bottom: 32px;
+      line-height: 1.65;
+    }
+
+    /* ── PROBLEM CARDS ── */
+    .cards-row {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 40px;
+    }
+    .card {
+      flex: 1 1 220px;
+      background: #fff;
+      border-radius: 14px;
+      padding: 22px 20px;
+      box-shadow: var(--shadow);
+      border-top: 4px solid var(--excel-border);
+    }
+    .card.accent { border-top-color: var(--green-mid); }
+    .card-icon { font-size: 28px; margin-bottom: 10px; }
+    .card h3 { font-size: 14px; font-weight: 700; margin-bottom: 6px; color: var(--text-dark); }
+    .card p { font-size: 13px; color: var(--text-mid); line-height: 1.6; }
+
+    /* ── DEMO WRAPPER ── */
+    .demo-block {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      margin-bottom: 40px;
+    }
+    .demo-label {
+      background: var(--accent);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .demo-label .badge {
+      background: rgba(255,255,255,0.25);
+      border-radius: 6px;
+      padding: 2px 9px;
+      font-size: 11px;
+    }
+
+    /* ── EXCEL CHROME ── */
+    .excel-chrome {
+      background: #f3f3f3;
+      border-bottom: 1px solid var(--excel-border);
+    }
+    .excel-titlebar {
+      background: #217346;
+      color: #fff;
+      font-size: 13px;
+      padding: 6px 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .excel-titlebar .dot {
+      width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,0.4);
+    }
+    .excel-titlebar .fname { font-weight: 600; flex: 1; text-align: center; font-size: 12px; opacity: 0.9; }
+    .excel-menubar {
+      background: #fff;
+      border-bottom: 1px solid var(--excel-border);
+      padding: 4px 12px;
+      font-size: 12px;
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+    .excel-menubar span {
+      padding: 4px 10px;
+      border-radius: 4px;
+      cursor: default;
+      color: #333;
+    }
+    .excel-menubar span:hover { background: #e9e9e9; }
+    .excel-menubar .highlight-menu {
+      background: #217346;
+      color: #fff !important;
+      border-radius: 4px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s;
+      position: relative;
+    }
+    .excel-menubar .highlight-menu:hover { background: #155a2e; }
+
+    /* dropdown */
+    .menu-wrap { position: relative; display: inline-block; }
+    .dropdown {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      background: #fff;
+      border: 1px solid var(--excel-border);
+      border-radius: 0 0 6px 6px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+      z-index: 10;
+      min-width: 210px;
+      padding: 4px 0;
+    }
+    .menu-wrap.open .dropdown { display: block; }
+    .dropdown-item {
+      padding: 9px 16px;
+      font-size: 12px;
+      color: #222;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .dropdown-item:hover { background: #e9f5ee; color: var(--accent); }
+
+    .excel-formula {
+      background: #fff;
+      border-bottom: 1px solid var(--excel-border);
+      padding: 4px 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 12px;
+      color: #888;
+    }
+    .formula-cell {
+      width: 52px; padding: 2px 6px;
+      border: 1px solid var(--excel-border);
+      background: #f9f9f9;
+      border-radius: 3px;
+      font-size: 11px;
+      text-align: center;
+    }
+
+    /* ── GRID ── */
+    .excel-grid {
+      overflow: auto;
+      max-height: 280px;
+    }
+    table.egrid {
+      border-collapse: collapse;
+      font-size: 12px;
+      width: 100%;
+      min-width: 480px;
+    }
+    table.egrid th {
+      background: var(--excel-header);
+      border: 1px solid var(--excel-border);
+      padding: 4px 8px;
+      font-weight: 600;
+      color: #555;
+      text-align: center;
+      min-width: 32px;
+      white-space: nowrap;
+    }
+    table.egrid td {
+      border: 1px solid var(--excel-border);
+      padding: 4px 8px;
+      white-space: pre-wrap;
+      vertical-align: top;
+      color: var(--text-dark);
+    }
+    table.egrid td.row-num {
+      background: var(--excel-header);
+      color: #888;
+      text-align: center;
+      font-size: 11px;
+      min-width: 28px;
+    }
+    .cell-active { background: #e8f0fe !important; outline: 2px solid #1a73e8; outline-offset: -2px; }
+    .cell-filled { background: #e8f5ec !important; }
+    .cell-highlight { background: #fffde7 !important; }
+
+    /* ── SHEET TABS ── */
+    .excel-tabs {
+      background: #f3f3f3;
+      border-top: 1px solid var(--excel-border);
+      display: flex;
+      align-items: flex-end;
+      gap: 2px;
+      padding: 4px 10px 0;
+      overflow-x: auto;
+      min-height: 30px;
+    }
+    .tab {
+      background: var(--tab-inactive);
+      border: 1px solid #bbb;
+      border-bottom: none;
+      border-radius: 4px 4px 0 0;
+      padding: 4px 12px;
+      font-size: 11px;
+      color: #555;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.2s, color 0.2s;
+    }
+    .tab.active {
+      background: #fff;
+      color: var(--accent);
+      font-weight: 700;
+      border-color: #bbb;
+    }
+    .tab.new-tab {
+      animation: popIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.7) translateY(8px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    /* ── STATUSBAR ── */
+    .excel-status {
+      background: var(--accent);
+      color: #fff;
+      font-size: 11px;
+      padding: 3px 14px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    /* ── CTA BUTTON ── */
+    .run-btn {
+      display: block;
+      margin: 18px auto 4px;
+      padding: 13px 36px;
+      background: var(--green);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 3px 14px rgba(26,122,60,0.35);
+      transition: background 0.2s, transform 0.1s;
+      letter-spacing: 0.03em;
+    }
+    .run-btn:hover { background: #155a2e; transform: translateY(-1px); }
+    .run-btn:active { transform: translateY(0); }
+    .run-btn:disabled { background: #aaa; cursor: not-allowed; transform: none; }
+
+    /* ── MSG BOX ── */
+    .msg-overlay {
+      display: none;
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.35);
+      align-items: center;
+      justify-content: center;
+      z-index: 20;
+    }
+    .msg-overlay.show { display: flex; }
+    .msg-box {
+      background: #fff;
+      border: 2px solid var(--excel-border);
+      border-radius: 8px;
+      padding: 24px 32px;
+      text-align: center;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+      animation: popIn 0.25s ease;
+    }
+    .msg-box .msg-icon { font-size: 32px; margin-bottom: 8px; }
+    .msg-box p { font-size: 14px; line-height: 1.6; color: #222; margin-bottom: 16px; }
+    .msg-close {
+      background: var(--accent); color: #fff;
+      border: none; border-radius: 6px;
+      padding: 8px 28px; font-size: 13px; font-weight: 700;
+      cursor: pointer;
+    }
+
+    .demo-relative { position: relative; }
+
+    /* ── TYPE ANIMATION ── */
+    .typing::after {
+      content: '|';
+      animation: blink 0.7s infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+    /* ── FEATURE LIST ── */
+    .feature-list { list-style: none; margin: 0 0 32px; }
+    .feature-list li {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 10px 0; border-bottom: 1px solid #f0f0f0;
+      font-size: 14px; line-height: 1.6;
+    }
+    .feature-list li:last-child { border: none; }
+    .feature-list .fi { font-size: 20px; flex-shrink: 0; }
+
+    /* ── FOOTER ── */
+    .footer {
+      background: #1e1e1e;
+      color: #888;
+      text-align: center;
+      padding: 28px 20px;
+      font-size: 12px;
+      line-height: 1.8;
+    }
+    .footer strong { color: #ccc; }
+    .footer .made { color: var(--green-mid); font-weight: 700; }
+
+    /* ── STEP INDICATOR ── */
+    .step-dots {
+      display: flex; justify-content: center; gap: 8px; margin: 8px 0 16px;
+    }
+    .step-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #ddd; transition: background 0.3s;
+    }
+    .step-dot.active { background: var(--green-mid); }
+
+    @media (max-width: 600px) {
+      .cards-row { flex-direction: column; }
+      table.egrid { font-size: 11px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══ HERO ══ -->
+<div class="hero">
+  <div class="hero-icon">📊</div>
+  <h1>주간학습 & 알림장<br/><span>자동화 도구</span></h1>
+  <p>학년부장 업무에서 매일 반복되는<br/>알림장·주간학습안내 작성을 클릭 한 번으로</p>
+</div>
+
+<!-- ══ INTRO ══ -->
+<div class="section">
+  <div class="section-title">✦ 왜 만들었나요</div>
+  <div class="section-heading">반복 업무, 이제 그만</div>
+  <div class="section-sub">
+    매일 새 시트 만들고, 날짜·안전수칙·과목별 내용 입력하는 일이<br/>
+    한 주에 몇 번씩 반복되다 보면 정작 중요한 수업 준비 시간이 줄어들게 됩니다.
+  </div>
+
+  <div class="cards-row">
+    <div class="card accent">
+      <div class="card-icon">📋</div>
+      <h3>알림장 시트 자동 생성</h3>
+      <p>이번 주·다음 주 평일 시트를 한 번에 생성. 날짜탭·안전수칙이 자동으로 채워집니다.</p>
+    </div>
+    <div class="card accent">
+      <div class="card-icon">📅</div>
+      <h3>주간학습안내 자동 완성</h3>
+      <p>DB 시트에서 원하는 주차를 클릭하면 교과별 단원·학습내용이 템플릿에 자동 입력됩니다.</p>
+    </div>
+    <div class="card accent">
+      <div class="card-icon">⚡</div>
+      <h3>Google Sheets 메뉴 연동</h3>
+      <p>스프레드시트 상단에 커스텀 메뉴가 생성되어 누구나 쉽게 버튼 하나로 실행합니다.</p>
+    </div>
+  </div>
+
+  <ul class="feature-list">
+    <li><span class="fi">🗓️</span><span><strong>날짜 자동 계산</strong> — 오늘 기준으로 이번 주/다음 주 평일을 자동 계산, 과거 날짜는 건너뜁니다.</span></li>
+    <li><span class="fi">🛡️</span><span><strong>안전 수칙 랜덤 삽입</strong> — 100가지 초등 안전 수칙 중 하나가 매 시트마다 무작위로 배정됩니다.</span></li>
+    <li><span class="fi">📚</span><span><strong>교과목 DB 연동</strong> — 별도 DB 시트에서 주차별 단원·학습내용을 불러와 템플릿에 자동으로 채웁니다.</span></li>
+    <li><span class="fi">🔁</span><span><strong>중복 방지</strong> — 이미 생성된 시트는 건너뛰거나 덮어쓸지 선택할 수 있습니다.</span></li>
+  </ul>
+</div>
+
+<!-- ══ DEMO 1 ══ -->
+<div class="section" style="padding-top:0">
+  <div class="section-title">✦ 데모 1</div>
+  <div class="section-heading">알림장 시트 자동 생성</div>
+  <div class="section-sub">메뉴를 클릭하면 이번 주·다음 주 평일 탭이 자동으로 만들어집니다.</div>
+
+  <div class="demo-block">
+    <div class="demo-label">
+      <span>📊</span> 2026_알림장_통합.xlsx
+      <span class="badge">Google Sheets</span>
+    </div>
+    <div class="excel-chrome">
+      <div class="excel-titlebar">
+        <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        <span class="fname">2026_알림장_통합.xlsx — Google Sheets</span>
+      </div>
+      <div class="excel-menubar">
+        <span>파일</span><span>수정</span><span>보기</span><span>삽입</span>
+        <div class="menu-wrap" id="menuWrap1">
+          <span class="highlight-menu" onclick="toggleMenu('menuWrap1')">📅 시트 관리 ▾</span>
+          <div class="dropdown">
+            <div class="dropdown-item" onclick="runDemo1()">이번 주/다음 주 평일 시트 생성</div>
+          </div>
+        </div>
+        <span>도움말</span>
+      </div>
+      <div class="excel-formula">
+        <span class="formula-cell">A1</span>
+        <span>fx</span>
+        <span id="d1-formula" style="color:#444; font-size:12px;">3. &lt;안전과 약속&gt;</span>
+      </div>
+    </div>
+
+    <div class="demo-relative">
+      <div class="excel-grid">
+        <table class="egrid">
+          <thead>
+            <tr>
+              <th></th>
+              <th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>G</th><th>H</th>
+            </tr>
+          </thead>
+          <tbody id="d1-tbody">
+          </tbody>
+        </table>
+      </div>
+
+      <div class="excel-tabs" id="d1-tabs">
+        <div class="tab active">홈</div>
+      </div>
+
+      <div class="excel-status">
+        <span id="d1-status">준비</span>
+        <span>100% ▼</span>
+      </div>
+
+      <!-- msg overlay -->
+      <div class="msg-overlay" id="d1-msg">
+        <div class="msg-box">
+          <div class="msg-icon">✅</div>
+          <p id="d1-msg-text"></p>
+          <button class="msg-close" onclick="closeMsg('d1-msg')">확인</button>
+        </div>
+      </div>
+    </div>
+
+    <button class="run-btn" id="d1-btn" onclick="runDemo1()">▶ 시트 자동 생성 실행</button>
+    <div class="step-dots" id="d1-dots">
+      <div class="step-dot" id="d1-dot-0"></div>
+      <div class="step-dot" id="d1-dot-1"></div>
+      <div class="step-dot" id="d1-dot-2"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ DEMO 2 ══ -->
+<div class="section" style="padding-top:0">
+  <div class="section-title">✦ 데모 2</div>
+  <div class="section-heading">주간학습안내 자동 완성</div>
+  <div class="section-sub">DB 시트에서 주차를 선택하면 템플릿에 교과별 내용이 자동으로 채워집니다.</div>
+
+  <div class="demo-block">
+    <div class="demo-label">
+      <span>📊</span> 2026_주간학습안내.xlsx
+      <span class="badge">Google Sheets</span>
+    </div>
+    <div class="excel-chrome">
+      <div class="excel-titlebar">
+        <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        <span class="fname">2026_주간학습안내.xlsx — Google Sheets</span>
+      </div>
+      <div class="excel-menubar">
+        <span>파일</span><span>수정</span><span>보기</span><span>삽입</span>
+        <div class="menu-wrap" id="menuWrap2">
+          <span class="highlight-menu" onclick="toggleMenu('menuWrap2')">🪄 자동화 마법 ▾</span>
+          <div class="dropdown">
+            <div class="dropdown-item" onclick="runDemo2()">주간학습안내 생성하기</div>
+          </div>
+        </div>
+        <span>도움말</span>
+      </div>
+      <div class="excel-formula">
+        <span class="formula-cell">A3</span>
+        <span>fx</span>
+        <span id="d2-formula" style="color:#444; font-size:12px;">제14주 (4.6.~4.10.)</span>
+      </div>
+    </div>
+
+    <div class="demo-relative">
+      <!-- DB sheet view -->
+      <div class="excel-grid" id="d2-dbview">
+        <table class="egrid">
+          <thead>
+            <tr>
+              <th></th><th>A</th><th>B</th><th>C</th><th>D</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="row-num">1</td>
+              <td style="background:#e8f5ec;font-weight:700">주차</td>
+              <td style="background:#e8f5ec;font-weight:700">시트탭 이름</td>
+              <td style="background:#e8f5ec;font-weight:700">주요 학사일정</td>
+              <td style="background:#e8f5ec;font-weight:700">학교 수업 안내</td>
+            </tr>
+            <tr id="d2-row-12">
+              <td class="row-num">2</td>
+              <td>제12주</td><td>03.16.~03.20.</td><td>-</td><td>•수학 단원평가</td>
+            </tr>
+            <tr id="d2-row-13">
+              <td class="row-num">3</td>
+              <td>제13주</td><td>03.23.~03.27.</td><td>-</td><td>•체험학습 신청서</td>
+            </tr>
+            <tr id="d2-row-14" class="cell-active">
+              <td class="row-num">4</td>
+              <td><strong>제14주</strong></td>
+              <td><strong>04.06.~04.10.</strong></td>
+              <td>과학의 날 행사</td>
+              <td>•수학 단원 마무리 •국어 독서감상문</td>
+            </tr>
+            <tr>
+              <td class="row-num">5</td>
+              <td style="color:#bbb">제15주</td><td style="color:#bbb">04.13.~04.17.</td><td></td><td></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Template view (hidden initially) -->
+      <div class="excel-grid" id="d2-tplview" style="display:none;">
+        <table class="egrid">
+          <thead>
+            <tr>
+              <th></th>
+              <th>A</th><th>B</th><th>C</th><th>D</th><th>E</th>
+              <th>F</th><th>G</th><th>H</th><th>I</th><th>J</th>
+              <th>K</th><th>L</th><th>M</th><th>N</th><th>O</th>
+            </tr>
+          </thead>
+          <tbody id="d2-tbody">
+            <tr><td class="row-num">1</td>
+              <td colspan="15" style="background:#217346;color:#fff;font-weight:700;text-align:center;font-size:13px;">2026학년도 5학년 주간학습안내</td>
+            </tr>
+            <tr><td class="row-num">2</td>
+              <td colspan="6" style="text-align:center;font-size:12px;color:#555;">담임</td>
+              <td colspan="4" style="text-align:center;font-size:12px;color:#555;">학급</td>
+              <td colspan="5" style="text-align:center;font-size:12px;color:#555;">보호자 확인</td>
+            </tr>
+            <tr><td class="row-num">3</td>
+              <td colspan="15" id="d2-weektext" style="text-align:center;font-weight:700;font-size:13px;color:#555;">제 __ 주 ( __.__ ~ __.__ )</td>
+            </tr>
+            <tr><td class="row-num">4</td>
+              <td colspan="6" style="font-weight:700;background:#f3f3f3;font-size:12px;">교과</td>
+              <td colspan="4" style="font-weight:700;background:#f3f3f3;font-size:12px;">단원</td>
+              <td colspan="5" style="font-weight:700;background:#f3f3f3;font-size:12px;">학습내용</td>
+            </tr>
+            <tr id="d2-tr-국어"><td class="row-num">5</td>
+              <td colspan="6" style="font-size:12px;">국어</td>
+              <td colspan="4" id="d2-unit-국어" style="font-size:11px;color:#999;">—</td>
+              <td colspan="5" id="d2-act-국어" style="font-size:11px;color:#999;">—</td>
+            </tr>
+            <tr id="d2-tr-도덕"><td class="row-num">6</td>
+              <td colspan="6" style="font-size:12px;">도덕</td>
+              <td colspan="4" id="d2-unit-도덕" style="font-size:11px;color:#999;">—</td>
+              <td colspan="5" id="d2-act-도덕" style="font-size:11px;color:#999;">—</td>
+            </tr>
+            <tr id="d2-tr-사회"><td class="row-num">7</td>
+              <td colspan="6" style="font-size:12px;">사회</td>
+              <td colspan="4" id="d2-unit-사회" style="font-size:11px;color:#999;">—</td>
+              <td colspan="5" id="d2-act-사회" style="font-size:11px;color:#999;">—</td>
+            </tr>
+            <tr id="d2-tr-수학"><td class="row-num">8</td>
+              <td colspan="6" style="font-size:12px;">수학</td>
+              <td colspan="4" id="d2-unit-수학" style="font-size:11px;color:#999;">—</td>
+              <td colspan="5" id="d2-act-수학" style="font-size:11px;color:#999;">—</td>
+            </tr>
+            <tr id="d2-tr-체육"><td class="row-num">9</td>
+              <td colspan="6" style="font-size:12px;">체육</td>
+              <td colspan="4" id="d2-unit-체육" style="font-size:11px;color:#999;">—</td>
+              <td colspan="5" id="d2-act-체육" style="font-size:11px;color:#999;">—</td>
+            </tr>
+            <tr id="d2-tr-음악"><td class="row-num">10</td>
+              <td colspan="6" style="font-size:12px;">음악</td>
+              <td colspan="4" id="d2-unit-음악" style="font-size:11px;color:#999;">—</td>
+              <td colspan="5" id="d2-act-음악" style="font-size:11px;color:#999;">—</td>
+            </tr>
+            <tr id="d2-tr-미술"><td class="row-num">11</td>
+              <td colspan="6" style="font-size:12px;">미술/실과</td>
+              <td colspan="4" id="d2-unit-미술" style="font-size:11px;color:#999;">—</td>
+              <td colspan="5" id="d2-act-미술" style="font-size:11px;color:#999;">—</td>
+            </tr>
+            <tr id="d2-tr-창체"><td class="row-num">12</td>
+              <td colspan="6" style="font-size:12px;">창체</td>
+              <td colspan="4" id="d2-unit-창체" style="font-size:11px;color:#999;">—</td>
+              <td colspan="5" id="d2-act-창체" style="font-size:11px;color:#999;">—</td>
+            </tr>
+            <tr><td class="row-num">13</td>
+              <td colspan="15" id="d2-notice" style="font-size:11px;color:#999;vertical-align:top;height:40px;">[ 안내사항 ]</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="excel-tabs" id="d2-tabs">
+        <div class="tab">💾2026 알림장 DB</div>
+        <div class="tab">💾2026 교과목 DB</div>
+        <div class="tab">템플릿</div>
+        <div class="tab active" id="d2-current-tab">💾2026 알림장 DB</div>
+      </div>
+
+      <div class="excel-status">
+        <span id="d2-status">4행 선택됨 — 제14주 (04.06.~04.10.)</span>
+        <span>100% ▼</span>
+      </div>
+
+      <div class="msg-overlay" id="d2-msg">
+        <div class="msg-box">
+          <div class="msg-icon">✅</div>
+          <p id="d2-msg-text"></p>
+          <button class="msg-close" onclick="closeMsg('d2-msg')">확인</button>
+        </div>
+      </div>
+    </div>
+
+    <button class="run-btn" id="d2-btn" onclick="runDemo2()">▶ 주간학습안내 생성 실행</button>
+    <div class="step-dots" id="d2-dots">
+      <div class="step-dot" id="d2-dot-0"></div>
+      <div class="step-dot" id="d2-dot-1"></div>
+      <div class="step-dot" id="d2-dot-2"></div>
+      <div class="step-dot" id="d2-dot-3"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ FOOTER ══ -->
+<div class="footer">
+  <p><strong>주간학습 & 알림장 자동화 도구</strong></p>
+  <p>Google Sheets Apps Script 기반 · 학년부장 업무 효율화 프로젝트</p>
+  <p style="margin-top:8px;" class="made">Made with ❤️ for teachers</p>
+</div>
+
+<script>
+// ─── UTILITIES ───────────────────────────────────────────
+function toggleMenu(id) {
+  const wrap = document.getElementById(id);
+  const isOpen = wrap.classList.contains('open');
+  document.querySelectorAll('.menu-wrap').forEach(w => w.classList.remove('open'));
+  if (!isOpen) wrap.classList.add('open');
+}
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.menu-wrap')) {
+    document.querySelectorAll('.menu-wrap').forEach(w => w.classList.remove('open'));
+  }
+});
+function closeMsg(id) {
+  document.getElementById(id).classList.remove('show');
+}
+function showMsg(id, text) {
+  document.getElementById(id + '-text').innerHTML = text;
+  document.getElementById(id).classList.add('show');
+}
+function setDot(prefix, n) {
+  const max = document.querySelectorAll('#' + prefix + '-dots .step-dot').length;
+  for (let i = 0; i < max; i++) {
+    const d = document.getElementById(prefix + '-dot-' + i);
+    if (d) d.classList.toggle('active', i === n);
+  }
+}
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ─── DEMO 1 : 알림장 시트 생성 ────────────────────────────
+const SAFETY_SAMPLES = [
+  "- 실내에서 뛰지 않아요.",
+  "- 복도와 계단에서는 오른쪽으로 걸어요.",
+  "- 체육 시간에는 준비 운동을 꼭 해요.",
+  "- 등하교 시 스마트폰을 보지 않아요.",
+  "- 위급할 땐 112나 119에 신고해요.",
+  "- 화재 경보기가 울리면 코와 입을 막고 대피해요.",
+  "- 친구의 물건을 빌릴 때는 허락을 구해요.",
+  "- 자전거나 킥보드를 탈 때는 헬멧을 써요.",
+  "- 물놀이 전에는 반드시 준비운동을 해요.",
+  "- 늘 긍정적인 마음으로 생활해요."
+];
+
+let d1Running = false;
+
+function buildD1InitGrid() {
+  const tbody = document.getElementById('d1-tbody');
+  tbody.innerHTML = '';
+  const rule = SAFETY_SAMPLES[0];
+  const rows = [
+    ['1', '3. <안전과 약속>', '', '', '', '', '', '', ''],
+    ['2', rule, '', '', '', '', '', '', ''],
+    ['3', '', '', '', '', '', '', '', ''],
+    ['4', '', '', '', '', '', '', '', ''],
+    ['5', '', '', '', '', '', '', '', ''],
+  ];
+  rows.forEach(r => {
+    const tr = document.createElement('tr');
+    r.forEach((c, i) => {
+      const td = document.createElement('td');
+      td.textContent = c;
+      if (i === 0) td.className = 'row-num';
+      if (i === 1) { td.style.fontWeight = '600'; td.style.color = '#217346'; }
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+}
+
+async function runDemo1() {
+  if (d1Running) return;
+  d1Running = true;
+  document.getElementById('menuWrap1').classList.remove('open');
+  const btn = document.getElementById('d1-btn');
+  btn.disabled = true;
+
+  const tabContainer = document.getElementById('d1-tabs');
+  // Reset tabs
+  tabContainer.innerHTML = '<div class="tab active">홈</div>';
+
+  const status = document.getElementById('d1-status');
+  const tbody = document.getElementById('d1-tbody');
+
+  // Step 0: scanning
+  setDot('d1', 0);
+  status.textContent = '📅 날짜 계산 중...';
+  await sleep(700);
+
+  // Generate next 8 weekday dates from "today" simulation
+  const today = new Date(2026, 3, 2); // April 2, 2026 (Thu)
+  today.setHours(0,0,0,0);
+  const dayNames = ['일','월','화','수','목','금','토'];
+  const dayOfWeek = today.getDay();
+  let monOffset = (dayOfWeek === 0) ? 1 : 1 - dayOfWeek;
+  let mon = new Date(today);
+  mon.setDate(today.getDate() + monOffset);
+
+  const dates = [];
+  for (let i = 0; i < 12; i++) {
+    let d = new Date(mon);
+    d.setDate(mon.getDate() + i);
+    if (d < today) continue;
+    const di = d.getDay();
+    if (di === 0 || di === 6) continue;
+    dates.push(d);
+    if (dates.length >= 8) break;
+  }
+
+  setDot('d1', 1);
+  status.textContent = '📄 시트 생성 중 (' + dates.length + '개)...';
+  await sleep(400);
+
+  // Create tabs one by one
+  let created = 0;
+  for (const d of dates) {
+    const m = d.getMonth() + 1;
+    const dt = d.getDate();
+    const dn = dayNames[d.getDay()];
+    const name = m + '/' + dt + ' (' + dn + ')';
+    const rule = SAFETY_SAMPLES[Math.floor(Math.random() * SAFETY_SAMPLES.length)];
+
+    // Update grid content to show this sheet
+    tbody.innerHTML = '';
+    const contentRow = '3. <안전과 약속>\n' + rule;
+    const rows = [
+      ['1', contentRow, '', '', '', '', '', '', ''],
+      ['2', '', '', '', '', '', '', '', ''],
+      ['3', '', '', '', '', '', '', '', ''],
+    ];
+    rows.forEach((r, ri) => {
+      const tr = document.createElement('tr');
+      r.forEach((c, ci) => {
+        const td = document.createElement('td');
+        td.textContent = c;
+        if (ci === 0) td.className = 'row-num';
+        if (ci === 1 && ri === 0) {
+          td.className = 'cell-filled';
+          td.style.color = '#155a2e';
+          td.style.fontWeight = '600';
+          td.style.whiteSpace = 'pre-wrap';
+        }
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    });
+
+    // Add tab
+    const tab = document.createElement('div');
+    tab.className = 'tab active new-tab';
+    tab.textContent = name;
+    // deactivate previous
+    tabContainer.querySelectorAll('.tab.active').forEach(t => t.classList.remove('active'));
+    tabContainer.appendChild(tab);
+
+    status.textContent = '✅ ' + name + ' 시트 생성됨';
+    created++;
+    await sleep(320);
+  }
+
+  setDot('d1', 2);
+  await sleep(300);
+  showMsg('d1-msg', '✅ <strong>' + created + '개</strong>의 시트가 생성되었습니다.');
+  status.textContent = '완료 — ' + created + '개 시트 생성됨';
+  btn.disabled = false;
+  d1Running = false;
+}
+
+buildD1InitGrid();
+
+// ─── DEMO 2 : 주간학습안내 생성 ──────────────────────────
+const DEMO2_DATA = {
+  week: '제14주 (4.6.~4.10.)',
+  subjects: {
+    '국어': { unit: '8. 인물의 삶을 찾아서', act: '• 전기문 특성 알기\n• 인물의 삶 파악하기' },
+    '도덕': { unit: '4. 생명을 존중하는 우리', act: '• 생명 존중의 의미 알기' },
+    '사회': { unit: '1. 우리나라의 정치 발전', act: '• 민주주의 원리 이해하기\n• 국가 기관의 역할' },
+    '수학': { unit: '3. 규칙과 대응', act: '• 두 양 사이의 대응 관계\n• 식으로 나타내기' },
+    '체육': { unit: '뜀틀 운동', act: '• 앞구르기 복습\n• 뜀틀 도전하기' },
+    '음악': { unit: '4. 세상과 소통하는 음악', act: '• 가락선 그리며 듣기\n• 우리 가락 이어 부르기' },
+    '미술': { unit: '조형 요소와 원리', act: '• 색의 조화 탐색\n• 판화 제작 시작' },
+    '창체': { unit: '학교 폭력 예방 교육', act: '• 친구와 소통하는 법\n• 갈등 해결 역할극' },
+  },
+  notice: '[주요 학사일정]\n과학의 날 행사 (4.9.)\n\n[학교 수업 안내]\n• 수학 단원 마무리 평가\n• 국어 독서감상문 제출'
+};
+
+const SUBJECT_KEYS = ['국어','도덕','사회','수학','체육','음악','미술','창체'];
+let d2Running = false;
+
+async function runDemo2() {
+  if (d2Running) return;
+  d2Running = true;
+  document.getElementById('menuWrap2').classList.remove('open');
+  const btn = document.getElementById('d2-btn');
+  btn.disabled = true;
+  const status = document.getElementById('d2-status');
+  const tabs = document.getElementById('d2-tabs');
+  const currentTab = document.getElementById('d2-current-tab');
+
+  // Reset template cells
+  document.getElementById('d2-weektext').textContent = '제 __ 주 ( __.__ ~ __.__ )';
+  document.getElementById('d2-weektext').style.color = '#555';
+  SUBJECT_KEYS.forEach(k => {
+    const u = document.getElementById('d2-unit-' + k);
+    const a = document.getElementById('d2-act-' + k);
+    if(u){ u.textContent = '—'; u.style.color = '#999'; }
+    if(a){ a.textContent = '—'; a.style.color = '#999'; }
+  });
+  document.getElementById('d2-notice').textContent = '[ 안내사항 ]';
+  document.getElementById('d2-notice').style.color = '#999';
+
+  // Show DB view first
+  document.getElementById('d2-dbview').style.display = '';
+  document.getElementById('d2-tplview').style.display = 'none';
+
+  setDot('d2', 0);
+  status.textContent = '📋 알림장 DB에서 14주차 데이터 읽는 중...';
+  await sleep(800);
+
+  // Step 1: read DB
+  setDot('d2', 1);
+  status.textContent = '📚 교과목 DB에서 14주차 내용 불러오는 중...';
+  tabs.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', i===1));
+  await sleep(900);
+
+  // Step 2: copy template
+  setDot('d2', 2);
+  status.textContent = '📄 템플릿 시트를 복사하는 중...';
+  tabs.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', i===2));
+  await sleep(700);
+
+  // Create new tab
+  const newTab = document.createElement('div');
+  newTab.className = 'tab active new-tab';
+  newTab.textContent = '(04.06.~04.10.)';
+  tabs.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  tabs.appendChild(newTab);
+  currentTab.textContent = '(04.06.~04.10.)';
+  currentTab.classList.remove('active');
+
+  // Switch to template view
+  document.getElementById('d2-dbview').style.display = 'none';
+  document.getElementById('d2-tplview').style.display = '';
+
+  await sleep(500);
+
+  // Step 3: fill data
+  setDot('d2', 3);
+  status.textContent = '✏️ 데이터 자동 입력 중...';
+
+  // Fill week text
+  const wt = document.getElementById('d2-weektext');
+  wt.textContent = DEMO2_DATA.week;
+  wt.style.color = '#217346';
+  wt.style.fontWeight = '800';
+  await sleep(300);
+
+  // Fill subjects
+  for (const key of SUBJECT_KEYS) {
+    const data = DEMO2_DATA.subjects[key];
+    if (!data) continue;
+    const uEl = document.getElementById('d2-unit-' + key);
+    const aEl = document.getElementById('d2-act-' + key);
+    if (uEl) {
+      uEl.textContent = data.unit;
+      uEl.style.color = '#1e1e1e';
+      uEl.className = 'cell-filled';
+    }
+    if (aEl) {
+      aEl.textContent = data.act;
+      aEl.style.color = '#1e1e1e';
+      aEl.className = 'cell-filled';
+    }
+    status.textContent = '✏️ ' + key + ' 교과 입력 완료';
+    await sleep(200);
+  }
+
+  // Fill notice
+  const notEl = document.getElementById('d2-notice');
+  notEl.textContent = DEMO2_DATA.notice;
+  notEl.style.color = '#333';
+  notEl.className = 'cell-highlight';
+
+  status.textContent = '✅ 생성 완료 — (04.06.~04.10.) 시트에 주간학습안내 완성!';
+  await sleep(400);
+
+  showMsg('d2-msg', '✅ 생성 완료!<br/><br/>새로운 시트 <strong>(04.06.~04.10.)</strong>에<br/>주간학습안내가 완성되었습니다.');
+
+  btn.disabled = false;
+  d2Running = false;
+}
+</script>
+</body>
+</html>
