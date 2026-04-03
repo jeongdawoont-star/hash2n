@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>해시 코딩 기록소 - 카카오 공유</title>
+  <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.5.0/kakao.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      background: #ffffff;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      font-family: sans-serif;
+    }
+    .share-btn {
+      cursor: pointer;
+      transition: transform 0.2s;
+      border: none;
+      background: none;
+    }
+    .share-btn:hover {
+      transform: scale(1.05);
+    }
+    .guide-text {
+      margin-top: 20px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+
+  <button id="kakaotalk-sharing-btn" class="share-btn">
+    <img src="hashbrown.png" width="300" alt="카카오톡 공유하기 버튼">
+  </button>
+  <p class="guide-text">👆 캐릭터를 눌러서 카톡으로 공유해보세요!</p>
+
+  <script>
+    // 🔥 여기에 아까 복사했던 JavaScript 키를 다시 꼭 넣어라!
+    Kakao.init('e8d5e1a13e1917877c1cae3691ab7f4b'); 
+
+    const mainPageUrl = 'https://jeongdawoont-star.github.io/hash2n/index.html?from=kakao';
+    const sharePageUrl = 'https://jeongdawoont-star.github.io/hash2n/kakao.html?v=20260402';
+    const instagramUrl = 'https://jeongdawoont-star.github.io/hash2n/instagram.html';
+
+    Kakao.Share.createDefaultButton({
+      container: '#kakaotalk-sharing-btn',
+      objectType: 'feed',
+      content: {
+        title: '해시 코딩 기록소',
+        imageUrl: 'https://jeongdawoont-star.github.io/hash2n/hashbrown.png?v=20260402-2',
+        link: {
+          // 💡 카드의 이미지나 제목을 눌렀을 때 메인 페이지로 가게 수정함
+          mobileWebUrl: mainPageUrl,
+          webUrl: mainPageUrl,
+        },
+      },
+      buttons: [
+        {
+          title: '인스타그램',
+          link: {
+            mobileWebUrl: instagramUrl,
+            webUrl: instagramUrl,
+          },
+        },
+        {
+          title: '공유하기',
+          link: {
+            // 💡 2번 버튼: 이 공유 페이지로 다시 와서 다른 사람에게 보낼 수 있게 함
+            mobileWebUrl: sharePageUrl,
+            webUrl: sharePageUrl,
+          },
+        },
+      ],
+    });
+  </script>
+</body>
+</html>
