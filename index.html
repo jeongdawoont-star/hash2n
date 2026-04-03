@@ -65,21 +65,20 @@ body {
   text-align: center;
 }
 .header-toolbar {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  display: flex;
   align-items: center;
   gap: 8px;
 }
 .header-actions-left {
-  justify-self: start;
   display: flex;
   align-items: center;
   gap: 6px;
 }
 .header-title-wrap {
-  justify-self: center;
+  flex: 1;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
 }
 .header-project-id {
@@ -136,6 +135,19 @@ body {
   align-items: center;
   justify-content: center;
   font-size: 16px;
+}
+.connection-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #22C55E;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.18);
+}
+.fullscreen-corner {
+  position: fixed;
+  top: 8px;
+  right: 8px;
+  z-index: 90;
 }
 
 /* 설정 카드 */
@@ -444,14 +456,22 @@ body {
   }
   .header {
     flex-shrink: 0;
-    padding: 6px 0 4px;
+    padding: 4px 0 2px;
   }
   .header .emoji-row { font-size: 24px; margin: 0; display: inline; animation: none; }
-  .header h1 { font-size: 20px; }
+  .header h1 { font-size: 19px; }
   .header p { display: none; }
+  .header-toolbar { gap: 6px; }
+  .header-actions-left { gap: 4px; }
   .header-menu-btn {
-    padding: 6px 8px;
+    padding: 5px 7px;
     font-size: 10px;
+  }
+  .header-project-id { font-size: 10px; max-width: 120px; }
+  .header-icon-btn {
+    width: 30px;
+    height: 30px;
+    font-size: 15px;
   }
   #mainContent {
     flex: 1;
@@ -460,15 +480,10 @@ body {
     flex-direction: column;
     overflow: hidden;
   }
-  .status-bar {
-    flex-shrink: 0;
-    margin-bottom: 6px;
-    padding: 7px 14px;
-    border-radius: 10px;
-  }
+  .status-bar { display: none; }
   .sec-title {
     flex-shrink: 0;
-    margin-bottom: 6px;
+    margin-bottom: 4px;
     font-size: 11px;
   }
   .students-grid {
@@ -485,10 +500,49 @@ body {
   .student-card {
     aspect-ratio: unset !important;
     min-height: 0 !important;
-    padding: 8px;
+    padding: 6px;
+    display: grid;
+    grid-template-columns: 44px 1fr;
+    gap: 6px;
+    align-items: stretch;
   }
-  .s-name { font-size: clamp(13px, 1.3vw, 18px); }
-  .mission-tile-label { font-size: clamp(9px, 1.1vw, 14px); }
+  .student-top {
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+    height: 100%;
+    padding: 2px 0;
+    border-right: 1px dashed #D1D5DB;
+  }
+  .s-name {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    transform: rotate(180deg);
+    font-size: clamp(12px, 1.2vw, 16px);
+    letter-spacing: 0;
+    line-height: 1;
+    max-height: 100%;
+  }
+  .student-count-pill {
+    min-width: 24px;
+    height: 24px;
+    font-size: 10px;
+  }
+  .mission-board {
+    height: 100%;
+    gap: 6px;
+  }
+  .mission-tile {
+    border-radius: 10px;
+    padding: 6px;
+  }
+  .mission-tile-label { font-size: clamp(12px, 1.6vw, 18px); }
+  .fullscreen-corner {
+    top: 4px;
+    right: 4px;
+  }
   .admin-fab { bottom: 10px; right: 12px; width: 42px; height: 42px; font-size: 17px; }
 }
 </style>
@@ -501,6 +555,7 @@ body {
   <div class="header">
     <div class="header-toolbar">
       <div class="header-actions-left">
+        <span class="connection-dot" title="연결됨"></span>
         <button class="header-menu-btn sync-btn" onclick="syncFromSheets()">🔄 동기화</button>
         <button class="header-menu-btn" id="inspectorBtn" onclick="toggleInspectorMode()">🧪 OFF</button>
         <button class="header-menu-btn" onclick="openConfigEditor()">✏️ 설정</button>
@@ -510,7 +565,6 @@ body {
         <h1>활동 트래커</h1>
         <span class="header-project-id" id="headerProjectId">연결대기</span>
       </div>
-      <button class="header-menu-btn header-icon-btn" id="fullscreenBtn" onclick="toggleFullscreen()" aria-label="전체화면">⛶</button>
     </div>
     <p>오늘도 열심히 해보자!</p>
   </div>
@@ -545,13 +599,6 @@ body {
 
   <!-- 메인 콘텐츠 -->
   <div id="mainContent" style="display:none;">
-    <div class="status-bar">
-      <div class="status-left">
-        <div class="dot"></div>
-        <span class="status-text" id="statusText">연결됨</span>
-      </div>
-    </div>
-
     <div class="sec-title">
       👥 학생 선택
       <span class="badge" id="studentCount">-</span>
@@ -565,6 +612,8 @@ body {
     <span>불러오는 중...</span>
   </div>
 </div>
+
+<button class="header-menu-btn header-icon-btn fullscreen-corner" id="fullscreenBtn" onclick="toggleFullscreen()" aria-label="전체화면">⤢</button>
 
 <!-- 관리자 버튼 -->
 <button class="admin-fab" onclick="goAdmin()" title="관리자">⚙️</button>
@@ -728,7 +777,6 @@ async function initApp(cfg) {
 
     document.getElementById('loadingSection').style.display = 'none';
     document.getElementById('mainContent').style.display = 'block';
-    document.getElementById('statusText').textContent = '연결됨';
     const projectEl = document.getElementById('headerProjectId');
     if (projectEl) projectEl.textContent = cfg.projectId || '';
     if (btn) { btn.disabled = false; btn.textContent = '🚀 시작하기'; }
@@ -1117,7 +1165,7 @@ window.toggleFullscreen = async function() {
 function refreshFullscreenButton() {
   const btn = document.getElementById('fullscreenBtn');
   if (!btn) return;
-  btn.textContent = document.fullscreenElement ? '🗗' : '⛶';
+  btn.textContent = document.fullscreenElement ? '⤡' : '⤢';
 }
 
 document.addEventListener('fullscreenchange', refreshFullscreenButton);
