@@ -93,6 +93,19 @@ body {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.header-student-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 52px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #92400E;
+  font-size: 12px;
+  font-weight: 800;
+}
 .header .emoji-row {
   font-size: 52px;
   display: block;
@@ -319,7 +332,7 @@ body {
 }
 .mission-board.board-3 {
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-template-rows: minmax(0, 1fr) minmax(0, 0.78fr);
+  grid-template-rows: repeat(2, minmax(0, 1fr));
 }
 .mission-board.board-3 .mission-tile:nth-child(3) {
   grid-column: 1 / span 2;
@@ -468,6 +481,12 @@ body {
     font-size: 10px;
   }
   .header-project-id { font-size: 10px; max-width: 120px; }
+  .header-student-count {
+    min-width: 46px;
+    height: 24px;
+    padding: 0 8px;
+    font-size: 11px;
+  }
   .header-icon-btn {
     width: 30px;
     height: 30px;
@@ -481,11 +500,7 @@ body {
     overflow: hidden;
   }
   .status-bar { display: none; }
-  .sec-title {
-    flex-shrink: 0;
-    margin-bottom: 4px;
-    font-size: 11px;
-  }
+  .sec-title { display: none; }
   .students-grid {
     flex: 1;
     min-height: 0;
@@ -525,19 +540,23 @@ body {
     max-height: 100%;
   }
   .student-count-pill {
-    min-width: 24px;
-    height: 24px;
-    font-size: 10px;
+    display: none;
   }
   .mission-board {
     height: 100%;
-    gap: 6px;
+    gap: 5px;
   }
   .mission-tile {
     border-radius: 10px;
     padding: 6px;
   }
-  .mission-tile-label { font-size: clamp(12px, 1.6vw, 18px); }
+  .mission-tile-label {
+    font-size: clamp(11px, 1.35vw, 17px);
+    line-height: 1.1;
+  }
+  .mission-board.board-3 .mission-tile-label {
+    font-size: clamp(10px, 1.25vw, 16px);
+  }
   .fullscreen-corner {
     top: 4px;
     right: 4px;
@@ -558,6 +577,7 @@ body {
         <button class="header-menu-btn sync-btn" onclick="syncFromSheets()">🔄 동기화</button>
         <button class="header-menu-btn" id="inspectorBtn" onclick="toggleInspectorMode()">🧪 OFF</button>
         <button class="header-menu-btn" onclick="openConfigEditor()">✏️ 설정</button>
+        <span class="header-student-count" id="studentCount">-명</span>
       </div>
       <div class="header-title-wrap">
         <span class="emoji-row">🎯</span>
@@ -598,10 +618,7 @@ body {
 
   <!-- 메인 콘텐츠 -->
   <div id="mainContent" style="display:none;">
-    <div class="sec-title">
-      👥 학생 선택
-      <span class="badge" id="studentCount">-</span>
-    </div>
+    <div class="sec-title">👥 학생 선택</div>
     <div id="studentsGrid" class="students-grid"></div>
     <div id="errorBox" class="error-box" style="display:none;"></div>
   </div>
@@ -1245,7 +1262,6 @@ function renderStudents(scores) {
   grid.innerHTML = '';
   students.forEach(s => {
     const sc = scores[s.id] || {};
-    const doneCount = activeMissions.filter(m => Number(sc[m.id]) > 0).length;
     const boardClass = getMissionBoardClass(activeMissions.length);
 
     const card = document.createElement('div');
@@ -1258,12 +1274,7 @@ function renderStudents(scores) {
     nameEl.className = 's-name';
     nameEl.textContent = s.name;
 
-    const countEl = document.createElement('div');
-    countEl.className = 'student-count-pill';
-    countEl.textContent = `${doneCount}`;
-
     top.appendChild(nameEl);
-    top.appendChild(countEl);
 
     const board = document.createElement('div');
     board.className = `mission-board ${boardClass}`;
