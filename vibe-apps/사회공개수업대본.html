@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5학년 사회 기후와 날씨 역할극 대본 (최종 완성본)</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Jua&display=swap');
+
+        :root {
+            --spring-color: #fff0f0;
+            --summer-color: #f0f8ff;
+            --autumn-color: #fff8eb;
+            --winter-color: #f8f0ff;
+            --main-font: 'Jua', sans-serif;
+        }
+
+        body {
+            font-family: var(--main-font);
+            margin: 0;
+            padding: 0;
+            background-color: #e0e0e0;
+            color: #222;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        @page {
+            size: A4 portrait;
+            margin: 0; 
+        }
+
+        .page {
+            width: 210mm;
+            height: 296mm;
+            margin: 0 auto;
+            background: white;
+            box-sizing: border-box;
+            page-break-after: always;
+            padding: 18mm;
+            display: flex;
+            flex-direction: column;
+        }
+
+        @media print {
+            body { background: white; }
+            .page { 
+                box-shadow: none; 
+                margin: 0; 
+                border: none;
+            }
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 12px;
+        }
+
+        .page-type {
+            display: inline-block;
+            background-color: #2d3436;
+            color: white;
+            padding: 6px 18px;
+            border-radius: 20px;
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+
+        .page-type.answer-key {
+            background-color: #d63031;
+        }
+
+        /* 16:9 비율 고정 크기 사진 부착 공간 (크기 축소: 가로 128mm x 세로 72mm) */
+        .photo-placeholder {
+            width: 128mm !important;
+            height: 72mm !important; 
+            min-height: 72mm !important;
+            max-height: 72mm !important;
+            flex-shrink: 0;
+            border: 2px dashed #7f8c8d;
+            border-radius: 8px;
+            background-color: #f1f2f6;
+            margin: 0 auto 15px auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #7f8c8d;
+            font-size: 15px;
+            text-align: center;
+            box-sizing: border-box;
+        }
+        
+        .photo-placeholder strong {
+            color: #2c3e50;
+            font-size: 17px;
+            margin-bottom: 5px;
+        }
+
+        .word-bank {
+            background-color: #fffde7;
+            border: 3px dashed #f39c12;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 17px;
+            margin-bottom: 15px;
+            line-height: 1.6;
+            flex-shrink: 0;
+        }
+        
+        .word-bank strong {
+            display: block;
+            color: #d35400;
+            margin-bottom: 5px;
+            font-size: 19px;
+        }
+
+        .word-item {
+            display: inline-block;
+            margin: 0 8px;
+            color: #2c3e50;
+            font-weight: bold;
+        }
+
+        .scenario-box {
+            border-radius: 15px;
+            padding: 20px;
+            border: 3px solid #ddd;
+            flex-grow: 1;
+        }
+
+        .spring { background-color: var(--spring-color); border-color: #ffb8b8; }
+        .summer { background-color: var(--summer-color); border-color: #91d5ff; }
+        .autumn { background-color: var(--autumn-color); border-color: #ffd8a8; }
+        .winter { background-color: var(--winter-color); border-color: #d3adf7; }
+
+        .scenario-title {
+            font-size: 24px;
+            margin-top: 0;
+            margin-bottom: 15px;
+            border-bottom: 2px dashed rgba(0,0,0,0.1);
+            padding-bottom: 10px;
+            text-align: center;
+        }
+        .spring .scenario-title { color: #d63031; }
+        .summer .scenario-title { color: #0984e3; }
+        .autumn .scenario-title { color: #e17055; }
+        .winter .scenario-title { color: #6c5ce7; }
+
+        .role-line {
+            margin-bottom: 15px;
+            font-size: 18px;
+            line-height: 1.6;
+            display: flex;
+            align-items: center;
+        }
+
+        /* 정답지(대본용)에만 적용되는 절취선 및 간격 확대 스타일 */
+        .answer-page .role-line {
+            margin-bottom: 20px; /* 약간 조정하여 여유 확보 */
+            padding-bottom: 20px;
+            border-bottom: 2px dashed #b2bec3;
+            position: relative;
+        }
+        
+        .answer-page .role-line::after {
+            content: "✂️ 자르는 선";
+            position: absolute;
+            bottom: -11px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--spring-color);
+            padding: 0 10px;
+            color: #636e72;
+            font-size: 13px;
+            border-radius: 10px;
+        }
+        .answer-page.summer-page .role-line::after { background: var(--summer-color); }
+        .answer-page.autumn-page .role-line::after { background: var(--autumn-color); }
+        .answer-page.winter-page .role-line::after { background: var(--winter-color); }
+
+        .answer-page .role-line:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        .answer-page .role-line:last-child::after {
+            content: none;
+        }
+
+        .role-name {
+            display: inline-block;
+            min-width: 90px;
+            font-weight: bold;
+            color: #fff;
+            text-align: center;
+            padding: 4px 0;
+            border-radius: 8px;
+            margin-right: 12px;
+            flex-shrink: 0;
+            height: fit-content;
+        }
+
+        .anchor { background-color: #1dd1a1; }
+        .caster { background-color: #ff9f43; }
+        .citizen { background-color: #54a0ff; }
+        .scientist { background-color: #5f27cd; }
+        .reporter { background-color: #e84393; }
+
+        .dialogue {
+            flex-grow: 1;
+        }
+
+        .blank-box {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            height: 26px;
+            border: 2px solid #555;
+            background-color: #fff;
+            vertical-align: text-bottom;
+            margin: 0 4px;
+            border-radius: 5px;
+            padding: 0 5px;
+            box-sizing: border-box;
+        }
+        
+        .blank-text {
+            color: #e84118;
+            font-weight: bold;
+            font-size: 19px;
+            white-space: nowrap;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="page">
+        <div class="page-header">
+            <div class="page-type">📝 학생 연습용 대본 (빈칸 채우기)</div>
+        </div>
+        
+        <div class="word-bank">
+            <strong>[ 모둠 1. 핵심 낱말 보기 ]</strong>
+            <span class="word-item">기후</span> | <span class="word-item">날씨</span> | <span class="word-item">여러 해에 걸쳐 나타난 날씨의 평균적인 상태</span> | <span class="word-item">짧은 시간에 변하는 대기의 상태</span><br>
+            <span class="word-item">봄</span> | <span class="word-item">온화하다</span> | <span class="word-item">따뜻하다</span> | <span class="word-item">꽃샘추위</span>
+        </div>
+
+        <div class="scenario-box spring">
+            <h2 class="scenario-title">🌸 모둠 1. 봄 - 맑은 날 (꽃샘추위)</h2>
+            <div class="role-line">
+                <span class="role-name anchor">앵커</span>
+                <div class="dialogue">안녕하십니까. 본격적인 뉴스에 앞서 용어부터 정확히 정리해 볼까요? 기상학자님, 기후와 날씨의 정의는 무엇인가요?</div>
+            </div>
+            <div class="role-line">
+                <span class="role-name scientist">기상학자</span>
+                <div class="dialogue"><span class="blank-box" style="width: 60px;"></span>(이)란 <span class="blank-box" style="width: 380px;"></span>(을)를 말합니다. 반면에 <span class="blank-box" style="width: 60px;"></span>(이)란 <span class="blank-box" style="width: 280px;"></span>(을)를 뜻합니다.</div>
+            </div>
+            <div class="role-line">
+                <span class="role-name anchor">앵커</span>
+                <div class="dialogue">그렇군요! 그럼 오늘의 날씨를 알아볼까요? 기상캐스터?</div>
+            </div>
+            <div class="role-line">
+                <span class="role-name caster">기상캐스터</span>
+                <div class="dialogue">네, 계절의 시작인 <span class="blank-box" style="width: 60px;"></span>은(는) 기온 상태가 <span class="blank-box" style="width: 110px;"></span> 거나 <span class="blank-box" style="width: 110px;"></span>는 두 가지 큰 특징이 있습니다. 하지만 오늘은 일시적으로 기온이 뚝 떨어지는 <span class="blank-box" style="width: 110px;"></span> 현상이 나타났습니다.</div>
+            </div>
+            <div class="role-line">
+                <span class="role-name citizen">시민</span>
+                <div class="dialogue">으스스~ 얇은 겉옷만 입고 나왔다가 덜덜 떨고 있어요. 꽃들도 깜짝 놀랐겠어요!</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page">
+        <div class="page-header">
+            <div class="page-type">📝 학생 연습용 대본 (빈칸 채우기)</div>
+        </div>
+
+        <div class="word-bank">
+            <strong>[ 모둠 2. 핵심 낱말 보기 ]</strong>
+            <span class="word-item">봄</span> | <span class="word-item">날씨</span> | <span class="word-item">황사</span> | <span class="word-item">미세먼지</span>
+        </div>
+
+        <div class="scenario-box spring">
+            <h2 class="scenario-title">😷 모둠 2. 봄 - 공기가 탁한 날 </h2>
+            <div class="role-line">
+                <span class="role-name anchor">앵커</span>
+                <div class="dialogue">맑고 푸른 <span class="blank-box" style="width: 60px;"></span> 하늘을 기대했는데 아쉽게도 오늘의 <span class="blank-box" style="width: 60px;"></span>는 대기 오염이 무척 심각합니다. 외출 시 주의가 필요합니다.</div>
+            </div>
+            <div class="role-line">
+                <span class="role-name caster">기상캐스터</span>
+                <div class="dialogue">네, 주로 편서풍을 타고 날아오는 거대한 모래먼지인 <span class="blank-box" style="width: 60px;"></span>(와)과 자동차 매연 등에서 나오는 오염 물질인 <span class="blank-box" style="width: 110px;"></span>의 영향으로 도시가 뿌옇게 흐려지는 현상이 발생합니다.</div>
+            </div>
+            <div class="role-line">
+                <span class="role-name citizen">시민</span>
+                <div class="dialogue">켁켁! 목도 칼칼하고 눈이 너무 따가워요. 주차된 차 위에도 누런 먼지가 소복하게 쌓였어요.</div>
+            </div>
+            <div class="role-line">
+                <span class="role-name scientist">기상학자</span>
+                <div class="dialogue">이런 날에는 해로운 물질이 호흡기로 들어올 수 있으니 반드시 보건용 마스크를 착용해야 합니다.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page">
+        <div class="page-header">
+            <div class="page-type">📝 학생 연습용 대본 (빈칸 채우기)</div>
+        </div>
+
+        <div class="word-bank">
+            <strong>[ 모둠 3. 핵심 낱말 보기 ]</strong>
+            <span class="word-item">여름</span> | <span class="word-item">덥고 비가 많이온다</span> | <span class="word-item">장마</span> | <span class="word-item">습하다</span>
+        </div>
+
+        <div class="scenario-box summer">
+            <h2 class="scenario-title">☔ 모둠 3. 여름 - 비가 계속 오는 날</h2>
+            <div class="role-line">
+                <span class="role-name anchor">앵커</span>
+                <div class="dialogue">계절이 바뀌었습니다. 우리나라의 <span class="blank-box" style="width: 60px;"></span> 기후는 기본적으로 <span class="blank-box" style="width: 180px;"></span>는 특징을 가지고 있습니다. 현장 연결하겠습니다.</div>
+            </div>
+            <div class="role-line">
+                <span class="role-name caster">기상캐스터</span>
+                <div class="dialogue">네, 현재 초여름에 오랫동안 비가 내리는 현상인 <span class="blank-box" style="width: 60px;"></span>(이)가 시작되어 며칠째 굵은 빗줄기가 쏟아지고 있습니다.</div>
+            </div>
+            <div class="role-line">
+                <span class="role-name citizen">시민</span>
+                <div class="dialogue">비가 너무 많이 와서 밖에서 놀지도 못해요. 게다가 집 안의 공기가 매우 <span class="blank-box" style="width: 80px;"></span> 상태라서 빨래도 안 마르고 곰팡이가 필 것 같아요.</div>
+            </div>
+            <div class="role-line">
+                <span class="role-name scientist">기상학자</span>
+                <div class="dialogue">성질이 다른 두 공기가 만나 세력 다툼을 하면서 정체전선을 형성하여 많은 비를 뿌리게 되는 것입니다.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page">
+        <div class="page-header">
+            <div class="page-type">📝 학생 연습용 대본 (빈칸 채우기)</div>
+        </div>
+
+        <div class="word-bank">
+            <strong>[ 모둠 4. 핵심 낱말 보기 ]</strong>
+            <span class="word-item">평균 기온이 높다</span> | <span class="word-item">남쪽 바다에서 부는 바람</span><br><span class="word-item">뜨겁고 습한 바람</span> | <span class="word-item">더위를 피해 바다나 숲 등 시원한 곳을 찾는다</span>
+        </div>
+
+        <div class="scenario-box summer">
+            <h2 class="scenario-title">🔥 모둠 4. 여름 - 엄청 더운 날</h2>
+            <div class="role-line">
+                <span class="role-name anchor">앵커</span>
+                <div class="dialogue">가만히 있어도 땀이 나는 날씨입니다. 우리나라는 1년 중 여름철에 <span class="blank-box" style="width: 160px;"></span>는 기후적 특징이 뚜렷하게 나타납니다.</div>
+            </div>
+            <div class="role-line">
+                <span class="role-name scientist">기상학자</span>
+                <div class="dialogue">우리나라 여름은 지형적으로 <span class="blank-box" style="width: 240px;"></span>의 영향을 강하게 받습니다. 이 바람의 성질은 <span class="blank-box" style="width: 160px;"></span>이기 때문에 날씨가 몹시 덥고 끈적끈적한 것입니다.</div>
+            </div>
+            <div class="role-line">
+                <span class="role-name caster">기상캐스터</span>
+                <div class="dialogue">네, 학자님 말씀대로 숨이 턱턱 막힐 지경입니다. 폭염과 열대야가 기승을 부리며 무더위가 계속되고 있습니다.</div>
+            </div>
+            <div class="role-line">
+                <span class="role-name citizen">시민</span>
+                <div class="dialogue">너무 더워서 일상생활이 힘들 정도예요. 그래서 주말마다 사람들이 <span class="blank-box" style="width: 400px;"></span>. 저도 빨리 계곡에 발을 담그고 싶네요!</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page">
+        <div class="page-header">
+            <div class="page-type">📝 학생 연습용 대본 (빈칸 채우기)</div>
+        </div>
+
+        <div class="word-bank">
+            <strong>[ 모둠 5. 핵심 낱말 보기 ]</strong>
+            <span class="word-item">가을</span> | <span class="word-item">바깥활동 하기 좋다</span> | <span class="word-item">단풍놀이</span> | <span class="word-item">추수</span>
+        </div>
+
+        <div class="scenario-box autumn">
+            <h2 class="scenario-title">🍁 모둠 5. 가을 - 맑은 날</h2>
+            <div class="role-line">
+                <span class="role-name anchor">앵커</span>
+                <div class="dialogue">아침저녁으로 제법 선선한 바람이 부는 <span class="blank-box" style="width: 60px;"></span>(이)가 찾아왔습니다. 파란 하늘을 보니 기분까지 상쾌해지는데요.</div>
+            </div>
+            <div class="role-line">
+                <span class="role-name caster">기상캐스터</span>
+                <div class="dialogue">네, 덥지도 춥지도 않고 쾌적해서 <span class="blank-box" style="width: 180px;"></span>는 특징 때문에 야외로 나가는 분들이 아주 많습니다.</div>
+            </div>
+            <div class="role-line">
+                <span class="role-name citizen">시민</span>
+                <div class="dialogue">날씨가 너무 좋아서 도시락 싸서 산으로 <span class="blank-box" style="width: 110px;"></span>(을)를 가려고요! 농촌에서는 다 자란 벼를 거두는 일인 <span class="blank-box" style="width: 60px;"></span>(을)를 하느라 바쁘시더라고요. 풍성한 계절이에요.</div>
+            </div>
+            <div class="role-line">
+                <span class="role-name scientist">기상학자</span>
+                <div class="dialogue">이동성 고기압의 영향으로 맑고 건조한 날씨가 계속됩니다. 일교차가 크니 감기에 조심하세요.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page">
+        <div class="page-header">
+            <div class="page-type">📝 학생 연습용 대본 (빈칸 채우기)</div>
+        </div>
+
+        <div class="word-bank">
+            <strong>[ 모둠 6. 핵심 낱말 보기 ]</strong>
+            <span class="word-item">기후</span> | <span class="word-item">가을</span> | <span class="word-item">날씨</span> | <span class="word-item">상강(서리 내리는 날)</span>
+        </div>
+
+        <div class="scenario-box autumn">
+            <h2 class="scenario-title">🍂 모둠 6. 가을 - 얼음이 어는 날</h2>
+            <div class="role-line">
+                <span class="role-name anchor">앵커</span>
+                <div class="dialogue">사계절이 뚜렷한 우리나라 <span class="blank-box" style="width: 60px;"></span>의 특징 덕분에 계절의 변화를 잘 느낄 수 있죠. 어느덧 <span class="blank-box" style="width: 60px;"></span>의 끝자락, 부쩍 쌀쌀해졌습니다.</div>
+            </div>
+            <div class="role-line">
+                <span class="role-name caster">기상캐스터</span>
+                <div class="dialogue">네, 어제오늘 매일 변하는 <span class="blank-box" style="width: 60px;"></span>가 크게 달라지며 기온이 뚝 떨어졌는데요. 오늘은 첫 얼음과 서리가 맺힌다는 절기인 <span class="blank-box" style="width: 220px;"></span>입니다.</div>
+            </div>
+            <div class="role-line">
+                <span class="role-name citizen">시민</span>
+                <div class="dialogue">아침에 밭에 나가보니 배추랑 무 위에 하얀 눈꽃 같은 서리가 피었더라고요. 이제 정말 겨울 채비를 해야겠어요.</div>
+            </div>
+            <div class="role-line">
+                <span class="role-name scientist">기상학자</span>
+                <div class="dialogue">밤사이 맑은 하늘 아래 땅이 빠르게 식으면서 기온이 영하로 떨어졌고, 수증기가 얼어붙어 서리가 맺힌 것입니다.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page">
+        <div class="page-header">
+            <div class="page-type">📝 학생 연습용 대본 (빈칸 채우기)</div>
+        </div>
+
+        <div class="word-bank">
+            <strong>[ 모둠 7. 핵심 낱말 보기 ]</strong>
+            <span class="word-item">겨울</span> | <span class="word-item">춥고 눈이 내린다</span> | <span class="word-item">춥고 건조하다</span><br><span class="word-item">북서쪽 육지에서 부는 바람</span> | <span class="word-item">차갑고 건조한 바람</span> | <span class="word-item">한파특보</span>
+        </div>
+
+        <div class="scenario-box winter">
+            <h2 class="scenario-title">⛄ 모둠 7. 겨울 - 춥고 눈 오는 날 (5인)</h2>
+            <div class="role-line">
+                <span class="role-name anchor">앵커</span>
+                <div class="dialogue">이번에 전해드릴 날씨는 <span class="blank-box" style="width: 60px;"></span>입니다. 이 계절은 눈이 오지 않을 땐 <span class="blank-box" style="width: 130px;"></span>는 특징이 있고, 지형에 따라 눈구름이 만들어지면 <span class="blank-box" style="width: 160px;"></span>는 특징도 보입니다. 취재기자 연결합니다.</div>
+            </div>
+            <div class="role-line">
+                <span class="role-name reporter">기자</span>
+                <div class="dialogue">네, 저는 지금 눈보라가 치는 도심에 나와 있습니다. 오늘 매우 심한 추위가 몰려와 전국적으로 <span class="blank-box" style="width: 110px;"></span>가 발령되었습니다. 시민 한 분과 이야기 나눠보겠습니다.</div>
+            </div>
+            <div class="role-line">
+                <span class="role-name citizen">시민</span>
+                <div class="dialogue">와! 눈사람 만들 생각에 신나지만, 빙판길이라 너무 미끄러워서 걸어 다니기 무척 조심스러워요.</div>
+            </div>
+            <div class="role-line">
+                <span class="role-name scientist">기상학자</span>
+                <div class="dialogue">이 시기 우리나라는 주로 <span class="blank-box" style="width: 240px;"></span>의 영향을 강하게 받기 시작합니다.</div>
+            </div>
+            <div class="role-line">
+                <span class="role-name caster">기상캐스터</span>
+                <div class="dialogue">맞습니다. 학자님 말씀대로 이 바람의 성질은 <span class="blank-box" style="width: 180px;"></span>이기 때문에 우리가 몹시 춥게 느끼는 것입니다. 내일도 옷차림 든든히 하셔야겠습니다.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page">
+        <div class="page-header">
+            <div class="page-type">📝 학생 연습용 대본 (빈칸 채우기)</div>
+        </div>
+
+        <div class="word-bank">
+            <strong>[ 모둠 8. 핵심 낱말 보기 ]</strong>
+            <span class="word-item">겨울</span> | <span class="word-item">날씨</span> | <span class="word-item">삼한사미</span> | <span class="word-item">미세먼지와 황사</span>
+        </div>
+
+        <div class="scenario-box winter">
+            <h2 class="scenario-title">🌫️ 모둠 8. 겨울 - 공기가 답답한 날 (5인)</h2>
+            <div class="role-line">
+                <span class="role-name anchor">앵커</span>
+                <div class="dialogue"><span class="blank-box" style="width: 60px;"></span>철, 뼈가 시리던 추위가 조금 풀리면 어김없이 찾아오는 대기 오염 문제입니다.</div>
+            </div>
+            <div class="role-line">
+                <span class="role-name caster">기상캐스터</span>
+                <div class="dialogue">네, 매서운 추위가 덜한 <span class="blank-box" style="width: 60px;"></span>가 되면 어김없이 대기가 탁해져 잿빛 하늘을 만들고 있습니다. 자세한 상황, 현장 기자 연결합니다.</div>
+            </div>
+            <div class="role-line">
+                <span class="role-name reporter">기자</span>
+                <div class="dialogue">네, 저는 지금 도심 공원에 나와 있습니다. 하늘이 온통 뿌옇게 변해버렸는데요. <span class="blank-box" style="width: 160px;"></span>(이)가 겹치면서 공기가 매우 탁합니다.</div>
+            </div>
+            <div class="role-line">
+                <span class="role-name citizen">시민</span>
+                <div class="dialogue">요즘 3일은 춥고 4일은 먼지가 가득하다는 신조어인 <span class="blank-box" style="width: 110px;"></span>라는 말이 딱 맞아요. 공기청정기가 계속 빨간불이에요.</div>
+            </div>
+            <div class="role-line">
+                <span class="role-name scientist">기상학자</span>
+                <div class="dialogue">바람이 잦아들면서 대기가 정체되고, 오염 물질이 공기 중에 그대로 쌓이면서 탁해지는 현상입니다. 호흡기 건강에 꼭 유의하세요.</div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="page answer-page spring-page">
+        <div class="page-header">
+            <div class="page-type answer-key">💡 교사용 정답지 및 개인 대본용</div>
+        </div>
+        
+        <div class="photo-placeholder">
+            <strong>📷 PPT 사진 붙이는 곳</strong>
+            <span>[주말 꽃샘추위]</span>
+            <span style="font-size:13px; margin-top:5px;">(16:9 고정 / 가로 128mm x 세로 72mm)</span>
+        </div>
+
+        <div class="scenario-box spring">
+            <h2 class="scenario-title">🌸 모둠 1. 봄 - 맑은 날 (꽃샘추위)</h2>
+            <div class="role-line">
+                <span class="role-name anchor">앵커</span>
+                <div class="dialogue">안녕하십니까. 본격적인 뉴스에 앞서 용어부터 정확히 정리해 볼까요? 기상학자님, 기후와 날씨의 정의는 무엇인가요?</div>
+            </div>
+            <div class="role-line">
+                <span class="role-name scientist">기상학자</span>
+                <div class="dialogue"><span class="blank-box" style="width: 60px;"><span class="blank-text">기후</span></span>(이)란 <span class="blank-box" style="width: 380px;"><span class="blank-text">여러 해에 걸쳐 나타난 날씨의 평균적인 상태</span></span>(을)를 말합니다. 반면에 <span class="blank-box" style="width: 60px;"><span class="blank-text">날씨</span></span>(이)란 <span class="blank-box" style="width: 280px;"><span class="blank-text">짧은 시간에 변하는 대기의 상태</span></span>(을)를 뜻합니다.</div>
+            </div>
+            <div class="role-line">
+                <span class="role-name anchor">앵커</span>
+                <div class="dialogue">그렇군요! 그럼 오늘의 날씨를 알아볼까요? 기상캐스터?</div>
+            </div>
+            <div class="role-line">
+                <span class="role-name caster">기상캐스터</span>
+                <div class="dialogue">네, 계절의 시작인 <span class="blank-box" style="width: 60px;"><span class="blank-text">봄</span></span>은(는) 기온 상태가 <span class="blank-box" style="width: 110px;"><span class="blank-text">온화하다</span></span> 거나 <span class="blank-box" style="width: 110px;"><span class="blank-text">따뜻하다</span></span>는 두 가지 큰 특징이 있습니다. 하지만 오늘은 일시적으로 기온이 뚝 떨어지는 <span class="blank-box" style="width: 110px;"><span class="blank-text">꽃샘추위</span></span> 현상이 나타났습니다.</div>
+            </div>
+            <div class="role-line">
+                <span class="role-name citizen">시민</span>
+                <div class="dialogue">으스스~ 얇은 겉옷만 입고 나왔다가 덜덜 떨고 있어요. 꽃들도 깜짝 놀랐겠어요!</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page answer-page spring-page">
+        <div class="page-header">
+            <div class="page-type answer-key">💡 교사용 정답지 및 개인 대본용</div>
+        </div>
+        
+        <div class="photo-placeholder">
+            <strong>📷 PPT 사진 붙이는 곳</strong>
+            <span>[황사로 미세먼지↑]</span>
+            <span style="font-size:13px; margin-top:5px;">(16:9 고정 / 가로 128mm x 세로 72mm)</span>
+        </div>
+
+        <div class="scenario-box spring">
+            <h2 class="scenario-title">😷 모둠 2. 봄 - 공기가 탁한 날 </h2>
+            <div class="role-line">
+                <span class="role-name anchor">앵커</span>
+                <div class="dialogue">맑고 푸른 <span class="blank-box" style="width: 60px;"><span class="blank-text">봄</span></span> 하늘을 기대했는데 아쉽게도 오늘의 <span class="blank-box" style="width: 60px;"><span class="blank-text">날씨</span></span>는 대기 오염이 무척 심각합니다. 외출 시 주의가 필요합니다.</div>
+            </div>
+            <div class="role-line">
+                <span class="role-name caster">기상캐스터</span>
+                <div class="dialogue">네, 주로 편서풍을 타고 날아오는 거대한 모래먼지인 <span class="blank-box" style="width: 60px;"><span class="blank-text">황사</span></span>(와)과 자동차 매연 등에서 나오는 오염 물질인 <span class="blank-box" style="width: 110px;"><span class="blank-text">미세먼</span>지</span>의 영향으로 도시가 뿌옇게 흐려지는 현상이 발생합니다.</div>
+            </div>
+            <div class="role-line">
+                <span class="role-name citizen">시민</span>
+                <div class="dialogue">켁켁! 목도 칼칼하고 눈이 너무 따가워요. 주차된 차 위에도 누런 먼지가 소복하게 쌓였어요.</div>
+            </div>
+            <div class="role-line">
+                <span class="role-name scientist">기상학자</span>
+                <div class="dialogue">이런 날에는 해로운 물질이 호흡기로 들어올 수 있으니 반드시 보건용 마스크를 착용해야 합니다.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page answer-page summer-page">
+        <div class="page-header">
+            <div class="page-type answer-key">💡 교사용 정답지 및 개인 대본용</div>
+        </div>
+
+        <div class="photo-placeholder">
+            <strong>📷 PPT 사진 붙이는 곳</strong>
+            <span>[장맛비 본격 시작]</span>
+            <span style="font-size:13px; margin-top:5px;">(16:9 고정 / 가로 128mm x 세로 72mm)</span>
+        </div>
+
+        <div class="scenario-box summer">
+            <h2 class="scenario-title">☔ 모둠 3. 여름 - 비가 계속 오는 날</h2>
+            <div class="role-line">
+                <span class="role-name anchor">앵커</span>
+                <div class="dialogue">계절이 바뀌었습니다. 우리나라의 <span class="blank-box" style="width: 60px;"><span class="blank-text">여름</span></span> 기후는 기본적으로 <span class="blank-box" style="width: 180px;"><span class="blank-text">덥고 비가 많이온다</span></span>는 특징을 가지고 있습니다. 현장 연결하겠습니다.</div>
+            </div>
+            <div class="role-line">
+                <span class="role-name caster">기상캐스터</span>
+                <div class="dialogue">네, 현재 초여름에 오랫동안 비가 내리는 현상인 <span class="blank-box" style="width: 60px;"><span class="blank-text">장마</span></span>(이)가 시작되어 며칠째 굵은 빗줄기가 쏟아지고 있습니다.</div>
+            </div>
+            <div class="role-line">
+                <span class="role-name citizen">시민</span>
+                <div class="dialogue">비가 너무 많이 와서 밖에서 놀지도 못해요. 게다가 집 안의 공기가 매우 <span class="blank-box" style="width: 80px;"><span class="blank-text">습하다</span></span> 상태라서 빨래도 안 마르고 곰팡이가 필 것 같아요.</div>
+            </div>
+            <div class="role-line">
+                <span class="role-name scientist">기상학자</span>
+                <div class="dialogue">성질이 다른 두 공기가 만나 세력 다툼을 하면서 정체전선을 형성하여 많은 비를 뿌리게 되는 것입니다.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page answer-page summer-page">
+        <div class="page-header">
+            <div class="page-type answer-key">💡 교사용 정답지 및 개인 대본용</div>
+        </div>
+
+        <div class="photo-placeholder">
+            <strong>📷 PPT 사진 붙이는 곳</strong>
+            <span>[본격적인 여름 더위]</span>
+            <span style="font-size:13px; margin-top:5px;">(16:9 고정 / 가로 128mm x 세로 72mm)</span>
+        </div>
+
+        <div class="scenario-box summer">
+            <h2 class="scenario-title">🔥 모둠 4. 여름 - 엄청 더운 날</h2>
+            <div class="role-line">
+                <span class="role-name anchor">앵커</span>
+                <div class="dialogue">가만히 있어도 땀이 나는 날씨입니다. 우리나라는 1년 중 여름철에 <span class="blank-box" style="width: 160px;"><span class="blank-text">평균 기온이 높다</span></span>는 기후적 특징이 뚜렷하게 나타납니다.</div>
+            </div>
+            <div class="role-line">
+                <span class="role-name scientist">기상학자</span>
+                <div class="dialogue">우리나라 여름은 지형적으로 <span class="blank-box" style="width: 240px;"><span class="blank-text">남쪽 바다에서 부는 바람</span></span>의 영향을 강하게 받습니다. 이 바람의 성질은 <span class="blank-box" style="width: 160px;"><span class="blank-text">뜨겁고 습한 바람</span></span>이기 때문에 날씨가 몹시 덥고 끈적끈적한 것입니다.</div>
+            </div>
+            <div class="role-line">
+                <span class="role-name caster">기상캐스터</span>
+                <div class="dialogue">네, 학자님 말씀대로 숨이 턱턱 막힐 지경입니다. 폭염과 열대야가 기승을 부리며 무더위가 계속되고 있습니다.</div>
+            </div>
+            <div class="role-line">
+                <span class="role-name citizen">시민</span>
+                <div class="dialogue">너무 더워서 일상생활이 힘들 정도예요. 그래서 주말마다 사람들이 <span class="blank-box" style="width: 400px;"><span class="blank-text">더위를 피해 바다나 숲 등 시원한 곳을 찾는다</span></span>. 저도 빨리 계곡에 발을 담그고 싶네요!</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page answer-page autumn-page">
+        <div class="page-header">
+            <div class="page-type answer-key">💡 교사용 정답지 및 개인 대본용</div>
+        </div>
+
+        <div class="photo-placeholder">
+            <strong>📷 PPT 사진 붙이는 곳</strong>
+            <span>[완연한 가을, 한낮 맑고 온화]</span>
+            <span style="font-size:13px; margin-top:5px;">(16:9 고정 / 가로 128mm x 세로 72mm)</span>
+        </div>
+
+        <div class="scenario-box autumn">
+            <h2 class="scenario-title">🍁 모둠 5. 가을 - 맑은 날</h2>
+            <div class="role-line">
+                <span class="role-name anchor">앵커</span>
+                <div class="dialogue">아침저녁으로 제법 선선한 바람이 부는 <span class="blank-box" style="width: 60px;"><span class="blank-text">가을</span></span>(이)가 찾아왔습니다. 파란 하늘을 보니 기분까지 상쾌해지는데요.</div>
+            </div>
+            <div class="role-line">
+                <span class="role-name caster">기상캐스터</span>
+                <div class="dialogue">네, 덥지도 춥지도 않고 쾌적해서 <span class="blank-box" style="width: 180px;"><span class="blank-text">바깥활동 하기 좋다</span></span>는 특징 때문에 야외로 나가는 분들이 아주 많습니다.</div>
+            </div>
+            <div class="role-line">
+                <span class="role-name citizen">시민</span>
+                <div class="dialogue">날씨가 너무 좋아서 도시락 싸서 산으로 <span class="blank-box" style="width: 110px;"><span class="blank-text">단풍놀이</span></span>(을)를 가려고요! 농촌에서는 다 자란 벼를 거두는 일인 <span class="blank-box" style="width: 60px;"><span class="blank-text">추수</span></span>(을)를 하느라 바쁘시더라고요. 풍성한 계절이에요.</div>
+            </div>
+            <div class="role-line">
+                <span class="role-name scientist">기상학자</span>
+                <div class="dialogue">이동성 고기압의 영향으로 맑고 건조한 날씨가 계속됩니다. 일교차가 크니 감기에 조심하세요.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page answer-page autumn-page">
+        <div class="page-header">
+            <div class="page-type answer-key">💡 교사용 정답지 및 개인 대본용</div>
+        </div>
+
+        <div class="photo-placeholder">
+            <strong>📷 PPT 사진 붙이는 곳</strong>
+            <span>[내일 서리 내린다는 절기 '상강']</span>
+            <span style="font-size:13px; margin-top:5px;">(16:9 고정 / 가로 128mm x 세로 72mm)</span>
+        </div>
+
+        <div class="scenario-box autumn">
+            <h2 class="scenario-title">🍂 모둠 6. 가을 - 얼음이 어는 날</h2>
+            <div class="role-line">
+                <span class="role-name anchor">앵커</span>
+                <div class="dialogue">사계절이 뚜렷한 우리나라 <span class="blank-box" style="width: 60px;"><span class="blank-text">기후</span></span>의 특징 덕분에 계절의 변화를 잘 느낄 수 있죠. 어느덧 <span class="blank-box" style="width: 60px;"><span class="blank-text">가을</span></span>의 끝자락, 부쩍 쌀쌀해졌습니다.</div>
+            </div>
+            <div class="role-line">
+                <span class="role-name caster">기상캐스터</span>
+                <div class="dialogue">네, 어제오늘 매일 변하는 <span class="blank-box" style="width: 60px;"><span class="blank-text">날씨</span></span>가 크게 달라지며 기온이 뚝 떨어졌는데요. 오늘은 첫 얼음과 서리가 맺힌다는 절기인 <span class="blank-box" style="width: 220px;"><span class="blank-text">상강(서리 내리는 날)</span></span>입니다.</div>
+            </div>
+            <div class="role-line">
+                <span class="role-name citizen">시민</span>
+                <div class="dialogue">아침에 밭에 나가보니 배추랑 무 위에 하얀 눈꽃 같은 서리가 피었더라고요. 이제 정말 겨울 채비를 해야겠어요.</div>
+            </div>
+            <div class="role-line">
+                <span class="role-name scientist">기상학자</span>
+                <div class="dialogue">밤사이 맑은 하늘 아래 땅이 빠르게 식으면서 기온이 영하로 떨어졌고, 수증기가 얼어붙어 서리가 맺힌 것입니다.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page answer-page winter-page">
+        <div class="page-header">
+            <div class="page-type answer-key">💡 교사용 정답지 및 개인 대본용</div>
+        </div>
+
+        <div class="photo-placeholder">
+            <strong>📷 PPT 사진 붙이는 곳</strong>
+            <span>[오후부터 올겨울 최강 한파]</span>
+            <span style="font-size:13px; margin-top:5px;">(16:9 고정 / 가로 128mm x 세로 72mm)</span>
+        </div>
+
+        <div class="scenario-box winter">
+            <h2 class="scenario-title">⛄ 모둠 7. 겨울 - 춥고 눈 오는 날 (5인)</h2>
+            <div class="role-line">
+                <span class="role-name anchor">앵커</span>
+                <div class="dialogue">이번에 전해드릴 날씨는 <span class="blank-box" style="width: 60px;"><span class="blank-text">겨울</span></span>입니다. 이 계절은 눈이 오지 않을 땐 <span class="blank-box" style="width: 130px;"><span class="blank-text">춥고 건조하다</span></span>는 특징이 있고, 지형에 따라 눈구름이 만들어지면 <span class="blank-box" style="width: 160px;"><span class="blank-text">춥고 눈이 내린다</span></span>는 특징도 보입니다. 취재기자 연결합니다.</div>
+            </div>
+            <div class="role-line">
+                <span class="role-name reporter">기자</span>
+                <div class="dialogue">네, 저는 지금 눈보라가 치는 도심에 나와 있습니다. 오늘 매우 심한 추위가 몰려와 전국적으로 <span class="blank-box" style="width: 110px;"><span class="blank-text">한파특보</span></span>가 발령되었습니다. 시민 한 분과 이야기 나눠보겠습니다.</div>
+            </div>
+            <div class="role-line">
+                <span class="role-name citizen">시민</span>
+                <div class="dialogue">와! 눈사람 만들 생각에 신나지만, 빙판길이라 너무 미끄러워서 걸어 다니기 무척 조심스러워요.</div>
+            </div>
+            <div class="role-line">
+                <span class="role-name scientist">기상학자</span>
+                <div class="dialogue">이 시기 우리나라는 주로 <span class="blank-box" style="width: 240px;"><span class="blank-text">북서쪽 육지에서 부는 바람</span></span>의 영향을 강하게 받기 시작합니다.</div>
+            </div>
+            <div class="role-line">
+                <span class="role-name caster">기상캐스터</span>
+                <div class="dialogue">맞습니다. 학자님 말씀대로 이 바람의 성질은 <span class="blank-box" style="width: 180px;"><span class="blank-text">차갑고 건조한 바람</span></span>이기 때문에 우리가 몹시 춥게 느끼는 것입니다. 내일도 옷차림 든든히 하셔야겠습니다.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page answer-page winter-page">
+        <div class="page-header">
+            <div class="page-type answer-key">💡 교사용 정답지 및 개인 대본용</div>
+        </div>
+
+        <div class="photo-placeholder">
+            <strong>📷 PPT 사진 붙이는 곳</strong>
+            <span>[올 겨울 미세먼지 또?]</span>
+            <span style="font-size:13px; margin-top:5px;">(16:9 고정 / 가로 128mm x 세로 72mm)</span>
+        </div>
+
+        <div class="scenario-box winter">
+            <h2 class="scenario-title">🌫️ 모둠 8. 겨울 - 공기가 답답한 날 (5인)</h2>
+            <div class="role-line">
+                <span class="role-name anchor">앵커</span>
+                <div class="dialogue"><span class="blank-box" style="width: 60px;"><span class="blank-text">겨울</span></span>철, 뼈가 시리던 추위가 조금 풀리면 어김없이 찾아오는 대기 오염 문제입니다.</div>
+            </div>
+            <div class="role-line">
+                <span class="role-name caster">기상캐스터</span>
+                <div class="dialogue">네, 매서운 추위가 덜한 <span class="blank-box" style="width: 60px;"><span class="blank-text">날씨</span></span>가 되면 어김없이 대기가 탁해져 잿빛 하늘을 만들고 있습니다. 자세한 상황, 현장 기자 연결합니다.</div>
+            </div>
+            <div class="role-line">
+                <span class="role-name reporter">기자</span>
+                <div class="dialogue">네, 저는 지금 도심 공원에 나와 있습니다. 하늘이 온통 뿌옇게 변해버렸는데요. <span class="blank-box" style="width: 160px;"><span class="blank-text">미세먼지와 황사</span></span>(이)가 겹치면서 공기가 매우 탁합니다.</div>
+            </div>
+            <div class="role-line">
+                <span class="role-name citizen">시민</span>
+                <div class="dialogue">요즘 3일은 춥고 4일은 먼지가 가득하다는 신조어인 <span class="blank-box" style="width: 110px;"><span class="blank-text">삼한사미</span></span>라는 말이 딱 맞아요. 공기청정기가 계속 빨간불이에요.</div>
+            </div>
+            <div class="role-line">
+                <span class="role-name scientist">기상학자</span>
+                <div class="dialogue">바람이 잦아들면서 대기가 정체되고, 오염 물질이 공기 중에 그대로 쌓이면서 탁해지는 현상입니다. 호흡기 건강에 꼭 유의하세요.</div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
