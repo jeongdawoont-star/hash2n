@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, query, orderBy, serverTimestamp, deleteDoc, doc, updateDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, serverTimestamp, deleteDoc, doc, updateDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js";
 
 // ⭐️ 여기에 선생님의 파이어베이스 설정 코드를 붙여넣으세요! ⭐️
@@ -84,21 +84,39 @@ window.render = async function() {
   showLoadingOverlay();
 
   try {
-    const q = query(collection(db, "records"), orderBy("order", "asc"));
-    const querySnapshot = await getDocs(q);
+    const querySnapshot = await getDocs(collection(db, "records"));
     
     allRecords = [];
     querySnapshot.forEach((documentSnapshot) => {
       allRecords.push({ id: documentSnapshot.id, ...documentSnapshot.data() });
     });
 
-    // order 필드가 없는 기록은 createdAt 기준으로 정렬 후 order 부여
-    if (allRecords.some(r => r.order === undefined || r.order === null)) {
-      allRecords.sort((a, b) => {
-        const aTime = a.createdAt ? a.createdAt.toMillis() : 0;
-        const bTime = b.createdAt ? b.createdAt.toMillis() : 0;
-        return bTime - aTime;
-      });
+    const hasMissingOrder = allRecords.some(r => r.order === undefined || r.order === null);
+
+    // 정렬 기준: order가 있으면 order 우선, 없으면 createdAt(최신순) 사용
+    allRecords.sort((a, b) => {
+      const aHasOrder = a.order !== undefined && a.order !== null;
+      const bHasOrder = b.order !== undefined && b.order !== null;
+
+      if (aHasOrder && bHasOrder) {
+        return a.order - b.order;
+      }
+
+      if (aHasOrder && !bHasOrder) {
+        return -1;
+      }
+
+      if (!aHasOrder && bHasOrder) {
+        return 1;
+      }
+
+      const aTime = a.createdAt ? a.createdAt.toMillis() : 0;
+      const bTime = b.createdAt ? b.createdAt.toMillis() : 0;
+      return bTime - aTime;
+    });
+
+    // order가 비어있는 기존 문서가 있으면 현재 정렬 순서대로 order를 일괄 부여
+    if (hasMissingOrder) {
       const batch = writeBatch(db);
       allRecords.forEach((record, i) => {
         const docRef = doc(db, "records", record.id);
