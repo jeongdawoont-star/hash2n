@@ -106,14 +106,17 @@ function updateAdminUi() {
 window.toggleAdminMode = function() {
   if (isAdminMode) {
     isAdminMode = false;
+    sessionStorage.setItem("isAdminMode", "0");
     updateAdminUi();
     renderCards(document.getElementById("recordContainer"));
+    alert("관리자 모드가 꺼졌습니다.");
     return;
   }
 
   const input = prompt("관리자 모드 비밀번호를 입력하세요.");
   if (input === PASSWORD) {
     isAdminMode = true;
+    sessionStorage.setItem("isAdminMode", "1");
     updateAdminUi();
     renderCards(document.getElementById("recordContainer"));
     alert("관리자 모드가 켜졌습니다.");
@@ -214,7 +217,7 @@ function renderCards(container) {
     const title = item.title || "제목 없는 기록";
     const desc = item.desc || "설명이 생략된 코딩 로그입니다.";
     const tags = item.tags ? item.tags.split(',').map(tag => tag.trim()).filter(tag => tag) : [];
-    const displayNum = allRecords.findIndex(r => r.id === docId) + 1;
+    const displayNum = allRecords.length - allRecords.findIndex(r => r.id === docId);
 
     let tagsHtml = '';
     tags.forEach(tag => {
@@ -242,7 +245,7 @@ function renderCards(container) {
           <span class="material-symbols-outlined text-sm">delete</span>
         </button>
       </div>
-    ` : `<span class="text-[10px] label-font text-[#b2b2ad]">보기 모드</span>`;
+    ` : ``;
 
     const card = `
       <div id="card-${docId}" class="bg-surface-container-lowest rounded-3xl p-6 flex flex-col items-center gap-4 hover:bg-tertiary-container transition-all group border border-transparent hover:border-[#fcf7e1]">
@@ -251,9 +254,7 @@ function renderCards(container) {
           <div class="flex items-center gap-1">
             <span class="label-font text-xl font-bold text-outline-variant">#${String(displayNum).padStart(3, '0')}</span>
           </div>
-          <div class="flex items-center gap-1">
-            ${adminActions}
-          </div>
+          ${isAdminMode ? `<div class="flex items-center gap-1">${adminActions}</div>` : ``}
         </div>
         
         <div class="w-full rounded-2xl overflow-hidden mb-2">
@@ -403,6 +404,8 @@ window.toggleDarkMode = function() {
 
 // 다크모드 초기화
 (function() {
+  isAdminMode = sessionStorage.getItem("isAdminMode") === "1";
+
   if (localStorage.getItem("darkMode") === "1") {
     document.documentElement.classList.add("dark");
   }
