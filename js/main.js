@@ -17,6 +17,7 @@ const db = getFirestore(app);
 const storage = getStorage(app);
 
 const PASSWORD = "3393";
+let isAdminMode = false;
 
 function showLoadingOverlay() {
   const overlay = document.getElementById("pageLoadingOverlay");
@@ -58,12 +59,12 @@ function waitForImagesToLoad(container) {
 }
 
 window.openAdmin = function() {
-  const input = prompt("관리자 비밀번호를 입력하세요.");
-  if (input === PASSWORD) {
-    document.getElementById("adminPanel").classList.remove("hidden");
-  } else if (input !== null) {
-    alert("비밀번호가 틀렸습니다.");
+  if (!isAdminMode) {
+    alert("설정에서 관리자 모드를 먼저 켜주세요.");
+    openSettings();
+    return;
   }
+  document.getElementById("adminPanel").classList.remove("hidden");
 };
 
 window.closeAdmin = function() {
@@ -72,6 +73,54 @@ window.closeAdmin = function() {
 
 // 전체 레코드 목록 (순서 변경을 위해 메모리에 유지)
 let allRecords = [];
+
+function updateAdminUi() {
+  const modeText = document.getElementById("adminModeStatus");
+  const modeBtn = document.getElementById("adminModeBtn");
+  const quickAddWrap = document.getElementById("settingsAddWrap");
+  const addButtons = Array.from(document.querySelectorAll(".add-entry-btn"));
+
+  if (modeText) {
+    modeText.textContent = isAdminMode ? "ON" : "OFF";
+    modeText.className = isAdminMode
+      ? "label-font text-xs font-bold text-emerald-600"
+      : "label-font text-xs font-bold text-[#b2b2ad]";
+  }
+
+  if (modeBtn) {
+    modeBtn.textContent = isAdminMode ? "끄기" : "켜기";
+    modeBtn.className = isAdminMode
+      ? "bg-primary-container text-on-secondary-container label-font font-bold text-xs px-4 py-2 rounded-xl active:scale-95 transition-all"
+      : "bg-secondary-container text-on-secondary-container label-font font-bold text-xs px-4 py-2 rounded-xl active:scale-95 transition-all";
+  }
+
+  if (quickAddWrap) {
+    quickAddWrap.classList.toggle("hidden", !isAdminMode);
+  }
+
+  addButtons.forEach((btn) => {
+    btn.classList.toggle("opacity-50", !isAdminMode);
+  });
+}
+
+window.toggleAdminMode = function() {
+  if (isAdminMode) {
+    isAdminMode = false;
+    updateAdminUi();
+    renderCards(document.getElementById("recordContainer"));
+    return;
+  }
+
+  const input = prompt("관리자 모드 비밀번호를 입력하세요.");
+  if (input === PASSWORD) {
+    isAdminMode = true;
+    updateAdminUi();
+    renderCards(document.getElementById("recordContainer"));
+    alert("관리자 모드가 켜졌습니다.");
+  } else if (input !== null) {
+    alert("비밀번호가 틀렸습니다.");
+  }
+};
 
 // 텍스트에서 줄바꿈(\n)을 <br>로 변환
 function nl2br(text) {
@@ -160,7 +209,7 @@ function renderCards(container) {
     return;
   }
 
-  filtered.forEach((item, idx) => {
+  filtered.forEach((item) => {
     const docId = item.id;
     const title = item.title || "제목 없는 기록";
     const desc = item.desc || "설명이 생략된 코딩 로그입니다.";
@@ -172,10 +221,28 @@ function renderCards(container) {
       tagsHtml += `<span class="bg-tertiary-fixed text-on-tertiary-fixed text-[10px] label-font px-2 py-0.5 rounded-full uppercase">${tag}</span>`;
     });
 
-    const isFirst = idx === 0;
-    const isLast = idx === filtered.length - 1;
-    const upDisabled = isFirst ? "opacity-30 pointer-events-none" : "";
-    const downDisabled = isLast ? "opacity-30 pointer-events-none" : "";
+    const realIndex = allRecords.findIndex(r => r.id === docId);
+    const upDisabled = realIndex <= 0 ? "opacity-30 pointer-events-none" : "";
+    const downDisabled = realIndex >= allRecords.length - 1 ? "opacity-30 pointer-events-none" : "";
+    const adminActions = isAdminMode ? `
+      <div class="flex items-center gap-1">
+        <span class="text-[10px] label-font text-emerald-600 font-bold mr-1">ADMIN</span>
+        <button onclick="moveRecord('${docId}', -1)" class="p-1 rounded-full hover:bg-secondary-container transition-colors ${upDisabled}" title="위로 이동">
+          <span class="material-symbols-outlined text-base text-secondary">arrow_upward</span>
+        </button>
+        <button onclick="moveRecord('${docId}', 1)" class="p-1 rounded-full hover:bg-secondary-container transition-colors ${downDisabled}" title="아래로 이동">
+          <span class="material-symbols-outlined text-base text-secondary">arrow_downward</span>
+        </button>
+      </div>
+      <div class="flex items-center gap-1">
+        <button onclick="openEdit('${docId}')" class="text-outline-variant hover:text-secondary transition-colors p-2 rounded-full hover:bg-secondary-container" title="기록 수정">
+          <span class="material-symbols-outlined text-sm">edit</span>
+        </button>
+        <button onclick="deleteRecord('${docId}', '${item.storagePath || ''}')" class="text-outline-variant hover:text-error transition-colors p-2 rounded-full hover:bg-primary-container" title="기록 삭제">
+          <span class="material-symbols-outlined text-sm">delete</span>
+        </button>
+      </div>
+    ` : `<span class="text-[10px] label-font text-[#b2b2ad]">보기 모드</span>`;
 
     const card = `
       <div id="card-${docId}" class="bg-surface-container-lowest rounded-3xl p-6 flex flex-col items-center gap-4 hover:bg-tertiary-container transition-all group border border-transparent hover:border-[#fcf7e1]">
@@ -183,20 +250,9 @@ function renderCards(container) {
         <div class="w-full flex justify-between items-center mb-2">
           <div class="flex items-center gap-1">
             <span class="label-font text-xl font-bold text-outline-variant">#${String(displayNum).padStart(3, '0')}</span>
-            <button onclick="moveRecord('${docId}', -1)" class="p-1 rounded-full hover:bg-secondary-container transition-colors ${upDisabled}" title="위로 이동">
-              <span class="material-symbols-outlined text-base text-secondary">arrow_upward</span>
-            </button>
-            <button onclick="moveRecord('${docId}', 1)" class="p-1 rounded-full hover:bg-secondary-container transition-colors ${downDisabled}" title="아래로 이동">
-              <span class="material-symbols-outlined text-base text-secondary">arrow_downward</span>
-            </button>
           </div>
           <div class="flex items-center gap-1">
-            <button onclick="openEdit('${docId}')" class="text-outline-variant hover:text-secondary transition-colors p-2 rounded-full hover:bg-secondary-container" title="기록 수정">
-              <span class="material-symbols-outlined text-sm">edit</span>
-            </button>
-            <button onclick="deleteRecord('${docId}', '${item.storagePath || ''}')" class="text-outline-variant hover:text-error transition-colors p-2 rounded-full hover:bg-primary-container" title="기록 삭제">
-              <span class="material-symbols-outlined text-sm">delete</span>
-            </button>
+            ${adminActions}
           </div>
         </div>
         
@@ -229,6 +285,11 @@ function renderCards(container) {
 
 // 순서 변경
 window.moveRecord = async function(docId, direction) {
+  if (!isAdminMode) {
+    alert("관리자 모드에서만 순서를 변경할 수 있습니다.");
+    return;
+  }
+
   const idx = allRecords.findIndex(r => r.id === docId);
   const targetIdx = idx + direction;
   if (targetIdx < 0 || targetIdx >= allRecords.length) return;
@@ -252,6 +313,11 @@ window.moveRecord = async function(docId, direction) {
 
 // 수정 패널 열기
 window.openEdit = function(docId) {
+  if (!isAdminMode) {
+    alert("관리자 모드에서만 수정할 수 있습니다.");
+    return;
+  }
+
   const record = allRecords.find(r => r.id === docId);
   if (!record) return;
 
@@ -268,9 +334,8 @@ window.closeEdit = function() {
 };
 
 window.saveEdit = async function() {
-  const input = prompt("수정 권한 확인: 관리자 비밀번호를 입력하세요.");
-  if (input !== PASSWORD) {
-    if (input !== null) alert("비밀번호가 틀렸습니다.");
+  if (!isAdminMode) {
+    alert("관리자 모드에서만 저장할 수 있습니다.");
     return;
   }
 
@@ -332,7 +397,8 @@ window.toggleDarkMode = function() {
   document.documentElement.classList.toggle("dark");
   const isDark = document.documentElement.classList.contains("dark");
   localStorage.setItem("darkMode", isDark ? "1" : "0");
-  document.getElementById("darkModeToggle").checked = isDark;
+  const darkToggle = document.getElementById("darkModeToggle");
+  if (darkToggle) darkToggle.checked = isDark;
 };
 
 // 다크모드 초기화
@@ -340,9 +406,21 @@ window.toggleDarkMode = function() {
   if (localStorage.getItem("darkMode") === "1") {
     document.documentElement.classList.add("dark");
   }
+
+  window.addEventListener("DOMContentLoaded", () => {
+    const isDark = document.documentElement.classList.contains("dark");
+    const darkToggle = document.getElementById("darkModeToggle");
+    if (darkToggle) darkToggle.checked = isDark;
+    updateAdminUi();
+  });
 })();
 
 window.addRecord = async function() {
+  if (!isAdminMode) {
+    alert("관리자 모드에서만 기록을 추가할 수 있습니다.");
+    return;
+  }
+
   const fileInput = document.getElementById("imageInput");
   const link = document.getElementById("linkInput").value;
   const title = document.getElementById("titleInput").value;
@@ -395,25 +473,24 @@ window.addRecord = async function() {
 };
 
 window.deleteRecord = async function(docId, storagePath) {
-  const input = prompt("삭제 권한 확인: 관리자 비밀번호를 입력하세요.");
-  
-  if (input === PASSWORD) {
-    if(confirm("정말로 이 기록을 영구 삭제하시겠습니까?")) {
-      try {
-        await deleteDoc(doc(db, "records", docId));
-        if (storagePath) {
-          const imageRef = ref(storage, storagePath);
-          await deleteObject(imageRef);
-        }
-        alert("기록이 삭제되었습니다.");
-        window.render(); 
-      } catch (error) {
-        console.error("삭제 중 오류:", error);
-        alert("삭제 중 오류가 발생했습니다.");
+  if (!isAdminMode) {
+    alert("관리자 모드에서만 삭제할 수 있습니다.");
+    return;
+  }
+
+  if(confirm("정말로 이 기록을 영구 삭제하시겠습니까?")) {
+    try {
+      await deleteDoc(doc(db, "records", docId));
+      if (storagePath) {
+        const imageRef = ref(storage, storagePath);
+        await deleteObject(imageRef);
       }
+      alert("기록이 삭제되었습니다.");
+      window.render(); 
+    } catch (error) {
+      console.error("삭제 중 오류:", error);
+      alert("삭제 중 오류가 발생했습니다.");
     }
-  } else if (input !== null) {
-    alert("비밀번호가 틀렸습니다.");
   }
 };
 

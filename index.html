@@ -45,6 +45,21 @@
   <style>
     .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
     body { font-family: 'Be Vietnam Pro', sans-serif; background-color: #fbf9f5; color: #31332f; min-height: max(884px, 100dvh); }
+    html.dark body { background-color: #141718 !important; color: #ecebe7 !important; }
+    html.dark header { background-color: rgba(20, 23, 24, 0.9) !important; border-color: #2f3436 !important; }
+    html.dark nav { background-color: rgba(20, 23, 24, 0.92) !important; border-color: #2f3436 !important; }
+    html.dark #pageLoadingOverlay { background-color: rgba(20, 23, 24, 0.75) !important; }
+    html.dark #recordContainer .bg-surface-container-lowest,
+    html.dark #adminPanel > div,
+    html.dark #editPanel > div,
+    html.dark #searchPanel > div,
+    html.dark #settingsPanel > div { background-color: #1b1f21 !important; color: #ecebe7 !important; }
+    html.dark #recordContainer .hover\:bg-tertiary-container:hover { background-color: #242a2d !important; }
+    html.dark .text-on-surface,
+    html.dark .text-on-surface-variant,
+    html.dark .text-outline-variant { color: #ecebe7 !important; }
+    html.dark input,
+    html.dark textarea { background-color: #2b3134 !important; color: #ecebe7 !important; }
     .headline-font { font-family: 'Plus Jakarta Sans', sans-serif; }
     .label-font { font-family: 'Space Grotesk', sans-serif; }
     .loading-spinner {
@@ -102,7 +117,7 @@
     </section>
 
     <section class="mt-12 flex justify-center">
-      <button onclick="openAdmin()" class="group relative flex items-center gap-3 bg-secondary-container text-on-secondary-container font-bold px-12 py-5 rounded-2xl hover:shadow-[0_20px_40px_rgba(49,51,47,0.06)] transition-all active:scale-95">
+      <button onclick="openAdmin()" class="add-entry-btn group relative flex items-center gap-3 bg-secondary-container text-on-secondary-container font-bold px-12 py-5 rounded-2xl hover:shadow-[0_20px_40px_rgba(49,51,47,0.06)] transition-all active:scale-95">
         <span class="material-symbols-outlined text-3xl">add_circle</span>
         <span class="headline-font text-xl">기록 추가</span>
         <div class="absolute -top-2 -right-2 w-6 h-6 bg-primary-container rounded-full border-2 border-surface group-hover:animate-bounce"></div>
@@ -115,7 +130,7 @@
       <span class="material-symbols-outlined">inventory_2</span>
       <span class="label-font text-[10px] uppercase font-bold mt-1">Archive</span>
     </a>
-    <a class="flex flex-col items-center justify-center text-[#7c5556]/60 hover:opacity-80 transition-opacity" href="#" onclick="openAdmin()">
+    <a class="add-entry-btn flex flex-col items-center justify-center text-[#7c5556]/60 hover:opacity-80 transition-opacity" href="#" onclick="openAdmin(); return false;">
       <span class="material-symbols-outlined">add_circle</span>
       <span class="label-font text-[10px] uppercase font-bold mt-1">Add</span>
     </a>
@@ -227,7 +242,16 @@
           </label>
         </div>
         <div class="flex items-center justify-between">
-          <span class="label-font font-bold text-sm text-on-surface">관리자 패널 열기</span>
+          <div class="flex flex-col">
+            <span class="label-font font-bold text-sm text-on-surface">관리자 모드</span>
+            <span id="adminModeStatus" class="label-font text-xs font-bold text-[#b2b2ad]">OFF</span>
+          </div>
+          <button id="adminModeBtn" onclick="toggleAdminMode()" class="bg-secondary-container text-on-secondary-container label-font font-bold text-xs px-4 py-2 rounded-xl active:scale-95 transition-all">
+            켜기
+          </button>
+        </div>
+        <div id="settingsAddWrap" class="hidden flex items-center justify-between">
+          <span class="label-font font-bold text-sm text-on-surface">새 글 추가</span>
           <button onclick="closeSettings(); openAdmin();" class="bg-secondary-container text-on-secondary-container label-font font-bold text-xs px-4 py-2 rounded-xl active:scale-95 transition-all">
             열기
           </button>
