@@ -382,7 +382,7 @@ window.openSearch = function() {
 };
 
 window.closeSearch = function() {
-  clearSearch();
+  document.getElementById("searchPanel").classList.add("hidden");
 };
 
 // Settings
