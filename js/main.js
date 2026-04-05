@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, query, orderBy, serverTimestamp, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, query, orderBy, serverTimestamp, deleteDoc, doc, updateDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js";
 
 // ⭐️ 여기에 선생님의 파이어베이스 설정 코드를 붙여넣으세요! ⭐️
@@ -70,80 +70,259 @@ window.closeAdmin = function() {
   document.getElementById("adminPanel").classList.add("hidden");
 };
 
+// 전체 레코드 목록 (순서 변경을 위해 메모리에 유지)
+let allRecords = [];
+
+// 텍스트에서 줄바꿈(\n)을 <br>로 변환
+function nl2br(text) {
+  return (text || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>");
+}
+
 // 화면에 피드형 카드를 그리는 함수
 window.render = async function() {
   const container = document.getElementById("recordContainer");
   showLoadingOverlay();
 
   try {
-    const q = query(collection(db, "records"), orderBy("createdAt", "desc"));
+    const q = query(collection(db, "records"), orderBy("order", "asc"));
     const querySnapshot = await getDocs(q);
     
-    container.innerHTML = ""; 
-    let index = querySnapshot.size;
-
+    allRecords = [];
     querySnapshot.forEach((documentSnapshot) => {
-      const item = documentSnapshot.data();
-      const docId = documentSnapshot.id;
-      
-      const title = item.title || "제목 없는 기록";
-      const desc = item.desc || "설명이 생략된 코딩 로그입니다.";
-      const tags = item.tags ? item.tags.split(',').map(tag => tag.trim()).filter(tag => tag) : [];
-      
-      let tagsHtml = '';
-      tags.forEach(tag => {
-        tagsHtml += `<span class="bg-tertiary-fixed text-on-tertiary-fixed text-[10px] label-font px-2 py-0.5 rounded-full uppercase">${tag}</span>`;
-      });
-
-      // 🔥 스크린샷과 동일한 세로형(인스타 피드) 레이아웃 적용 🔥
-      const card = `
-        <div class="bg-surface-container-lowest rounded-3xl p-6 flex flex-col items-center gap-4 hover:bg-tertiary-container transition-all group border border-transparent hover:border-[#fcf7e1]">
-          
-          <div class="w-full flex justify-between items-center mb-2">
-            <span class="label-font text-xl font-bold text-outline-variant">#${String(index).padStart(3, '0')}</span>
-            <button onclick="deleteRecord('${docId}', '${item.storagePath || ''}')" class="text-outline-variant hover:text-error transition-colors p-2 rounded-full hover:bg-primary-container" title="기록 삭제">
-              <span class="material-symbols-outlined text-sm">delete</span>
-            </button>
-          </div>
-          
-          <div class="w-full rounded-2xl overflow-hidden mb-2">
-            <img src="${item.imageUrl}" class="w-full h-auto object-contain" alt="thumbnail">
-          </div>
-          
-          <div class="w-full text-center flex flex-col items-center gap-2 px-2">
-            <h3 class="font-bold text-2xl text-on-surface">${title}</h3>
-            <p class="text-sm text-on-surface-variant leading-relaxed">${desc}</p>
-            <div class="mt-2 flex flex-wrap justify-center gap-2">
-              ${tagsHtml}
-            </div>
-          </div>
-          
-          <a href="${item.link}" target="_blank" class="w-full mt-4">
-            <button class="w-full bg-primary text-[#fff7f6] label-font px-6 py-4 rounded-2xl hover:shadow-[0_10px_20px_rgba(124,85,86,0.15)] transition-all active:scale-95 flex items-center justify-center gap-2">
-              Go to Link
-              <span class="material-symbols-outlined text-sm">arrow_outward</span>
-            </button>
-          </a>
-          
-        </div>
-      `;
-      container.innerHTML += card;
-      index--;
+      allRecords.push({ id: documentSnapshot.id, ...documentSnapshot.data() });
     });
 
-     if(container.innerHTML === "") {
-       container.innerHTML = `<div class="text-center py-12 label-font text-on-surface-variant">아직 등록된 기록이 없습니다. 우측 하단의 Add 버튼을 눌러보세요!</div>`;
-       hideLoadingOverlay();
-     } else {
-       waitForImagesToLoad(container);
+    // order 필드가 없는 기록은 createdAt 기준으로 정렬 후 order 부여
+    if (allRecords.some(r => r.order === undefined || r.order === null)) {
+      allRecords.sort((a, b) => {
+        const aTime = a.createdAt ? a.createdAt.toMillis() : 0;
+        const bTime = b.createdAt ? b.createdAt.toMillis() : 0;
+        return bTime - aTime;
+      });
+      const batch = writeBatch(db);
+      allRecords.forEach((record, i) => {
+        const docRef = doc(db, "records", record.id);
+        batch.update(docRef, { order: i });
+        record.order = i;
+      });
+      await batch.commit();
     }
+
+    renderCards(container);
 
   } catch (error) {
     console.error("데이터 불러오기 에러:", error);
     container.innerHTML = `<div class="text-center py-12 text-error font-bold">데이터를 불러오는데 실패했습니다. (콘솔창 확인)</div>`;
-     hideLoadingOverlay();
+    hideLoadingOverlay();
   }
 };
+
+function renderCards(container) {
+  container.innerHTML = "";
+
+  if (allRecords.length === 0) {
+    container.innerHTML = `<div class="text-center py-12 label-font text-on-surface-variant">아직 등록된 기록이 없습니다. 우측 하단의 Add 버튼을 눌러보세요!</div>`;
+    hideLoadingOverlay();
+    return;
+  }
+
+  const currentSearch = document.getElementById("searchInput") ? document.getElementById("searchInput").value.trim().toLowerCase() : "";
+
+  const filtered = currentSearch
+    ? allRecords.filter(r =>
+        (r.title || "").toLowerCase().includes(currentSearch) ||
+        (r.tags || "").toLowerCase().includes(currentSearch) ||
+        (r.desc || "").toLowerCase().includes(currentSearch)
+      )
+    : allRecords;
+
+  if (filtered.length === 0) {
+    container.innerHTML = `<div class="text-center py-12 label-font text-on-surface-variant">"${currentSearch}"에 해당하는 기록이 없습니다.</div>`;
+    hideLoadingOverlay();
+    return;
+  }
+
+  filtered.forEach((item, idx) => {
+    const docId = item.id;
+    const title = item.title || "제목 없는 기록";
+    const desc = item.desc || "설명이 생략된 코딩 로그입니다.";
+    const tags = item.tags ? item.tags.split(',').map(tag => tag.trim()).filter(tag => tag) : [];
+    const displayNum = allRecords.findIndex(r => r.id === docId) + 1;
+
+    let tagsHtml = '';
+    tags.forEach(tag => {
+      tagsHtml += `<span class="bg-tertiary-fixed text-on-tertiary-fixed text-[10px] label-font px-2 py-0.5 rounded-full uppercase">${tag}</span>`;
+    });
+
+    const isFirst = idx === 0;
+    const isLast = idx === filtered.length - 1;
+    const upDisabled = isFirst ? "opacity-30 pointer-events-none" : "";
+    const downDisabled = isLast ? "opacity-30 pointer-events-none" : "";
+
+    const card = `
+      <div id="card-${docId}" class="bg-surface-container-lowest rounded-3xl p-6 flex flex-col items-center gap-4 hover:bg-tertiary-container transition-all group border border-transparent hover:border-[#fcf7e1]">
+        
+        <div class="w-full flex justify-between items-center mb-2">
+          <div class="flex items-center gap-1">
+            <span class="label-font text-xl font-bold text-outline-variant">#${String(displayNum).padStart(3, '0')}</span>
+            <button onclick="moveRecord('${docId}', -1)" class="p-1 rounded-full hover:bg-secondary-container transition-colors ${upDisabled}" title="위로 이동">
+              <span class="material-symbols-outlined text-base text-secondary">arrow_upward</span>
+            </button>
+            <button onclick="moveRecord('${docId}', 1)" class="p-1 rounded-full hover:bg-secondary-container transition-colors ${downDisabled}" title="아래로 이동">
+              <span class="material-symbols-outlined text-base text-secondary">arrow_downward</span>
+            </button>
+          </div>
+          <div class="flex items-center gap-1">
+            <button onclick="openEdit('${docId}')" class="text-outline-variant hover:text-secondary transition-colors p-2 rounded-full hover:bg-secondary-container" title="기록 수정">
+              <span class="material-symbols-outlined text-sm">edit</span>
+            </button>
+            <button onclick="deleteRecord('${docId}', '${item.storagePath || ''}')" class="text-outline-variant hover:text-error transition-colors p-2 rounded-full hover:bg-primary-container" title="기록 삭제">
+              <span class="material-symbols-outlined text-sm">delete</span>
+            </button>
+          </div>
+        </div>
+        
+        <div class="w-full rounded-2xl overflow-hidden mb-2">
+          <img src="${item.imageUrl}" class="w-full h-auto object-contain" alt="thumbnail">
+        </div>
+        
+        <div class="w-full text-center flex flex-col items-center gap-2 px-2">
+          <h3 class="font-bold text-2xl text-on-surface">${nl2br(title)}</h3>
+          <p class="text-sm text-on-surface-variant leading-relaxed">${nl2br(desc)}</p>
+          <div class="mt-2 flex flex-wrap justify-center gap-2">
+            ${tagsHtml}
+          </div>
+        </div>
+        
+        <a href="${item.link}" target="_blank" class="w-full mt-4">
+          <button class="w-full bg-primary text-[#fff7f6] label-font px-6 py-4 rounded-2xl hover:shadow-[0_10px_20px_rgba(124,85,86,0.15)] transition-all active:scale-95 flex items-center justify-center gap-2">
+            Go to Link
+            <span class="material-symbols-outlined text-sm">arrow_outward</span>
+          </button>
+        </a>
+        
+      </div>
+    `;
+    container.innerHTML += card;
+  });
+
+  waitForImagesToLoad(container);
+}
+
+// 순서 변경
+window.moveRecord = async function(docId, direction) {
+  const idx = allRecords.findIndex(r => r.id === docId);
+  const targetIdx = idx + direction;
+  if (targetIdx < 0 || targetIdx >= allRecords.length) return;
+
+  // 두 항목의 order 값 교환
+  const batch = writeBatch(db);
+  const aRef = doc(db, "records", allRecords[idx].id);
+  const bRef = doc(db, "records", allRecords[targetIdx].id);
+  const aOrder = allRecords[idx].order;
+  const bOrder = allRecords[targetIdx].order;
+  batch.update(aRef, { order: bOrder });
+  batch.update(bRef, { order: aOrder });
+  await batch.commit();
+
+  // 메모리 배열도 교환
+  [allRecords[idx].order, allRecords[targetIdx].order] = [bOrder, aOrder];
+  [allRecords[idx], allRecords[targetIdx]] = [allRecords[targetIdx], allRecords[idx]];
+
+  renderCards(document.getElementById("recordContainer"));
+};
+
+// 수정 패널 열기
+window.openEdit = function(docId) {
+  const record = allRecords.find(r => r.id === docId);
+  if (!record) return;
+
+  document.getElementById("editDocId").value = docId;
+  document.getElementById("editTitleInput").value = record.title || "";
+  document.getElementById("editDescInput").value = record.desc || "";
+  document.getElementById("editTagsInput").value = record.tags || "";
+  document.getElementById("editLinkInput").value = record.link || "";
+  document.getElementById("editPanel").classList.remove("hidden");
+};
+
+window.closeEdit = function() {
+  document.getElementById("editPanel").classList.add("hidden");
+};
+
+window.saveEdit = async function() {
+  const input = prompt("수정 권한 확인: 관리자 비밀번호를 입력하세요.");
+  if (input !== PASSWORD) {
+    if (input !== null) alert("비밀번호가 틀렸습니다.");
+    return;
+  }
+
+  const docId = document.getElementById("editDocId").value;
+  const title = document.getElementById("editTitleInput").value;
+  const desc = document.getElementById("editDescInput").value;
+  const tags = document.getElementById("editTagsInput").value;
+  const link = document.getElementById("editLinkInput").value;
+
+  const saveBtn = document.getElementById("editSaveBtn");
+  saveBtn.innerText = "저장 중...";
+  saveBtn.disabled = true;
+
+  try {
+    await updateDoc(doc(db, "records", docId), { title, desc, tags, link });
+    const record = allRecords.find(r => r.id === docId);
+    if (record) Object.assign(record, { title, desc, tags, link });
+    closeEdit();
+    renderCards(document.getElementById("recordContainer"));
+  } catch (error) {
+    console.error("수정 에러:", error);
+    alert("수정 중 오류가 발생했습니다.");
+  } finally {
+    saveBtn.innerText = "수정 저장";
+    saveBtn.disabled = false;
+  }
+};
+
+// 검색
+window.doSearch = function() {
+  renderCards(document.getElementById("recordContainer"));
+};
+
+window.clearSearch = function() {
+  document.getElementById("searchInput").value = "";
+  document.getElementById("searchPanel").classList.add("hidden");
+  renderCards(document.getElementById("recordContainer"));
+};
+
+window.openSearch = function() {
+  document.getElementById("searchPanel").classList.remove("hidden");
+  setTimeout(() => document.getElementById("searchInput").focus(), 50);
+};
+
+window.closeSearch = function() {
+  clearSearch();
+};
+
+// Settings
+window.openSettings = function() {
+  document.getElementById("settingsPanel").classList.remove("hidden");
+};
+
+window.closeSettings = function() {
+  document.getElementById("settingsPanel").classList.add("hidden");
+};
+
+window.toggleDarkMode = function() {
+  document.documentElement.classList.toggle("dark");
+  const isDark = document.documentElement.classList.contains("dark");
+  localStorage.setItem("darkMode", isDark ? "1" : "0");
+  document.getElementById("darkModeToggle").checked = isDark;
+};
+
+// 다크모드 초기화
+(function() {
+  if (localStorage.getItem("darkMode") === "1") {
+    document.documentElement.classList.add("dark");
+  }
+})();
 
 window.addRecord = async function() {
   const fileInput = document.getElementById("imageInput");
@@ -175,6 +354,7 @@ window.addRecord = async function() {
       title: title,
       desc: desc,
       tags: tags,
+      order: allRecords.length,
       createdAt: serverTimestamp()
     });
 
