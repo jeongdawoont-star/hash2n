@@ -445,6 +445,10 @@ window.addRecord = async function() {
     const imageRef = ref(storage, filePath);
     await uploadBytes(imageRef, file);
     const imageUrl = await getDownloadURL(imageRef);
+    const minOrder = allRecords.length > 0
+      ? Math.min(...allRecords.map((r) => (r.order ?? 0)))
+      : 0;
+    const newOrder = allRecords.length > 0 ? minOrder - 1 : 0;
 
     await addDoc(collection(db, "records"), {
       imageUrl: imageUrl,
@@ -453,7 +457,7 @@ window.addRecord = async function() {
       title: title,
       desc: desc,
       tags: tags,
-      order: allRecords.length,
+      order: newOrder,
       createdAt: serverTimestamp()
     });
 
