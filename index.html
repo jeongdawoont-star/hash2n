@@ -116,19 +116,16 @@
 
     </section>
 
-    <section class="mt-12 flex justify-center">
-      <button onclick="openAdmin()" class="add-entry-btn group relative flex items-center gap-3 bg-secondary-container text-on-secondary-container font-bold px-12 py-5 rounded-2xl hover:shadow-[0_20px_40px_rgba(49,51,47,0.06)] transition-all active:scale-95">
-        <span class="material-symbols-outlined text-3xl">add_circle</span>
-        <span class="headline-font text-xl">기록 추가</span>
-        <div class="absolute -top-2 -right-2 w-6 h-6 bg-primary-container rounded-full border-2 border-surface group-hover:animate-bounce"></div>
-      </button>
-    </section>
   </main>
 
   <nav class="fixed bottom-0 left-0 w-full z-40 flex justify-around items-center px-4 pb-6 pt-3 bg-[#fbf9f5]/80 backdrop-blur-xl rounded-t-3xl border-t border-[#b2b2ad]/20 shadow-[0_-20px_40px_rgba(49,51,47,0.06)]">
     <a class="flex flex-col items-center justify-center bg-[#7c5556] text-[#fff7f6] rounded-xl px-4 py-1.5 transform scale-90 duration-200" href="#">
       <span class="material-symbols-outlined">inventory_2</span>
       <span class="label-font text-[10px] uppercase font-bold mt-1">Archive</span>
+    </a>
+    <a class="add-entry-btn flex flex-col items-center justify-center text-[#7c5556]/60 hover:opacity-80 transition-opacity" href="#" onclick="openAdmin(); return false;">
+      <span class="material-symbols-outlined">add_circle</span>
+      <span class="label-font text-[10px] uppercase font-bold mt-1">Add</span>
     </a>
     <a class="flex flex-col items-center justify-center text-[#7c5556]/60 hover:opacity-80 transition-opacity" href="#" onclick="openSettings(); return false;">
       <span class="material-symbols-outlined">settings</span>
