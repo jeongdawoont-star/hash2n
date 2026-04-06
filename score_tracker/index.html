@@ -297,10 +297,20 @@ body {
   display: flex; align-items: center; justify-content: center;
   gap: 8px;
 }
+.student-order {
+  flex-shrink: 0;
+  color: #A16207;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.2px;
+}
 .s-name {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
   font-size: clamp(15px, 1.5vw, 21px);
   font-weight: 800; color: var(--text); line-height: 1.05;
-  letter-spacing: -0.4px;
+  letter-spacing: 0;
   word-break: keep-all;
   text-align: center;
 }
@@ -501,6 +511,8 @@ body {
     flex: 1;
     min-height: 0;
     grid-template-columns: repeat(var(--student-cols, 4), minmax(0, 1fr)) !important;
+    grid-template-rows: repeat(var(--student-rows, 1), minmax(0, 1fr));
+    grid-auto-flow: column;
     grid-auto-rows: 1fr;
     align-content: stretch;
     gap: 8px;
@@ -519,7 +531,7 @@ body {
   }
   .student-top {
     flex-direction: column;
-    justify-content: space-between;
+    justify-content: flex-start;
     align-items: center;
     gap: 4px;
     min-width: 0;
@@ -528,8 +540,6 @@ body {
     border-right: 1px dashed #D1D5DB;
   }
   .s-name {
-    writing-mode: vertical-rl;
-    text-orientation: mixed;
     font-size: clamp(12px, 1.2vw, 16px);
     letter-spacing: 0;
     line-height: 1;
@@ -1308,10 +1318,15 @@ function renderStudents(scores) {
     const top = document.createElement('div');
     top.className = 'student-top';
 
+    const orderEl = document.createElement('div');
+    orderEl.className = 'student-order';
+    orderEl.textContent = String(s.order || '').padStart(2, '0');
+
     const nameEl = document.createElement('div');
     nameEl.className = 's-name';
     nameEl.textContent = s.name;
 
+    top.appendChild(orderEl);
     top.appendChild(nameEl);
 
     const board = document.createElement('div');
@@ -1367,6 +1382,8 @@ function renderStudents(scores) {
   else if (count <= 6) landscapeCols = 3;
   else landscapeCols = 4;
   grid.style.setProperty('--student-cols', landscapeCols);
+  const landscapeRows = Math.ceil((count || 1) / landscapeCols);
+  grid.style.setProperty('--student-rows', landscapeRows);
 }
 
 window.goAdmin = function() {
