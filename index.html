@@ -99,6 +99,44 @@
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
+    .seo-toggle {
+      max-width: 960px;
+      margin: 0 auto 32px;
+    }
+    .seo-toggle summary {
+      list-style: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #7a726f;
+      user-select: none;
+    }
+    .seo-toggle summary::-webkit-details-marker { display: none; }
+    .seo-toggle-line {
+      flex: 1;
+      height: 1px;
+      background: #d8d2c9;
+    }
+    .seo-toggle-label {
+      font-size: 12px;
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+    }
+    .seo-toggle-caret {
+      font-size: 16px;
+      line-height: 1;
+      color: #7c5556;
+      transform: rotate(0deg);
+      transition: transform 0.15s ease;
+      display: inline-block;
+    }
+    .seo-toggle[open] .seo-toggle-caret {
+      transform: rotate(90deg);
+    }
+    .seo-toggle-body {
+      margin-top: 14px;
+    }
   </style>
 </head>
 
@@ -132,28 +170,37 @@
         <p class="mt-4 max-w-2xl text-sm md:text-base text-[#6e6664] leading-7">
           교실에서 실제로 쓰는 웹 도구, 학생 활동 관리 앱, 자동화 실험, 수업용 자료를 모아 둔 코딩 아카이브입니다.
         </p>
-        <p class="mt-2 max-w-2xl text-xs md:text-sm text-[#7a726f] leading-6">
-          검색어 안내: 해시브라운 해시툰, 해시브라운 코딩, 해시브라운 바이브코딩, 해시브라운 바이브코딩 저장소
-        </p>
       </div>
     </section>
 
-    <section class="mb-8 max-w-4xl mx-auto">
-      <div class="bg-[#fffdf9] border border-[#ece7de] rounded-3xl p-6 md:p-8 shadow-sm">
-        <h3 class="headline-font text-2xl font-extrabold text-primary tracking-tight">주요 프로젝트</h3>
-        <p class="mt-3 text-sm md:text-base text-[#5f5956] leading-7">
-          이 페이지는 수업 보조 도구, 학급 운영 자동화, 발표 자료, AI 기반 실험 프로젝트를 한곳에서 소개합니다. 아래 링크는 검색엔진과 방문자가 바로 접근할 수 있는 대표 페이지입니다.
+    <details class="seo-toggle">
+      <summary>
+        <span class="seo-toggle-line" aria-hidden="true"></span>
+        <span class="seo-toggle-label">프로젝트 링크/검색어 펼치기</span>
+        <span class="seo-toggle-caret" aria-hidden="true">▶</span>
+      </summary>
+      <div class="seo-toggle-body">
+        <p class="max-w-4xl mx-auto mb-4 text-xs md:text-sm text-[#7a726f] leading-6 text-center">
+          검색어 안내: 해시브라운 해시툰, 해시브라운 코딩, 해시브라운 바이브코딩, 해시브라운 바이브코딩 저장소
         </p>
-        <ul class="mt-5 grid grid-cols-1 md:grid-cols-2 gap-3 text-sm md:text-base text-[#4f4a47]">
-          <li><a class="underline decoration-[#d3c3be] underline-offset-4 hover:text-primary" href="./score_tracker/">활동 트래커: 학생 미션 제출과 검사 상태를 관리하는 학급용 점수 트래커</a></li>
-          <li><a class="underline decoration-[#d3c3be] underline-offset-4 hover:text-primary" href="./vibe-apps/weekly-notice-automation.html">주간학습 및 알림장 자동화 도구</a></li>
-          <li><a class="underline decoration-[#d3c3be] underline-offset-4 hover:text-primary" href="./vibe-apps/dictation-studio.html">받아쓰기 Studio: Google TTS 기반 받아쓰기 음원 생성기</a></li>
-          <li><a class="underline decoration-[#d3c3be] underline-offset-4 hover:text-primary" href="./vibe-apps/social-open-class-script.html">사회 공개수업 역할극 대본</a></li>
-          <li><a class="underline decoration-[#d3c3be] underline-offset-4 hover:text-primary" href="./vibe-apps/design-elements-slide.html">조형 요소와 조형 원리 슬라이드</a></li>
-          <li><a class="underline decoration-[#d3c3be] underline-offset-4 hover:text-primary" href="./vibe-apps/songsabot.html">학교생활 AI 분쟁처리 시스템 소개</a></li>
-        </ul>
+        <section class="mb-8 max-w-4xl mx-auto">
+          <div class="bg-[#fffdf9] border border-[#ece7de] rounded-3xl p-6 md:p-8 shadow-sm">
+            <h3 class="headline-font text-2xl font-extrabold text-primary tracking-tight">주요 프로젝트</h3>
+            <p class="mt-3 text-sm md:text-base text-[#5f5956] leading-7">
+              이 페이지는 수업 보조 도구, 학급 운영 자동화, 발표 자료, AI 기반 실험 프로젝트를 한곳에서 소개합니다. 아래 링크는 검색엔진과 방문자가 바로 접근할 수 있는 대표 페이지입니다.
+            </p>
+            <ul class="mt-5 grid grid-cols-1 md:grid-cols-2 gap-3 text-sm md:text-base text-[#4f4a47]">
+              <li><a class="underline decoration-[#d3c3be] underline-offset-4 hover:text-primary" href="./score_tracker/">활동 트래커: 학생 미션 제출과 검사 상태를 관리하는 학급용 점수 트래커</a></li>
+              <li><a class="underline decoration-[#d3c3be] underline-offset-4 hover:text-primary" href="./vibe-apps/weekly-notice-automation.html">주간학습 및 알림장 자동화 도구</a></li>
+              <li><a class="underline decoration-[#d3c3be] underline-offset-4 hover:text-primary" href="./vibe-apps/dictation-studio.html">받아쓰기 Studio: Google TTS 기반 받아쓰기 음원 생성기</a></li>
+              <li><a class="underline decoration-[#d3c3be] underline-offset-4 hover:text-primary" href="./vibe-apps/social-open-class-script.html">사회 공개수업 역할극 대본</a></li>
+              <li><a class="underline decoration-[#d3c3be] underline-offset-4 hover:text-primary" href="./vibe-apps/design-elements-slide.html">조형 요소와 조형 원리 슬라이드</a></li>
+              <li><a class="underline decoration-[#d3c3be] underline-offset-4 hover:text-primary" href="./vibe-apps/songsabot.html">학교생활 AI 분쟁처리 시스템 소개</a></li>
+            </ul>
+          </div>
+        </section>
       </div>
-    </section>
+    </details>
 
     <section class="bg-surface-container rounded-3xl p-4 md:p-8 max-w-2xl mx-auto">
       
