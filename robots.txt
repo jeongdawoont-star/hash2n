@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://jeongdawoont-star.github.io/hash2n/sitemap.xml
