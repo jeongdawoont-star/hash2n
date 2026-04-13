@@ -157,12 +157,30 @@ body {
   justify-content: center;
   font-size: 16px;
 }
-.connection-dot {
+.status-lamps {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.status-lamp {
   width: 9px;
   height: 9px;
   border-radius: 50%;
+  background: #CBD5E1;
+  box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.16);
+  transition: background 0.2s, box-shadow 0.2s;
+}
+.status-lamp[data-state="loading"] {
+  background: #F59E0B;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.18);
+}
+.status-lamp[data-state="ok"] {
   background: #22C55E;
   box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.18);
+}
+.status-lamp[data-state="error"] {
+  background: #EF4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.18);
 }
 .fullscreen-corner {
   position: fixed;
@@ -214,6 +232,20 @@ body {
 .connect-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(255,107,53,0.45); }
 .connect-btn:active { transform: scale(0.97); }
 .connect-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+.setup-tools {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.setup-tools .muted-btn {
+  flex: 1;
+  min-height: 40px;
+}
+.setup-tools-hint {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-bottom: 14px;
+}
 
 /* 상태 바 */
 .status-bar {
@@ -598,7 +630,10 @@ body {
   <div class="header">
     <div class="header-toolbar">
       <div class="header-actions-left">
-        <span class="connection-dot" title="연결됨"></span>
+        <span class="status-lamps">
+          <span class="status-lamp" id="sheetStatusLamp" data-state="idle" title="시트 동기화 대기"></span>
+          <span class="status-lamp" id="configFileStatusLamp" data-state="idle" title="로컬 설정 대기"></span>
+        </span>
         <button class="header-menu-btn sync-btn" onclick="syncFromSheets()">🔄 동기화</button>
         <button class="header-menu-btn" id="inspectorBtn" onclick="toggleInspectorMode()">🧪 OFF</button>
         <button class="header-menu-btn" onclick="openConfigEditor()">✏️ 설정</button>
@@ -637,6 +672,12 @@ body {
         <div class="hint">apps-script.js 배포 후 생성 (없으면 비워도 됨)</div>
       </div>
     </div>
+    <div class="setup-tools">
+      <button class="muted-btn" type="button" onclick="saveConfigToFile()">💾 파일 저장</button>
+      <button class="muted-btn" type="button" onclick="triggerConfigFileLoad()">📂 파일 불러오기</button>
+      <input type="file" id="configFileInput" accept=".json,application/json" style="display:none;">
+    </div>
+    <div class="setup-tools-hint">설정값은 GitHub 대신 이 기기 또는 로컬 JSON 파일로만 보관할 수 있습니다.</div>
     <button class="connect-btn" id="connectBtn" onclick="connectApp()">🚀 시작하기</button>
     <button class="muted-btn" id="cancelEditBtn" onclick="cancelConfigEdit()" style="width:100%;margin-top:10px;display:none;">취소</button>
   </div>
@@ -666,13 +707,13 @@ import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstat
 let db, missions = [], students = [], currentScores = {}, inspectionMap = {};
 let isEditingConfig = false;
 let isInspectorMode = false;
-const INSPECTOR_PIN = '3393';
 const pendingTiles = new Set();
 let scoreUnsub = null;
 let inspectionUnsub = null;
 let autoSyncTimer = null;
 let autoSyncFocusHandler = null;
 let lastSyncSignature = '';
+let lastLoadedConfigLabel = '';
 
 function setupAutoSync(cfg) {
   if (autoSyncTimer) {
@@ -703,18 +744,6 @@ function normalizeSheetsId(value) {
   return match ? match[1] : raw.replace(/[#?].*$/, '').trim();
 }
 
-function loadConfigFromUrl() {
-  const p = new URLSearchParams(location.search);
-  const cfg = {
-    projectId: (p.get('pid') || '').trim(),
-    apiKey: (p.get('akey') || '').trim(),
-    sheetsId: normalizeSheetsId(p.get('sheets') || ''),
-    scriptUrl: (p.get('script') || '').trim(),
-  };
-  if (!cfg.projectId || !cfg.apiKey) return {};
-  return cfg;
-}
-
 function pickNameCell(row) {
   if (!Array.isArray(row)) return '';
   const cleaned = row.map(v => (v || '').toString().trim()).filter(Boolean);
@@ -723,52 +752,136 @@ function pickNameCell(row) {
   return cleaned[0];
 }
 
+function normalizeConfig(raw = {}) {
+  return {
+    projectId: (raw.projectId || '').trim(),
+    apiKey: (raw.apiKey || '').trim(),
+    sheetsId: normalizeSheetsId(raw.sheetsId || ''),
+    scriptUrl: (raw.scriptUrl || '').trim(),
+  };
+}
+
+function applyConfigToInputs(cfg) {
+  document.getElementById('projectId').value = cfg.projectId || '';
+  document.getElementById('apiKey').value = cfg.apiKey || '';
+  document.getElementById('sheetsId').value = cfg.sheetsId || '';
+  document.getElementById('scriptUrl').value = cfg.scriptUrl || '';
+}
+
+function readConfigFromInputs() {
+  return normalizeConfig({
+    projectId: document.getElementById('projectId').value,
+    apiKey: document.getElementById('apiKey').value,
+    sheetsId: document.getElementById('sheetsId').value,
+    scriptUrl: document.getElementById('scriptUrl').value,
+  });
+}
+
+function getAdminPin() {
+  return localStorage.getItem('admin_pin') || '1234';
+}
+
+function verifyTeacherPin(message = '관리자 비밀번호를 입력하세요') {
+  const pin = prompt(message);
+  if ((pin || '').trim() !== getAdminPin()) {
+    showToast('비밀번호가 올바르지 않습니다');
+    return false;
+  }
+  return true;
+}
+
+function setStatusLamp(elementId, state, title) {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+  el.dataset.state = state;
+  el.title = title;
+}
+
+function updateSheetStatus(state, detail = '') {
+  const title = detail || (
+    state === 'ok' ? '시트 동기화 완료' :
+    state === 'loading' ? '시트 동기화 중' :
+    state === 'error' ? '시트 동기화 실패' :
+    '시트 동기화 대기'
+  );
+  setStatusLamp('sheetStatusLamp', state, title);
+}
+
+function updateConfigFileStatus(state, detail = '') {
+  const title = detail || (
+    state === 'ok' ? '로컬 설정 사용 가능' :
+    state === 'loading' ? '로컬 설정 파일 확인 중' :
+    state === 'error' ? '로컬 설정 파일 불러오기 실패' :
+    '로컬 설정 대기'
+  );
+  setStatusLamp('configFileStatusLamp', state, title);
+}
+
 // ── 설정 저장/로드 ──────────────────────────────────────────
 function saveConfig(cfg) { localStorage.setItem('tracker_cfg', JSON.stringify(cfg)); }
 function loadConfig() {
   try { return JSON.parse(localStorage.getItem('tracker_cfg')) || {}; } catch { return {}; }
 }
 
-async function loadHostedConfig() {
-  try {
-    const res = await fetch('./tracker-config.json', { cache: 'no-store' });
-    if (!res.ok) return {};
-    const raw = await res.json();
-    const cfg = {
-      projectId: (raw.projectId || '').trim(),
-      apiKey: (raw.apiKey || '').trim(),
-      sheetsId: normalizeSheetsId(raw.sheetsId || ''),
-      scriptUrl: (raw.scriptUrl || '').trim(),
-    };
-    if (!cfg.projectId || !cfg.apiKey) return {};
-    return cfg;
-  } catch {
-    return {};
+window.saveConfigToFile = function() {
+  const cfg = readConfigFromInputs();
+  if (!cfg.projectId || !cfg.apiKey) {
+    alert('저장할 설정값을 먼저 입력하세요.');
+    return;
   }
+
+  const blob = new Blob([JSON.stringify(cfg, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'tracker-config.local.json';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+  updateConfigFileStatus('ok', '로컬 설정 파일 저장 완료');
+  showToast('설정 파일을 저장했습니다');
+};
+
+window.triggerConfigFileLoad = function() {
+  const input = document.getElementById('configFileInput');
+  if (!input) return;
+  input.value = '';
+  input.click();
+};
+
+async function importConfigFile(file) {
+  updateConfigFileStatus('loading', '로컬 설정 파일 불러오는 중');
+  const text = await file.text();
+  const cfg = normalizeConfig(JSON.parse(text));
+  if (!cfg.projectId || !cfg.apiKey) {
+    throw new Error('설정 파일에 프로젝트 ID 또는 API Key가 없습니다');
+  }
+
+  lastLoadedConfigLabel = file.name || 'tracker-config.local.json';
+  applyConfigToInputs(cfg);
+  saveConfig(cfg);
+  updateConfigFileStatus('ok', `로컬 파일 불러옴: ${lastLoadedConfigLabel}`);
+  showToast('로컬 설정 파일을 불러왔습니다');
+  await initApp(cfg);
 }
 
 // ── 앱 연결 ─────────────────────────────────────────────────
 window.connectApp = async function() {
-  const cfg = {
-    projectId: document.getElementById('projectId').value.trim(),
-    apiKey: document.getElementById('apiKey').value.trim(),
-    sheetsId: normalizeSheetsId(document.getElementById('sheetsId').value),
-    scriptUrl: document.getElementById('scriptUrl').value.trim(),
-  };
+  const cfg = readConfigFromInputs();
   if (!cfg.projectId || !cfg.apiKey) { alert('프로젝트 ID와 API Key를 입력하세요.'); return; }
   isEditingConfig = false;
   document.getElementById('cancelEditBtn').style.display = 'none';
   document.getElementById('connectBtn').textContent = '🚀 시작하기';
   saveConfig(cfg);
+  updateConfigFileStatus('ok', lastLoadedConfigLabel ? `로컬 파일 불러옴: ${lastLoadedConfigLabel}` : '기기 저장 설정 사용 중');
   await initApp(cfg);
 };
 
 window.openConfigEditor = function() {
+  if (!verifyTeacherPin('설정을 열려면 관리자 비밀번호를 입력하세요')) return;
   const cfg = window._cfg || loadConfig();
-  document.getElementById('projectId').value = cfg.projectId || '';
-  document.getElementById('apiKey').value = cfg.apiKey || '';
-  document.getElementById('sheetsId').value = cfg.sheetsId || '';
-  document.getElementById('scriptUrl').value = cfg.scriptUrl || '';
+  applyConfigToInputs(cfg);
 
   isEditingConfig = true;
   document.getElementById('connectBtn').textContent = '💾 설정 저장';
@@ -790,6 +903,7 @@ window.cancelConfigEdit = function() {
 async function initApp(cfg) {
   const btn = document.getElementById('connectBtn');
   if (btn) { btn.disabled = true; btn.textContent = '연결 중...'; }
+  updateSheetStatus(cfg.sheetsId ? 'loading' : 'idle', cfg.sheetsId ? '시트 동기화 준비 중' : '시트 ID 없음');
 
   document.getElementById('loadingSection').style.display = 'flex';
   document.getElementById('mainContent').style.display = 'none';
@@ -811,7 +925,10 @@ async function initApp(cfg) {
 
     // 앱 시작 시 Sheets를 기준으로 항상 1회 동기화(삭제/체크 반영)
     if (cfg.sheetsId) await syncFromSheets(true);
-    else await loadStudents();
+    else {
+      await loadStudents();
+      updateSheetStatus('idle', '시트 ID 없이 Firebase만 연결됨');
+    }
 
     // 주기 + 포커스 복귀 동기화
     setupAutoSync(cfg);
@@ -828,6 +945,7 @@ async function initApp(cfg) {
     document.getElementById('loadingSection').style.display = 'none';
     document.getElementById('setupSection').style.display = 'block';
     if (btn) { btn.disabled = false; btn.textContent = '🚀 시작하기'; }
+    updateSheetStatus('error', 'Firebase 연결 실패');
     showError('연결 실패: ' + err.message);
   }
 }
@@ -981,7 +1099,13 @@ function isBooleanLikeMissionName(name) {
 // ── Sheets → Firestore 동기화 ────────────────────────────────
 window.syncFromSheets = async function(silent = false) {
   const cfg = window._cfg || loadConfig();
-  if (!cfg.sheetsId) { if (!silent) alert('Sheets ID가 설정되지 않았습니다.'); return; }
+  if (!cfg.sheetsId) {
+    updateSheetStatus('idle', '시트 ID가 설정되지 않았습니다');
+    if (!silent) alert('Sheets ID가 설정되지 않았습니다.');
+    return;
+  }
+
+  updateSheetStatus('loading', '시트 동기화 중');
 
   if (!silent) {
     const btn = document.querySelector('.sync-btn');
@@ -1119,9 +1243,11 @@ window.syncFromSheets = async function(silent = false) {
     lastSyncSignature = nextSignature;
 
     await loadStudents();
+    updateSheetStatus('ok', `시트 동기화 완료 ${new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}`);
     if (!silent) showToast('✅ 동기화 완료!');
 
   } catch (err) {
+    updateSheetStatus('error', `시트 동기화 실패: ${err.message}`);
     if (!silent) showError('동기화 실패: ' + err.message);
     else console.warn(err);
   } finally {
@@ -1203,11 +1329,7 @@ async function writeToSheets(allScores, inspection) {
 
 window.toggleInspectorMode = function() {
   if (!isInspectorMode) {
-    const pin = prompt('관리자 비밀번호를 입력하세요');
-    if ((pin || '').trim() !== INSPECTOR_PIN) {
-      showToast('비밀번호가 올바르지 않습니다');
-      return;
-    }
+    if (!verifyTeacherPin()) return;
   }
   isInspectorMode = !isInspectorMode;
   const btn = document.getElementById('inspectorBtn');
@@ -1243,29 +1365,51 @@ function refreshFullscreenButton() {
 document.addEventListener('fullscreenchange', refreshFullscreenButton);
 
 async function toggleInspection(studentId, missionId, done) {
-  if (!done) {
-    showToast('제출(초록)된 과제만 검사완료 처리할 수 있어요');
-    return;
-  }
+  const key = `${studentId}:${missionId}`;
+  if (pendingTiles.has(key)) return;
 
   const student = students.find(s => s.id === studentId);
   const mission = missions.find(m => m.id === missionId);
   if (!student || !mission) return;
 
+  const needsAutoSubmit = !done;
   const next = Object.assign({}, inspectionMap);
   const row = Object.assign({}, next[studentId] || {});
   const was = !!row[missionId];
-  row[missionId] = !was;
+  const nextInspection = needsAutoSubmit ? true : !was;
+  row[missionId] = nextInspection;
   next[studentId] = row;
 
+  pendingTiles.add(key);
+  renderStudents(currentScores);
+
   try {
+    let nextScores = currentScores;
+    if (needsAutoSubmit) {
+      const ref = doc(db, 'scores', 'current');
+      const snap = await getDoc(ref);
+      const all = snap.exists() ? snap.data() : {};
+      if (!all[studentId]) all[studentId] = {};
+      all[studentId][missionId] = 1;
+      await setDoc(ref, all);
+      currentScores = all;
+      nextScores = all;
+    }
+
     await setDoc(doc(db, 'scores', 'inspection'), next);
     inspectionMap = next;
     renderStudents(currentScores);
-    writeToSheets(currentScores, inspectionMap).catch(console.warn);
-    showToast(`${student.name} · ${mission.name} 검사 ${was ? '해제' : '완료'}`);
+    writeToSheets(nextScores, inspectionMap).catch(console.warn);
+    if (needsAutoSubmit) {
+      showToast(`${student.name} · ${mission.name} 제출 + 검사 완료`);
+    } else {
+      showToast(`${student.name} · ${mission.name} 검사 ${nextInspection ? '완료' : '해제'}`);
+    }
   } catch (err) {
     showError('검사 저장 실패: ' + err.message);
+  } finally {
+    pendingTiles.delete(key);
+    renderStudents(currentScores);
   }
 }
 
@@ -1395,9 +1539,7 @@ function renderStudents(scores) {
 }
 
 window.goAdmin = function() {
-  const cfg = loadConfig();
-  const p = new URLSearchParams({ pid: cfg.projectId || '', akey: cfg.apiKey || '' });
-  location.href = `admin.html?${p}`;
+  location.href = 'admin.html';
 };
 
 function showError(msg) {
@@ -1422,21 +1564,32 @@ window.showToast = function(msg) {
 
 // 자동 로드
 (async function boot() {
-  const urlCfg = loadConfigFromUrl();
-  const saved = loadConfig();
-  const hosted = await loadHostedConfig();
-  const bootCfg = (urlCfg.projectId && urlCfg.apiKey)
-    ? urlCfg
-    : ((hosted.projectId && hosted.apiKey) ? hosted : saved);
+  const fileInput = document.getElementById('configFileInput');
+  if (fileInput) {
+    fileInput.addEventListener('change', async (event) => {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      try {
+        await importConfigFile(file);
+      } catch (err) {
+        updateConfigFileStatus('error', `로컬 파일 불러오기 실패: ${err.message}`);
+        showError('로컬 파일 불러오기 실패: ' + err.message);
+      } finally {
+        event.target.value = '';
+      }
+    });
+  }
+
+  const saved = normalizeConfig(loadConfig());
+  const bootCfg = saved;
 
   if (bootCfg.projectId && bootCfg.apiKey) {
-    document.getElementById('projectId').value = bootCfg.projectId;
-    document.getElementById('apiKey').value = bootCfg.apiKey;
-    if (bootCfg.sheetsId) document.getElementById('sheetsId').value = bootCfg.sheetsId;
-    if (bootCfg.scriptUrl) document.getElementById('scriptUrl').value = bootCfg.scriptUrl;
+    applyConfigToInputs(bootCfg);
     saveConfig(bootCfg);
+    updateConfigFileStatus('ok', '기기 저장 설정 사용 중');
     initApp(bootCfg);
   } else {
+    updateConfigFileStatus('idle', '로컬 설정 파일 또는 기기 저장 설정이 필요합니다');
     document.getElementById('setupSection').style.display = 'block';
   }
 })();
