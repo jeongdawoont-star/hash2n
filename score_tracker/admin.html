@@ -512,6 +512,12 @@ function migrateScoresByMissionName(oldMissions, newMissions, allScores) {
     oldIdToName[m.id] = (m.name || '').toString().trim();
   });
 
+  const newIdToName = {};
+  (newMissions || []).forEach(m => {
+    if (!m || !m.id) return;
+    newIdToName[m.id] = (m.name || '').toString().trim();
+  });
+
   const newNameToId = {};
   (newMissions || []).forEach(m => {
     const key = (m.name || '').toString().trim();
@@ -530,8 +536,16 @@ function migrateScoresByMissionName(oldMissions, newMissions, allScores) {
       if (!n) return;
 
       let targetId = null;
-      const oldName = oldIdToName[mid];
-      if (oldName && newNameToId[oldName]) {
+      const oldName = (oldIdToName[mid] || '').toString().trim();
+      const sameIdName = (newIdToName[mid] || '').toString().trim();
+
+      // 1) 같은 ID가 같은 미션명을 가리키면 그대로 유지
+      if (sameIdName && oldName && sameIdName === oldName) {
+        targetId = mid;
+      }
+
+      // 2) 그 외에는 미션명 기준으로 매핑(순서 이동/삽입 대응)
+      if (!targetId && oldName && newNameToId[oldName]) {
         targetId = newNameToId[oldName];
       }
 
@@ -551,6 +565,12 @@ function migrateInspectionByMissionName(oldMissions, newMissions, allInspection)
     oldIdToName[m.id] = (m.name || '').toString().trim();
   });
 
+  const newIdToName = {};
+  (newMissions || []).forEach(m => {
+    if (!m || !m.id) return;
+    newIdToName[m.id] = (m.name || '').toString().trim();
+  });
+
   const newNameToId = {};
   (newMissions || []).forEach(m => {
     const key = (m.name || '').toString().trim();
@@ -564,8 +584,16 @@ function migrateInspectionByMissionName(oldMissions, newMissions, allInspection)
     const dst = {};
     Object.entries(src).forEach(([mid, value]) => {
       if (!value) return;
-      const oldName = oldIdToName[mid];
-      const newId = oldName ? newNameToId[oldName] : null;
+      const oldName = (oldIdToName[mid] || '').toString().trim();
+      const sameIdName = (newIdToName[mid] || '').toString().trim();
+      let newId = null;
+
+      if (sameIdName && oldName && sameIdName === oldName) {
+        newId = mid;
+      }
+      if (!newId && oldName && newNameToId[oldName]) {
+        newId = newNameToId[oldName];
+      }
       if (newId) dst[newId] = true;
     });
     migrated[sid] = dst;
