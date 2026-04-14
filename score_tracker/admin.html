@@ -329,8 +329,13 @@ import {
 
 // ── 설정 ─────────────────────────────────────────────────────
 const P = new URLSearchParams(location.search);
-const PID  = P.get('pid')  || (()=>{ try{return JSON.parse(localStorage.getItem('tracker_cfg')||'{}').projectId||''}catch{return ''} })();
-const AKEY = P.get('akey') || (()=>{ try{return JSON.parse(localStorage.getItem('tracker_cfg')||'{}').apiKey||''}catch{return ''} })();
+const RUNTIME_CONFIG_KEY = 'tracker_cfg_runtime';
+function loadRuntimeConfig() {
+  try { return JSON.parse(sessionStorage.getItem(RUNTIME_CONFIG_KEY) || '{}') || {}; } catch { return {}; }
+}
+const runtimeCfg = loadRuntimeConfig();
+const PID  = P.get('pid')  || (runtimeCfg.projectId || '');
+const AKEY = P.get('akey') || (runtimeCfg.apiKey || '');
 
 let db, missions = [], students = [], allScores = {};
 let PIN = localStorage.getItem('admin_pin') || '1234';
@@ -581,7 +586,7 @@ function isBooleanLikeMissionName(name) {
 
 // ── Sheets 동기화 ────────────────────────────────────────────
 window.syncSheets = async function() {
-  const cfg = JSON.parse(localStorage.getItem('tracker_cfg')||'{}');
+  const cfg = loadRuntimeConfig();
   if (!cfg.sheetsId) { showToast('Sheets ID 없음 — 홈에서 설정하세요', 'err'); return; }
 
   const btn = document.getElementById('syncBtn');
@@ -693,15 +698,28 @@ window.syncSheets = async function() {
       });
     }
 
-    const migratedScores = migrateScoresByMissionName(oldMissions, normalizedMList, oldScores);
-    const migratedInspection = migrateInspectionByMissionName(oldMissions, normalizedMList, oldInspection);
+    let nextScores = migrateScoresByMissionName(oldMissions, normalizedMList, oldScores);
+    let nextInspection = migrateInspectionByMissionName(oldMissions, normalizedMList, oldInspection);
+
+    // Apps Script가 있으면 scores 시트의 현재 값/색상을 우선 반영한다.
+    if (cfg.scriptUrl) {
+      try {
+        const snapshot = await fetchSheetSnapshotFromScript(cfg.scriptUrl);
+        if (snapshot) {
+          nextScores = normalizeSnapshotByLists(snapshot.scores, sList, normalizedMList);
+          nextInspection = normalizeInspectionSnapshotByLists(snapshot.inspection, sList, normalizedMList);
+        }
+      } catch (snapshotErr) {
+        console.warn('sheet snapshot fallback:', snapshotErr);
+      }
+    }
 
     const now = new Date().toISOString();
     await Promise.all([
       setDoc(doc(db,'config','missions'),{list:normalizedMList,updatedAt:now}),
       setDoc(doc(db,'config','students'),{list:sList,updatedAt:now}),
-      setDoc(doc(db,'scores','current'), migratedScores),
-      setDoc(doc(db,'scores','inspection'), migratedInspection)
+      setDoc(doc(db,'scores','current'), nextScores),
+      setDoc(doc(db,'scores','inspection'), nextInspection)
     ]);
 
     missions = normalizedMList; students = sList;
@@ -766,6 +784,50 @@ async function fetchScoreMissionNames(id) {
   } catch {
     return [];
   }
+}
+
+async function fetchSheetSnapshotFromScript(scriptUrl) {
+  const raw = (scriptUrl || '').trim();
+  if (!raw) return null;
+  const url = raw + (raw.includes('?') ? '&' : '?') + 'mode=sheetSnapshot';
+  const res = await fetch(url, { method: 'GET' });
+  if (!res.ok) throw new Error('Apps Script 스냅샷 로드 실패');
+  const data = await res.json();
+  if (!data || !data.ok) throw new Error(data && data.error ? data.error : 'Apps Script 응답 오류');
+  return {
+    scores: data.scores && typeof data.scores === 'object' ? data.scores : {},
+    inspection: data.inspection && typeof data.inspection === 'object' ? data.inspection : {}
+  };
+}
+
+function normalizeSnapshotByLists(snapshot, studentList, missionList) {
+  const src = snapshot && typeof snapshot === 'object' ? snapshot : {};
+  const out = {};
+  (studentList || []).forEach((student) => {
+    const sid = student.id;
+    const row = src[sid] && typeof src[sid] === 'object' ? src[sid] : {};
+    const dst = {};
+    (missionList || []).forEach((mission) => {
+      dst[mission.id] = Number(row[mission.id]) || 0;
+    });
+    out[sid] = dst;
+  });
+  return out;
+}
+
+function normalizeInspectionSnapshotByLists(snapshot, studentList, missionList) {
+  const src = snapshot && typeof snapshot === 'object' ? snapshot : {};
+  const out = {};
+  (studentList || []).forEach((student) => {
+    const sid = student.id;
+    const row = src[sid] && typeof src[sid] === 'object' ? src[sid] : {};
+    const dst = {};
+    (missionList || []).forEach((mission) => {
+      dst[mission.id] = !!row[mission.id];
+    });
+    out[sid] = dst;
+  });
+  return out;
 }
 
 // ── 전체 점수 초기화 ─────────────────────────────────────────

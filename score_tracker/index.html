@@ -818,9 +818,10 @@ function updateConfigFileStatus(state, detail = '') {
 }
 
 // ── 설정 저장/로드 ──────────────────────────────────────────
-function saveConfig(cfg) { localStorage.setItem('tracker_cfg', JSON.stringify(cfg)); }
+const RUNTIME_CONFIG_KEY = 'tracker_cfg_runtime';
+function saveConfig(cfg) { sessionStorage.setItem(RUNTIME_CONFIG_KEY, JSON.stringify(cfg)); }
 function loadConfig() {
-  try { return JSON.parse(localStorage.getItem('tracker_cfg')) || {}; } catch { return {}; }
+  try { return JSON.parse(sessionStorage.getItem(RUNTIME_CONFIG_KEY)) || {}; } catch { return {}; }
 }
 
 window.saveConfigToFile = function() {
@@ -874,7 +875,7 @@ window.connectApp = async function() {
   document.getElementById('cancelEditBtn').style.display = 'none';
   document.getElementById('connectBtn').textContent = '🚀 시작하기';
   saveConfig(cfg);
-  updateConfigFileStatus('ok', lastLoadedConfigLabel ? `로컬 파일 불러옴: ${lastLoadedConfigLabel}` : '기기 저장 설정 사용 중');
+  updateConfigFileStatus('ok', lastLoadedConfigLabel ? `로컬 파일 불러옴: ${lastLoadedConfigLabel}` : '현재 탭 설정 사용 중');
   await initApp(cfg);
 };
 
@@ -989,6 +990,50 @@ async function fetchScoreMissionNames(sheetsId) {
   } catch {
     return [];
   }
+}
+
+async function fetchSheetSnapshotFromScript(scriptUrl) {
+  const raw = (scriptUrl || '').trim();
+  if (!raw) return null;
+  const url = raw + (raw.includes('?') ? '&' : '?') + 'mode=sheetSnapshot';
+  const res = await fetch(url, { method: 'GET' });
+  if (!res.ok) throw new Error('Apps Script 스냅샷 로드 실패');
+  const data = await res.json();
+  if (!data || !data.ok) throw new Error(data && data.error ? data.error : 'Apps Script 응답 오류');
+  return {
+    scores: data.scores && typeof data.scores === 'object' ? data.scores : {},
+    inspection: data.inspection && typeof data.inspection === 'object' ? data.inspection : {}
+  };
+}
+
+function normalizeSnapshotByLists(snapshot, studentList, missionList) {
+  const src = snapshot && typeof snapshot === 'object' ? snapshot : {};
+  const out = {};
+  (studentList || []).forEach((student) => {
+    const sid = student.id;
+    const row = src[sid] && typeof src[sid] === 'object' ? src[sid] : {};
+    const dst = {};
+    (missionList || []).forEach((mission) => {
+      dst[mission.id] = Number(row[mission.id]) || 0;
+    });
+    out[sid] = dst;
+  });
+  return out;
+}
+
+function normalizeInspectionSnapshotByLists(snapshot, studentList, missionList) {
+  const src = snapshot && typeof snapshot === 'object' ? snapshot : {};
+  const out = {};
+  (studentList || []).forEach((student) => {
+    const sid = student.id;
+    const row = src[sid] && typeof src[sid] === 'object' ? src[sid] : {};
+    const dst = {};
+    (missionList || []).forEach((mission) => {
+      dst[mission.id] = !!row[mission.id];
+    });
+    out[sid] = dst;
+  });
+  return out;
 }
 
 function parseCSV(text) {
@@ -1230,14 +1275,27 @@ window.syncFromSheets = async function(silent = false) {
       });
     }
 
-    const migratedScores = migrateScoresByMissionName(oldMissions, normalizedMissionList, oldScores);
-    const migratedInspection = migrateInspectionByMissionName(oldMissions, normalizedMissionList, oldInspection);
+    let nextScores = migrateScoresByMissionName(oldMissions, normalizedMissionList, oldScores);
+    let nextInspection = migrateInspectionByMissionName(oldMissions, normalizedMissionList, oldInspection);
+
+    // Apps Script가 있으면 scores 시트의 현재 값/색상을 우선 반영한다.
+    if (cfg.scriptUrl) {
+      try {
+        const snapshot = await fetchSheetSnapshotFromScript(cfg.scriptUrl);
+        if (snapshot) {
+          nextScores = normalizeSnapshotByLists(snapshot.scores, studentList, normalizedMissionList);
+          nextInspection = normalizeInspectionSnapshotByLists(snapshot.inspection, studentList, normalizedMissionList);
+        }
+      } catch (snapshotErr) {
+        console.warn('sheet snapshot fallback:', snapshotErr);
+      }
+    }
 
     await Promise.all([
       setDoc(doc(db, 'config', 'missions'), { list: normalizedMissionList, updatedAt: new Date().toISOString() }),
       setDoc(doc(db, 'config', 'students'), { list: studentList, updatedAt: new Date().toISOString() }),
-      setDoc(doc(db, 'scores', 'current'), migratedScores),
-      setDoc(doc(db, 'scores', 'inspection'), migratedInspection)
+      setDoc(doc(db, 'scores', 'current'), nextScores),
+      setDoc(doc(db, 'scores', 'inspection'), nextInspection)
     ]);
 
     lastSyncSignature = nextSignature;
@@ -1586,10 +1644,10 @@ window.showToast = function(msg) {
   if (bootCfg.projectId && bootCfg.apiKey) {
     applyConfigToInputs(bootCfg);
     saveConfig(bootCfg);
-    updateConfigFileStatus('ok', '기기 저장 설정 사용 중');
+    updateConfigFileStatus('ok', '현재 탭 설정 사용 중');
     initApp(bootCfg);
   } else {
-    updateConfigFileStatus('idle', '로컬 설정 파일 또는 기기 저장 설정이 필요합니다');
+    updateConfigFileStatus('idle', '로컬 설정 파일 또는 현재 탭 설정이 필요합니다');
     document.getElementById('setupSection').style.display = 'block';
   }
 })();

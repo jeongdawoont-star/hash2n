@@ -4,7 +4,19 @@
 // 주의: Firestore REST 호출을 제거해서 403 scope 오류를 원천 차단
 // ============================================================
 
-function doGet() {
+function doGet(e) {
+  try {
+    const mode = (typeof e !== 'undefined' && e && e.parameter && e.parameter.mode)
+      ? String(e.parameter.mode).trim()
+      : '';
+    if (mode === 'sheetSnapshot') {
+      const scores = buildScoresPayloadFromCurrentSheet_();
+      const inspection = readInspectionMapFromScoresSheet_();
+      return jsonResponse({ ok: true, scores: scores, inspection: inspection });
+    }
+  } catch (err) {
+    return jsonResponse({ ok: false, error: String(err && err.message ? err.message : err) });
+  }
   return jsonResponse({ ok: true, message: 'tracker sheet writer is running' });
 }
 
