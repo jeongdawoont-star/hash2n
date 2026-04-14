@@ -54,15 +54,7 @@ function onEdit(e) {
 
     const isSingleCell = e.range.getNumRows() === 1 && e.range.getNumColumns() === 1;
 
-    if (isSingleCell && startCol === 1) {
-      // A열 체크박스: 체크 시 해당 행을 최하단으로
-      const raw = (typeof e.value === 'undefined' ? e.range.getValue() : e.value);
-      const val = String(raw).trim().toLowerCase();
-      const checked = raw === true || val === 'true' || val === '1' || val === '완료' || val === 'x';
-      if (checked) {
-        moveCheckedMissionRowToBottom_(sheet, row);
-      }
-    } else if (isSingleCell && startCol === 2) {
+    if (isSingleCell && startCol === 2) {
       // B열 미션명: 새로 입력(이전값 없음)이면 맨 위로 이동
       const newName = (e.range.getValue() || '').toString().trim();
       const oldName = (e.oldValue || '').toString().trim();
