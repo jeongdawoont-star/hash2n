@@ -8,6 +8,32 @@ let currentSearch = '';
 // ────────────────────────────────────────────────────
 // 유틸
 // ────────────────────────────────────────────────────
+function showLoadingOverlay() {
+  document.getElementById('pageLoadingOverlay')?.classList.remove('hidden');
+}
+
+function hideLoadingOverlay() {
+  document.getElementById('pageLoadingOverlay')?.classList.add('hidden');
+}
+
+function waitForImagesToLoad(container) {
+  const images = Array.from(container.querySelectorAll('img'));
+  if (images.length === 0) { hideLoadingOverlay(); return; }
+
+  let done = 0;
+  const total = images.length;
+  const timer = setTimeout(hideLoadingOverlay, 3000); // 최대 3초 대기
+  const onDone = () => { if (++done >= total) { clearTimeout(timer); hideLoadingOverlay(); } };
+
+  images.forEach(img => {
+    if (img.complete) { onDone(); }
+    else {
+      img.addEventListener('load',  onDone, { once: true });
+      img.addEventListener('error', onDone, { once: true });
+    }
+  });
+}
+
 function nl2br(text) {
   return (text || '')
     .replace(/&/g, '&amp;')
@@ -109,10 +135,12 @@ function renderCards(container) {
     container.innerHTML += card;
   });
 
+  waitForImagesToLoad(container);
 }
 
 function render() {
   const container = document.getElementById('recordContainer');
+  showLoadingOverlay();
   renderCards(container);
 }
 
