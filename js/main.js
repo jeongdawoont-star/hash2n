@@ -145,36 +145,37 @@ function render() {
 }
 
 // ────────────────────────────────────────────────────
-// QR 코드 토글
+// QR 코드 — 미리 생성 후 캐시
 // ────────────────────────────────────────────────────
-window.toggleQr = function(btn) {
-  const panel  = btn.nextElementSibling;          // .qr-panel
-  const canvas = panel.querySelector('.qr-canvas');
-  const isOpen = !panel.classList.contains('hidden');
+function pregenerateQrCodes() {
+  if (typeof QRCode === 'undefined') {
+    console.warn('QRCode 라이브러리 미로드 — 재시도');
+    setTimeout(pregenerateQrCodes, 500);
+    return;
+  }
+  document.querySelectorAll('#recordContainer [data-link]').forEach(btn => {
+    const panel  = btn.nextElementSibling;
+    const canvas = panel?.querySelector('.qr-canvas');
+    if (!canvas || canvas.dataset.generated) return;
+    QRCode.toCanvas(canvas, btn.dataset.link, {
+      width: 200, margin: 2,
+      color: { dark: '#31332f', light: '#fffdf9' }
+    }, err => { if (!err) canvas.dataset.generated = '1'; });
+  });
+}
 
+window.toggleQr = function(btn) {
+  const panel  = btn.nextElementSibling;
+  const isOpen = !panel.classList.contains('hidden');
   if (isOpen) {
     panel.classList.add('hidden');
     panel.classList.remove('flex');
     btn.innerHTML = `<span class="material-symbols-outlined text-sm">qr_code</span> QR 코드 열기`;
-    return;
+  } else {
+    panel.classList.remove('hidden');
+    panel.classList.add('flex');
+    btn.innerHTML = `<span class="material-symbols-outlined text-sm">close</span> QR 닫기`;
   }
-
-  // QR 생성 (처음 열 때 한 번만)
-  if (!canvas.dataset.generated) {
-    const url = btn.dataset.link;
-    QRCode.toCanvas(canvas, url, {
-      width: 200,
-      margin: 2,
-      color: { dark: '#31332f', light: '#fffdf9' }
-    }, err => {
-      if (err) console.error('QR 생성 오류:', err);
-    });
-    canvas.dataset.generated = '1';
-  }
-
-  panel.classList.remove('hidden');
-  panel.classList.add('flex');
-  btn.innerHTML = `<span class="material-symbols-outlined text-sm">close</span> QR 닫기`;
 };
 
 // ────────────────────────────────────────────────────
@@ -193,6 +194,7 @@ window.doSearch = function() {
   currentSearch = (document.getElementById('searchInput').value || '').trim().toLowerCase();
   document.getElementById('searchPanel').classList.add('hidden');
   render();
+  pregenerateQrCodes();
 };
 
 window.clearSearch = function() {
@@ -200,6 +202,7 @@ window.clearSearch = function() {
   document.getElementById('searchInput').value = '';
   document.getElementById('searchPanel').classList.add('hidden');
   render();
+  pregenerateQrCodes();
 };
 
 // ────────────────────────────────────────────────────
@@ -234,5 +237,6 @@ window.toggleDarkMode = function() {
     if (toggle) toggle.checked = isDark;
 
     render();
+    pregenerateQrCodes();
   });
 })();
