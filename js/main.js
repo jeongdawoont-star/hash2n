@@ -127,7 +127,7 @@ function renderCards(container) {
           QR 코드 열기
         </button>
         <div class="qr-panel hidden w-full flex-col items-center gap-2 py-2">
-          <canvas class="qr-canvas rounded-2xl shadow-md"></canvas>
+          <img class="qr-img rounded-2xl shadow-md" width="200" height="200" alt="QR 코드">
           <span class="label-font text-[10px] text-[#b2b2ad]">카메라로 스캔하세요</span>
         </div>
 
@@ -149,18 +149,19 @@ function render() {
 // ────────────────────────────────────────────────────
 function pregenerateQrCodes() {
   if (typeof QRCode === 'undefined') {
-    console.warn('QRCode 라이브러리 미로드 — 재시도');
     setTimeout(pregenerateQrCodes, 500);
     return;
   }
   document.querySelectorAll('#recordContainer [data-link]').forEach(btn => {
-    const panel  = btn.nextElementSibling;
-    const canvas = panel?.querySelector('.qr-canvas');
-    if (!canvas || canvas.dataset.generated) return;
-    QRCode.toCanvas(canvas, btn.dataset.link, {
+    const panel = btn.nextElementSibling;
+    const img   = panel?.querySelector('.qr-img');
+    if (!img || img.dataset.generated) return;
+    QRCode.toDataURL(btn.dataset.link, {
       width: 200, margin: 2,
       color: { dark: '#31332f', light: '#fffdf9' }
-    }, err => { if (!err) canvas.dataset.generated = '1'; });
+    }, (err, url) => {
+      if (!err) { img.src = url; img.dataset.generated = '1'; }
+    });
   });
 }
 
