@@ -110,10 +110,22 @@ function renderCards(container) {
 
         <a href="${item.link}" target="_blank" rel="noopener noreferrer" class="w-full mt-4">
           <button class="w-full bg-primary text-[#fff7f6] label-font px-6 py-4 rounded-2xl hover:shadow-[0_10px_20px_rgba(124,85,86,0.15)] transition-all active:scale-95 flex items-center justify-center gap-2">
-            Go to Link
+            바로가기
             <span class="material-symbols-outlined text-sm">arrow_outward</span>
           </button>
         </a>
+
+        <button
+          onclick="toggleQr(this)"
+          data-link="${item.link.replace(/"/g, '&quot;')}"
+          class="mt-1 w-full flex items-center justify-center gap-1.5 text-[#b2b2ad] hover:text-[#7c5556] transition-colors label-font text-xs py-1.5 rounded-xl hover:bg-[#f5f0ea]">
+          <span class="material-symbols-outlined text-sm">qr_code</span>
+          QR 코드 열기
+        </button>
+        <div class="qr-panel hidden w-full flex-col items-center gap-2 py-2">
+          <canvas class="qr-canvas rounded-2xl shadow-md"></canvas>
+          <span class="label-font text-[10px] text-[#b2b2ad]">카메라로 스캔하세요</span>
+        </div>
 
       </div>`;
     container.innerHTML += card;
@@ -127,6 +139,39 @@ function render() {
   showLoadingOverlay();
   renderCards(container);
 }
+
+// ────────────────────────────────────────────────────
+// QR 코드 토글
+// ────────────────────────────────────────────────────
+window.toggleQr = function(btn) {
+  const panel  = btn.nextElementSibling;          // .qr-panel
+  const canvas = panel.querySelector('.qr-canvas');
+  const isOpen = !panel.classList.contains('hidden');
+
+  if (isOpen) {
+    panel.classList.add('hidden');
+    panel.classList.remove('flex');
+    btn.innerHTML = `<span class="material-symbols-outlined text-sm">qr_code</span> QR 코드 열기`;
+    return;
+  }
+
+  // QR 생성 (처음 열 때 한 번만)
+  if (!canvas.dataset.generated) {
+    const url = btn.dataset.link;
+    QRCode.toCanvas(canvas, url, {
+      width: 200,
+      margin: 2,
+      color: { dark: '#31332f', light: '#fffdf9' }
+    }, err => {
+      if (err) console.error('QR 생성 오류:', err);
+    });
+    canvas.dataset.generated = '1';
+  }
+
+  panel.classList.remove('hidden');
+  panel.classList.add('flex');
+  btn.innerHTML = `<span class="material-symbols-outlined text-sm">close</span> QR 닫기`;
+};
 
 // ────────────────────────────────────────────────────
 // 검색
