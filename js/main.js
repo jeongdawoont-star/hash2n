@@ -156,11 +156,13 @@ function pregenerateQrCodes() {
     const panel = btn.nextElementSibling;
     const img   = panel?.querySelector('.qr-img');
     if (!img || img.dataset.generated) return;
-    QRCode.toDataURL(btn.dataset.link, {
+    // DOM에 붙이지 않은 임시 캔버스에 그린 후 dataURL로 변환
+    const tmp = document.createElement('canvas');
+    QRCode.toCanvas(tmp, btn.dataset.link, {
       width: 200, margin: 2,
       color: { dark: '#31332f', light: '#fffdf9' }
-    }, (err, url) => {
-      if (!err) { img.src = url; img.dataset.generated = '1'; }
+    }, err => {
+      if (!err) { img.src = tmp.toDataURL('image/png'); img.dataset.generated = '1'; }
     });
   });
 }
