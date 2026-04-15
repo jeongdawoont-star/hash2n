@@ -35,7 +35,7 @@ export const RECORDS = [
     desc: "임진왜란판 레지스탕스 아발론.\n진화된 마피아 게임이라고 생각하면 된다.\n보드게임을 진행자 없이, 실물 카드 없이 할 수 있게 개조했다.\n토요한글학교에서 아이들과 하려고 제작.\n태블릿1대로 10명까지 플레이 가능.\n모바일 크롬에서 잘 됨",
     tags: "claude, gemini",
     link: "http://jeongdawoont-star.github.io/hash2n/vibe-apps/Choong-Yeok-the-Loyalty-and-Traitor.html",
-    image: "img/1775877854662_Gemini_Generated_Image_336cvp336cvp336c.png",
+    image: "img/12.jpg",
   },
 
   {
@@ -43,7 +43,7 @@ export const RECORDS = [
     desc: "내가 생각하는 바이브 코딩\n아직 제작 수준 미달이라\n혼자먹긴 맛있는데\n남한테 팔순없는 수준\n해썹인증같은거 못받음",
     tags: "",
     link: "https://www.instagram.com/p/DWy1CxMGgf9/?igsh=MTE0dXZncTRiM3Vtag==",
-    image: "img/1775527834309_1775486364553.jpg",
+    image: "img/11.jpg",
   },
 
   {
@@ -51,7 +51,7 @@ export const RECORDS = [
     desc: "나는 이게 너무 쓸모있다.\n15년간 종이 명렬표에 과제 체크하던걸 셀프 터치로 바꿨다.\n애들이 탭에 체크하면 내 엑셀에 기록된다.",
     tags: "copilot",
     link: "https://jeongdawoont-star.github.io/hash2n/vibe-apps/student-tracker-demo.html",
-    image: "img/1775369768535_15.jpg",
+    image: "img/10.jpg",
   },
 
   {
@@ -59,7 +59,7 @@ export const RECORDS = [
     desc: "호치민 학생들의 어휘능력 향상을 돕기위해 개발.\n(은)사실 내가 수업할때 편하려고 제작.\n외부 api 2개정도 구해다 놓으면 굉장히 편리한 사전이 된다.\n어휘학습카드도 제작되고.\n아직 인가전이라 [고급]눌러서 동의해야함.\n사전설정 필수. 해적판 아님.",
     tags: "copilot",
     link: "https://docs.google.com/spreadsheets/u/0/d/17jj3yravBhx2R8nkGo84Di9i7XOPsG7bkypkwUYT8OI/copy?authuser=0",
-    image: "img/1775400249467_16.jpg",
+    image: "img/9.jpg",
   },
 
   {
@@ -67,7 +67,7 @@ export const RECORDS = [
     desc: "막대한 학급 송사를 처리하려고 만들었다\n\n학생 입력-서버 기록-AI 분석\n학생에겐 지도내용을\n학부모에겐 안내문자를 써줌\n누가 기록도 되고\n자동으로 폰에 메시지로 넘어옴",
     tags: "gemini, firebase",
     link: "https://jeongdawoont-star.github.io/hash2n/vibe-apps/songsabot.html",
-    image: "img/1775403741384_17.jpg",
+    image: "img/8.jpg",
   },
 
   {
@@ -75,7 +75,7 @@ export const RECORDS = [
     desc: "받아쓰기 급수표는 있는데 음성은 없다니\n교사의 목을 아껴주기 위해 만들었다\n텍스트만 넣으면 음성 생성 가능",
     tags: "",
     link: "https://jeongdawoont-star.github.io/hash2n/vibe-apps/%EB%B0%9B%EC%95%84%EC%93%B0%EA%B8%B0%20Studio.html",
-    image: "img/1775205290020_11.jpg",
+    image: "img/7.jpg",
   },
 
   {
@@ -83,7 +83,7 @@ export const RECORDS = [
     desc: "학년부장 업무 중\n매일 알림장\n매주 주간학습 엑셀로 만들어 공유하기\n매번 새시트 만들고 내용쓰기 번거로워\n몽땅 때려넣고 클릭만 하면\n자동 생성되게 만들었다\n\n제작툴: gemini",
     tags: "",
     link: "https://jeongdawoont-star.github.io/hash2n/vibe-apps/weekly-notice-automation.html",
-    image: "img/1775203624039_12.jpg",
+    image: "img/6.jpg",
   },
 
   {
@@ -91,7 +91,7 @@ export const RECORDS = [
     desc: "조형요소와 조형원리를 설명해주고\n어떻게 표현하는지 알려주는 수업세트\n음성도 출력된다",
     tags: "claude",
     link: "https://jeongdawoont-star.github.io/hash2n/vibe-apps/%EC%A1%B0%ED%98%95%EC%9A%94%EC%86%8C%20%EC%8A%AC%EB%9D%BC%EC%9D%B4%EB%93%9C.html",
-    image: "img/1775400855364_13.jpg",
+    image: "img/5.jpg",
   },
 
   {
@@ -99,7 +99,7 @@ export const RECORDS = [
     desc: "교육과정 개정되면서 자료가 하나도 없어서\nhtml로 학습지랑 퀴즈 자료 만들었다",
     tags: "gemini",
     link: "https://jeongdawoont-star.github.io/hash2n/vibe-apps/%EC%82%AC%ED%9A%8C%EA%B3%B5%EA%B0%9C%EC%88%98%EC%97%85%EB%8C%80%EB%B3%B8.html",
-    image: "img/1775400658980_14.jpg",
+    image: "img/4.jpg",
   },
 
   {
@@ -107,7 +107,7 @@ export const RECORDS = [
     desc: "외식하러 갔다가 지루해 하는 딸을 위해\n즉석으로 만들어준 셈게임\n알에서부터 온갖 동물로 진화한다\n\n제작툴: 클로드",
     tags: "",
     link: "https://claude.ai/public/artifacts/5853c966-42fa-4d66-9664-aad266340014",
-    image: "img/1775203564994_10.jpg",
+    image: "img/3.jpg",
   },
 
   {
@@ -115,7 +115,7 @@ export const RECORDS = [
     desc: "바이브코딩 첫 시험작\n영단어로 하는 브롤스타즈\n컴퓨터실 감성으로 1키보드 2P 지원\n제작툴: Canva",
     tags: "",
     link: "https://hash2n.my.canva.site/wordwar",
-    image: "img/1775203488728_8.jpg",
+    image: "img/2.jpg",
   },
 
   {
@@ -123,7 +123,7 @@ export const RECORDS = [
     desc: "만든 작품들을 올려보려 합니다",
     tags: "",
     link: "https://www.instagram.com/p/DWjF75eGruc/?img_index=18&igsh=MXBlaXh1dWp3a3g2Zw==",
-    image: "img/1775062102852_1 두발자전거 8.jpg",
+    image: "img/1.jpg",
   },
 
 ];
