@@ -82,67 +82,38 @@
     html.dark nav { background-color: rgba(20, 23, 24, 0.92) !important; border-color: #2f3436 !important; }
     html.dark #pageLoadingOverlay { background-color: rgba(20, 23, 24, 0.75) !important; }
     html.dark #recordContainer .bg-surface-container-lowest,
-    html.dark #adminPanel > div,
-    html.dark #editPanel > div,
     html.dark #searchPanel > div,
     html.dark #settingsPanel > div { background-color: #1b1f21 !important; color: #ecebe7 !important; }
     html.dark #recordContainer .hover\:bg-tertiary-container:hover { background-color: #242a2d !important; }
     html.dark .text-on-surface,
     html.dark .text-on-surface-variant,
     html.dark .text-outline-variant { color: #ecebe7 !important; }
-    html.dark input,
-    html.dark textarea { background-color: #2b3134 !important; color: #ecebe7 !important; }
+    html.dark input { background-color: #2b3134 !important; color: #ecebe7 !important; }
     .headline-font { font-family: 'Plus Jakarta Sans', sans-serif; }
     .label-font { font-family: 'Space Grotesk', sans-serif; }
     .loading-spinner {
-      width: 52px;
-      height: 52px;
+      width: 52px; height: 52px;
       border-radius: 9999px;
       border: 4px solid rgba(124, 85, 86, 0.2);
       border-top-color: #7c5556;
       animation: spin 0.8s linear infinite;
     }
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-    .seo-toggle {
-      max-width: 960px;
-      margin: 0 auto 32px;
-    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .seo-toggle { max-width: 960px; margin: 0 auto 32px; }
     .seo-toggle summary {
-      list-style: none;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      color: #7a726f;
-      user-select: none;
+      list-style: none; cursor: pointer;
+      display: flex; align-items: center; gap: 10px;
+      color: #7a726f; user-select: none;
     }
     .seo-toggle summary::-webkit-details-marker { display: none; }
-    .seo-toggle-line {
-      flex: 1;
-      height: 1px;
-      background: #d8d2c9;
-    }
-    .seo-toggle-label {
-      font-size: 12px;
-      letter-spacing: 0.02em;
-      white-space: nowrap;
-    }
+    .seo-toggle-line { flex: 1; height: 1px; background: #d8d2c9; }
+    .seo-toggle-label { font-size: 12px; letter-spacing: 0.02em; white-space: nowrap; }
     .seo-toggle-caret {
-      font-size: 16px;
-      line-height: 1;
-      color: #7c5556;
-      transform: rotate(0deg);
-      transition: transform 0.15s ease;
-      display: inline-block;
+      font-size: 16px; line-height: 1; color: #7c5556;
+      transform: rotate(0deg); transition: transform 0.15s ease; display: inline-block;
     }
-    .seo-toggle[open] .seo-toggle-caret {
-      transform: rotate(90deg);
-    }
-    .seo-toggle-body {
-      margin-top: 14px;
-    }
+    .seo-toggle[open] .seo-toggle-caret { transform: rotate(90deg); }
+    .seo-toggle-body { margin-top: 14px; }
   </style>
 </head>
 
@@ -151,15 +122,12 @@
   <div id="pageLoadingOverlay" class="fixed inset-0 z-[120] bg-[#fbf9f5]/70 backdrop-blur-sm flex items-center justify-center">
     <div class="flex flex-col items-center gap-4">
       <div class="loading-spinner"></div>
-      <p class="label-font text-sm text-[#7c5556]">이미지 로딩 중...</p>
+      <p class="label-font text-sm text-[#7c5556]">로딩 중...</p>
     </div>
   </div>
 
   <header class="fixed top-0 left-0 w-full z-40 bg-[#fbf9f5]/90 backdrop-blur-md flex justify-between items-center px-6 py-4 border-b border-[#efeee9]">
     <div class="flex items-center gap-4">
-      <button class="p-2 rounded-full hover:bg-[#efeee9] transition-colors active:scale-95 duration-150">
-        <span class="material-symbols-outlined text-[#7c5556]">menu</span>
-      </button>
       <h1 class="text-xl font-bold text-[#7c5556] headline-font tracking-tight">Hash Coding Log</h1>
     </div>
     <div class="flex items-center gap-2">
@@ -206,15 +174,12 @@
     </details>
 
     <section class="bg-surface-container rounded-3xl p-4 md:p-8 max-w-2xl mx-auto">
-      
       <div class="grid grid-cols-1 gap-8" id="recordContainer">
         <div class="text-center py-12 label-font text-on-surface-variant">
-          아카이브를 불러오는 중입니다...
+          로딩 중...
         </div>
       </div>
-
     </section>
-
   </main>
 
   <nav class="fixed bottom-0 left-0 w-full z-40 flex justify-around items-center px-4 pb-6 pt-3 bg-[#fbf9f5]/80 backdrop-blur-xl rounded-t-3xl border-t border-[#b2b2ad]/20 shadow-[0_-20px_40px_rgba(49,51,47,0.06)]">
@@ -222,86 +187,15 @@
       <span class="material-symbols-outlined">inventory_2</span>
       <span class="label-font text-[10px] uppercase font-bold mt-1">Archive</span>
     </a>
-    <a class="add-entry-btn flex flex-col items-center justify-center text-[#7c5556]/60 hover:opacity-80 transition-opacity" href="#" onclick="openAdmin(); return false;">
-      <span class="material-symbols-outlined">add_circle</span>
-      <span class="label-font text-[10px] uppercase font-bold mt-1">Add</span>
-    </a>
-    <a class="flex flex-col items-center justify-center text-[#7c5556]/60 hover:opacity-80 transition-opacity" href="#" onclick="openSettings(); return false;">
+    <button onclick="openSearch()" class="flex flex-col items-center justify-center text-[#7c5556]/60 hover:opacity-80 transition-opacity">
+      <span class="material-symbols-outlined">search</span>
+      <span class="label-font text-[10px] uppercase font-bold mt-1">Search</span>
+    </button>
+    <button onclick="openSettings()" class="flex flex-col items-center justify-center text-[#7c5556]/60 hover:opacity-80 transition-opacity">
       <span class="material-symbols-outlined">settings</span>
       <span class="label-font text-[10px] uppercase font-bold mt-1">Settings</span>
-    </a>
+    </button>
   </nav>
-
-  <div id="adminPanel" class="hidden fixed inset-0 z-[100] bg-[#31332f]/40 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-surface-container-lowest rounded-[1.5rem] p-6 md:p-8 max-w-md w-full shadow-[0_20px_40px_rgba(49,51,47,0.1)] relative max-h-[90vh] overflow-y-auto">
-      <button onclick="closeAdmin()" class="absolute top-6 right-6 text-[#b2b2ad] hover:text-primary transition-colors">
-        <span class="material-symbols-outlined">close</span>
-      </button>
-      
-      <h3 class="headline-font text-2xl font-bold text-primary mb-6">새로운 기록 추가</h3>
-      
-      <div class="flex flex-col gap-4">
-        <div>
-          <label class="block text-xs font-bold text-[#b2b2ad] mb-1 label-font uppercase">이미지 (필수)</label>
-          <input type="file" id="imageInput" accept="image/*" class="w-full bg-surface-variant rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-secondary text-sm">
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-[#b2b2ad] mb-1 label-font uppercase">바로가기 링크 URL (필수)</label>
-          <input type="text" id="linkInput" placeholder="https://..." class="w-full bg-surface-variant rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-secondary text-sm">
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-[#b2b2ad] mb-1 label-font uppercase">제목 (선택)</label>
-          <input type="text" id="titleInput" placeholder="예: State Management Paradox" class="w-full bg-surface-variant rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-secondary text-sm">
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-[#b2b2ad] mb-1 label-font uppercase">간단한 설명 (Enter로 줄바꿈)</label>
-          <textarea id="descInput" rows="2" placeholder="코드에 얽힌 짧은 에피소드..." class="w-full bg-surface-variant rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-secondary text-sm"></textarea>
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-[#b2b2ad] mb-1 label-font uppercase">태그 (쉼표로 구분)</label>
-          <input type="text" id="tagsInput" placeholder="예: React, CSS" class="w-full bg-surface-variant rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-secondary text-sm">
-        </div>
-        
-        <button onclick="addRecord()" class="mt-4 w-full bg-primary text-on-primary label-font px-6 py-4 rounded-xl hover:shadow-[0_10px_20px_rgba(124,85,86,0.15)] transition-all active:scale-95 text-lg font-bold">
-          아카이브에 저장
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <script type="module" src="js/main.js"></script>
-
-  <!-- 수정 패널 -->
-  <div id="editPanel" class="hidden fixed inset-0 z-[100] bg-[#31332f]/40 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-surface-container-lowest rounded-[1.5rem] p-6 md:p-8 max-w-md w-full shadow-[0_20px_40px_rgba(49,51,47,0.1)] relative max-h-[90vh] overflow-y-auto">
-      <button onclick="closeEdit()" class="absolute top-6 right-6 text-[#b2b2ad] hover:text-primary transition-colors">
-        <span class="material-symbols-outlined">close</span>
-      </button>
-      <h3 class="headline-font text-2xl font-bold text-primary mb-6">기록 수정</h3>
-      <input type="hidden" id="editDocId">
-      <div class="flex flex-col gap-4">
-        <div>
-          <label class="block text-xs font-bold text-[#b2b2ad] mb-1 label-font uppercase">바로가기 링크 URL</label>
-          <input type="text" id="editLinkInput" placeholder="https://..." class="w-full bg-surface-variant rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-secondary text-sm">
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-[#b2b2ad] mb-1 label-font uppercase">제목</label>
-          <input type="text" id="editTitleInput" placeholder="예: State Management Paradox" class="w-full bg-surface-variant rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-secondary text-sm">
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-[#b2b2ad] mb-1 label-font uppercase">간단한 설명 (Enter로 줄바꿈)</label>
-          <textarea id="editDescInput" rows="4" placeholder="코드에 얽힌 짧은 에피소드..." class="w-full bg-surface-variant rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-secondary text-sm"></textarea>
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-[#b2b2ad] mb-1 label-font uppercase">태그 (쉼표로 구분)</label>
-          <input type="text" id="editTagsInput" placeholder="예: React, CSS" class="w-full bg-surface-variant rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-secondary text-sm">
-        </div>
-        <button id="editSaveBtn" onclick="saveEdit()" class="mt-4 w-full bg-primary text-on-primary label-font px-6 py-4 rounded-xl hover:shadow-[0_10px_20px_rgba(124,85,86,0.15)] transition-all active:scale-95 text-lg font-bold">
-          수정 저장
-        </button>
-      </div>
-    </div>
-  </div>
 
   <!-- 검색 패널 -->
   <div id="searchPanel" class="hidden fixed inset-0 z-[100] bg-[#31332f]/40 backdrop-blur-sm flex items-start justify-center pt-24 p-4">
@@ -311,14 +205,16 @@
       </button>
       <h3 class="headline-font text-xl font-bold text-primary mb-4">검색</h3>
       <div class="flex gap-2">
-        <input type="text" id="searchInput" placeholder="제목, 태그, 설명으로 검색..." class="flex-1 bg-surface-variant rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-secondary text-sm" onkeydown="if(event.key==='Enter') doSearch()">
+        <input type="text" id="searchInput" placeholder="제목, 태그, 설명으로 검색..."
+          class="flex-1 bg-surface-variant rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-secondary text-sm"
+          onkeydown="if(event.key==='Enter') doSearch()">
         <button onclick="doSearch()" class="bg-primary text-white px-4 py-2 rounded-xl label-font font-bold text-sm active:scale-95 transition-all">검색</button>
       </div>
       <button onclick="clearSearch()" class="mt-3 text-xs text-[#b2b2ad] hover:text-primary transition-colors label-font">검색 초기화</button>
     </div>
   </div>
 
-  <!-- Settings 패널 -->
+  <!-- 설정 패널 -->
   <div id="settingsPanel" class="hidden fixed inset-0 z-[100] bg-[#31332f]/40 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-surface-container-lowest rounded-[1.5rem] p-6 md:p-8 max-w-sm w-full shadow-[0_20px_40px_rgba(49,51,47,0.1)] relative">
       <button onclick="closeSettings()" class="absolute top-6 right-6 text-[#b2b2ad] hover:text-primary transition-colors">
@@ -333,24 +229,11 @@
             <div class="w-11 h-6 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
           </label>
         </div>
-        <div class="flex items-center justify-between">
-          <div class="flex flex-col">
-            <span class="label-font font-bold text-sm text-on-surface">관리자 모드</span>
-            <span id="adminModeStatus" class="label-font text-xs font-bold text-[#b2b2ad]">OFF</span>
-          </div>
-          <button id="adminModeBtn" onclick="toggleAdminMode()" class="bg-secondary-container text-on-secondary-container label-font font-bold text-xs px-4 py-2 rounded-xl active:scale-95 transition-all">
-            켜기
-          </button>
-        </div>
-        <div id="settingsAddWrap" class="hidden flex items-center justify-between">
-          <span class="label-font font-bold text-sm text-on-surface">새 글 추가</span>
-          <button onclick="closeSettings(); openAdmin();" class="bg-secondary-container text-on-secondary-container label-font font-bold text-xs px-4 py-2 rounded-xl active:scale-95 transition-all">
-            열기
-          </button>
-        </div>
       </div>
     </div>
   </div>
+
+  <script type="module" src="js/main.js"></script>
 
 </body>
 </html>

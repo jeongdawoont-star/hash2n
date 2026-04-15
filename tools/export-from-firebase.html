@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"/>
+<title>Firebase → records.js + 이미지 내보내기</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: monospace; background: #1e1e1e; color: #d4d4d4; padding: 24px; max-width: 900px; margin: 0 auto; }
+  h1 { color: #7c5556; font-family: sans-serif; margin-bottom: 4px; }
+  p.sub { color: #888; font-family: sans-serif; font-size: 14px; margin-top: 4px; }
+  label { display: block; margin-top: 14px; color: #9cdcfe; font-size: 13px; }
+  input { width: 100%; padding: 6px 8px; background: #2d2d2d; border: 1px solid #555; color: #d4d4d4; border-radius: 4px; font-family: monospace; font-size: 13px; margin-top: 4px; }
+  .btn { display: inline-block; margin-top: 20px; padding: 10px 24px; background: #7c5556; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 15px; font-family: sans-serif; }
+  .btn:hover { background: #a06060; }
+  .btn:disabled { background: #555; cursor: not-allowed; }
+  .btn-green { background: #3a6a3a; }
+  .btn-green:hover { background: #4a8a4a; }
+  .btn-blue { background: #2a4a7a; }
+  .btn-blue:hover { background: #3a5a9a; }
+  #log { margin-top: 20px; background: #111; border: 1px solid #333; padding: 12px; border-radius: 6px; font-size: 12px; line-height: 1.8; max-height: 280px; overflow-y: auto; }
+  .log-ok   { color: #6dbf6d; }
+  .log-err  { color: #f07070; }
+  .log-info { color: #9cdcfe; }
+  .log-warn { color: #f0c070; }
+  pre#codeOut { margin-top: 16px; background: #2d2d2d; border: 1px solid #555; padding: 14px; border-radius: 6px; overflow-x: auto; white-space: pre-wrap; font-size: 12px; line-height: 1.6; display: none; }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+  .progress-bar-wrap { margin-top: 12px; background: #333; border-radius: 4px; overflow: hidden; height: 8px; display: none; }
+  .progress-bar { height: 100%; background: #7c5556; width: 0%; transition: width 0.2s; }
+  .hint { color: #666; font-size: 11px; margin-top: 3px; }
+</style>
+</head>
+<body>
+
+<h1>🔥 Firebase 전체 내보내기</h1>
+<p class="sub">기록 텍스트 + 이미지를 한 번에 추출해서 zip으로 다운로드합니다.</p>
+
+<label>API Key</label>
+<input id="apiKey" placeholder="AIzaSy..."/>
+<label>Auth Domain</label>
+<input id="authDomain" placeholder="프로젝트.firebaseapp.com"/>
+<label>Project ID</label>
+<input id="projectId" placeholder="프로젝트-id"/>
+<label>Storage Bucket</label>
+<input id="storageBucket" placeholder="프로젝트.appspot.com"/>
+<p class="hint">Firebase 콘솔 → 프로젝트 설정 → 앱 → SDK 설정에서 복사</p>
+
+<br>
+<button id="startBtn" class="btn" onclick="doExport()">불러오기 시작</button>
+
+<div class="progress-bar-wrap" id="progressWrap">
+  <div class="progress-bar" id="progressBar"></div>
+</div>
+
+<div id="log"></div>
+
+<div class="actions" id="actionBtns" style="display:none; margin-top:16px;">
+  <button class="btn btn-green" onclick="downloadZip()">📦 ZIP 다운로드 (records.js + img/)</button>
+  <button class="btn btn-blue" onclick="copyCode()">📋 records.js 코드만 복사</button>
+</div>
+
+<pre id="codeOut"></pre>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+// ── 전역 상태 ──────────────────────────────────────────────────
+let zipInstance = null;
+let recordsJsCode = '';
+
+// ── 로그 헬퍼 ─────────────────────────────────────────────────
+const logEl = document.getElementById('log');
+function log(msg, cls = '') {
+  const line = document.createElement('div');
+  line.className = cls ? `log-${cls}` : '';
+  line.textContent = msg;
+  logEl.appendChild(line);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+function setProgress(cur, total) {
+  const wrap = document.getElementById('progressWrap');
+  const bar  = document.getElementById('progressBar');
+  wrap.style.display = 'block';
+  bar.style.width = total > 0 ? `${Math.round((cur / total) * 100)}%` : '0%';
+}
+
+// ── 이미지 fetch 시도 (다단계 CORS 우회) ────────────────────
+const PROXIES = [
+  u => u,                                                             // 1차: 직접
+  u => `https://corsproxy.io/?${encodeURIComponent(u)}`,             // 2차: corsproxy.io
+  u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`, // 3차: allorigins
+];
+const MIN_IMAGE_BYTES = 5000; // 5KB 미만이면 에러 응답으로 간주
+
+async function fetchImageBlob(url) {
+  for (const [i, proxy] of PROXIES.entries()) {
+    try {
+      const proxyUrl = proxy(url);
+      const res = await fetch(proxyUrl, { mode: 'cors' });
+      if (!res.ok) continue;
+
+      // 콘텐츠 타입 확인 (프록시가 에러 페이지를 200으로 반환하는 경우 거르기)
+      const ct = res.headers.get('content-type') || '';
+      if (i === 0 && ct && !ct.startsWith('image/')) continue; // 직접 요청만 타입 체크
+
+      const blob = await res.blob();
+      if (blob.size >= MIN_IMAGE_BYTES) return blob; // 너무 작으면 에러 응답
+    } catch (_) {}
+  }
+  throw new Error('모든 프록시 실패');
+}
+
+// ── 파일명 결정 ───────────────────────────────────────────────
+function makeFilename(record, index) {
+  // storagePath: "thumbnails/1234567890_filename.webp"
+  if (record.storagePath) {
+    const base = record.storagePath.split('/').pop();  // "1234567890_filename.webp"
+    // 확장자를 jpg로 통일하거나 원본 유지
+    return base;
+  }
+  // imageUrl에서 파일명 추출 시도
+  if (record.imageUrl) {
+    try {
+      const url = new URL(record.imageUrl);
+      const segments = url.pathname.split('/');
+      const raw = decodeURIComponent(segments[segments.length - 1]);
+      const name = raw.split('?')[0].split('/').pop();
+      if (name && name.includes('.')) return name;
+    } catch (_) {}
+  }
+  return `record-${String(index + 1).padStart(3, '0')}.jpg`;
+}
+
+// ── 문자열 이스케이프 ─────────────────────────────────────────
+function esc(str) {
+  return (str || '').replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+}
+
+// ── Node.js 다운로드 스크립트 생성 ───────────────────────────
+function buildNodeDownloader(failedImages) {
+  const entries = failedImages.map(({ filename, url }) =>
+    `  { file: 'img/${filename}', url: '${url.replace(/'/g, "\\'")}' },`
+  ).join('\n');
+
+  return `/**
+ * Firebase 이미지 다운로드 스크립트 (브라우저 CORS 우회용)
+ * 사용법: node download-images.js
+ * (Node.js 18 이상 — fetch 내장. 그 이하면: npm install node-fetch)
+ */
+const fs   = require('fs');
+const path = require('path');
+const https = require('https');
+const http  = require('http');
+
+const IMAGES = [
+${entries}
+];
+
+function download(url, dest) {
+  return new Promise((resolve, reject) => {
+    fs.mkdirSync(path.dirname(dest), { recursive: true });
+    const file = fs.createWriteStream(dest);
+    const lib  = url.startsWith('https') ? https : http;
+    lib.get(url, res => {
+      // 리다이렉트 처리
+      if (res.statusCode === 301 || res.statusCode === 302) {
+        file.close();
+        return download(res.headers.location, dest).then(resolve).catch(reject);
+      }
+      if (res.statusCode !== 200) {
+        file.close();
+        return reject(new Error('HTTP ' + res.statusCode));
+      }
+      res.pipe(file);
+      file.on('finish', () => { file.close(); resolve(); });
+    }).on('error', err => { fs.unlink(dest, () => {}); reject(err); });
+  });
+}
+
+(async () => {
+  console.log(\`이미지 \${IMAGES.length}개 다운로드 시작...\\n\`);
+  for (const { file, url } of IMAGES) {
+    try {
+      process.stdout.write(\`  다운로드: \${file} ... \`);
+      await download(url, file);
+      const kb = (fs.statSync(file).size / 1024).toFixed(0);
+      console.log(\`✅ (\${kb} KB)\`);
+    } catch (e) {
+      console.log(\`❌ 실패: \${e.message}\`);
+    }
+  }
+  console.log('\\n완료! download-images.js 파일은 삭제해도 됩니다.');
+})();
+`;
+}
+
+// ── records.js 코드 생성 ──────────────────────────────────────
+function buildRecordsJs(records, filenameMap) {
+  const lines = [];
+  lines.push('// ================================================================');
+  lines.push('// 해시 코딩 기록소 · 아카이브 데이터');
+  lines.push('// ================================================================');
+  lines.push('//');
+  lines.push('// 📌 새 기록 추가 방법');
+  lines.push('//   1. img/ 폴더에 이미지 파일 업로드 (가로 600px, 약 200kb 권장)');
+  lines.push('//   2. 아래 템플릿 블록을 통째로 복사');
+  lines.push('//   3. RECORDS = [ 바로 아래에 붙여넣고 내용만 채우기');
+  lines.push('//   4. 저장 → 커밋 → 완료!');
+  lines.push('//');
+  lines.push('// ┌──────────────────── 새 기록 템플릿 (복사해서 사용) ─────────────────────┐');
+  lines.push('//');
+  lines.push('//   {');
+  lines.push('//     title: "제목을 입력하세요",');
+  lines.push('//     desc: "설명을 입력하세요\\n두 번째 줄은 \\\\n으로 줄바꿈",');
+  lines.push('//     tags: "태그1, 태그2, 태그3",');
+  lines.push('//     link: "https://연결할-링크-주소",');
+  lines.push('//     image: "img/파일명.jpg",');
+  lines.push('//   },');
+  lines.push('//');
+  lines.push('// └─────────────────────────────────────────────────────────────────────────┘');
+  lines.push('//');
+  lines.push('// 📷 이미지 리사이즈: tools/resize.js 스크립트 사용 (node tools/resize.js)');
+  lines.push('//    또는 squoosh.app 에서 가로 600px로 내보내기');
+  lines.push('//');
+  lines.push('// ================================================================');
+  lines.push('');
+  lines.push('export const RECORDS = [');
+  lines.push('');
+  lines.push('  // ▼ 여기에 새 기록을 붙여넣으세요 (최신 항목을 맨 위에) ▼');
+  lines.push('');
+  lines.push('');
+
+  records.forEach((r, i) => {
+    const filename = filenameMap[r.id] || makeFilename(r, i);
+    const descEscaped = esc((r.desc || '').replace(/\n/g, '\\n'));
+    lines.push('  {');
+    lines.push(`    title: "${esc(r.title || '')}",`);
+    lines.push(`    desc: "${descEscaped}",`);
+    lines.push(`    tags: "${esc(r.tags || '')}",`);
+    lines.push(`    link: "${esc(r.link || '')}",`);
+    lines.push(`    image: "img/${filename}",`);
+    lines.push('  },');
+    if (i < records.length - 1) lines.push('');
+  });
+
+  lines.push('');
+  lines.push('];');
+  return lines.join('\n');
+}
+
+// ── 메인 내보내기 ─────────────────────────────────────────────
+window.doExport = async function() {
+  const btn = document.getElementById('startBtn');
+  btn.disabled = true;
+  btn.textContent = '처리 중...';
+  logEl.innerHTML = '';
+  document.getElementById('actionBtns').style.display = 'none';
+  document.getElementById('codeOut').style.display = 'none';
+  zipInstance = null;
+  recordsJsCode = '';
+
+  const config = {
+    apiKey:        document.getElementById('apiKey').value.trim(),
+    authDomain:    document.getElementById('authDomain').value.trim(),
+    projectId:     document.getElementById('projectId').value.trim(),
+    storageBucket: document.getElementById('storageBucket').value.trim(),
+  };
+
+  if (!config.apiKey || !config.projectId) {
+    log('❌ API Key와 Project ID는 필수입니다.', 'err');
+    btn.disabled = false; btn.textContent = '불러오기 시작';
+    return;
+  }
+
+  try {
+    // 1) Firebase 연결
+    log('🔌 Firebase 연결 중...', 'info');
+    const app = initializeApp(config, 'export-' + Date.now());
+    const db  = getFirestore(app);
+
+    // 2) Firestore 레코드 읽기
+    log('📄 Firestore records 컬렉션 읽는 중...', 'info');
+    const snap = await getDocs(collection(db, 'records'));
+    let records = [];
+    snap.forEach(d => records.push({ id: d.id, ...d.data() }));
+
+    if (records.length === 0) {
+      log('⚠️ records 컬렉션에 문서가 없습니다.', 'warn');
+      btn.disabled = false; btn.textContent = '불러오기 시작';
+      return;
+    }
+
+    // 3) 정렬 (order → createdAt)
+    records.sort((a, b) => {
+      const aHas = a.order !== undefined && a.order !== null;
+      const bHas = b.order !== undefined && b.order !== null;
+      if (aHas && bHas) return a.order - b.order;
+      if (aHas) return -1;
+      if (bHas) return 1;
+      const toMs = v => typeof v?.toMillis === 'function' ? v.toMillis() : (v || 0);
+      return toMs(b.createdAt) - toMs(a.createdAt);
+    });
+
+    log(`✅ ${records.length}개 기록 확인`, 'ok');
+
+    // 4) 이미지 다운로드
+    const zip = new JSZip();
+    const imgFolder = zip.folder('img');
+    const filenameMap = {};   // record.id → 저장 파일명
+    const failedImages = [];  // 브라우저로 못 받은 이미지 목록
+
+    log('🖼️ 이미지 다운로드 시작...', 'info');
+    setProgress(0, records.length);
+
+    for (let i = 0; i < records.length; i++) {
+      const r = records[i];
+      const filename = makeFilename(r, i);
+      filenameMap[r.id] = filename;
+
+      if (!r.imageUrl) {
+        log(`  [${i+1}/${records.length}] ⚠️ ${r.title || r.id} — imageUrl 없음`, 'warn');
+        setProgress(i + 1, records.length);
+        continue;
+      }
+
+      try {
+        const blob = await fetchImageBlob(r.imageUrl);
+        imgFolder.file(filename, blob);
+        log(`  [${i+1}/${records.length}] ✅ ${filename} (${(blob.size/1024).toFixed(0)} KB)`, 'ok');
+      } catch (e) {
+        log(`  [${i+1}/${records.length}] ⚠️ ${filename} — 브라우저 차단, Node.js 스크립트에 추가`, 'warn');
+        failedImages.push({ filename, url: r.imageUrl });
+      }
+      setProgress(i + 1, records.length);
+    }
+
+    // 5) records.js 생성
+    recordsJsCode = buildRecordsJs(records, filenameMap);
+    zip.file('records.js', recordsJsCode);
+
+    // 6) 실패한 이미지가 있으면 Node.js 다운로드 스크립트 자동 생성
+    if (failedImages.length > 0) {
+      const nodeScript = buildNodeDownloader(failedImages);
+      zip.file('download-images.js', nodeScript);
+      log(`\n⚠️ ${failedImages.length}개 이미지는 브라우저로 받을 수 없었습니다.`, 'warn');
+      log(`   ZIP 안의 download-images.js 를 실행하면 모두 받을 수 있어요:`, 'warn');
+      log(`   node download-images.js`, 'warn');
+    }
+
+    // 7) 안내 텍스트 추가
+    const hasNodeScript = failedImages.length > 0;
+    const readme = [
+      '== Firebase 내보내기 결과 ==',
+      '',
+      '📁 해야 할 일:',
+      '  1. records.js   → 프로젝트 루트에 덮어쓰기',
+      '  2. img/         → 프로젝트 루트 img/ 폴더에 붙여넣기',
+      ...(hasNodeScript ? [
+        '  3. download-images.js → 프로젝트 루트에 복사 후:',
+        '     > node download-images.js',
+        '     (실행하면 나머지 이미지가 img/ 폴더에 저장됩니다)',
+        '     완료 후 download-images.js 는 삭제해도 됩니다.',
+      ] : []),
+      '',
+      '📷 이미지 리사이즈 권장: 가로 600px, 약 200KB',
+      '   방법 1) node tools/resize.js img/파일명.jpg',
+      '   방법 2) squoosh.app 에서 내보내기',
+    ].join('\n');
+    zip.file('내보내기-안내.txt', readme);
+
+    zipInstance = zip;
+
+    // 8) UI 표시
+    document.getElementById('actionBtns').style.display = 'flex';
+    document.getElementById('codeOut').textContent = recordsJsCode;
+    document.getElementById('codeOut').style.display = 'block';
+    log(`\n🎉 완료! ZIP을 다운로드하세요.`, 'ok');
+
+  } catch (e) {
+    log('❌ 오류: ' + e.message, 'err');
+    console.error(e);
+  }
+
+  btn.disabled = false;
+  btn.textContent = '다시 불러오기';
+};
+
+// ── ZIP 다운로드 ──────────────────────────────────────────────
+window.downloadZip = async function() {
+  if (!zipInstance) { alert('먼저 불러오기를 실행하세요.'); return; }
+  const btn = event.target;
+  btn.disabled = true; btn.textContent = '압축 중...';
+  try {
+    const blob = await zipInstance.generateAsync({ type: 'blob', compression: 'DEFLATE' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'firebase-export.zip';
+    a.click();
+  } finally {
+    btn.disabled = false; btn.textContent = '📦 ZIP 다운로드 (records.js + img/)';
+  }
+};
+
+// ── 코드 복사 ─────────────────────────────────────────────────
+window.copyCode = function() {
+  if (!recordsJsCode) { alert('먼저 불러오기를 실행하세요.'); return; }
+  navigator.clipboard.writeText(recordsJsCode).then(() => {
+    const btn = event.target;
+    btn.textContent = '✅ 복사됨!';
+    setTimeout(() => btn.textContent = '📋 records.js 코드만 복사', 2000);
+  });
+};
+</script>
+</body>
+</html>
