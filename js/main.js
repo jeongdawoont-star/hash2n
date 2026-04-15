@@ -148,7 +148,7 @@ function render() {
 // QR 코드 — 미리 생성 후 캐시
 // ────────────────────────────────────────────────────
 function pregenerateQrCodes() {
-  if (typeof QRCode === 'undefined') {
+  if (typeof QRious === 'undefined') {
     setTimeout(pregenerateQrCodes, 500);
     return;
   }
@@ -156,14 +156,14 @@ function pregenerateQrCodes() {
     const panel = btn.nextElementSibling;
     const img   = panel?.querySelector('.qr-img');
     if (!img || img.dataset.generated) return;
-    // DOM에 붙이지 않은 임시 캔버스에 그린 후 dataURL로 변환
-    const tmp = document.createElement('canvas');
-    QRCode.toCanvas(tmp, btn.dataset.link, {
-      width: 200, margin: 2,
-      color: { dark: '#31332f', light: '#fffdf9' }
-    }, err => {
-      if (!err) { img.src = tmp.toDataURL('image/png'); img.dataset.generated = '1'; }
+    const qr = new QRious({
+      value:      btn.dataset.link,
+      size:       200,
+      background: '#fffdf9',
+      foreground: '#31332f',
     });
+    img.src = qr.toDataURL();
+    img.dataset.generated = '1';
   });
 }
 
