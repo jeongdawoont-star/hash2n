@@ -1,0 +1,37 @@
+name: Optimize Images → img-re/
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'img/**'
+  workflow_dispatch:   # 수동 실행도 가능
+
+jobs:
+  optimize:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install sharp
+        run: npm install sharp
+
+      - name: Convert images to AVIF (≤ 150 KB)
+        run: node tools/optimize-images.js
+
+      - name: Commit optimized images
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: 'ci: optimize img/ → img-re/ as AVIF (≤150KB)'
+          file_pattern: 'img-re/*'
+          commit_user_name: 'github-actions[bot]'
+          commit_user_email: 'github-actions[bot]@users.noreply.github.com'
