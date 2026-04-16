@@ -28,10 +28,30 @@ jobs:
       - name: Convert images to AVIF (≤ 150 KB)
         run: node tools/optimize-images.js
 
-      - name: Commit optimized images
+      - name: Update records.js image paths (img/x.ext → img-re/x.avif)
+        run: |
+          node -e "
+            const fs = require('fs');
+            let content = fs.readFileSync('records.js', 'utf8');
+            const updated = content.replace(
+              /image:\s*\"img\/([^\"]+)\"/g,
+              (_, filename) => {
+                const base = filename.replace(/\.[^.]+\$/, '');
+                return \`image: \"img-re/\${base}.avif\"\`;
+              }
+            );
+            if (updated !== content) {
+              fs.writeFileSync('records.js', updated);
+              console.log('records.js updated');
+            } else {
+              console.log('records.js: no changes needed');
+            }
+          "
+
+      - name: Commit optimized images and updated records
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: 'ci: optimize img/ → img-re/ as AVIF (≤150KB)'
-          file_pattern: 'img-re/*'
+          file_pattern: 'img-re/* records.js'
           commit_user_name: 'github-actions[bot]'
           commit_user_email: 'github-actions[bot]@users.noreply.github.com'
