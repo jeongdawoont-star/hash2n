@@ -30,6 +30,13 @@ export const RECORDS = [
 
   // ▼ 여기에 새 기록을 붙여넣으세요 (최신 항목을 맨 위에) ▼
 
+  {
+    title: "도블 메이커",
+    desc: "아이랑 게임하려고 만들었다.\n실제 도블과는 다르지만 직접 그림과 사진을 넣는 것이 포인트.\n끌어 놓아야 매칭이 된다.",
+    tags: "gemini",
+    link: "https://jeongdawoont-star.github.io/hash2n/vibe-apps/doble-maker.html",
+    image: "img/13.png",
+  },
 
   {
     title: "충역 - 왜란의 그림자",
