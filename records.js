@@ -16,7 +16,7 @@
 //     desc: "설명을 입력하세요\n두 번째 줄은 \\n으로 줄바꿈",
 //     tags: "태그1, 태그2, 태그3",
 //     link: "https://연결할-링크-주소",
-//     image: "img/파일명.jpg",
+//     image: "img-re/파일명.avif",
 //   },
 //
 // └─────────────────────────────────────────────────────────────────────────┘
@@ -35,7 +35,7 @@ export const RECORDS = [
     desc: "아이랑 게임하려고 만들었다.\n실제 도블과는 다르지만 직접 그림과 사진을 넣는 것이 포인트.\n끌어 놓아야 매칭이 된다.",
     tags: "gemini",
     link: "https://jeongdawoont-star.github.io/hash2n/vibe-apps/doble-maker.html",
-    image: "img/13.png",
+    image: "img-re/13.avif",
   },
 
   {
