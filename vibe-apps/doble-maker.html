@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>우당탕탕 도블 메이커</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Jua&display=swap');
+        
+        /* 브라우저 새로고침(Pull-to-refresh) 방지 및 기본 세팅 */
+        html, body {
+            font-family: 'Jua', sans-serif;
+            background-color: #fef08a;
+            overscroll-behavior-y: none;
+            overscroll-behavior: none;
+            user-select: none;
+            -webkit-user-select: none;
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        /* 투명 배경 체크무늬 (보관함용) */
+        .transparent-bg {
+            background-image: linear-gradient(45deg, #e5e7eb 25%, transparent 25%), 
+                              linear-gradient(-45deg, #e5e7eb 25%, transparent 25%), 
+                              linear-gradient(45deg, transparent 75%, #e5e7eb 75%), 
+                              linear-gradient(-45deg, transparent 75%, #e5e7eb 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+            background-color: white;
+        }
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 5px; border: 2px solid white; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useRef, useEffect, useCallback, useMemo } = React;
+
+        // --- 도블 수학 (오더 7: 카드당 그림 8개, 총 57장) ---
+        const generateDobbleDeck = (n) => {
+            let cards = [];
+            let infinityCard = [];
+            for (let i = 0; i <= n; i++) infinityCard.push(i);
+            cards.push(infinityCard);
+
+            for (let i = 0; i < n; i++) {
+                let card = [0];
+                for (let j = 0; j < n; j++) card.push((n + 1) + i * n + j);
+                cards.push(card);
+            }
+
+            for (let i = 0; i < n; i++) {
+                for (let j = 0; j < n; j++) {
+                    let card = [i + 1];
+                    for (let k = 0; k < n; k++) {
+                        card.push((n + 1) + k * n + ((i * k + j) % n));
+                    }
+                    cards.push(card);
+                }
+            }
+            return cards;
+        };
+        // 난이도별 덱 (소수 오더만 사용)
+        const DOBBLE_DECKS = {
+            2: generateDobbleDeck(2),  // 7장, 그림 3개씩
+            3: generateDobbleDeck(3),  // 13장, 그림 4개씩
+            5: generateDobbleDeck(5),  // 31장, 그림 6개씩
+            7: generateDobbleDeck(7),  // 57장, 그림 8개씩
+        };
+        const DIFFICULTY_OPTIONS = [
+            { order: 2, label: '미니',   emoji: '🐣', desc: '7개 그림',  cardDesc: '7장',  btnColor: 'bg-green-400  border-green-700',  activeBg: 'bg-green-500'  },
+            { order: 3, label: '보통',   emoji: '🙂', desc: '13개 그림', cardDesc: '13장', btnColor: 'bg-blue-400   border-blue-700',   activeBg: 'bg-blue-500'   },
+            { order: 5, label: '어려움', emoji: '🔥', desc: '31개 그림', cardDesc: '31장', btnColor: 'bg-orange-400 border-orange-700', activeBg: 'bg-orange-500' },
+            { order: 7, label: '풀판',   emoji: '💀', desc: '57개 그림', cardDesc: '57장', btnColor: 'bg-red-400    border-red-700',    activeBg: 'bg-red-500'    },
+        ];
+
+        const getRandomColor = () => `hsla(${Math.floor(Math.random() * 360)}, 80%, 60%, 0.5)`;
+
+        // --- 전체화면 실행 함수 ---
+        const enterFullscreen = () => {
+            const el = document.documentElement;
+            if (el.requestFullscreen) {
+                el.requestFullscreen().catch(err => console.log(err));
+            } else if (el.webkitRequestFullscreen) {
+                el.webkitRequestFullscreen().catch(err => console.log(err));
+            }
+        };
+
+        // --- 드래그 가능한 스티커 컴포넌트 (Portal 방식: z-index 영역 침범 완전 해결) ---
+        const DraggableSymbol = ({ symId, src, isCenter, playerIdx, onDragEnd, config }) => {
+            const [isDragging, setIsDragging] = useState(false);
+            const [ghostPos, setGhostPos] = useState({ x: 0, y: 0 });
+            const [ghostSize, setGhostSize] = useState({ w: 80, h: 80 });
+            const [startOffset, setStartOffset] = useState({ x: 0, y: 0 });
+            const imgRef = useRef(null);
+
+            const onPointerDown = (e) => {
+                if (isCenter) return;
+                e.preventDefault();
+                const rect = imgRef.current.getBoundingClientRect();
+                setGhostSize({ w: rect.width, h: rect.height });
+                setGhostPos({ x: rect.left, y: rect.top });
+                setStartOffset({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+                setIsDragging(true);
+                try { e.target.setPointerCapture(e.pointerId); } catch(err){}
+            };
+
+            const onPointerMove = (e) => {
+                if (!isDragging) return;
+                setGhostPos({ x: e.clientX - startOffset.x, y: e.clientY - startOffset.y });
+            };
+
+            const onPointerUp = (e) => {
+                if (!isDragging) return;
+                setIsDragging(false);
+                try { e.target.releasePointerCapture(e.pointerId); } catch(err){}
+                if (onDragEnd) {
+                    onDragEnd(symId, playerIdx, e.clientX, e.clientY, () => {});
+                }
+            };
+
+            return (
+                <div className="relative w-full h-full flex items-center justify-center">
+                    {/* 원본: 드래그 중엔 반투명하게 남아있음 */}
+                    <img
+                        ref={imgRef}
+                        src={src}
+                        className={`absolute object-contain select-none drop-shadow-md ${isCenter ? 'pointer-events-none' : 'cursor-grab hover:scale-110 transition-transform duration-100'}`}
+                        style={{
+                            transform: `translate(${config.x}%, ${config.y}%) rotate(${config.rotate}deg) scale(${config.scale})`,
+                            width: '85%',
+                            height: '85%',
+                            touchAction: 'none',
+                            opacity: isDragging ? 0.25 : 1,
+                            transition: isDragging ? 'none' : 'opacity 0.15s',
+                        }}
+                        onPointerDown={onPointerDown}
+                        onPointerMove={onPointerMove}
+                        onPointerUp={onPointerUp}
+                        onPointerCancel={onPointerUp}
+                        draggable="false"
+                    />
+                    {/* 드래그 고스트: body 최상단에 Portal로 렌더링 → 어떤 영역도 뚫음 */}
+                    {isDragging && ReactDOM.createPortal(
+                        <img
+                            src={src}
+                            draggable="false"
+                            style={{
+                                position: 'fixed',
+                                left: ghostPos.x,
+                                top: ghostPos.y,
+                                width: ghostSize.w,
+                                height: ghostSize.h,
+                                transform: `rotate(${config.rotate}deg) scale(1.15)`,
+                                objectFit: 'contain',
+                                pointerEvents: 'none',
+                                zIndex: 99999,
+                                filter: 'drop-shadow(0 12px 28px rgba(0,0,0,0.65)) brightness(1.2)',
+                                userSelect: 'none',
+                                cursor: 'grabbing',
+                            }}
+                        />,
+                        document.body
+                    )}
+                </div>
+            );
+        };
+
+        // --- 플레이어 구역 (그리드 분배 시스템) ---
+        const PlayerZone = ({ idx, name, color, barColor, isTop, width, border, playerCards, scores, handleDragEnd, symbols, roundKey }) => {
+            const card = playerCards[idx];
+            
+            // 8개의 그림을 그리드 셀에 중복 없이 할당 (겹침 및 삐져나옴 완벽 방지)
+            const gridClass = width === 'w-full' ? 'grid-cols-4 grid-rows-2' : 'grid-cols-3 grid-rows-3';
+            const numCells = width === 'w-full' ? 8 : 9;
+
+            const layout = useMemo(() => {
+                if (!card) return [];
+                let cellIndices = Array.from({length: numCells}, (_, i) => i).sort(() => Math.random() - 0.5);
+
+                return card.map((symId, index) => {
+                    return {
+                        symId,
+                        cellIndex: cellIndices[index],
+                        x: Math.random() * 20 - 10, // 상하좌우 10% 범위 내에서만 흔들림
+                        y: Math.random() * 20 - 10,
+                        rotate: Math.random() * 360,
+                        scale: Math.random() * 0.3 + 0.7 // 크기 0.7 ~ 1.0 보장
+                    };
+                });
+            }, [card, roundKey, numCells]);
+
+            return (
+                <div className={`relative flex flex-col ${width} h-full ${color} ${border || ''} box-border`}>
+                    {/* 테두리 점수 바 */}
+                    <div className={`absolute ${isTop ? 'top-0' : 'bottom-0'} left-0 w-full ${barColor} py-1 z-0 shadow-inner`}>
+                        <div className={`text-white text-center text-sm md:text-base font-bold tracking-widest ${isTop ? 'rotate-180' : ''}`}>
+                            {name} : {scores[idx]}점
+                        </div>
+                    </div>
+                    {/* 그리드 영역 (점수 바를 가리지 않도록 상/하단 여백 적용) */}
+                    <div className={`grid ${gridClass} w-full h-full gap-1 p-2 ${isTop ? 'pt-10' : 'pb-10'} place-items-center relative z-10`}>
+                        {Array.from({length: numCells}).map((_, cIdx) => {
+                            const item = layout.find(l => l.cellIndex === cIdx);
+                            return (
+                                <div key={cIdx} className="relative w-full h-full flex items-center justify-center">
+                                    {item && <DraggableSymbol key={`${item.symId}-${roundKey}`} symId={item.symId} src={symbols[item.symId]} playerIdx={idx} onDragEnd={handleDragEnd} config={item} />}
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            );
+        };
+
+        // --- 메인 앱 ---
+        const App = () => {
+            const [gameState, setGameState] = useState('menu');
+            const [playerCount, setPlayerCount] = useState(2);
+            const [dobbleOrder, setDobbleOrder] = useState(3); // 기본: 보통 (13그림)
+            const [symbols, setSymbols] = useState([]); // App 레벨에서 상태 관리하여 데이터 영구 보존
+
+            const [deck, setDeck] = useState([]);
+            const [centerCard, setCenterCard] = useState(null);
+            const [playerCards, setPlayerCards] = useState([]);
+            const [scores, setScores] = useState([]);
+            const [cardsRemaining, setCardsRemaining] = useState(0);
+            const [winner, setWinner] = useState(null);
+            const [roundKey, setRoundKey] = useState(0);
+            const [matchFlash, setMatchFlash] = useState(false);
+
+            const centerRef = useRef(null);
+
+            const startGame = (gameSymbols) => {
+                let newDeck = [...DOBBLE_DECKS[dobbleOrder]].sort(() => Math.random() - 0.5);
+                const pCards = [];
+                const initialScores = [];
+                for (let i = 0; i < playerCount; i++) {
+                    pCards.push(newDeck.pop());
+                    initialScores.push(0);
+                }
+                const cCard = newDeck.pop();
+
+                setDeck(newDeck);
+                setCenterCard(cCard);
+                setPlayerCards(pCards);
+                setScores(initialScores);
+                setCardsRemaining(newDeck.length);
+                setWinner(null);
+                setRoundKey(1);
+                setGameState('playing');
+            };
+
+            const handleDragEnd = (symId, playerIdx, clientX, clientY, resetPos) => {
+                if (!centerRef.current || !centerCard) { 
+                    resetPos(); return; 
+                }
+                
+                // 중립 구역(Middle Row 전체) 드롭 감지
+                const rect = centerRef.current.getBoundingClientRect();
+                const isInsideCenter = clientX >= rect.left && clientX <= rect.right &&
+                                       clientY >= rect.top && clientY <= rect.bottom;
+
+                if (isInsideCenter && centerCard.includes(symId)) {
+                    setMatchFlash(true);
+                    setTimeout(() => setMatchFlash(false), 200);
+
+                    const newScores = [...scores];
+                    newScores[playerIdx] += 1;
+                    
+                    const newPlayerCards = [...playerCards];
+                    newPlayerCards[playerIdx] = centerCard;
+                    
+                    let nextCenter = null;
+                    let remaining = [...deck];
+                    if (remaining.length > 0) {
+                        nextCenter = remaining.pop();
+                    }
+
+                    setScores(newScores);
+                    setPlayerCards(newPlayerCards);
+                    setRoundKey(prev => prev + 1);
+                    
+                    if (nextCenter) {
+                        setDeck(remaining);
+                        setCenterCard(nextCenter);
+                        setCardsRemaining(remaining.length);
+                    } else {
+                        setDeck([]);
+                        setCenterCard(null);
+                        setCardsRemaining(0);
+                        
+                        let maxScore = -1;
+                        let winningPlayers = [];
+                        newScores.forEach((s, idx) => {
+                            if (s > maxScore) { maxScore = s; winningPlayers = [idx + 1]; }
+                            else if (s === maxScore) { winningPlayers.push(idx + 1); }
+                        });
+                        setWinner(winningPlayers.join(', ') + '번 플레이어');
+                        setTimeout(() => setGameState('result'), 800);
+                    }
+                } else {
+                    resetPos();
+                }
+            };
+
+            const renderMenu = () => (
+                <div className="flex flex-col items-center justify-center h-screen w-screen p-4 text-center overflow-hidden">
+                    <h1 className="text-4xl md:text-6xl font-bold text-red-500 drop-shadow-md mb-4 leading-tight">🤪 우당탕탕<br/>도블 메이커</h1>
+                    <div className="bg-white p-5 md:p-8 rounded-3xl shadow-xl border-4 border-black max-w-md w-full space-y-5">
+                        {/* 인원 선택 */}
+                        <div>
+                            <h2 className="text-lg md:text-xl mb-3 text-gray-700 font-bold">몇 명이서 할까요?</h2>
+                            <div className="flex justify-center space-x-4">
+                                {[2, 3, 4].map(num => (
+                                    <button
+                                        key={num}
+                                        onClick={() => setPlayerCount(num)}
+                                        className={`w-14 h-14 md:w-16 md:h-16 rounded-full text-2xl border-4 transition-transform ${playerCount === num ? 'bg-blue-500 text-white border-blue-700 scale-110' : 'bg-gray-200 border-gray-400'}`}
+                                    >
+                                        {num}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* 난이도 선택 */}
+                        <div>
+                            <h2 className="text-lg md:text-xl mb-3 text-gray-700 font-bold">난이도 선택</h2>
+                            <div className="grid grid-cols-2 gap-2">
+                                {DIFFICULTY_OPTIONS.map(opt => (
+                                    <button
+                                        key={opt.order}
+                                        onClick={() => { setDobbleOrder(opt.order); setSymbols([]); }}
+                                        className={`py-3 px-2 rounded-2xl border-4 transition-all text-left ${dobbleOrder === opt.order ? opt.activeBg + ' text-white border-black scale-105 shadow-lg' : 'bg-gray-100 border-gray-300 text-gray-700'}`}
+                                    >
+                                        <div className="text-2xl">{opt.emoji}</div>
+                                        <div className="font-bold text-base">{opt.label}</div>
+                                        <div className={`text-xs mt-0.5 ${dobbleOrder === opt.order ? 'text-white/90' : 'text-gray-500'}`}>{opt.desc} / {opt.cardDesc}</div>
+                                    </button>
+                                ))}
+                            </div>
+                            {dobbleOrder !== 3 && symbols.length > 0 && (
+                                <p className="text-xs text-orange-600 mt-2 font-bold">⚠️ 난이도 바꾸면 그림이 초기화됩니다</p>
+                            )}
+                        </div>
+
+                        <button
+                            onClick={() => { enterFullscreen(); setGameState('creating'); }}
+                            className="w-full bg-green-500 hover:bg-green-600 text-white text-2xl md:text-3xl py-4 rounded-xl shadow-[0_6px_0_#166534] active:shadow-[0_0px_0_#166534] active:translate-y-[6px] transition-all border-4 border-black"
+                        >
+                            그림 그리러 가기!
+                        </button>
+                    </div>
+                </div>
+            );
+
+            const renderCreator = () => (
+                <CreatorView
+                    symbols={symbols}
+                    setSymbols={setSymbols}
+                    required={DOBBLE_DECKS[dobbleOrder].length}
+                    onStart={(finalSymbols) => {
+                        enterFullscreen();
+                        setSymbols(finalSymbols);
+                        startGame(finalSymbols);
+                    }}
+                    onBack={() => setGameState('menu')}
+                />
+            );
+
+            // 중앙 중립 구역 레이아웃
+            const centerLayout = useMemo(() => {
+                if (!centerCard) return [];
+                let cellIndices = Array.from({length: 9}, (_, i) => i).sort(() => Math.random() - 0.5);
+                return centerCard.map((symId, index) => ({
+                    symId,
+                    cellIndex: cellIndices[index],
+                    x: Math.random() * 20 - 10,
+                    y: Math.random() * 20 - 10,
+                    rotate: Math.random() * 360,
+                    scale: Math.random() * 0.4 + 0.8
+                }));
+            }, [centerCard, roundKey]);
+
+            const renderPlaying = () => {
+                return (
+                    <div className="flex flex-col w-screen h-screen bg-gray-900 text-white font-bold select-none touch-none overflow-hidden">
+                        
+                        {/* --- TOP ROW (상단 영역) --- */}
+                        <div className="flex w-full h-1/3 relative z-10 border-b-2 border-gray-700">
+                            {playerCount >= 2 && (
+                                playerCount === 2 ? (
+                                    <PlayerZone idx={1} name="P2 (빨강)" color="bg-red-900/30" barColor="bg-red-600" isTop={true} width="w-full" playerCards={playerCards} scores={scores} handleDragEnd={handleDragEnd} symbols={symbols} roundKey={roundKey} />
+                                ) : (
+                                    <>
+                                        <PlayerZone idx={1} name="P2 (빨강)" color="bg-red-900/30" barColor="bg-red-600" isTop={true} width="w-1/2" border="border-r-4 border-gray-900" playerCards={playerCards} scores={scores} handleDragEnd={handleDragEnd} symbols={symbols} roundKey={roundKey} />
+                                        <PlayerZone idx={2} name="P3 (초록)" color="bg-green-900/30" barColor="bg-green-600" isTop={true} width="w-1/2" playerCards={playerCards} scores={scores} handleDragEnd={handleDragEnd} symbols={symbols} roundKey={roundKey} />
+                                    </>
+                                )
+                            )}
+                        </div>
+
+                        {/* --- MIDDLE ROW (중앙 중립 구역) --- */}
+                        <div ref={centerRef} className={`relative flex flex-col items-center justify-center w-full h-1/3 transition-colors duration-200 z-0 ${matchFlash ? 'bg-yellow-500/50' : 'bg-gray-800'}`}>
+                            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none opacity-20 text-center">
+                                <span className="text-5xl md:text-7xl tracking-widest uppercase">중립 구역</span>
+                                <span className="text-2xl md:text-3xl mt-2">남은 카드: {cardsRemaining}장</span>
+                            </div>
+                            
+                            {/* 중앙 전용 3x3 그리드 적용 */}
+                            <div className={`grid grid-cols-3 grid-rows-3 w-[65vmin] h-[65vmin] md:w-[45vmin] md:h-[45vmin] place-items-center relative z-10 transition-transform duration-200 ${matchFlash ? 'scale-110' : 'scale-100'}`}>
+                                {Array.from({length: 9}).map((_, cIdx) => {
+                                    const item = centerLayout.find(l => l.cellIndex === cIdx);
+                                    return (
+                                        <div key={cIdx} className="relative w-full h-full flex items-center justify-center">
+                                            {item && <DraggableSymbol key={`center-${item.symId}-${roundKey}`} symId={item.symId} src={symbols[item.symId]} isCenter={true} config={item} />}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        {/* --- BOTTOM ROW (하단 영역) --- */}
+                        <div className="flex w-full h-1/3 relative z-10 border-t-2 border-gray-700">
+                            {playerCount <= 3 ? (
+                                <PlayerZone idx={0} name="P1 (파랑)" color="bg-blue-900/30" barColor="bg-blue-600" isTop={false} width="w-full" playerCards={playerCards} scores={scores} handleDragEnd={handleDragEnd} symbols={symbols} roundKey={roundKey} />
+                            ) : (
+                                <>
+                                    <PlayerZone idx={0} name="P1 (파랑)" color="bg-blue-900/30" barColor="bg-blue-600" isTop={false} width="w-1/2" border="border-r-4 border-gray-900" playerCards={playerCards} scores={scores} handleDragEnd={handleDragEnd} symbols={symbols} roundKey={roundKey} />
+                                    <PlayerZone idx={3} name="P4 (보라)" color="bg-purple-900/30" barColor="bg-purple-600" isTop={false} width="w-1/2" playerCards={playerCards} scores={scores} handleDragEnd={handleDragEnd} symbols={symbols} roundKey={roundKey} />
+                                </>
+                            )}
+                        </div>
+
+                        {/* 시작 오버레이 */}
+                        <div className="absolute inset-0 pointer-events-none flex items-center justify-center opacity-0 animate-[fadeOut_3s_ease-in-out] z-[200]">
+                            <div className="bg-black/80 text-white text-2xl p-6 rounded-3xl border-4 border-yellow-400 text-center shadow-2xl">
+                                내 구역의 정답을 찾아<br/>
+                                <span className="text-yellow-400 text-4xl mt-2 block">가운데로 끌어다 놓으세요!</span>
+                            </div>
+                        </div>
+                    </div>
+                );
+            };
+
+            const renderResult = () => (
+                <div className="flex flex-col items-center justify-center h-screen w-screen space-y-8 bg-purple-600 text-white p-4 overflow-hidden">
+                    <h1 className="text-5xl md:text-6xl font-bold animate-bounce text-yellow-300 drop-shadow-[0_5px_5px_rgba(0,0,0,0.5)]">🎉 게임 종료! 🎉</h1>
+                    <div className="text-3xl md:text-4xl bg-white text-black px-10 py-6 rounded-3xl shadow-2xl border-4 border-black text-center w-full max-w-md">
+                        우승자: <br/><span className="text-5xl md:text-6xl text-red-500 block mt-4">{winner}!!</span>
+                    </div>
+                    <div className="flex space-x-4">
+                        <button onClick={() => startGame(symbols)} className="bg-green-500 text-white text-xl md:text-2xl px-6 py-4 rounded-xl border-4 border-black shadow-[0_6px_0_#166534] active:translate-y-[6px] active:shadow-none transition-all">
+                            <i className="fas fa-redo mr-2"></i> 다시 하기
+                        </button>
+                        <button onClick={() => setGameState('menu')} className="bg-blue-500 text-white text-xl md:text-2xl px-6 py-4 rounded-xl border-4 border-black shadow-[0_6px_0_#1e3a8a] active:translate-y-[6px] active:shadow-none transition-all">
+                            <i className="fas fa-home mr-2"></i> 처음으로
+                        </button>
+                    </div>
+                </div>
+            );
+
+            return (
+                <div>
+                    <style>{`@keyframes fadeOut { 0% { opacity: 1; } 80% { opacity: 1; } 100% { opacity: 0; } }`}</style>
+                    {gameState === 'menu' && renderMenu()}
+                    {gameState === 'creating' && renderCreator()}
+                    {gameState === 'playing' && renderPlaying()}
+                    {gameState === 'result' && renderResult()}
+                </div>
+            );
+        };
+
+        // --- 크리에이터 뷰 ---
+        const CreatorView = ({ symbols, setSymbols, required, onStart, onBack }) => {
+            const [viewMode, setViewMode] = useState('draw');
+            const canvasRef = useRef(null);
+            const fileInputRef = useRef(null);
+            const cameraInputRef = useRef(null);
+            // 모바일에서만 카메라 버튼 표시 (데스크톱은 capture 속성이 갤러리로 fallback됨)
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            
+            const [isDrawing, setIsDrawing] = useState(false);
+            const [history, setHistory] = useState([]);
+            const [historyStep, setHistoryStep] = useState(-1);
+            const [isGenerating, setIsGenerating] = useState(false);
+            const [isProcessingFiles, setIsProcessingFiles] = useState(false);
+            const [toastMsg, setToastMsg] = useState('');
+
+            useEffect(() => {
+                if (viewMode !== 'draw') return;
+                // 레이아웃 완성 후 캔버스 내부 해상도를 실제 표시 크기로 맞춤 (좌표 불일치 방지)
+                requestAnimationFrame(() => {
+                    const canvas = canvasRef.current;
+                    if (!canvas) return;
+                    const rect = canvas.getBoundingClientRect();
+                    if (rect.width > 0 && rect.height > 0) {
+                        canvas.width = Math.round(rect.width);
+                        canvas.height = Math.round(rect.height);
+                    }
+                    initCanvas();
+                });
+            }, [viewMode]);
+
+            const showToast = (msg) => {
+                setToastMsg(msg);
+                setTimeout(() => setToastMsg(''), 1500);
+            };
+
+            const initCanvas = () => {
+                const canvas = canvasRef.current;
+                if (!canvas) return;
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.lineWidth = 10;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                ctx.strokeStyle = 'black';
+                setHistory([canvas.toDataURL('image/png')]);
+                setHistoryStep(0);
+            };
+
+            const saveHistoryState = (canvas) => {
+                const dataUrl = canvas.toDataURL('image/png');
+                const newHistory = history.slice(0, historyStep + 1);
+                newHistory.push(dataUrl);
+                setHistory(newHistory);
+                setHistoryStep(newHistory.length - 1);
+            };
+
+            const getCoordinates = (e) => {
+                const canvas = canvasRef.current;
+                const rect = canvas.getBoundingClientRect();
+                const scaleX = canvas.width / rect.width;
+                const scaleY = canvas.height / rect.height;
+                let clientX, clientY;
+
+                if (e.touches && e.touches.length > 0) {
+                    clientX = e.touches[0].clientX;
+                    clientY = e.touches[0].clientY;
+                } else {
+                    clientX = e.clientX;
+                    clientY = e.clientY;
+                }
+                return {
+                    x: (clientX - rect.left) * scaleX,
+                    y: (clientY - rect.top) * scaleY
+                };
+            };
+
+            const startDrawing = (e) => {
+                e.preventDefault();
+                setIsDrawing(true);
+                const { x, y } = getCoordinates(e);
+                const ctx = canvasRef.current.getContext('2d');
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+            };
+
+            const draw = (e) => {
+                e.preventDefault();
+                if (!isDrawing) return;
+                const { x, y } = getCoordinates(e);
+                const ctx = canvasRef.current.getContext('2d');
+                ctx.lineTo(x, y);
+                ctx.stroke();
+            };
+
+            const stopDrawing = (e) => {
+                if(e) e.preventDefault();
+                if (isDrawing) {
+                    setIsDrawing(false);
+                    saveHistoryState(canvasRef.current);
+                }
+            };
+
+            const handleUndo = () => {
+                if (historyStep > 0) {
+                    setHistoryStep(historyStep - 1);
+                    const canvas = canvasRef.current;
+                    const ctx = canvas.getContext('2d');
+                    const img = new Image();
+                    img.onload = () => {
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                        ctx.drawImage(img, 0, 0);
+                    };
+                    img.src = history[historyStep - 1];
+                }
+            };
+
+            const clearCanvas = () => {
+                const canvas = canvasRef.current;
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                saveHistoryState(canvas);
+            };
+
+            const handleSaveDraw = () => {
+                if (historyStep > 0) {
+                    const dataUrl = canvasRef.current.toDataURL('image/png');
+                    setSymbols(prev => {
+                        if (prev.length < required) return [...prev, dataUrl];
+                        return prev;
+                    });
+                    clearCanvas();
+                    showToast("🎨 그림 1장 추가 완료!");
+                }
+            };
+
+            const applyRandomFrame = (img) => {
+                const canvas = document.createElement('canvas');
+                canvas.width = 400; canvas.height = 400;
+                const ctx = canvas.getContext('2d');
+
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                const shapes = ['circle', 'heart', 'star', 'triangle', 'squircle'];
+                const shape = shapes[Math.floor(Math.random() * shapes.length)];
+
+                ctx.translate(200, 200);
+                ctx.beginPath();
+
+                if (shape === 'circle') ctx.arc(0, 0, 170, 0, Math.PI * 2);
+                else if (shape === 'heart') {
+                    ctx.translate(0, -30);
+                    ctx.moveTo(0, -60);
+                    ctx.bezierCurveTo(0, -60, -40, -150, -120, -150);
+                    ctx.bezierCurveTo(-220, -150, -220, -30, -220, -30);
+                    ctx.bezierCurveTo(-220, 70, -80, 170, 0, 230);
+                    ctx.bezierCurveTo(80, 170, 220, 70, 220, -30);
+                    ctx.bezierCurveTo(220, -30, 220, -150, 120, -150);
+                    ctx.bezierCurveTo(40, -150, 0, -60, 0, -60);
+                } else if (shape === 'star') {
+                    for (let i = 0; i < 10; i++) {
+                        const radius = i % 2 === 0 ? 180 : 80;
+                        const angle = (i * Math.PI) / 5 - Math.PI / 2;
+                        ctx.lineTo(Math.cos(angle) * radius, Math.sin(angle) * radius);
+                    }
+                } else if (shape === 'triangle') {
+                    ctx.translate(0, 30);
+                    for (let i = 0; i < 3; i++) {
+                        const angle = (i * 2 * Math.PI) / 3 - Math.PI / 2;
+                        ctx.lineTo(Math.cos(angle) * 190, Math.sin(angle) * 190);
+                    }
+                } else if (shape === 'squircle') {
+                    const r = 60, s = 160;
+                    ctx.moveTo(-s+r, -s);
+                    ctx.arcTo(s, -s, s, s, r);
+                    ctx.arcTo(s, s, -s, s, r);
+                    ctx.arcTo(-s, s, -s, -s, r);
+                    ctx.arcTo(-s, -s, s, -s, r);
+                }
+                ctx.closePath();
+                ctx.save();
+                ctx.clip(); 
+
+                ctx.fillStyle = 'white';
+                ctx.fill();
+
+                const scale = Math.max(400 / img.width, 400 / img.height);
+                const w = img.width * scale;
+                const h = img.height * scale;
+                ctx.drawImage(img, -w/2, -h/2, w, h);
+                ctx.restore();
+
+                ctx.lineWidth = 16;
+                ctx.strokeStyle = `hsl(${Math.floor(Math.random() * 360)}, 80%, 60%)`;
+                ctx.lineJoin = 'round';
+                ctx.stroke();
+
+                return canvas.toDataURL('image/png');
+            };
+
+            const processFiles = async (files) => {
+                setIsProcessingFiles(true);
+                const newUrls = [];
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    const url = await new Promise((resolve) => {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            const img = new Image();
+                            img.onload = () => resolve(applyRandomFrame(img));
+                            img.src = e.target.result;
+                        };
+                        reader.readAsDataURL(file);
+                    });
+                    newUrls.push(url);
+                }
+
+                setSymbols(prev => {
+                    const spaceLeft = required - prev.length;
+                    return [...prev, ...newUrls.slice(0, spaceLeft)];
+                });
+                setIsProcessingFiles(false);
+                showToast(`✂️ 스티커 ${files.length}장 추가 완료!`);
+            };
+
+            const handleFileUpload = (e) => {
+                if (!e.target.files || e.target.files.length === 0) return;
+                processFiles(Array.from(e.target.files));
+                e.target.value = '';
+            };
+
+            const deleteSymbol = (idx) => {
+                setSymbols(symbols.filter((_, i) => i !== idx));
+            };
+
+            // 그림을 기기 갤러리/다운로드 폴더에 저장
+            const saveSymbolToGallery = async (src, idx) => {
+                try {
+                    // dataURL → Blob 변환
+                    const res = await fetch(src);
+                    const blob = await res.blob();
+                    const file = new File([blob], `doble-${idx + 1}.png`, { type: 'image/png' });
+
+                    // 모바일: Web Share API (갤러리에 직접 저장 가능)
+                    if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+                        await navigator.share({ files: [file], title: `도블 그림 ${idx + 1}` });
+                    } else {
+                        // PC: 다운로드 링크로 저장
+                        const a = document.createElement('a');
+                        a.href = src;
+                        a.download = `doble-${idx + 1}.png`;
+                        a.click();
+                    }
+                    showToast(`💾 그림 ${idx + 1}번 저장됨!`);
+                } catch (err) {
+                    if (err.name !== 'AbortError') showToast('저장 실패 😥');
+                }
+            };
+
+            const generateMissingAndStart = async () => {
+                setIsGenerating(true);
+                const currentCount = symbols.length;
+                const needed = required - currentCount;
+                let finalSymbols = [...symbols];
+
+                if (needed > 0 && currentCount > 0) {
+                    for (let i = 0; i < needed; i++) {
+                        const baseSrc = symbols[Math.floor(Math.random() * currentCount)];
+                        const newSymbolUrl = await generateVariant(baseSrc);
+                        finalSymbols.push(newSymbolUrl);
+                        if (i % 5 === 0) await new Promise(r => setTimeout(r, 10)); // 브라우저 멈춤 방지
+                    }
+                }
+                
+                setTimeout(() => {
+                    setIsGenerating(false);
+                    onStart(finalSymbols);
+                }, 200);
+            };
+
+            const generateVariant = (baseDataUrl) => {
+                return new Promise((resolve) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = 400; canvas.height = 400;
+                        const ctx = canvas.getContext('2d');
+                        
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                        ctx.translate(canvas.width/2, canvas.height/2);
+                        ctx.rotate((Math.random() - 0.5) * 0.5); 
+                        if (Math.random() > 0.5) ctx.scale(-1, 1);
+                        ctx.translate(-canvas.width/2, -canvas.height/2);
+
+                        ctx.drawImage(img, 0, 0);
+                        ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+                        ctx.globalCompositeOperation = 'source-atop';
+                        ctx.fillStyle = getRandomColor();
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+                        
+                        ctx.globalCompositeOperation = 'source-over';
+                        ctx.strokeStyle = ['#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6'][Math.floor(Math.random()*5)];
+                        ctx.lineWidth = 10;
+                        ctx.beginPath();
+                        ctx.moveTo(Math.random()*400, Math.random()*400);
+                        ctx.lineTo(Math.random()*400, Math.random()*400);
+                        ctx.stroke();
+
+                        resolve(canvas.toDataURL('image/png'));
+                    };
+                    img.src = baseDataUrl;
+                });
+            };
+
+            const isFull = symbols.length >= required;
+            const canAutoFill = symbols.length >= 3 && !isFull;
+
+            const LoadingOverlay = () => isProcessingFiles && (
+                <div className="absolute inset-0 bg-black/50 z-50 flex flex-col items-center justify-center text-white rounded-3xl">
+                    <i className="fas fa-spinner fa-spin text-5xl mb-4"></i>
+                    <p className="text-xl font-bold mt-4">스티커 싹둑 오리는 중...</p>
+                </div>
+            );
+
+            const Toast = () => toastMsg && (
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black/80 text-white px-6 py-3 rounded-full text-xl md:text-2xl font-bold animate-bounce z-50 shadow-2xl">
+                    {toastMsg}
+                </div>
+            );
+
+            if (viewMode === 'draw') {
+                return (
+                    <div className="flex flex-col h-screen w-screen bg-orange-100 p-4 items-center justify-center relative overflow-hidden">
+                        <button onClick={onBack} className="absolute top-4 left-4 text-gray-600 bg-white/50 px-3 py-1 rounded-full shadow z-50"><i className="fas fa-home"></i> 처음으로</button>
+                        <button onClick={() => setViewMode('gallery')} className="absolute top-4 right-4 text-blue-600 bg-white/50 px-4 py-2 rounded-full font-bold shadow-md ring-2 ring-blue-300 z-50">
+                            보관함 확인 <i className="fas fa-arrow-right"></i>
+                        </button>
+
+                        <div className="w-full max-w-lg bg-white p-4 md:p-6 rounded-3xl shadow-xl border-4 border-black flex flex-col h-[85vh] relative mt-10">
+                            <LoadingOverlay />
+                            <Toast />
+                            
+                            <div className="text-center mb-4">
+                                <h2 className="text-2xl font-bold">그림판 ({symbols.length} / {required}장)</h2>
+                                <p className="text-gray-500 text-sm">추가하면 화면이 안 넘어가고 카운트만 오릅니다!</p>
+                            </div>
+                            
+                            <div className="w-full aspect-square bg-gray-200 rounded-2xl overflow-hidden relative touch-none shadow-inner border-2 border-gray-300 transparent-bg">
+                                <canvas
+                                    ref={canvasRef}
+                                    width={400}
+                                    height={400}
+                                    className="cursor-crosshair w-full h-full block touch-none"
+                                    onMouseDown={startDrawing}
+                                    onMouseMove={draw}
+                                    onMouseUp={stopDrawing}
+                                    onMouseOut={stopDrawing}
+                                    onTouchStart={startDrawing}
+                                    onTouchMove={draw}
+                                    onTouchEnd={stopDrawing}
+                                />
+                            </div>
+
+                            <div className="mt-4 flex justify-between px-2">
+                                <div className="flex gap-2">
+                                    <button onClick={handleUndo} disabled={historyStep <= 0} className="w-12 h-12 bg-gray-100 rounded-full border-2 border-black disabled:opacity-50"><i className="fas fa-undo"></i></button>
+                                </div>
+                                <button onClick={clearCanvas} className="px-4 py-2 bg-red-100 rounded-xl border-2 border-black text-red-600 font-bold"><i className="fas fa-trash"></i> 싹지우기</button>
+                            </div>
+
+                            <div className="mt-6 flex flex-col gap-3">
+                                <button onClick={handleSaveDraw} disabled={isFull} className="w-full py-4 bg-blue-500 text-white text-xl rounded-xl border-4 border-black font-bold shadow-[0_4px_0_#1e3a8a] active:translate-y-[4px] active:shadow-none transition-all disabled:bg-gray-400">
+                                    <i className="fas fa-pen mr-2"></i> 이 그림 저장하기
+                                </button>
+                                
+                                <div className="flex gap-2">
+                                    <input type="file" accept="image/*" multiple ref={fileInputRef} onChange={handleFileUpload} className="hidden" />
+                                    {isMobile && <input type="file" accept="image/*" capture="environment" ref={cameraInputRef} onChange={handleFileUpload} className="hidden" />}
+
+                                    <button onClick={() => fileInputRef.current.click()} disabled={isFull} className={`${isMobile ? 'flex-1' : 'w-full'} py-3 bg-indigo-100 rounded-xl border-2 border-black disabled:opacity-50 text-base font-bold shadow-[0_3px_0_#000] active:translate-y-[3px] active:shadow-none transition-all`}>
+                                        <i className="fas fa-images"></i> 갤러리 다중선택
+                                    </button>
+                                    {isMobile && (
+                                        <button onClick={() => cameraInputRef.current.click()} disabled={isFull} className="flex-1 py-3 bg-teal-100 rounded-xl border-2 border-black disabled:opacity-50 text-base font-bold shadow-[0_3px_0_#000] active:translate-y-[3px] active:shadow-none transition-all text-red-600">
+                                            <i className="fas fa-camera"></i> 바로 찰칵!
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="flex flex-col h-screen w-screen bg-orange-100 p-4 items-center justify-center relative overflow-hidden">
+                    <div className="w-full max-w-2xl bg-white p-4 md:p-6 rounded-3xl shadow-xl border-4 border-black flex flex-col h-[90vh]">
+                        <LoadingOverlay />
+                        <div className="flex justify-between items-center mb-4 pb-4 border-b-2 border-gray-200">
+                            <button onClick={() => setViewMode('draw')} className="text-blue-600 font-bold text-lg bg-blue-50 px-3 py-2 rounded-lg border-2 border-blue-200 hover:bg-blue-100 shadow">
+                                <i className="fas fa-plus"></i> 더 추가하기
+                            </button>
+                            <h2 className="text-2xl font-bold hidden md:block">모인 스티커들 ({symbols.length}/{required})</h2>
+                            <span className="text-xl font-bold md:hidden">{symbols.length}/{required}</span>
+                        </div>
+
+                        {/* 보관함은 자체적으로 스크롤 가능하게 유지 */}
+                        <div className="flex-1 overflow-y-auto p-3 bg-gray-100 rounded-2xl border-2 border-gray-300 shadow-inner" style={{ touchAction: 'auto' }}>
+                            <div className="grid grid-cols-4 sm:grid-cols-5 gap-3">
+                                {symbols.map((src, idx) => (
+                                    <div key={idx} className="relative aspect-square rounded-xl flex items-center justify-center group animate-fade-in transparent-bg border-2 border-gray-200">
+                                        <img src={src} className="w-full h-full object-contain p-1 drop-shadow-sm" alt={`Symbol ${idx}`} />
+                                        {/* 삭제 버튼 (우상단) */}
+                                        <button
+                                            onClick={() => deleteSymbol(idx)}
+                                            className="absolute top-0 right-0 translate-x-1/4 -translate-y-1/4 bg-red-500 text-white w-6 h-6 text-xs rounded-full font-bold shadow-md border-2 border-black active:scale-90 z-10"
+                                        ><i className="fas fa-times"></i></button>
+                                        {/* 저장 버튼 (좌하단) */}
+                                        <button
+                                            onClick={() => saveSymbolToGallery(src, idx)}
+                                            className="absolute bottom-0 left-0 -translate-x-1/4 translate-y-1/4 bg-blue-500 text-white w-6 h-6 text-xs rounded-full font-bold shadow-md border-2 border-black active:scale-90 z-10"
+                                            title="갤러리에 저장"
+                                        ><i className="fas fa-download"></i></button>
+                                    </div>
+                                ))}
+                                {Array.from({length: required - symbols.length}).map((_, i) => (
+                                    <div key={`empty-${i}`} className="aspect-square bg-gray-200 border-2 border-dashed border-gray-400 rounded-xl flex flex-col items-center justify-center text-gray-400">
+                                        <i className="fas fa-question text-xl mb-1"></i>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                        
+                        <div className="mt-6 flex flex-col gap-3">
+                            {canAutoFill && (
+                                <button 
+                                    onClick={generateMissingAndStart} 
+                                    disabled={isGenerating}
+                                    className="w-full py-4 bg-yellow-400 text-black text-2xl rounded-xl border-4 border-black font-bold shadow-[0_4px_0_#000] active:translate-y-[4px] active:shadow-none transition-all flex flex-col items-center"
+                                >
+                                    {isGenerating ? '스티커 무한 복사 중... 🧙‍♂️' : (
+                                        <>
+                                            <span>이대로 대충 시작! 🚀</span>
+                                            <span className="text-base font-normal mt-1">나머지 {required - symbols.length}개 자동 복사</span>
+                                        </>
+                                    )}
+                                </button>
+                            )}
+                            {isFull && (
+                                <button 
+                                    onClick={() => onStart(symbols)}
+                                    className="w-full py-5 bg-green-500 text-white text-3xl rounded-xl border-4 border-black font-bold shadow-[0_6px_0_#166534] active:translate-y-[6px] active:shadow-none transition-all"
+                                >
+                                    드래그 게임 시작! 🎉
+                                </button>
+                            )}
+                            {!canAutoFill && !isFull && (
+                                <div className="text-center p-4 bg-gray-100 rounded-xl border-2 border-dashed border-gray-400 text-gray-600 font-bold text-lg">
+                                    최소 3장 이상 모아주세요!<br/>
+                                    <span className="text-sm font-normal text-gray-500">(현재 {symbols.length}장 / 목표 {required}장)</span>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
