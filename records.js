@@ -35,7 +35,7 @@ export const RECORDS = [
     desc: "보물찾기를 좋아하는 아이를 위해 만들었다.\n고전 지뢰찾기를 응용함.\n2인 플레이 하다보면 시간이 금방 간다.",
     tags: "gemini",
     link: "https://jeongdawoont-star.github.io/hash2n/vibe-apps/find-tresure.html",
-    image: "img/14.png",
+    image: "img-re/14.avif",
   },
 
   {
