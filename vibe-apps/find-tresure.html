@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="color-scheme" content="light">
+<title>보물찾기</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Jua&display=swap');
+
+  :root {
+    --cell: 38px; /* 타일 기본 크기 */
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Jua', sans-serif;
+    background-color: #fff0f5;
+    background: linear-gradient(135deg, #fff0f5, #f3e8ff);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    color: #5b21b6;
+    overflow-x: hidden;
+  }
+  
+  h1 {
+    font-size: 2.2rem;
+    color: #db2777;
+    text-align: center;
+    padding: 12px 8px 2px;
+    text-shadow: 2px 2px 0 #fbcfe8;
+    letter-spacing: 1px;
+  }
+  .sub { font-size: 0.9rem; color: #9d174d; text-align: center; margin-bottom: 10px; }
+
+  /* 옵션 버튼 */
+  .opts { display: flex; flex-direction: column; align-items: center; gap: 8px; margin-bottom: 12px; }
+  .pills { display: flex; gap: 8px; justify-content: center; }
+  .pill {
+    font-size: 0.9rem; border: 2px solid #f472b6;
+    border-radius: 20px; padding: 4px 14px; cursor: pointer;
+    background: #fff; color: #db2777; 
+    box-shadow: 0 2px 0 #fbcfe8;
+    transition: all 0.1s;
+  }
+  .pill:active { transform: translateY(2px); box-shadow: 0 0 0 #fbcfe8; }
+  .pill.on { background: #f472b6; color: #fff; border-color: #db2777; box-shadow: 0 2px 0 #db2777; }
+  .pill.m-on { background: #a78bfa; color: #fff; border-color: #7c3aed; box-shadow: 0 2px 0 #7c3aed; }
+
+  /* 점수판(HUD) */
+  .hud { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-bottom: 8px; }
+  .hb {
+    background: #fff; border: 2px solid #f9a8d4; border-radius: 16px;
+    padding: 6px 12px; font-size: 1rem; color: #9d174d;
+    box-shadow: 0 3px 0 #fbcfe8;
+    transition: all 0.2s;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .hb b { font-size: 1.2rem; color: #be185d; }
+  .hb.turn-p1 { background: #e0f2fe; border-color: #38bdf8; box-shadow: 0 3px 0 #bae6fd; transform: scale(1.05); }
+  .hb.turn-p2 { background: #fce7f3; border-color: #f472b6; box-shadow: 0 3px 0 #fbcfe8; transform: scale(1.05); }
+
+  #dbar-wrap { width: 80%; max-width: 360px; display: none; margin: 4px auto; }
+  #dbar-bg { background: #fff; border-radius: 999px; border: 2px solid #f472b6; height: 12px; overflow: hidden; }
+  #dbar { height: 100%; background: #fb7185; border-radius: 999px; width: 100%; }
+  #dtxt { text-align: center; font-size: 0.9rem; color: #e11d48; margin-top: 4px; }
+
+  #msg { font-size: 1.1rem; color: #7c3aed; text-align: center; min-height: 26px; padding: 2px 8px; }
+
+  /* 막대그래프형 범례 */
+  .legend-bar-wrap {
+    display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 12px;
+  }
+  .lbar {
+    height: 14px; width: 160px; border-radius: 8px;
+    background: linear-gradient(to right, #bae6fd, #a7f3d0, #fef08a, #fbcfe8, #fca5a5);
+    border: 2px solid #fff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+
+  #bwrap { overflow: auto; width: 100%; flex: 1; padding: 2px 8px 80px; }
+  #board { display: grid; gap: 4px; width: max-content; margin: 0 auto; transition: gap 0.2s; }
+
+  .c {
+    width: var(--cell); height: var(--cell); border-radius: 10px;
+    font-size: calc(var(--cell) * 0.45); /* 아이콘 크기 자동 조절 */
+    display: flex; align-items: center; justify-content: center;
+    background: #ffffff; border: 2px solid #f8fafc;
+    box-shadow: 0 4px 0 #cbd5e1;
+    cursor: pointer; user-select: none;
+    -webkit-user-select: none;
+    transition: transform 0.05s, box-shadow 0.05s;
+  }
+  .c:active { transform: translateY(4px); box-shadow: 0 0 0 #cbd5e1; }
+  .c.open { box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); cursor: default; transform: translateY(4px); }
+
+  .c.p1 { border-color: #38bdf8; }
+  .c.p2 { border-color: #f472b6; }
+
+  .c.h1 { background: #bae6fd; } 
+  .c.h2 { background: #a7f3d0; } 
+  .c.h3 { background: #fef08a; } 
+  .c.h4 { background: #fbcfe8; } 
+  .c.h5 { background: #fca5a5; } 
+
+  .c.gem  { background: #fef08a; box-shadow: 0 0 10px #fde047; }
+  .c.trap { background: #fecaca; }
+
+  .btns {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    display: flex; justify-content: center; gap: 10px;
+    padding: 10px 12px 16px;
+    background: linear-gradient(180deg, transparent, #f3e8ff 40%);
+  }
+  button {
+    font-family: 'Jua', sans-serif; font-size: 1rem;
+    border-radius: 20px; padding: 10px 18px; cursor: pointer;
+    transition: transform 0.1s; border: none;
+  }
+  button:active { transform: translateY(3px); box-shadow: 0 1px 0 transparent !important; }
+  
+  .bh { background: #d8b4fe; color: #581c87; box-shadow: 0 4px 0 #a855f7; }
+  .bn { background: #f9a8d4; color: #831843; box-shadow: 0 4px 0 #ec4899; }
+  .bfs { background: #e2e8f0; color: #475569; box-shadow: 0 4px 0 #94a3b8; }
+
+  #ov {
+    display: none; position: fixed; inset: 0;
+    background: rgba(255, 240, 245, 0.85); z-index: 100;
+    align-items: center; justify-content: center;
+  }
+  #ov.show { display: flex; }
+  .ovc {
+    background: #fff; border: 4px solid #f472b6;
+    border-radius: 24px; padding: 30px 40px; text-align: center;
+    max-width: 320px; width: 88%;
+    box-shadow: 0 10px 25px rgba(219, 39, 119, 0.2);
+  }
+  .ovc .ico { font-size: 3.5rem; margin-bottom: 8px; }
+  .ovc .ttl { font-size: 1.8rem; color: #db2777; margin-bottom: 8px; }
+  .ovc .omsg { font-size: 1.1rem; color: #831843; margin-bottom: 12px; white-space: pre-line; line-height: 1.4; }
+  .ovc .osc  { font-size: 1.4rem; color: #7c3aed; margin-bottom: 18px; }
+</style>
+</head>
+<body>
+
+<h1>💖 두근두근 보물찾기 💖</h1>
+<div class="sub">숨겨진 보물을 모두 찾아보자!</div>
+
+<div class="opts">
+  <div class="pills">
+    <div class="pill m-on" id="mode-1" onclick="setMode(1)">👤 혼자 할래</div>
+    <div class="pill" id="mode-2" onclick="setMode(2)">👥 같이 할래</div>
+  </div>
+  <div class="pills">
+    <div class="pill on"  id="p-easy"   onclick="setDiff('easy',this)">쉬움</div>
+    <div class="pill"     id="p-normal" onclick="setDiff('normal',this)">보통</div>
+    <div class="pill"     id="p-hard"   onclick="setDiff('hard',this)">어려움</div>
+  </div>
+</div>
+
+<div class="hud">
+  <div class="hb" id="box-s1"><span id="lbl-s1">내 점수</span> <b id="hs1">0</b></div>
+  <div class="hb" id="box-s2" style="display:none"><span id="lbl-s2">2P 점수</span> <b id="hs2">0</b></div>
+  <div class="hb">남은 보물 <b id="hr">?</b></div>
+  <div class="hb">목숨 <b id="hl">3</b></div>
+</div>
+
+<div id="dbar-wrap">
+  <div id="dbar-bg"><div id="dbar"></div></div>
+  <div id="dtxt">앗! 너무 빨라요 천천히!</div>
+</div>
+
+<div id="msg"></div>
+
+<div class="legend-bar-wrap">
+  <span style="font-size:1.3rem">🎁</span>
+  <div class="lbar"></div>
+  <span style="font-size:1.3rem">🐍</span>
+</div>
+
+<div id="bwrap"><div id="board"></div></div>
+
+<div class="btns">
+  <button class="bh" onclick="useHint()">💡 힌트 쓸래</button>
+  <button class="bn" onclick="newGame()">🎀 새 게임</button>
+  <button class="bfs" onclick="toggleFS()">📺 크게 보기</button>
+</div>
+
+<div id="ov">
+  <div class="ovc">
+    <div class="ico" id="oi"></div>
+    <div class="ttl" id="ott"></div>
+    <div class="omsg" id="om"></div>
+    <div class="osc"  id="osc"></div>
+    <button class="bn" onclick="newGame()">다시 해볼래!</button>
+  </div>
+</div>
+
+<script>
+// --- 웹 오디오 설정 (사운드 재생) ---
+var audioCtx = null;
+function playSound(type) {
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    
+    var osc = audioCtx.createOscillator();
+    var gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    var now = audioCtx.currentTime;
+
+    if (type === 'pop') { 
+      // 기본 터치 뽁 소리
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(600, now);
+      osc.frequency.exponentialRampToValueAtTime(800, now + 0.05);
+      gain.gain.setValueAtTime(0.3, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+      osc.start(now); osc.stop(now + 0.05);
+    } else if (type === 'gem') { 
+      // 보물 획득 띠링~
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(523.25, now);
+      osc.frequency.setValueAtTime(659.25, now + 0.1);
+      osc.frequency.setValueAtTime(783.99, now + 0.2);
+      gain.gain.setValueAtTime(0.3, now);
+      gain.gain.linearRampToValueAtTime(0, now + 0.4);
+      osc.start(now); osc.stop(now + 0.4);
+    } else if (type === 'trap') { 
+      // 함정 뱀 소리 삐루루루
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(150, now);
+      osc.frequency.linearRampToValueAtTime(80, now + 0.3);
+      gain.gain.setValueAtTime(0.3, now);
+      gain.gain.linearRampToValueAtTime(0, now + 0.3);
+      osc.start(now); osc.stop(now + 0.3);
+    } else if (type === 'win') { 
+      // 승리 효과음
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(440, now);
+      osc.frequency.setValueAtTime(554.37, now + 0.1);
+      osc.frequency.setValueAtTime(659.25, now + 0.2);
+      osc.frequency.setValueAtTime(880, now + 0.3);
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.linearRampToValueAtTime(0, now + 0.6);
+      osc.start(now); osc.stop(now + 0.6);
+    } else if (type === 'lose') { 
+      // 패배 효과음
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(200, now);
+      osc.frequency.linearRampToValueAtTime(50, now + 0.5);
+      gain.gain.setValueAtTime(0.4, now);
+      gain.gain.linearRampToValueAtTime(0, now + 0.5);
+      osc.start(now); osc.stop(now + 0.5);
+    }
+  } catch(e) { console.log(e); }
+}
+// ------------------------------------
+
+var TRAPS = ['🐍']; 
+var GEMS  = ['🎁']; 
+
+var DIFF = {
+  easy:   { W:12, H:18, trap: 20, gem: 12, maxC:8, ms:2000, hc:10, lives: 5 },
+  normal: { W:14, H:22, trap: 40, gem: 10, maxC:6, ms:3000, hc:20, lives: 4 },
+  hard:   { W:16, H:26, trap: 65, gem:  8, maxC:5, ms:4000, hc:30, lives: 3 }
+};
+
+var cfg, grid, W, H;
+var score1, score2, lives, totalT, foundT;
+var delayed, clickW, raf;
+var diff = 'easy';
+var mode = 1; 
+var turn = 1; 
+var isFirstClick = true;
+
+function setMode(m) {
+  mode = m;
+  document.getElementById('mode-1').className = 'pill' + (m===1 ? ' m-on' : '');
+  document.getElementById('mode-2').className = 'pill' + (m===2 ? ' m-on' : '');
+  
+  if (mode === 1) {
+    document.getElementById('lbl-s1').textContent = '내 점수';
+    document.getElementById('box-s2').style.display = 'none';
+  } else {
+    document.getElementById('lbl-s1').textContent = '1P 점수';
+    document.getElementById('box-s2').style.display = 'flex';
+  }
+  newGame();
+}
+
+function setDiff(d, el) {
+  diff = d;
+  document.getElementById('p-easy').className = 'pill';
+  document.getElementById('p-normal').className = 'pill';
+  document.getElementById('p-hard').className = 'pill';
+  if (el) el.className = 'pill on';
+  newGame();
+}
+
+function shuffle(array) {
+  var i, j, temp;
+  for (i = array.length - 1; i > 0; i--) {
+    j = Math.floor(Math.random() * (i + 1));
+    temp = array[i];
+    array[i] = array[j];
+    array[j] = temp;
+  }
+}
+
+function resizeBoard() {
+  var isFS = document.fullscreenElement || document.webkitIsFullScreen || document.mozFullScreen;
+  if (isFS) {
+    var availW = window.innerWidth - 16; 
+    var availH = window.innerHeight - 250; // HUD와 버튼 영역 제외
+    var cellW = Math.floor(availW / W);
+    var cellH = Math.floor(availH / H);
+    var size = Math.max(16, Math.min(cellW, cellH)); 
+    document.documentElement.style.setProperty('--cell', size + 'px');
+  } else {
+    document.documentElement.style.setProperty('--cell', '38px'); // 기본 크기
+  }
+}
+
+// 화면이 회전되거나 크기가 바뀔 때마다 다시 계산
+window.addEventListener('resize', resizeBoard);
+
+function newGame() {
+  document.getElementById('ov').className = '';
+  cfg = DIFF[diff];
+  W = cfg.W; H = cfg.H;
+  score1 = 0; score2 = 0; turn = 1;
+  lives = cfg.lives; 
+  totalT = cfg.gem; foundT = 0;
+  delayed = false; clickW = [];
+  isFirstClick = true; 
+  
+  if (raf) cancelAnimationFrame(raf);
+  document.getElementById('dbar-wrap').style.display = 'none';
+  msg('');
+
+  grid = [];
+  var r, c;
+  for (r=0; r<H; r++) {
+    grid[r] = [];
+    for (c=0; c<W; c++) {
+      grid[r][c] = {
+        type: 'empty', rev: false, heat: 0, el: null, ico: ''
+      };
+    }
+  }
+
+  render();
+  resizeBoard(); // 그리드 그리기 전에 크기 맞춤
+  hud();
+}
+
+function generateItems(firstR, firstC) {
+  var cellTypes = [];
+  var i, r, c, tr, tc, mn_trap, mn_gem, d, diff_dist, h;
+  
+  for(i=0; i<cfg.gem; i++) cellTypes.push('gem');
+  for(i=0; i<cfg.trap; i++) cellTypes.push('trap');
+
+  var available = [];
+  for (r=0; r<H; r++) {
+    for (c=0; c<W; c++) {
+      if (Math.abs(r - firstR) <= 1 && Math.abs(c - firstC) <= 1) continue;
+      available.push({r: r, c: c});
+    }
+  }
+
+  shuffle(available);
+
+  for (i = 0; i < cellTypes.length; i++) {
+    var pos = available[i];
+    grid[pos.r][pos.c].type = cellTypes[i];
+    grid[pos.r][pos.c].ico = cellTypes[i] === 'trap' ? TRAPS[0] : GEMS[0];
+  }
+
+  for (r=0; r<H; r++) {
+    for (c=0; c<W; c++) {
+      if (grid[r][c].type !== 'empty') { grid[r][c].heat = -1; continue; }
+      mn_trap = 9999; mn_gem = 9999;
+      for (tr=0; tr<H; tr++) {
+        for (tc=0; tc<W; tc++) {
+          d = Math.max(Math.abs(r-tr), Math.abs(c-tc));
+          if (grid[tr][tc].type === 'trap' && d < mn_trap) mn_trap = d;
+          if (grid[tr][tc].type === 'gem'  && d < mn_gem) mn_gem = d;
+        }
+      }
+      diff_dist = mn_trap - mn_gem;
+      h = 3; 
+      if (diff_dist >= 2) h = 1;       
+      else if (diff_dist === 1) h = 2; 
+      else if (diff_dist === 0) h = 3; 
+      else if (diff_dist === -1) h = 4;
+      else if (diff_dist <= -2) h = 5; 
+      grid[r][c].heat = h;
+    }
+  }
+}
+
+function render() {
+  var b = document.getElementById('board');
+  b.innerHTML = '';
+  b.style.gridTemplateColumns = 'repeat('+W+', var(--cell))';
+  var r, c;
+  for (r=0; r<H; r++) {
+    for (c=0; c<W; c++) {
+      (function(rr, cc) {
+        var div = document.createElement('div');
+        div.className = 'c';
+        div.addEventListener('click', function(){ tap(rr, cc); });
+        grid[rr][cc].el = div;
+        b.appendChild(div);
+      })(r, c);
+    }
+  }
+}
+
+function tap(r, c) {
+  if (delayed || lives<=0) return;
+  var cell = grid[r][c];
+  if (cell.rev) return;
+
+  // Audio Context 시작을 위한 첫 클릭 처리 (안전장치)
+  if (!audioCtx) playSound('init');
+
+  var now = Date.now();
+  var nw = [];
+  var i;
+  for (i=0; i<clickW.length; i++) if (now-clickW[i]<2000) nw.push(clickW[i]);
+  nw.push(now); clickW = nw;
+  if (clickW.length > cfg.maxC) { doDelay(); return; }
+
+  if (isFirstClick) {
+    isFirstClick = false;
+    generateItems(r, c);
+  }
+
+  cell.rev = true;
+  var el = cell.el;
+  
+  if (mode === 2) {
+    el.classList.add(turn === 1 ? 'p1' : 'p2');
+  }
+
+  var addScore = 0;
+  if (cell.type === 'gem') {
+    playSound('gem'); // 보물 소리
+    el.className += ' open gem';
+    el.textContent = cell.ico;
+    foundT++; addScore = 30;
+    msg((mode===2 ? (turn===1?'1P ':'2P ') : '') + '보물 찾았다! 💖 (+30점)');
+    if (foundT >= totalT) setTimeout(win, 500);
+  } else if (cell.type === 'trap') {
+    playSound('trap'); // 함정 소리
+    el.className += ' open trap';
+    el.textContent = cell.ico;
+    lives--; addScore = -15;
+    msg((mode===2 ? (turn===1?'1P ':'2P ') : '') + '앗, 뱀이다! 🐍 (-15점)');
+    if (lives <= 0) setTimeout(lose, 500);
+  } else {
+    playSound('pop'); // 기본 뽁 소리
+    el.className += ' open h' + cell.heat;
+    el.textContent = '';
+  }
+
+  if (turn === 1) score1 = Math.max(0, score1 + addScore);
+  else score2 = Math.max(0, score2 + addScore);
+
+  if (mode === 2) {
+    turn = turn === 1 ? 2 : 1;
+  }
+  
+  hud();
+}
+
+function doDelay() {
+  if (delayed) return;
+  delayed = true; clickW = [];
+  if (turn === 1) score1 = Math.max(0, score1 - 5);
+  else score2 = Math.max(0, score2 - 5);
+
+  msg('조금만 천천히 눌러주세요! 🐢 (-5점)');
+  var wrap = document.getElementById('dbar-wrap');
+  var bar  = document.getElementById('dbar');
+  wrap.style.display = 'block';
+  bar.style.width = '100%';
+  var start = Date.now();
+  function tick() {
+    var e = Date.now() - start;
+    var pct = Math.max(0, 100 - (e / cfg.ms * 100));
+    bar.style.width = pct + '%';
+    if (e < cfg.ms) {
+      raf = requestAnimationFrame(tick);
+    } else {
+      delayed = false;
+      wrap.style.display = 'none';
+      msg('');
+      hud();
+    }
+  }
+  raf = requestAnimationFrame(tick);
+  hud();
+}
+
+function useHint() {
+  if (delayed || lives<=0) return;
+  if (isFirstClick) { msg('어디든 첫 칸을 먼저 콕! 눌러주세요.'); return; }
+
+  if (turn === 1) {
+    if (score1 < cfg.hc) { msg('1P 점수가 모자라요! 😢'); return; }
+    score1 -= cfg.hc;
+  } else {
+    if (score2 < cfg.hc) { msg('2P 점수가 모자라요! 😢'); return; }
+    score2 -= cfg.hc;
+  }
+
+  var cands = [];
+  var r, c, p, dr, dc, nr, nc;
+  for (r=0; r<H; r++) {
+    for (c=0; c<W; c++) {
+      if (grid[r][c].type==='gem' && !grid[r][c].rev) cands.push([r,c]);
+    }
+  }
+  if (!cands.length) { msg('보물을 다 찾았어요! ✨'); return; }
+  
+  p = cands[Math.floor(Math.random()*cands.length)];
+  for (dr=-2; dr<=2; dr++) {
+    for (dc=-2; dc<=2; dc++) {
+      nr = p[0]+dr; nc = p[1]+dc;
+      if (nr>=0 && nr<H && nc>=0 && nc<W && !grid[nr][nc].rev) {
+        (function(e){
+          e.style.background = '#fde047';
+          setTimeout(function(){ e.style.background = ''; }, 800);
+        })(grid[nr][nc].el);
+      }
+    }
+  }
+  msg('반짝이는 곳 근처에 보물이 있어요! ✨ (-'+cfg.hc+'점)');
+  hud();
+}
+
+function win() {
+  playSound('win');
+  document.getElementById('oi').textContent  = '👑';
+  document.getElementById('ott').textContent = '미션 성공!';
+  
+  var resultMsg = '대단해요! 보물 ' + totalT + '개를 모두 찾았어요. 🎉\n\n';
+  if (mode === 2) {
+    if (score1 > score2) resultMsg += '✨ 1P 친구 승리! ✨';
+    else if (score2 > score1) resultMsg += '✨ 2P 친구 승리! ✨';
+    else resultMsg += '🤝 우와~ 무승부! 🤝';
+  }
+  
+  document.getElementById('om').textContent  = resultMsg;
+  document.getElementById('osc').textContent = mode === 1 ? ('최종 점수: ' + score1 + '점') : ('1P: ' + score1 + '점 / 2P: ' + score2 + '점');
+  document.getElementById('ov').className = 'show';
+}
+
+function lose() {
+  playSound('lose');
+  document.getElementById('oi').textContent  = '👻';
+  document.getElementById('ott').textContent = '앗, 아쉬워요!';
+  document.getElementById('om').textContent  = '목숨을 모두 잃었어요. 다시 도전해볼까요? 🥺\n찾은 보물: ' + foundT + ' / ' + totalT;
+  document.getElementById('osc').textContent = mode === 1 ? ('최종 점수: ' + score1 + '점') : ('1P: ' + score1 + '점 / 2P: ' + score2 + '점');
+  document.getElementById('ov').className = 'show';
+}
+
+function hud() {
+  document.getElementById('hs1').textContent = score1;
+  document.getElementById('hs2').textContent = score2;
+  document.getElementById('hr').textContent = totalT - foundT;
+  
+  var b1 = document.getElementById('box-s1');
+  var b2 = document.getElementById('box-s2');
+  b1.className = 'hb' + (mode===2 && turn===1 ? ' turn-p1' : '');
+  b2.className = 'hb' + (mode===2 && turn===2 ? ' turn-p2' : '');
+
+  var h = '';
+  var i;
+  for (i=0; i<lives; i++) h += '❤️';
+  document.getElementById('hl').innerHTML = h || '👻';
+}
+
+function msg(t) {
+  document.getElementById('msg').textContent = t;
+}
+
+function toggleFS() {
+  var doc = window.document;
+  var docEl = doc.documentElement;
+
+  var requestFullScreen = docEl.requestFullscreen || docEl.mozRequestFullScreen || docEl.webkitRequestFullScreen || docEl.msRequestFullscreen;
+  var cancelFullScreen = doc.exitFullscreen || doc.mozCancelFullScreen || doc.webkitExitFullscreen || doc.msExitFullscreen;
+
+  if(!doc.fullscreenElement && !doc.mozFullScreenElement && !doc.webkitFullscreenElement && !doc.msFullscreenElement) {
+    requestFullScreen.call(docEl);
+  }
+  else {
+    cancelFullScreen.call(doc);
+  }
+}
+
+newGame();
+</script>
+</body>
+</html>

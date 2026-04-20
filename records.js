@@ -31,6 +31,14 @@ export const RECORDS = [
   // ▼ 여기에 새 기록을 붙여넣으세요 (최신 항목을 맨 위에) ▼
 
   {
+    title: "두근두근 보물찾기",
+    desc: "보물찾기를 좋아하는 아이를 위해 만들었다.\n고전 지뢰찾기를 응용함.\n2인 플레이 하다보면 시간이 금방 간다.",
+    tags: "gemini",
+    link: "https://jeongdawoont-star.github.io/hash2n/vibe-apps/find-tresure.html",
+    image: "img/14.png",
+  },
+
+  {
     title: "도블 메이커",
     desc: "아이랑 게임하려고 만들었다.\n실제 도블과는 다르지만 직접 그림과 사진을 넣는 것이 포인트.\n끌어 놓아야 매칭이 된다.",
     tags: "gemini",
