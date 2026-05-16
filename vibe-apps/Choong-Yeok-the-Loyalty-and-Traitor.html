@@ -47,7 +47,7 @@ button, input { font-family: Georgia, serif; outline: none; cursor: pointer; }
 /* ── 반응형 레이아웃 구조 (Head - Body - Foot) ── */
 .s-head { flex-shrink: 0; padding: clamp(12px, 1.5vw + 1.5vh, 24px) 20px; text-align: center; }
 .s-body {
-  flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
+  flex: 1; min-height: 0; overflow: hidden; overscroll-behavior: contain;
   padding: 10px 20px 40px;
   display: flex; flex-direction: column; align-items: center;
   justify-content: flex-start;
@@ -180,6 +180,13 @@ button, input { font-family: Georgia, serif; outline: none; cursor: pointer; }
 
 #toast{position:fixed;bottom:70px;left:50%;transform:translateX(-50%);background:var(--bg2);border:1px solid var(--gold2);color:var(--gold);padding:12px 24px;font-size:clamp(13px, 1vw + 1vh, 24px);font-family:sans-serif;z-index:999;white-space:nowrap;opacity:0;transition:opacity .3s;pointer-events:none; box-shadow: 0 4px 16px rgba(0,0,0,0.6);}
 #toast.on{opacity:1}
+
+@media (max-height: 720px) {
+  .s-head { padding: 8px 14px; }
+  .s-body { padding: 6px 12px 12px; }
+  .s-foot { padding: 8px 12px 12px; gap: 8px; }
+  .btn.big { padding: 10px 16px; }
+}
 </style>
 </head>
 <body>
@@ -336,8 +343,8 @@ button, input { font-family: Georgia, serif; outline: none; cursor: pointer; }
       </div>
       <div id="ttsWarning" class="hint" style="display:none; margin-bottom:20px; border-left-color:var(--red2); background:rgba(217,64,64,0.08); max-width:clamp(500px, 75vw, 960px); font-size:clamp(12px, 0.9vw + 0.9vh, 22px);">
         ⚠️ <strong>TTS 호환성 주의</strong><br>
-        이 기기/브라우저에서 음성 기능이 제한될 수 있습니다.<br>
-        <span style="color:var(--gold);">크롬 또는 삼성인터넷 최신 버전 사용을 권장합니다.</span>
+        이 기기에서는 음성 재생이 지연될 수 있어 자동 복구를 시도합니다.<br>
+        <span style="color:var(--gold);">음성이 계속 안 나오면 [텍스트 가이드]로 바로 진행하세요.</span>
       </div>
       <div class="ndots" id="nightDots"></div>
       <div class="ncard" id="ncardBox" style="display:none; transition:0.3s;">
@@ -674,6 +681,177 @@ let isFlipped = false;
 let mMissionVotes = [];
 let mMissionIdx = 0;
 let countdownTimer = null;
+const TTS_STATE = {
+  enabled: 'speechSynthesis' in window,
+  voice: null,
+  voicesLoaded: false,
+  unlocked: false,
+};
+
+function stripTags(text) {
+  return String(text || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+function wait(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function loadVoicesWithRetry(maxWaitMs = 1600) {
+  if (!TTS_STATE.enabled) return [];
+
+  let voices = speechSynthesis.getVoices();
+  if (voices.length > 0) {
+    TTS_STATE.voicesLoaded = true;
+    return voices;
+  }
+
+  const started = Date.now();
+  while (Date.now() - started < maxWaitMs) {
+    await wait(120);
+    voices = speechSynthesis.getVoices();
+    if (voices.length > 0) {
+      TTS_STATE.voicesLoaded = true;
+      return voices;
+    }
+  }
+
+  return voices;
+}
+
+function pickBestKoreanVoice(voices) {
+  if (!voices || voices.length === 0) return null;
+
+  const exact = voices.find(v => v.lang === 'ko-KR');
+  if (exact) return exact;
+
+  const koPrefix = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('ko'));
+  if (koPrefix) return koPrefix;
+
+  return voices[0] || null;
+}
+
+async function primeTTS() {
+  if (!TTS_STATE.enabled) return false;
+
+  try {
+    const voices = await loadVoicesWithRetry();
+    TTS_STATE.voice = pickBestKoreanVoice(voices);
+
+    speechSynthesis.cancel();
+    const warmup = new SpeechSynthesisUtterance(' ');
+    warmup.lang = 'ko-KR';
+    warmup.volume = 0;
+    warmup.rate = 1;
+    warmup.pitch = 1;
+    if (TTS_STATE.voice) warmup.voice = TTS_STATE.voice;
+
+    await new Promise(resolve => {
+      let settled = false;
+      const done = () => {
+        if (settled) return;
+        settled = true;
+        resolve();
+      };
+      warmup.onend = done;
+      warmup.onerror = done;
+      setTimeout(done, 320);
+      speechSynthesis.speak(warmup);
+    });
+
+    TTS_STATE.unlocked = true;
+    return true;
+  } catch (err) {
+    console.warn('TTS 초기화 실패:', err);
+    return false;
+  }
+}
+
+async function speakOnce(text, rate) {
+  if (!TTS_STATE.enabled) return false;
+
+  const plain = stripTags(text);
+  if (!plain) return true;
+
+  const voices = await loadVoicesWithRetry();
+  const selectedVoice = TTS_STATE.voice || pickBestKoreanVoice(voices);
+  TTS_STATE.voice = selectedVoice;
+
+  return new Promise(resolve => {
+    let settled = false;
+    const done = (ok) => {
+      if (settled) return;
+      settled = true;
+      resolve(ok);
+    };
+
+    try {
+      if (speechSynthesis.paused) speechSynthesis.resume();
+
+      const u = new SpeechSynthesisUtterance(plain);
+      u.lang = 'ko-KR';
+      u.rate = rate;
+      u.volume = 1;
+      u.pitch = 1;
+      if (selectedVoice) u.voice = selectedVoice;
+
+      const hardTimeout = setTimeout(() => {
+        speechSynthesis.cancel();
+        done(false);
+      }, Math.max(2600, plain.length * 140));
+
+      u.onend = () => {
+        clearTimeout(hardTimeout);
+        done(true);
+      };
+      u.onerror = () => {
+        clearTimeout(hardTimeout);
+        done(false);
+      };
+
+      speechSynthesis.cancel();
+      speechSynthesis.speak(u);
+    } catch (err) {
+      console.warn('TTS speak 예외:', err);
+      done(false);
+    }
+  });
+}
+
+function fitBodyContent(bodyEl) {
+  if (!bodyEl) return;
+
+  const target = Array.from(bodyEl.children).find(el =>
+    el.classList.contains('s-body-inner') || el.classList.contains('pbox') || el.classList.contains('mwrap')
+  ) || bodyEl.firstElementChild;
+
+  if (!target) return;
+
+  target.style.zoom = '1';
+  target.style.transform = '';
+  target.style.transformOrigin = '';
+
+  const availW = bodyEl.clientWidth - 4;
+  const availH = bodyEl.clientHeight - 4;
+  const needW = target.scrollWidth;
+  const needH = target.scrollHeight;
+  if (!needW || !needH) return;
+
+  const scale = Math.max(0.62, Math.min(1, availW / needW, availH / needH));
+  if ('zoom' in target.style) {
+    target.style.zoom = String(scale);
+  } else {
+    target.style.transform = `scale(${scale})`;
+    target.style.transformOrigin = 'top center';
+  }
+}
+
+function fitActiveScreenLayout() {
+  document.querySelectorAll('.screen.on .s-body').forEach(fitBodyContent);
+}
+
+function requestFitLayout() {
+  requestAnimationFrame(() => requestAnimationFrame(fitActiveScreenLayout));
+}
 
 function toggleFullScreen() {
   SFX.init();
@@ -699,11 +877,13 @@ function toggleFullScreen() {
 function show(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
   document.getElementById(id).classList.add('on');
+  requestFitLayout();
 }
 function pop(id,open){
   const el = document.getElementById(id);
   if(open) el.classList.add('on');
   else el.classList.remove('on');
+  requestFitLayout();
 }
 function toggleFlip() {
   isFlipped = !isFlipped;
@@ -735,6 +915,7 @@ function pickCount(n){
     if(G.players && G.players[i]) inp.value = G.players[i];
     ng.appendChild(inp);
   }
+  requestFitLayout();
 }
 
 function goNames(){
@@ -905,48 +1086,28 @@ function goNight(){
   document.getElementById('btnSkipNight').style.display = 'inline-block';
   
   show('s-night');
+  requestFitLayout();
 }
 
 function speakWait(text, rate = 0.95) {
-  return new Promise(resolve => {
-    // TTS 호환성 체크: speechSynthesis 지원 여부
-    if (!('speechSynthesis' in window)) {
-      console.warn('이 브라우저는 TTS를 지원하지 않습니다.');
-      // 폴백: 짧은 지연만 제공
-      setTimeout(resolve, Math.max(500, text.length * 30));
+  return (async () => {
+    const plain = stripTags(text);
+    if (!plain) return;
+
+    if (!TTS_STATE.enabled) {
+      await wait(Math.max(700, plain.length * 45));
       return;
     }
-    
-    try {
-      speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = 'ko-KR'; 
-      u.rate = rate;
-      u.volume = 1;
-      u.pitch = 1;
-      
-      u.onend = () => {
-        console.log('TTS 완료:', text);
-        resolve();
-      };
-      u.onerror = (event) => {
-        console.warn('TTS 에러:', event.error);
-        // 에러 발생 시에도 일정 시간 후 진행
-        setTimeout(resolve, Math.max(500, text.length * 30));
-      };
-      
-      // Android/삼성 기기에서 음성 목록 초기화
-      const voices = speechSynthesis.getVoices();
-      const korVoice = voices.find(v => v.lang.startsWith('ko'));
-      if(korVoice) u.voice = korVoice;
-      
-      speechSynthesis.speak(u);
-    } catch(err) {
-      console.error('TTS 예외 발생:', err);
-      // 예외 발생 시에도 일정 시간 후 진행
-      setTimeout(resolve, Math.max(500, text.length * 30));
+
+    let ok = await speakOnce(plain, rate);
+    if (!ok) {
+      await wait(150);
+      ok = await speakOnce(plain, Math.max(0.85, rate - 0.05));
     }
-  });
+    if (!ok) {
+      await wait(Math.max(900, plain.length * 55));
+    }
+  })();
 }
 
 function delay(ms) {
@@ -991,14 +1152,19 @@ async function play10SecCountdown() {
 
 async function runNightPhaseAuto() {
   SFX.init(); 
+  await primeTTS();
   document.getElementById('btnStartNightVoice').style.display = 'none';
   document.getElementById('btnSkipNight').style.display = 'none';
   document.getElementById('ncardBox').style.display = 'flex';
 
   const hasWonGyun = G.pc >= 7;
   const is10p = G.pc === 10;
+  const precheckLine = '칠천량 해전, 임진왜란의 격전 현장에 오신 것을 환영합니다.';
   
   try {
+    await speakWait(precheckLine, 0.92);
+    await delay(300);
+
     updateNightUI(0);
     await speakWait("게임을 시작합니다. 모두 책상에 엎드리고 눈을 감으세요.");
     await delay(2000); 
@@ -1079,6 +1245,7 @@ function showLeaderOrder() {
     order.textContent = label;
     listEl.appendChild(order);
   }
+  requestFitLayout();
 }
 
 function startBoardFromIntro() {
@@ -1157,6 +1324,7 @@ function showNightTextGuide() {
   document.getElementById('lIntroStep2').style.display = 'none';
   pop('pop-leader-intro', false);
   pop('pop-night-guide', true);
+  requestFitLayout();
 }
 
 function showRoundIntro() {
@@ -1461,6 +1629,18 @@ function addLog(msg,t){const el=document.getElementById('logBox');if(!el)return;
 let toastT;
 function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('on'),2500);}
 updTimer();
+window.addEventListener('resize', requestFitLayout);
+window.addEventListener('orientationchange', requestFitLayout);
+if (TTS_STATE.enabled) {
+  speechSynthesis.onvoiceschanged = () => {
+    const voices = speechSynthesis.getVoices();
+    if (voices.length > 0) {
+      TTS_STATE.voicesLoaded = true;
+      TTS_STATE.voice = pickBestKoreanVoice(voices);
+    }
+  };
+}
+requestFitLayout();
 </script>
 </body>
 </html>
