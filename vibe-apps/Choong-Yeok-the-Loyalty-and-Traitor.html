@@ -11,7 +11,8 @@
   --gold:#c9a84c;--gold2:#7a6230;
   --red:#d94040;--red2:#8b2020;
   --teal:#2eab92;--teal2:#1e7a68;
-  --dim:#6a6050;--text:#d4c9a8;--bd:#252018
+  --dim:#6a6050;--text:#d4c9a8;--bd:#252018;
+  --ui-scale:1;
 }
 
 /* 브라우저 당겨서 새로고침 차단 및 전체 크기 고정 */
@@ -54,7 +55,8 @@ button, input { font-family: Georgia, serif; outline: none; cursor: pointer; }
 }
 .s-body-inner { width:100%; display:flex; flex-direction:column; align-items:center; margin:auto 0; }
 
-.s-foot { flex-shrink: 0; padding: clamp(12px, 1.5vw + 1.5vh, 24px) 20px 20px; display: flex; gap: 12px; justify-content: center; align-items: center; background: linear-gradient(transparent, var(--bg) 20%);}
+.s-foot { flex-shrink: 0; padding: calc(clamp(12px, 1.5vw + 1.5vh, 24px) * var(--ui-scale)) 20px calc(20px * var(--ui-scale)); display: flex; gap: calc(12px * var(--ui-scale)); justify-content: center; align-items: center; background: linear-gradient(transparent, var(--bg) 20%); flex-wrap: wrap;}
+.s-foot .btn { max-width: 100%; }
 
 /* ── 공통 UI 컴포넌트 ── */
 .ycenter{align-items:center;justify-content:center}
@@ -64,12 +66,12 @@ button, input { font-family: Georgia, serif; outline: none; cursor: pointer; }
 .px{background:transparent;border:1px solid var(--bd);color:var(--dim);width:28px;height:28px;font-size:16px;line-height:28px}
 .pbody{padding:clamp(14px, 1.5vw + 1.5vh, 30px) 16px;overflow-y:auto; overscroll-behavior: contain;}
 
-.btn{padding:clamp(10px, 1.5vh + 0.5vw, 24px) clamp(16px, 2vw + 1vh, 40px);border:1px solid;background:transparent;font-size:clamp(13px, 1vw + 1vh, 24px);letter-spacing:.05em;transition:.15s;cursor:pointer}
+.btn{padding:calc(clamp(10px, 1.5vh + 0.5vw, 24px) * var(--ui-scale)) calc(clamp(16px, 2vw + 1vh, 40px) * var(--ui-scale));border:1px solid;background:transparent;font-size:calc(clamp(13px, 1vw + 1vh, 24px) * var(--ui-scale));letter-spacing:.05em;transition:.15s;cursor:pointer}
 .btn.gold{border-color:var(--gold2);color:var(--gold)}.btn.gold:hover{background:rgba(201,168,76,.15)}
 .btn.teal{border-color:var(--teal);color:var(--teal)}.btn.teal:hover{background:rgba(46,171,146,.15)}
 .btn.red{border-color:var(--red);color:var(--red)}.btn.red:hover{background:rgba(217,64,64,.15)}
 .btn.dim{border-color:var(--bd);color:var(--dim)}.btn.dim:hover{border-color:var(--dim);color:var(--text)}
-.btn.big{padding:clamp(14px, 2vh + 1vw, 30px) clamp(24px, 3vw + 1.5vh, 50px);font-weight:bold; font-size:clamp(15px, 1.2vw + 1.2vh, 28px);}
+.btn.big{padding:calc(clamp(14px, 2vh + 1vw, 30px) * var(--ui-scale)) calc(clamp(24px, 3vw + 1.5vh, 50px) * var(--ui-scale));font-weight:bold; font-size:calc(clamp(15px, 1.2vw + 1.2vh, 28px) * var(--ui-scale));}
 
 .lbl{font-size:clamp(11px, 0.8vw + 0.8vh, 20px);color:var(--gold);letter-spacing:.2em;font-family:sans-serif;text-transform:uppercase}
 .divline{height:1px;background:var(--bd);margin:clamp(8px, 1.5vh + 1vw, 20px) 0; width:100%;}
@@ -187,6 +189,11 @@ button, input { font-family: Georgia, serif; outline: none; cursor: pointer; }
   .s-foot { padding: 8px 12px 12px; gap: 8px; }
   .btn.big { padding: 10px 16px; }
 }
+
+@media (max-height: 540px), (max-width: 900px) {
+  .s-foot { justify-content: stretch; }
+  .s-foot .btn.big { flex: 1 1 100%; }
+}
 </style>
 </head>
 <body>
@@ -211,7 +218,7 @@ button, input { font-family: Georgia, serif; outline: none; cursor: pointer; }
   </div>
   <div class="s-foot">
     <button class="btn dim big" onclick="toggleFullScreen()">⛶ 전체화면</button>
-    <button class="btn gold big" onclick="SFX.init(); SFX.drum(); show('s-rules')">게임 방법 보기 →</button>
+    <button class="btn gold big" onclick="goRulesWithPrecheck()">게임 방법 보기 →</button>
   </div>
 </div>
 
@@ -686,7 +693,124 @@ const TTS_STATE = {
   voice: null,
   voicesLoaded: false,
   unlocked: false,
+  speaking: false,
+  lastGreetingAt: 0,
 };
+let nightVoiceRunning = false;
+let activeGuideAudio = null;
+
+const BUNDLED_AUDIO_REL_DIR = './assets/audio/';
+const BUNDLED_AUDIO_PREFIX_MAP = {
+  welcome: 'audio_00_',
+  night_start: 'audio_01_',
+  night_enemy_wakeup_5to9: 'audio_02_',
+  night_enemy_wakeup_10: 'audio_03_',
+  night_enemy_sleep: 'audio_04_',
+  night_yi_check: 'audio_05_',
+  night_yi_sleep: 'audio_06_',
+  night_gwak_5to6: 'audio_07_',
+  night_gwak_7to10: 'audio_08_',
+  night_gwak_sleep: 'audio_09_',
+  night_sunrise: 'audio_10_',
+  count_10: 'audio_11_',
+  count_9: 'audio_12_',
+  count_8: 'audio_13_',
+  count_7: 'audio_14_',
+  count_6: 'audio_15_',
+  count_5: 'audio_16_',
+  count_4: 'audio_17_',
+  count_3: 'audio_18_',
+  count_2: 'audio_19_',
+  count_1: 'audio_20_',
+  fallback_error: 'audio_21_'
+};
+
+const BUNDLED_AUDIO_FILE_NAMES = [
+  'audio_00_welcome.mp3',
+  'audio_01_night_start.mp3',
+  'audio_02_enemy_wakeup_5to9.mp3',
+  'audio_03_enemy_wakeup_10.mp3',
+  'audio_04_enemy_sleep.mp3',
+  'audio_05_yi_check.mp3',
+  'audio_06_yi_sleep.mp3',
+  'audio_07_gwak_5to6.mp3',
+  'audio_08_gwak_7to10.mp3',
+  'audio_09_gwak_sleep.mp3',
+  'audio_10_sunrise.mp3',
+  'audio_11_count_10.mp3',
+  'audio_12_count_9.mp3',
+  'audio_13_count_8.mp3',
+  'audio_14_count_7.mp3',
+  'audio_15_count_6.mp3',
+  'audio_16_count_5.mp3',
+  'audio_17_count_4.mp3',
+  'audio_18_count_3.mp3',
+  'audio_19_count_2.mp3',
+  'audio_20_count_1.mp3',
+  'audio_21_fallback_error.mp3'
+];
+
+const COUNTDOWN_KO = { 10: '십', 9: '구', 8: '팔', 7: '칠', 6: '육', 5: '오', 4: '사', 3: '삼', 2: '이', 1: '일' };
+
+function stopGuideAudio() {
+  if (!activeGuideAudio) return;
+  try {
+    activeGuideAudio.pause();
+    activeGuideAudio.currentTime = 0;
+    activeGuideAudio.src = '';
+  } catch (err) {
+    console.warn('가이드 오디오 정지 실패:', err);
+  }
+  activeGuideAudio = null;
+}
+
+function findBundledAudioFileName(prefix) {
+  if (!prefix) return null;
+  return BUNDLED_AUDIO_FILE_NAMES.find(name => name.startsWith(prefix)) || null;
+}
+
+async function playBundledAudioByKey(key) {
+  const prefix = BUNDLED_AUDIO_PREFIX_MAP[key];
+  if (!prefix) return false;
+
+  const fileName = findBundledAudioFileName(prefix);
+  if (!fileName) return false;
+
+  try {
+    if (TTS_STATE.enabled) speechSynthesis.cancel();
+    stopGuideAudio();
+
+    const src = `${BUNDLED_AUDIO_REL_DIR}${encodeURIComponent(fileName)}`;
+    const audio = new Audio(src);
+    audio.preload = 'auto';
+    activeGuideAudio = audio;
+
+    await new Promise((resolve, reject) => {
+      let done = false;
+      const finish = (ok) => {
+        if (done) return;
+        done = true;
+        audio.onended = null;
+        audio.onerror = null;
+        ok ? resolve() : reject(new Error('audio playback failed'));
+      };
+
+      audio.onended = () => finish(true);
+      audio.onerror = () => finish(false);
+
+      const playPromise = audio.play();
+      if (playPromise && typeof playPromise.then === 'function') {
+        playPromise.catch(() => finish(false));
+      }
+    });
+
+    activeGuideAudio = null;
+    return true;
+  } catch (err) {
+    activeGuideAudio = null;
+    return false;
+  }
+}
 
 function stripTags(text) {
   return String(text || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
@@ -768,6 +892,7 @@ async function primeTTS() {
 
 async function speakOnce(text, rate) {
   if (!TTS_STATE.enabled) return false;
+  if (TTS_STATE.speaking) return false;
 
   const plain = stripTags(text);
   if (!plain) return true;
@@ -781,10 +906,12 @@ async function speakOnce(text, rate) {
     const done = (ok) => {
       if (settled) return;
       settled = true;
+      TTS_STATE.speaking = false;
       resolve(ok);
     };
 
     try {
+      TTS_STATE.speaking = true;
       if (speechSynthesis.paused) speechSynthesis.resume();
 
       const u = new SpeechSynthesisUtterance(plain);
@@ -812,9 +939,40 @@ async function speakOnce(text, rate) {
       speechSynthesis.speak(u);
     } catch (err) {
       console.warn('TTS speak 예외:', err);
+      TTS_STATE.speaking = false;
       done(false);
     }
   });
+}
+
+function updateUIScaleByViewport() {
+  const vv = window.visualViewport;
+  const vw = Math.round(vv ? vv.width : window.innerWidth);
+  const vh = Math.round(vv ? vv.height : window.innerHeight);
+  const scaleW = Math.min(1, Math.max(0.78, vw / 980));
+  const scaleH = Math.min(1, Math.max(0.76, vh / 560));
+  const scale = Math.min(scaleW, scaleH);
+  document.documentElement.style.setProperty('--ui-scale', String(scale));
+}
+
+async function playPrecheckGreeting() {
+  const now = Date.now();
+  if (now - TTS_STATE.lastGreetingAt < 2500) return;
+  TTS_STATE.lastGreetingAt = now;
+
+  const usedBundled = await playBundledAudioByKey('welcome');
+  if (usedBundled) return;
+
+  if (!TTS_STATE.enabled) return;
+  await primeTTS();
+  await speakOnce('임진왜란의 전장 속으로 오신 걸 환영합니다.', 0.94);
+}
+
+function goRulesWithPrecheck() {
+  SFX.init();
+  SFX.drum();
+  show('s-rules');
+  playPrecheckGreeting();
 }
 
 function fitBodyContent(bodyEl) {
@@ -1089,8 +1247,13 @@ function goNight(){
   requestFitLayout();
 }
 
-function speakWait(text, rate = 0.95) {
+function speakWait(text, rate = 0.95, bundledKey = '') {
   return (async () => {
+    if (bundledKey) {
+      const usedBundled = await playBundledAudioByKey(bundledKey);
+      if (usedBundled) return;
+    }
+
     const plain = stripTags(text);
     if (!plain) return;
 
@@ -1099,11 +1262,7 @@ function speakWait(text, rate = 0.95) {
       return;
     }
 
-    let ok = await speakOnce(plain, rate);
-    if (!ok) {
-      await wait(150);
-      ok = await speakOnce(plain, Math.max(0.85, rate - 0.05));
-    }
+    const ok = await speakOnce(plain, rate);
     if (!ok) {
       await wait(Math.max(900, plain.length * 55));
     }
@@ -1128,8 +1287,15 @@ async function play10SecCountdown() {
   
   for(let i=10; i>=1; i--) {
     cdEl.textContent = i;
+
+    const usedBundled = await playBundledAudioByKey(`count_${i}`);
+    if (usedBundled) {
+      await delay(30);
+      continue;
+    }
+
     try {
-      const cu = new SpeechSynthesisUtterance(i.toString());
+      const cu = new SpeechSynthesisUtterance(COUNTDOWN_KO[i] || i.toString());
       cu.lang = 'ko-KR'; 
       cu.rate = 1.3;
       cu.volume = 1;
@@ -1140,6 +1306,7 @@ async function play10SecCountdown() {
       const korVoice = voices.find(v => v.lang.startsWith('ko'));
       if(korVoice) cu.voice = korVoice;
       
+      speechSynthesis.cancel();
       speechSynthesis.speak(cu);
     } catch(err) {
       console.warn('카운트다운 TTS 실패:', err);
@@ -1151,6 +1318,8 @@ async function play10SecCountdown() {
 }
 
 async function runNightPhaseAuto() {
+  if (nightVoiceRunning) return;
+  nightVoiceRunning = true;
   SFX.init(); 
   await primeTTS();
   document.getElementById('btnStartNightVoice').style.display = 'none';
@@ -1159,46 +1328,46 @@ async function runNightPhaseAuto() {
 
   const hasWonGyun = G.pc >= 7;
   const is10p = G.pc === 10;
-  const precheckLine = '칠천량 해전, 임진왜란의 격전 현장에 오신 것을 환영합니다.';
   
   try {
-    await speakWait(precheckLine, 0.92);
-    await delay(300);
-
     updateNightUI(0);
-    await speakWait("게임을 시작합니다. 모두 책상에 엎드리고 눈을 감으세요.");
+    await speakWait("게임을 시작합니다. 모두 책상에 엎드리고 눈을 감으세요.", 0.95, 'night_start');
     await delay(2000); 
 
     updateNightUI(1);
     const eWakeTTS = `적군 팀, 고개를 들고 서로의 얼굴을 확인하세요.${is10p ? ' 단, 와키자카는 고개를 들지 않고 엎드려 대기합니다.' : ''}`;
-    await speakWait(eWakeTTS);
+    await speakWait(eWakeTTS, 0.95, is10p ? 'night_enemy_wakeup_10' : 'night_enemy_wakeup_5to9');
     await play10SecCountdown(); 
-    await speakWait("다시 엎드리세요.");
+    await speakWait("다시 엎드리세요.", 0.95, 'night_enemy_sleep');
     await delay(2000);
 
     updateNightUI(2);
-    await speakWait("이순신 고개를 드세요. 적군 팀은 엎드린 채로 엄지손가락을 위로 들어주세요. 단, 도요토미는 엄지를 들지 않습니다.");
+    await speakWait("이순신 고개를 드세요. 적군 팀은 엎드린 채로 엄지손가락을 위로 들어주세요. 단, 도요토미는 엄지를 들지 않습니다.", 0.95, 'night_yi_check');
     await play10SecCountdown();
-    await speakWait("적군은 엄지를 내리고, 이순신은 다시 엎드리세요.");
+    await speakWait("적군은 엄지를 내리고, 이순신은 다시 엎드리세요.", 0.95, 'night_yi_sleep');
     await delay(2000);
 
     updateNightUI(3);
     const gwakTTS = `곽재우 고개를 드세요. 이순신${hasWonGyun ? '과 원균은' : '은'} 엎드린 채로 엄지손가락을 위로 들어주세요.`;
-    await speakWait(gwakTTS);
+    await speakWait(gwakTTS, 0.95, hasWonGyun ? 'night_gwak_7to10' : 'night_gwak_5to6');
     await play10SecCountdown();
-    await speakWait(`엄지를 내리고, 곽재우는 다시 엎드리세요.`);
+    await speakWait(`엄지를 내리고, 곽재우는 다시 엎드리세요.`, 0.95, 'night_gwak_sleep');
     await delay(2000);
 
     updateNightUI(4);
-    await speakWait("밤이 지났습니다. 모두 고개를 드세요. 이제 기기를 첫번째 리더에게 넘기고 낮 토론을 시작합니다.");
+    await speakWait("밤이 지났습니다. 모두 고개를 드세요. 이제 기기를 첫번째 리더에게 넘기고 낮 토론을 시작합니다.", 0.95, 'night_sunrise');
     await delay(1000);
     
     showLeaderIntro();
   } catch(err) {
     console.error('밤 페이즈 음성 오류:', err);
+    await playBundledAudioByKey('fallback_error');
     toast('⚠️ 음성 기능에 문제가 발생했습니다. 음성 건너뛰고 진행합니다.');
     await delay(1500);
     showLeaderIntro();
+  } finally {
+    stopGuideAudio();
+    nightVoiceRunning = false;
   }
 }
 
@@ -1631,6 +1800,11 @@ function toast(msg){const el=document.getElementById('toast');el.textContent=msg
 updTimer();
 window.addEventListener('resize', requestFitLayout);
 window.addEventListener('orientationchange', requestFitLayout);
+window.addEventListener('resize', updateUIScaleByViewport);
+window.addEventListener('orientationchange', updateUIScaleByViewport);
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', updateUIScaleByViewport);
+}
 if (TTS_STATE.enabled) {
   speechSynthesis.onvoiceschanged = () => {
     const voices = speechSynthesis.getVoices();
@@ -1640,6 +1814,7 @@ if (TTS_STATE.enabled) {
     }
   };
 }
+updateUIScaleByViewport();
 requestFitLayout();
 </script>
 </body>
