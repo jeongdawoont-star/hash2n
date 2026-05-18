@@ -729,13 +729,14 @@ window.syncSheets = async function() {
     let nextScores = migrateScoresByMissionName(oldMissions, normalizedMList, oldScores);
     let nextInspection = migrateInspectionByMissionName(oldMissions, normalizedMList, oldInspection);
 
-    // 미션 구조가 바뀐 직후에는 scores 시트가 재정렬 중일 수 있으므로
-    // 기존 Firestore 상태를 이름 기준으로 이관한 값을 우선 사용한다.
+    // 미션 구조가 바뀌지 않은 경우: Firestore scores를 권위(authority)로 사용하고
+    // 시트에서는 inspection(교사 확인 표시)만 가져온다.
+    // scores까지 시트로 덮어쓰면 writeToSheets가 실패했을 때 Firestore 데이터가 날아가는 버그 발생.
     if (cfg.scriptUrl && !missionChanged) {
       try {
         const snapshot = await fetchSheetSnapshotFromScript(cfg.scriptUrl);
         if (snapshot) {
-          nextScores = normalizeSnapshotByLists(snapshot.scores, sList, normalizedMList);
+          // scores는 Firestore(nextScores) 유지 — 시트로 덮어쓰지 않음
           nextInspection = normalizeInspectionSnapshotByLists(snapshot.inspection, sList, normalizedMList);
         }
       } catch (snapshotErr) {
