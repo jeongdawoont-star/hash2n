@@ -16,7 +16,7 @@
 - 카테고리: 게임
 - 연락 이메일: your-email@example.com
 - 웹사이트: https://jeongdawoont-star.github.io/hash2n/
-- 개인정보처리방침 URL: https://jeongdawoont-star.github.io/hash2n/policies/chungyeok/privacy-policy.html
+- 개인정보처리방침 URL: https://jeongdawoont-star.github.io/hash2n/policies/chungyeok/privacy-policy.ko.html
 
 ## 정책/컴플라이언스
 

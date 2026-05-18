@@ -166,7 +166,7 @@ npm run android:open
 - play-console/metadata-template.md 작성
 - play-console/metadata-ko-KR.md 초안 기준으로 문구 확정
 - play-console/submission-checklist.md 순서대로 점검
-- policies/chungyeok/privacy-policy.html 공개 URL을 Play Console에 입력
+- policies/chungyeok/privacy-policy.ko.html 공개 URL을 Play Console에 입력
 
 ### 우선순위 중간
 
@@ -243,8 +243,9 @@ npm run android:open
 - scripts/preflight-release.ps1 추가
 
 8. 개인정보처리방침 페이지 추가
-- ../policies/chungyeok/privacy-policy.html 생성
-- ../privacy-policy.html은 하위 경로로 리다이렉트
+- ../policies/chungyeok/privacy-policy.html (영문) 생성
+- ../policies/chungyeok/privacy-policy.ko.html (국문) 생성
+- ../privacy-policy.html은 국문 페이지로 리다이렉트
 
 9. CI/CD 워크플로 추가
 - ../.github/workflows/android-release.yml 생성

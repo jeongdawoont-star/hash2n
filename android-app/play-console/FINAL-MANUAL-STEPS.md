@@ -8,7 +8,7 @@ Everything else is automated. Only these actions require your account access.
 
 2. Privacy policy publish check
 - Confirm this URL is publicly reachable:
-  - https://jeongdawoont-star.github.io/hash2n/policies/chungyeok/privacy-policy.html
+  - https://jeongdawoont-star.github.io/hash2n/policies/chungyeok/privacy-policy.ko.html
 
 3. Play Console input
 - Use metadata from play-console/metadata-ko-KR.md.
