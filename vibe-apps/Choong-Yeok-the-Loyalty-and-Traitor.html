@@ -13,13 +13,23 @@
   --teal:#2eab92;--teal2:#1e7a68;
   --dim:#6a6050;--text:#d4c9a8;--bd:#252018;
   --ui-scale:1;
+  --app-height: 100dvh;
+  --safe-head-pad: 1;
+  --safe-body-pad: 1;
+  --safe-foot-pad: 1;
+  --safe-btn-scale: 1;
 }
 
-/* 브라우저 당겨서 새로고침 차단 및 전체 크기 고정 */
+/* 모바일 주소창/하단바 변화에 대응하고, 필요 시 세로 스크롤을 허용 */
 html, body {
-  width: 100vw; height: 100vh; overflow: hidden;
+  width: 100%;
+  min-height: var(--app-height);
+  height: var(--app-height);
+  overflow-x: hidden;
+  overflow-y: auto;
   background: var(--bg); color: var(--text); font-family: Georgia, serif;
-  overscroll-behavior: none;
+  overscroll-behavior-x: none;
+  overscroll-behavior-y: contain;
 }
 button, input { font-family: Georgia, serif; outline: none; cursor: pointer; }
 
@@ -37,25 +47,37 @@ button, input { font-family: Georgia, serif; outline: none; cursor: pointer; }
 .screen {
   position:fixed; inset:0; display:none; flex-direction:column;
   opacity:0; transition: opacity 0.3s ease-in-out, transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  transform-origin: center center; width: 100vw; height: 100vh;
+  transform-origin: center center;
+  width: 100%;
+  min-height: var(--app-height);
+  height: var(--app-height);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
-.screen.on { display:flex; opacity: 1; }
+.screen.on {
+  display:flex;
+  opacity: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
 .screen.flipped { transform: rotate(180deg); }
 
 @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes pulseGlow { 0% { box-shadow: inset 0 0 5px rgba(201,168,76,0.2); } 50% { box-shadow: inset 0 0 15px rgba(201,168,76,0.6); } 100% { box-shadow: inset 0 0 5px rgba(201,168,76,0.2); } }
 
 /* ── 반응형 레이아웃 구조 (Head - Body - Foot) ── */
-.s-head { flex-shrink: 0; padding: clamp(12px, 1.5vw + 1.5vh, 24px) 20px; text-align: center; }
+.s-head { flex-shrink: 0; text-align: center; }
 .s-body {
-  flex: 1; min-height: 0; overflow: hidden; overscroll-behavior: contain;
-  padding: 10px 20px 40px;
+  flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain;
+  padding: calc(10px * var(--safe-body-pad)) 20px calc(40px * var(--safe-body-pad));
   display: flex; flex-direction: column; align-items: center;
   justify-content: flex-start;
+  -webkit-overflow-scrolling: touch;
 }
 .s-body-inner { width:100%; display:flex; flex-direction:column; align-items:center; margin:auto 0; }
 
-.s-foot { flex-shrink: 0; padding: calc(clamp(12px, 1.5vw + 1.5vh, 24px) * var(--ui-scale)) 20px calc(20px * var(--ui-scale)); display: flex; gap: calc(12px * var(--ui-scale)); justify-content: center; align-items: center; background: linear-gradient(transparent, var(--bg) 20%); flex-wrap: wrap;}
+.s-head { padding: calc(clamp(12px, 1.5vw + 1.5vh, 24px) * var(--safe-head-pad)) 20px; }
+.s-foot { flex-shrink: 0; padding: calc(clamp(12px, 1.5vw + 1.5vh, 24px) * var(--ui-scale) * var(--safe-foot-pad)) 20px calc((20px * var(--ui-scale) * var(--safe-foot-pad)) + env(safe-area-inset-bottom, 0px)); display: flex; gap: calc(12px * var(--ui-scale) * var(--safe-foot-pad)); justify-content: center; align-items: center; background: linear-gradient(transparent, var(--bg) 20%); flex-wrap: wrap;}
 .s-foot .btn { max-width: 100%; }
 
 /* ── 공통 UI 컴포넌트 ── */
@@ -71,7 +93,31 @@ button, input { font-family: Georgia, serif; outline: none; cursor: pointer; }
 .btn.teal{border-color:var(--teal);color:var(--teal)}.btn.teal:hover{background:rgba(46,171,146,.15)}
 .btn.red{border-color:var(--red);color:var(--red)}.btn.red:hover{background:rgba(217,64,64,.15)}
 .btn.dim{border-color:var(--bd);color:var(--dim)}.btn.dim:hover{border-color:var(--dim);color:var(--text)}
-.btn.big{padding:calc(clamp(14px, 2vh + 1vw, 30px) * var(--ui-scale)) calc(clamp(24px, 3vw + 1.5vh, 50px) * var(--ui-scale));font-weight:bold; font-size:calc(clamp(15px, 1.2vw + 1.2vh, 28px) * var(--ui-scale));}
+.btn.big{padding:calc(clamp(14px, 2vh + 1vw, 30px) * var(--ui-scale) * var(--safe-btn-scale)) calc(clamp(24px, 3vw + 1.5vh, 50px) * var(--ui-scale) * var(--safe-btn-scale));font-weight:bold; font-size:calc(clamp(15px, 1.2vw + 1.2vh, 28px) * var(--ui-scale) * var(--safe-btn-scale));}
+
+body[data-mobile-safe="1"] {
+  --safe-head-pad: 0.9;
+  --safe-body-pad: 0.86;
+  --safe-foot-pad: 0.86;
+  --safe-btn-scale: 0.92;
+}
+
+body[data-mobile-safe="2"] {
+  --safe-head-pad: 0.78;
+  --safe-body-pad: 0.74;
+  --safe-foot-pad: 0.74;
+  --safe-btn-scale: 0.84;
+}
+
+body[data-mobile-safe="2"] #s-intro .s-body {
+  justify-content: flex-start;
+  overflow-y: auto;
+}
+
+body[data-mobile-safe="2"] #s-intro .s-body-inner {
+  margin: 0;
+  padding-bottom: 8px;
+}
 
 .lbl{font-size:clamp(11px, 0.8vw + 0.8vh, 20px);color:var(--gold);letter-spacing:.2em;font-family:sans-serif;text-transform:uppercase}
 .divline{height:1px;background:var(--bd);margin:clamp(8px, 1.5vh + 1vw, 20px) 0; width:100%;}
@@ -186,7 +232,7 @@ button, input { font-family: Georgia, serif; outline: none; cursor: pointer; }
 @media (max-height: 720px) {
   .s-head { padding: 8px 14px; }
   .s-body { padding: 6px 12px 12px; }
-  .s-foot { padding: 8px 12px 12px; gap: 8px; }
+  .s-foot { padding: 8px 12px calc(12px + env(safe-area-inset-bottom, 0px)); gap: 8px; }
   .btn.big { padding: 10px 16px; }
 }
 
@@ -951,8 +997,55 @@ function updateUIScaleByViewport() {
   const vh = Math.round(vv ? vv.height : window.innerHeight);
   const scaleW = Math.min(1, Math.max(0.78, vw / 980));
   const scaleH = Math.min(1, Math.max(0.76, vh / 560));
-  const scale = Math.min(scaleW, scaleH);
+  const safeLevel = Number(document.body.getAttribute('data-mobile-safe') || '0');
+  const safeFactor = safeLevel === 2 ? 0.9 : safeLevel === 1 ? 0.96 : 1;
+  const scale = Math.max(0.68, Math.min(scaleW, scaleH) * safeFactor);
   document.documentElement.style.setProperty('--ui-scale', String(scale));
+}
+
+function updateAppViewportHeight() {
+  const vv = window.visualViewport;
+  const vh = Math.round(vv ? vv.height : window.innerHeight);
+  document.documentElement.style.setProperty('--app-height', `${vh}px`);
+}
+
+function isLikelyMobileViewport() {
+  const ua = navigator.userAgent || '';
+  const touchCapable = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+  return /Android|iPhone|iPad|iPod|Mobile/i.test(ua) || touchCapable;
+}
+
+function calcIntroOverflow(vh) {
+  const intro = document.getElementById('s-intro');
+  if (!intro) return 0;
+  const head = intro.querySelector('.s-head');
+  const body = intro.querySelector('.s-body');
+  const foot = intro.querySelector('.s-foot');
+  if (!head || !body || !foot) return 0;
+
+  const required = head.offsetHeight + body.scrollHeight + foot.offsetHeight;
+  return Math.max(0, required - vh);
+}
+
+function updateMobileSafeMode() {
+  if (!document.body) return;
+
+  const vv = window.visualViewport;
+  const vw = Math.round(vv ? vv.width : window.innerWidth);
+  const vh = Math.round(vv ? vv.height : window.innerHeight);
+  const mobile = isLikelyMobileViewport() || vw <= 1024;
+
+  let level = 0;
+  if (mobile) {
+    if (vh < 780) level = 1;
+    if (vh < 640) level = 2;
+
+    const overflow = calcIntroOverflow(vh);
+    if (overflow > 16) level = Math.max(level, 1);
+    if (overflow > 80) level = Math.max(level, 2);
+  }
+
+  document.body.setAttribute('data-mobile-safe', String(level));
 }
 
 async function playPrecheckGreeting() {
@@ -1008,7 +1101,11 @@ function fitActiveScreenLayout() {
 }
 
 function requestFitLayout() {
-  requestAnimationFrame(() => requestAnimationFrame(fitActiveScreenLayout));
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    updateMobileSafeMode();
+    updateUIScaleByViewport();
+    fitActiveScreenLayout();
+  }));
 }
 
 function toggleFullScreen() {
@@ -1035,12 +1132,14 @@ function toggleFullScreen() {
 function show(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
   document.getElementById(id).classList.add('on');
+  updateMobileSafeMode();
   requestFitLayout();
 }
 function pop(id,open){
   const el = document.getElementById(id);
   if(open) el.classList.add('on');
   else el.classList.remove('on');
+  updateMobileSafeMode();
   requestFitLayout();
 }
 function toggleFlip() {
@@ -1800,9 +1899,20 @@ function toast(msg){const el=document.getElementById('toast');el.textContent=msg
 updTimer();
 window.addEventListener('resize', requestFitLayout);
 window.addEventListener('orientationchange', requestFitLayout);
+window.addEventListener('fullscreenchange', requestFitLayout);
+window.addEventListener('resize', updateAppViewportHeight);
+window.addEventListener('orientationchange', updateAppViewportHeight);
+window.addEventListener('fullscreenchange', updateAppViewportHeight);
+window.addEventListener('resize', updateMobileSafeMode);
+window.addEventListener('orientationchange', updateMobileSafeMode);
+window.addEventListener('fullscreenchange', updateMobileSafeMode);
 window.addEventListener('resize', updateUIScaleByViewport);
 window.addEventListener('orientationchange', updateUIScaleByViewport);
 if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', updateAppViewportHeight);
+  window.visualViewport.addEventListener('scroll', updateAppViewportHeight);
+  window.visualViewport.addEventListener('resize', updateMobileSafeMode);
+  window.visualViewport.addEventListener('scroll', updateMobileSafeMode);
   window.visualViewport.addEventListener('resize', updateUIScaleByViewport);
 }
 if (TTS_STATE.enabled) {
@@ -1814,6 +1924,8 @@ if (TTS_STATE.enabled) {
     }
   };
 }
+updateAppViewportHeight();
+updateMobileSafeMode();
 updateUIScaleByViewport();
 requestFitLayout();
 </script>
