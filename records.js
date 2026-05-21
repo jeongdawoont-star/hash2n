@@ -31,6 +31,14 @@ export const RECORDS = [
   // ▼ 여기에 새 기록을 붙여넣으세요 (최신 항목을 맨 위에) ▼
 
   {
+    title: "아이 아침 플래너",
+    desc: "등교 준비가 힘든 아이를 위해 만들었다.\n아침에 해야할 일들을 입력하면\n체크박스로 하나씩 체크하면서 준비할 수 있다.\n하루 미션 완료 시 고양이가 자동으로 집에 들어온다.",
+    tags: "copilot",
+    link: "https://jeongdawoont-star.github.io/hash2n/vibe-apps/Child%20Morning.html",
+    image: "img-re/15.avif",
+  },
+
+  {
     title: "두근두근 보물찾기",
     desc: "보물찾기를 좋아하는 아이를 위해 만들었다.\n고전 지뢰찾기를 응용함.\n2인 플레이 하다보면 시간이 금방 간다.",
     tags: "gemini",
