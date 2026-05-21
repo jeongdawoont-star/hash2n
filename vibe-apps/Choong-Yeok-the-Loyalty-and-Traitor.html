@@ -1315,13 +1315,15 @@ function goNight(){
   const hasWonGyun = G.pc >= 7;
   const is10p = G.pc === 10;
   
-  let eWakeTxt = is10p ? `<br><br>단, <strong style="color:#d94040">와키자카</strong>는 고개를 들지 않고 엎드려 대기합니다.` : '';
+  let eWakeTxt = is10p
+    ? `<span style="color:#d94040">와키자카</span>를 제외한 <span style="color:#d94040">적군 팀</span>, 고개를 들고 서로의 얼굴을 확인하세요.`
+    : `<span style="color:#d94040">적군 팀</span>, 고개를 들고 서로의 얼굴을 확인하세요.`;
   let gwakTxt = `<strong style="color:#c9a84c">곽재우</strong>, 고개를 드세요.<br><strong style="color:#c9a84c">이순신</strong>${hasWonGyun ? '과 <span style="color:#d94040">원균</span>은' : '은'} 엎드린 채로 <strong>엄지손가락</strong>을 위로 들어주세요.`;
 
   NSTEPS = [
     {ico:'🌙', txt:'모두 책상에 <strong style="color:#d4c9a8">엎드리고 눈을 감으세요.</strong>'},
-    {ico:'⚔️', txt:`<span style="color:#d94040">적군 팀</span>, 고개를 들고 서로의 얼굴을 확인하세요.${eWakeTxt}`},
-    {ico:'👁️', txt:'<strong style="color:#c9a84c">이순신</strong>, 고개를 드세요.<br><span style="color:#d94040">적군 팀</span>은 엎드린 채로 <strong>엄지손가락</strong>을 위로 들어주세요.<br>(단, 도요토미는 엄지를 들지 않습니다.)'},
+    {ico:'⚔️', txt:eWakeTxt},
+    {ico:'👁️', txt:'<strong style="color:#c9a84c">이순신</strong>은 고개를 드세요.<br>그리고 <span style="color:#d94040">도요토미</span>를 제외한 <span style="color:#d94040">적군 팀</span>은 엎드린 채로 <strong>엄지손가락</strong>을 위로 들어주세요.'},
     {ico:'🏹', txt: gwakTxt},
     {ico:'☀️', txt:'모두 <strong style="color:#d4c9a8">고개를 드세요!</strong><br>이제 기기를 리더에게 넘기고 낮 토론을 시작합니다.'}
   ];
@@ -1434,14 +1436,16 @@ async function runNightPhaseAuto() {
     await delay(2000); 
 
     updateNightUI(1);
-    const eWakeTTS = `적군 팀, 고개를 들고 서로의 얼굴을 확인하세요.${is10p ? ' 단, 와키자카는 고개를 들지 않고 엎드려 대기합니다.' : ''}`;
+    const eWakeTTS = is10p
+      ? '와키자카를 제외한 적군 팀, 고개를 들고 서로의 얼굴을 확인하세요.'
+      : '적군 팀, 고개를 들고 서로의 얼굴을 확인하세요.';
     await speakWait(eWakeTTS, 0.95, is10p ? 'night_enemy_wakeup_10' : 'night_enemy_wakeup_5to9');
     await play10SecCountdown(); 
     await speakWait("다시 엎드리세요.", 0.95, 'night_enemy_sleep');
     await delay(2000);
 
     updateNightUI(2);
-    await speakWait("이순신 고개를 드세요. 적군 팀은 엎드린 채로 엄지손가락을 위로 들어주세요. 단, 도요토미는 엄지를 들지 않습니다.", 0.95, 'night_yi_check');
+    await speakWait("이순신은 고개를 드세요. 그리고 도요토미를 제외한 적군 팀은 엎드린 채로 엄지손가락을 위로 들어주세요.", 0.95, 'night_yi_check');
     await play10SecCountdown();
     await speakWait("적군은 엄지를 내리고, 이순신은 다시 엎드리세요.", 0.95, 'night_yi_sleep');
     await delay(2000);
@@ -1542,13 +1546,15 @@ function showNightTextGuide() {
     {
       num: 2,
       title: '적군 팀 확인',
-      desc: `적군 팀만 고개를 들고 서로의 얼굴을 확인합니다.${is10p ? ' (와키자카는 제외)' : ''}<br><strong style="color:var(--gold);">[10초 경과]</strong><br>그 후 다시 엎드려야 합니다.`,
+      desc: is10p
+        ? '와키자카를 제외한 적군 팀만 고개를 들고 서로의 얼굴을 확인합니다.<br><strong style="color:var(--gold);">[10초 경과]</strong><br>그 후 다시 엎드려야 합니다.'
+        : '적군 팀만 고개를 들고 서로의 얼굴을 확인합니다.<br><strong style="color:var(--gold);">[10초 경과]</strong><br>그 후 다시 엎드려야 합니다.',
       time: '약 15초'
     },
     {
       num: 3,
       title: '이순신 확인',
-      desc: '이순신이 고개를 들고 적군을 봅니다.<br>적군 전원은 엎드린 채 엄지손가락을 위로 들어줍니다.<br>(도요토미는 엄지를 들지 않음)<br><strong style="color:var(--gold);">[10초 경과]</strong>',
+      desc: '이순신은 고개를 드세요. 그리고 도요토미를 제외한 적군 팀은 엎드린 채로 엄지손가락을 위로 들어주세요.<br><strong style="color:var(--gold);">[10초 경과]</strong>',
       time: '약 15초'
     },
     {
