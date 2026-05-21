@@ -98,11 +98,15 @@ body {
   font-family: 'Quicksand', sans-serif;
   overflow: hidden;
   background: linear-gradient(180deg, #ffdbcf 0%, #fff9ee 100%);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .stage {
   width: min(100vw, calc(100vh * 16 / 9));
   height: min(100vh, calc(100vw * 9 / 16));
-  margin: 0 auto;
+  margin: 0;
   position: relative;
   overflow: hidden;
   border-left: 6px solid #f0e8d2;
@@ -498,6 +502,9 @@ body {
             <span class="countdown-time-part countdown-second" id="countdown-second">00초</span>
           </span>
         </div>
+        <button class="text-outline hover:scale-110 transition-transform active:translate-y-1" onclick="toggleFullscreenMode()" aria-label="전체화면 전환" type="button">
+          <span class="material-symbols-outlined !text-4xl" id="fullscreen-toggle-icon">fullscreen</span>
+        </button>
         <button class="text-outline hover:scale-110 transition-transform active:translate-y-1" onclick="toggleSettings()" aria-label="설정">
           <span class="material-symbols-outlined !text-4xl">settings</span>
         </button>
@@ -1520,6 +1527,26 @@ function syncCountdownDisplay() {
   document.getElementById('countdown-large-seconds').textContent = ss;
 }
 
+function renderFullscreenToggle() {
+  const icon = document.getElementById('fullscreen-toggle-icon');
+  if (!icon) return;
+  icon.textContent = document.fullscreenElement ? 'fullscreen_exit' : 'fullscreen';
+}
+
+async function toggleFullscreenMode() {
+  try {
+    if (document.fullscreenElement) {
+      await document.exitFullscreen();
+    } else {
+      await document.documentElement.requestFullscreen();
+    }
+  } catch (_) {
+    // ignore unsupported fullscreen requests
+  } finally {
+    renderFullscreenToggle();
+  }
+}
+
 function renderCountdownToggle() {
   const icon = document.getElementById('countdown-toggle-icon');
   const button = document.getElementById('countdown-toggle');
@@ -1596,6 +1623,7 @@ renderCatHouse();
 playLoopVideo();
 updateHeaderClock();
 syncCountdownDisplay();
+renderFullscreenToggle();
 renderCountdownToggle();
 grantDailyCatRewardIfNeeded();
 ensureCatAnimation();
@@ -1611,6 +1639,7 @@ window.addEventListener('pointercancel', () => {
 });
 
 setInterval(updateHeaderClock, 1000);
+document.addEventListener('fullscreenchange', renderFullscreenToggle);
 window.addEventListener('resize', () => {
   scheduleMissionLabelFit();
   state.cats.forEach(clampCatToMat);
