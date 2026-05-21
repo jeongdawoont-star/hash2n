@@ -803,6 +803,7 @@ const CHEER_TEXTS = ['야호!', '최고야!', '짝짝짝!', '잘했어!', '멋�
 const REWARD_STEP_COUNT = 10;
 const CAT_LEVEL_EMOJIS = ['😺', '😸', '😻', '😼', '🐱', '🐈', '🐈‍⬛'];
 const CAT_SIZE_PX = 54;
+const AUDIO_MASTER_GAIN = 0.05;
 
 let happyPlaybackTimeoutId = null;
 let isHappyPlaying = false;
@@ -817,6 +818,9 @@ let responsiveResizeObserver = null;
 let draggingCatId = null;
 let dragOffsetX = 0;
 let dragOffsetY = 0;
+let audioContext = null;
+let audioMasterGain = null;
+let lastUiSoundAt = 0;
 
 let state = {
   childName: '하린',
@@ -850,6 +854,150 @@ function ensureDailyState() {
   state.completed = {};
   state.todayScore = 0;
   return true;
+}
+
+function ensureAudioReady() {
+  const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextCtor) return null;
+
+  if (!audioContext) {
+    audioContext = new AudioContextCtor();
+    audioMasterGain = audioContext.createGain();
+    audioMasterGain.gain.value = AUDIO_MASTER_GAIN;
+    audioMasterGain.connect(audioContext.destination);
+  }
+
+  if (audioContext.state === 'suspended') {
+    audioContext.resume().catch(() => {});
+  }
+
+  return audioContext;
+}
+
+function playSynthTone({
+  frequency,
+  type = 'sine',
+  duration = 0.08,
+  volume = 0.7,
+  attack = 0.005,
+  decay = 0.08,
+  frequencyEnd = frequency,
+  detune = 0
+}) {
+  const ctx = ensureAudioReady();
+  if (!ctx || !audioMasterGain) return;
+
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  const now = ctx.currentTime;
+  const safeAttack = Math.max(0.001, attack);
+  const safeDuration = Math.max(safeAttack + 0.01, duration);
+
+  osc.type = type;
+  osc.frequency.setValueAtTime(frequency, now);
+  osc.frequency.exponentialRampToValueAtTime(Math.max(30, frequencyEnd), now + safeDuration);
+  osc.detune.setValueAtTime(detune, now);
+
+  gain.gain.setValueAtTime(0.0001, now);
+  gain.gain.exponentialRampToValueAtTime(Math.max(0.0001, volume), now + safeAttack);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + Math.max(safeAttack + 0.01, decay));
+
+  osc.connect(gain);
+  gain.connect(audioMasterGain);
+  osc.start(now);
+  osc.stop(now + safeDuration);
+}
+
+function playUiTapSound() {
+  const now = performance.now();
+  if (now - lastUiSoundAt < 45) return;
+  lastUiSoundAt = now;
+
+  playSynthTone({
+    frequency: 620,
+    frequencyEnd: 880,
+    type: 'sine',
+    duration: 0.06,
+    volume: 0.26,
+    attack: 0.003,
+    decay: 0.055,
+    detune: -3
+  });
+  window.setTimeout(() => {
+    playSynthTone({
+      frequency: 880,
+      frequencyEnd: 1180,
+      type: 'triangle',
+      duration: 0.055,
+      volume: 0.18,
+      attack: 0.002,
+      decay: 0.05,
+      detune: 7
+    });
+  }, 24);
+}
+
+function playMergeSound(level = 0) {
+  const clampedLevel = Math.max(0, Math.min(CAT_LEVEL_EMOJIS.length - 1, Number(level) || 0));
+  const levelBoost = clampedLevel * 46;
+
+  playSynthTone({
+    frequency: 420 + levelBoost,
+    frequencyEnd: 620 + levelBoost,
+    type: 'triangle',
+    duration: 0.14,
+    volume: 0.5,
+    attack: 0.004,
+    decay: 0.12
+  });
+  playSynthTone({
+    frequency: 640 + levelBoost,
+    frequencyEnd: 960 + levelBoost,
+    type: 'sine',
+    duration: 0.16,
+    volume: 0.28,
+    attack: 0.002,
+    decay: 0.14,
+    detune: 8
+  });
+  window.setTimeout(() => {
+    playSynthTone({
+      frequency: 880 + levelBoost,
+      frequencyEnd: 1260 + levelBoost,
+      type: 'sine',
+      duration: 0.12,
+      volume: 0.16,
+      attack: 0.002,
+      decay: 0.1,
+      detune: 5
+    });
+  }, 42);
+}
+
+function refreshForNewDay() {
+  const didReset = ensureDailyState();
+  if (!didReset) return false;
+
+  persistState();
+  renderMissions();
+  renderScores();
+  renderRewardProgress();
+  renderHeaderTitle();
+  renderCatHouse();
+  syncCountdownDisplay();
+  return true;
+}
+
+function handleInteractivePointerDown(event) {
+  ensureAudioReady();
+
+  const target = event.target instanceof Element ? event.target : null;
+  if (!target) return;
+
+  const interactive = target.closest('button, a, label, input, textarea, select, summary, .house-cat');
+  if (!interactive) return;
+
+  playUiTapSound();
 }
 
 function normalizeRewardState() {
@@ -1442,6 +1590,7 @@ function tryMergeCats(baseCat) {
   const newCat = createCat(nextLevel, mergedX, mergedY);
   persistState();
   renderCatHouse();
+  playMergeSound(nextLevel);
 
   const mergedNode = document.querySelector(`.house-cat[data-cat-id="${newCat.id}"]`);
   if (mergedNode) {
@@ -1623,6 +1772,7 @@ function completeMission(idx, checked) {
   state.completed[idx] = checked;
 
   if (!wasChecked && checked) {
+    playUiTapSound();
     state.todayScore += 10;
     state.totalScore += 10;
     showRandomCheer();
@@ -1921,10 +2071,7 @@ function initResponsiveObserver() {
 loadState();
 normalizeRewardState();
 normalizeCatHouseState();
-const didResetDaily = ensureDailyState();
-if (didResetDaily) {
-  persistState();
-}
+refreshForNewDay();
 updateUiScale();
 updateResponsiveLayout();
 renderMissions();
@@ -1952,6 +2099,7 @@ window.addEventListener('load', () => {
   scheduleResponsiveLayout();
 });
 
+window.addEventListener('pointerdown', handleInteractivePointerDown, { passive: true });
 window.addEventListener('pointermove', (event) => {
   moveDraggingCat(event.clientX, event.clientY);
 });
@@ -1963,6 +2111,7 @@ window.addEventListener('pointercancel', () => {
 });
 
 setInterval(updateHeaderClock, 1000);
+setInterval(refreshForNewDay, 1000);
 setInterval(fitArrivalTimer, 1000);
 document.addEventListener('fullscreenchange', renderFullscreenToggle);
 window.addEventListener('resize', () => {
