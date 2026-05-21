@@ -1,0 +1,1621 @@
+<!DOCTYPE html>
+<html class="light" lang="ko">
+<head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<title>아침 모험 플래너</title>
+<script id="tailwind-config">
+tailwind.config = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      colors: {
+        "inverse-primary": "#ffb59c",
+        "outline-variant": "#dec0b6",
+        "primary-container": "#ff7f50",
+        "surface": "#fff9ee",
+        "on-tertiary-fixed-variant": "#034c6c",
+        "error-container": "#ffdad6",
+        "on-surface": "#1f1b0e",
+        "surface-container-lowest": "#ffffff",
+        "surface-container": "#f6edd8",
+        "on-surface-variant": "#57423b",
+        "error": "#ba1a1a",
+        "secondary-fixed": "#ffddb6",
+        "on-tertiary": "#ffffff",
+        "inverse-surface": "#343022",
+        "on-secondary-container": "#6f4600",
+        "primary-fixed": "#ffdbcf",
+        "background": "#fff9ee",
+        "surface-container-highest": "#eae2cc",
+        "surface-bright": "#fff9ee",
+        "outline": "#8b7169",
+        "secondary-fixed-dim": "#ffb95a",
+        "primary": "#a43c12",
+        "on-secondary": "#ffffff",
+        "on-error-container": "#93000a",
+        "tertiary-container": "#74aacf",
+        "on-primary": "#ffffff",
+        "on-primary-fixed": "#380c00",
+        "tertiary": "#2a6485",
+        "secondary": "#845400",
+        "on-tertiary-fixed": "#001e2e",
+        "on-secondary-fixed": "#2a1800",
+        "surface-container-low": "#fcf3dd",
+        "surface-container-high": "#f0e8d2",
+        "on-tertiary-container": "#003e5a",
+        "primary-fixed-dim": "#ffb59c",
+        "on-primary-fixed-variant": "#822800",
+        "on-error": "#ffffff",
+        "surface-variant": "#eae2cc",
+        "tertiary-fixed": "#c7e7ff",
+        "on-primary-container": "#6c2000",
+        "surface-dim": "#e2d9c4",
+        "secondary-container": "#feb246",
+        "surface-tint": "#a43c12",
+        "on-secondary-fixed-variant": "#643f00",
+        "tertiary-fixed-dim": "#97cdf3",
+        "inverse-on-surface": "#f9f0da",
+        "on-background": "#1f1b0e"
+      },
+      borderRadius: {
+        DEFAULT: "1rem",
+        lg: "2rem",
+        xl: "3rem",
+        full: "9999px"
+      },
+      spacing: {
+        "margin-mobile": "20px",
+        "gutter": "20px",
+        "margin-desktop": "40px",
+        "component-padding": "12px"
+      },
+      fontFamily: {
+        "label-lg": ["Quicksand"],
+        "headline-lg": ["Quicksand"],
+        "body-lg": ["Quicksand"],
+        "headline-lg-mobile": ["Quicksand"],
+        "body-md": ["Quicksand"],
+        "headline-md": ["Quicksand"]
+      },
+      fontSize: {
+        "label-lg": ["16px", { lineHeight: "22px", fontWeight: "700" }],
+        "headline-lg": ["40px", { lineHeight: "48px", letterSpacing: "-0.02em", fontWeight: "700" }],
+        "body-lg": ["20px", { lineHeight: "28px", fontWeight: "700" }],
+        "headline-lg-mobile": ["28px", { lineHeight: "34px", fontWeight: "700" }],
+        "body-md": ["18px", { lineHeight: "24px", fontWeight: "500" }],
+        "headline-md": ["28px", { lineHeight: "34px", fontWeight: "700" }]
+      }
+    }
+  }
+};
+</script>
+<style>
+body {
+  font-family: 'Quicksand', sans-serif;
+  overflow: hidden;
+  background: linear-gradient(180deg, #ffdbcf 0%, #fff9ee 100%);
+}
+.stage {
+  width: min(100vw, calc(100vh * 16 / 9));
+  height: min(100vh, calc(100vw * 9 / 16));
+  margin: 0 auto;
+  position: relative;
+  overflow: hidden;
+  border-left: 6px solid #f0e8d2;
+  border-right: 6px solid #f0e8d2;
+}
+.parallax-track {
+  position: absolute;
+  left: 0;
+  width: 200%;
+  pointer-events: none;
+  will-change: transform;
+}
+.hill-back {
+  bottom: 0;
+  height: 30%;
+  background: radial-gradient(70% 100% at 10% 100%, #f6edd8 0%, transparent 60%),
+              radial-gradient(60% 100% at 35% 100%, #f6edd8 0%, transparent 62%),
+              radial-gradient(70% 100% at 60% 100%, #f6edd8 0%, transparent 60%),
+              radial-gradient(65% 100% at 85% 100%, #f6edd8 0%, transparent 62%);
+  animation: driftSlow 60s linear infinite;
+  opacity: 0.9;
+}
+.hill-front {
+  bottom: -2%;
+  height: 26%;
+  background: radial-gradient(70% 100% at 8% 100%, #fcf3dd 0%, transparent 60%),
+              radial-gradient(58% 100% at 30% 100%, #fcf3dd 0%, transparent 62%),
+              radial-gradient(72% 100% at 55% 100%, #fcf3dd 0%, transparent 60%),
+              radial-gradient(62% 100% at 78% 100%, #fcf3dd 0%, transparent 62%),
+              radial-gradient(66% 100% at 96% 100%, #fcf3dd 0%, transparent 62%);
+  animation: driftFast 30s linear infinite;
+  opacity: 1;
+}
+.neomorph-btn {
+  box-shadow: 6px 6px 0 0 rgba(164, 60, 18, 0.3), -2px -2px 10px 0 rgba(255, 255, 255, 0.8);
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.neomorph-btn:active {
+  transform: translateY(4px);
+  box-shadow: 0 0 0 0 rgba(164, 60, 18, 0.3);
+}
+.cat-bounce {
+  animation: bounce 2s infinite;
+}
+.cat-loop-mirrored {
+  transform: scaleX(-1);
+}
+.cat-happy-offset {
+  object-position: 50% var(--cat-y,50%) !important;
+  height: var(--cat-scale,100%) !important;
+  width: 100% !important;
+  left: 0;
+  top: 0;
+  position: absolute;
+  transition: object-position 0.2s, height 0.2s;
+}
+.cat-cheer-bubble {
+  position: absolute;
+  right: -1.08rem;
+  top: -0.92rem;
+  z-index: 20;
+  pointer-events: none;
+  background: linear-gradient(180deg, #ff8f67 0%, #ff7f50 100%);
+  color: #ffffff;
+  border-radius: 9999px;
+  padding: 0.56rem 1.46rem 0.78rem;
+  font-size: 1.58rem;
+  font-weight: 700;
+  line-height: 1.05;
+  isolation: isolate;
+  box-shadow: 0 8px 18px rgba(164, 60, 18, 0.25);
+}
+.cat-cheer-bubble span {
+  position: relative;
+  z-index: 2;
+  display: inline-block;
+}
+.cat-cheer-bubble::after {
+  content: '';
+  position: absolute;
+  right: 1.66rem;
+  bottom: -0.55rem;
+  width: 1.1rem;
+  height: 1.1rem;
+  background: #ff7f50;
+  transform: rotate(45deg);
+  border-radius: 0 0 0.25rem 0;
+  z-index: 0;
+}
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 48;
+}
+.countdown-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 28ch;
+  justify-content: space-between;
+}
+.countdown-date {
+  color: #ff7f50;
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: left;
+}
+.countdown-time {
+  color: #1f1b0e;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0;
+  font-weight: 700;
+}
+.countdown-time-part {
+  display: inline-block;
+  text-align: right;
+}
+.countdown-hour,
+.countdown-minute {
+  width: 3.1ch;
+}
+.countdown-second {
+  width: 4ch;
+}
+.arrival-card {
+  min-height: 8.5rem;
+}
+.arrival-timer {
+  font-size: clamp(4.2rem, 8.4vw, 6.8rem);
+  line-height: 0.88;
+  letter-spacing: -0.04em;
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 4.8ch;
+}
+.arrival-time-part {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 2.2ch;
+  text-align: right;
+}
+.arrival-time-colon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 0.7ch;
+  transform: translateX(15px);
+}
+.arrival-inline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 100%;
+}
+.arrival-copy {
+  display: flex;
+  align-items: center;
+  gap: 1.4rem;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.arrival-label {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  align-self: stretch;
+  font-size: 2.1rem;
+  line-height: 1;
+}
+.arrival-toggle {
+  flex: 0 0 auto;
+  width: 4.75rem;
+  height: 4.75rem;
+  border-radius: 9999px;
+}
+.mission-card {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  background: #ffffff;
+  border: 4px solid #dec0b6;
+  border-radius: 2rem;
+  box-shadow: 6px 6px 0 0 rgba(222, 192, 182, 0.3);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.mission-card:hover {
+  border-color: #c9aca2;
+  box-shadow: 8px 8px 0 0 rgba(222, 192, 182, 0.34);
+}
+.mission-card-empty {
+  height: 100%;
+  border-radius: 2rem;
+  border: 4px dashed rgba(222, 192, 182, 0.75);
+  background: rgba(255, 255, 255, 0.3);
+}
+.main-tab-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 1rem;
+  transition: all 0.2s ease;
+}
+.main-tab-btn.active {
+  background: #ff7f50;
+  color: #ffffff;
+  padding: 0.5rem 2rem;
+}
+.main-tab-btn:not(.active) {
+  color: #57423b;
+  padding: 0.75rem;
+}
+.main-tab-btn:not(.active):hover {
+  background: #eae2cc;
+}
+.panel-hidden {
+  display: none;
+}
+.cat-house-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  height: 100%;
+  min-height: 0;
+}
+.cat-house-head {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+.cat-house-headline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.7rem;
+  font-size: 1.9rem;
+  color: #845400;
+  font-weight: 700;
+}
+.cat-house-count {
+  background: #ffffff;
+  border: 3px solid #dec0b6;
+  border-radius: 9999px;
+  padding: 0.4rem 0.95rem;
+  font-size: 1.12rem;
+  color: #57423b;
+  font-weight: 700;
+}
+.cat-house-note {
+  color: #6f4600;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+.cat-house-mat {
+  position: relative;
+  flex: 1;
+  min-height: 16rem;
+  border-radius: 2rem;
+  border: 5px solid #c9aca2;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 14% 20%, rgba(255, 255, 255, 0.26) 0%, rgba(255, 255, 255, 0) 34%),
+    radial-gradient(circle at 82% 72%, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0) 38%),
+    repeating-linear-gradient(45deg, #e8d4be 0, #e8d4be 14px, #e2ccb3 14px, #e2ccb3 28px),
+    repeating-linear-gradient(-45deg, rgba(175, 130, 95, 0.08) 0, rgba(175, 130, 95, 0.08) 9px, rgba(175, 130, 95, 0) 9px, rgba(175, 130, 95, 0) 18px);
+}
+.house-cat {
+  position: absolute;
+  width: 3.4rem;
+  height: 3.4rem;
+  border-radius: 9999px;
+  border: 3px solid rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 14px rgba(87, 66, 59, 0.22);
+  font-size: 1.85rem;
+  user-select: none;
+  cursor: grab;
+  touch-action: none;
+  transition: transform 0.12s ease;
+}
+.house-cat.dragging {
+  cursor: grabbing;
+  transform: scale(1.08);
+  z-index: 20;
+}
+.house-cat.merge-pop {
+  animation: pop 0.22s ease;
+}
+.house-cat.level-0 { background: #ffd66a; }
+.house-cat.level-1 { background: #ffb95a; }
+.house-cat.level-2 { background: #ff9cb1; }
+.house-cat.level-3 { background: #a7d8ff; }
+.house-cat.level-4 { background: #c9b0ff; }
+.house-cat.level-5 { background: #a7e5b4; }
+.house-cat.level-6 { background: #ffd29e; }
+#mission-list[data-size="large"] .mission-card {
+  padding: 1.25rem 1.25rem;
+  gap: 0.9rem;
+}
+#mission-list[data-size="large"] .mission-icon-wrap {
+  width: clamp(6.8rem, 10.4vh, 9.2rem);
+  height: clamp(6.8rem, 10.4vh, 9.2rem);
+}
+#mission-list[data-size="large"] .mission-icon {
+  font-size: clamp(5.2rem, 8.6vh, 7.4rem);
+}
+#mission-list[data-size="large"] .mission-label {
+  font-size: clamp(2rem, 3.8vh, 3.8rem);
+  line-height: 1;
+}
+#mission-list[data-size="large"] .mission-score-badge {
+  width: clamp(6rem, 9.2vh, 8rem);
+  height: clamp(6rem, 9.2vh, 8rem);
+}
+#mission-list[data-size="large"] .mission-score-text {
+  font-size: clamp(2.6rem, 4.4vh, 3.8rem);
+}
+#mission-list[data-size="compact"] .mission-card {
+  padding: 0.9rem 1rem;
+  gap: 0.6rem;
+}
+#mission-list[data-size="compact"] .mission-icon-wrap {
+  width: 5.4rem;
+  height: 5.4rem;
+}
+#mission-list[data-size="compact"] .mission-icon {
+  font-size: 4.4rem;
+}
+#mission-list[data-size="compact"] .mission-label {
+  font-size: clamp(1.3rem, 2.5vh, 2.2rem);
+  line-height: 1;
+}
+.mission-label {
+  display: block;
+  white-space: normal;
+  overflow: hidden;
+  text-overflow: clip;
+  text-align: left;
+  word-break: keep-all;
+}
+#mission-list[data-size="compact"] .mission-score-badge {
+  width: 5.4rem;
+  height: 5.4rem;
+}
+#mission-list[data-size="compact"] .mission-score-text {
+  font-size: 2.24rem;
+}
+@keyframes driftSlow {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+@keyframes driftFast {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-16px); }
+  60% { transform: translateY(-8px); }
+}
+@keyframes pop {
+  0% { transform: scale(0.8); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="parallax-track hill-back"></div>
+  <div class="parallax-track hill-front"></div>
+
+  <header class="bg-surface w-full px-margin-mobile md:px-margin-desktop pt-component-padding absolute top-0 left-0 z-40">
+    <div class="flex justify-between items-center w-full max-w-7xl mx-auto">
+      <h1 id="planner-title" class="flex items-center gap-2 text-primary font-bold text-lg md:text-2xl leading-tight whitespace-nowrap">
+        <span>🐾</span>
+        <span>아침 준비 플래너</span>
+      </h1>
+      <div class="flex gap-3 items-center">
+        <div class="bg-surface-container-low border-4 border-outline-variant rounded-full px-4 py-3 text-primary-container font-bold text-lg md:text-2xl leading-tight whitespace-nowrap tabular-nums countdown-chip" id="countdown">
+          <span class="countdown-date" id="countdown-date">0000년 0월 0일 0요일 오전</span>
+          <span class="countdown-time" id="countdown-time">
+            <span class="countdown-time-part countdown-hour" id="countdown-hour">0시</span>
+            <span class="countdown-time-part countdown-minute" id="countdown-minute">0분</span>
+            <span class="countdown-time-part countdown-second" id="countdown-second">00초</span>
+          </span>
+        </div>
+        <button class="text-outline hover:scale-110 transition-transform active:translate-y-1" onclick="toggleSettings()" aria-label="설정">
+          <span class="material-symbols-outlined !text-4xl">settings</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="absolute inset-0 pt-24 md:pt-28 px-margin-mobile md:px-margin-desktop pb-24 grid grid-cols-12 gap-6 z-30">
+    <section class="col-span-5 flex flex-col gap-5">
+      <div class="bg-surface-container-low border-[6px] border-outline-variant rounded-[2.5rem] px-6 py-5 shadow-[8px_8px_0px_0px_rgba(222,192,182,1)] arrival-card">
+        <div class="arrival-inline">
+          <div class="arrival-copy">
+            <p class="font-label-lg text-secondary font-extrabold arrival-label">등교까지</p>
+            <div class="font-headline-md text-primary-container tabular-nums arrival-timer" id="countdown-large">
+              <span class="arrival-time-part" id="countdown-large-minutes">00</span>
+              <span class="arrival-time-colon">:</span>
+              <span class="arrival-time-part" id="countdown-large-seconds">00</span>
+            </div>
+          </div>
+          <button class="border-4 border-primary bg-primary-fixed text-primary flex items-center justify-center neomorph-btn arrival-toggle" id="countdown-toggle" onclick="toggleCountdownTimer()" type="button" aria-label="타이머 시작 또는 정지">
+            <span class="material-symbols-outlined !text-4xl" id="countdown-toggle-icon">play_arrow</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="relative w-full flex-1 flex justify-center items-center min-h-[240px] mt-2">
+        <div class="relative w-[26rem] h-[22.1rem] cursor-pointer transition-transform duration-300 overflow-visible" id="cat-character">
+          <div class="absolute inset-0 overflow-hidden rounded-[18%] border-4 border-primary">
+            <video id="cat-video" class="cat-loop-mirrored w-full h-full object-cover rounded-[18%] shadow-lg cat-happy-offset"
+              style="--cat-y:50%; --cat-scale:100%;"
+              src="./assets/child-morning/cat-loop.mp4" autoplay loop muted playsinline preload="auto" poster="https://placehold.co/320x320/ffd9cc/a43c12?text=CAT">
+              브라우저가 동영상을 지원하지 않습니다.
+            </video>
+          </div>
+          <div id="cat-cheer" class="cat-cheer-bubble"><span>야호!</span></div>
+        </div>
+      </div>
+
+      <section class="grid grid-cols-2 gap-4 -mt-2">
+        <div class="bg-white rounded-xl p-4 shadow-[6px_6px_0px_0px_rgba(254,178,70,0.5)] border-4 border-secondary-container flex flex-col items-center">
+          <span class="font-label-lg text-outline">오늘 점수</span>
+          <span class="font-headline-md text-secondary text-3xl" id="today-score">⭐ 0</span>
+        </div>
+        <div class="bg-white rounded-xl p-4 shadow-[6px_6px_0px_0px_rgba(116,170,207,0.5)] border-4 border-tertiary-container flex flex-col items-center">
+          <span class="font-label-lg text-outline">누적 점수</span>
+          <span class="font-headline-md text-tertiary text-3xl" id="total-score">🏆 0</span>
+        </div>
+      </section>
+    </section>
+
+    <section class="col-span-7 bg-surface-container rounded-[2.5rem] border-[6px] border-outline-variant p-6 shadow-[inset_0px_4px_20px_rgba(0,0,0,0.05)] flex flex-col min-h-0 overflow-hidden">
+      <h2 class="font-headline-md text-primary mb-6 flex items-center justify-center gap-3 text-3xl">
+        <span class="material-symbols-outlined !text-4xl">task_alt</span> 오늘의 미션
+      </h2>
+      <div class="grid grid-cols-2 gap-3 flex-1 min-h-0" id="mission-list"></div>
+    </section>
+  </main>
+
+  <nav class="absolute bottom-0 left-0 w-full h-20 flex justify-around items-center px-gutter bg-surface-container-low border-t-[6px] border-outline-variant z-50">
+    <a class="flex flex-col items-center justify-center bg-primary-container text-on-primary rounded-2xl px-8 py-2" href="#" aria-label="미션 탭">
+      <span class="material-symbols-outlined !text-3xl" style="font-variation-settings: 'FILL' 1;">pets</span>
+      <span class="font-label-lg">미션</span>
+    </a>
+    <a class="flex flex-col items-center justify-center text-on-surface-variant p-3 hover:bg-surface-variant rounded-2xl transition-all" href="#" onclick="openCatHouseModal(); return false;" aria-label="고양이 집 탭">
+      <span class="material-symbols-outlined !text-3xl">home</span>
+      <span class="font-label-lg">고양이 집</span>
+    </a>
+    <a class="flex flex-col items-center justify-center text-on-surface-variant p-3 hover:bg-surface-variant rounded-2xl transition-all" href="#" onclick="openRewardModal(); return false;" aria-label="보상 탭">
+      <span class="material-symbols-outlined !text-3xl">military_tech</span>
+      <span class="font-label-lg">보상</span>
+    </a>
+  </nav>
+</div>
+
+<div class="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] hidden items-center justify-center p-6" id="settings-modal">
+  <div class="bg-surface w-full max-w-md rounded-[2.5rem] border-[6px] border-primary p-8 shadow-2xl relative animate-[pop_0.3s_ease-out]">
+    <button class="absolute top-5 right-5 w-11 h-11 bg-surface-variant rounded-full flex items-center justify-center border-2 border-outline" onclick="toggleSettings()" aria-label="닫기">
+      <span class="material-symbols-outlined">close</span>
+    </button>
+    <h3 class="font-headline-md text-primary mb-7 text-3xl">설정</h3>
+    <div class="space-y-6">
+      <div>
+        <label class="block font-label-lg text-secondary mb-2" for="child-name">모험가 이름</label>
+        <input class="w-full bg-white border-4 border-outline-variant rounded-full px-6 py-3 font-body-md text-xl focus:border-primary-container outline-none transition-all" id="child-name" placeholder="이름을 적어줘요!" type="text">
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block font-label-lg text-secondary mb-2" for="wake-time">일어날 시간</label>
+          <input class="w-full bg-white border-4 border-outline-variant rounded-full px-4 py-3 font-body-md text-xl focus:border-primary-container outline-none transition-all" id="wake-time" type="time" value="07:30">
+        </div>
+        <div>
+          <label class="block font-label-lg text-secondary mb-2" for="leave-time">출발 시간</label>
+          <input class="w-full bg-white border-4 border-outline-variant rounded-full px-4 py-3 font-body-md text-xl focus:border-primary-container outline-none transition-all" id="leave-time" type="time" value="08:30">
+        </div>
+      </div>
+      <div>
+        <label class="block font-label-lg text-secondary mb-2" for="missions">미션 목록(줄바꿈)</label>
+        <textarea class="w-full bg-white border-4 border-outline-variant rounded-3xl px-5 py-4 font-body-md text-lg focus:border-primary-container outline-none transition-all min-h-28" id="missions">옷입기
+가방싸기
+물통 채우기
+양치하기
+양말신기</textarea>
+      </div>
+      <div>
+        <div class="flex items-center justify-between mb-2">
+          <label class="block font-label-lg text-secondary" for="reward-score-range">보상 점수 구간</label>
+          <span class="font-headline-md text-primary text-xl" id="reward-score-value">100점</span>
+        </div>
+        <input class="w-full accent-primary-container" id="reward-score-range" type="range" min="10" max="500" step="10" value="100" oninput="updateRewardTargetPreview(this.value)">
+      </div>
+      <div class="grid grid-cols-3 gap-3">
+        <button class="bg-primary-container text-white font-headline-md py-3 rounded-2xl neomorph-btn text-lg flex items-center justify-center gap-1" onclick="saveSettingsAsJson()" type="button">
+          <span class="material-symbols-outlined !text-2xl">download</span>
+          저장
+        </button>
+        <label class="bg-tertiary text-white font-headline-md py-3 rounded-2xl neomorph-btn text-lg flex items-center justify-center gap-1 cursor-pointer">
+          <span class="material-symbols-outlined !text-2xl">upload_file</span>
+          불러오기
+          <input id="settings-file-input" type="file" accept="application/json" class="hidden" onchange="loadSettingsFromInput(event)">
+        </label>
+        <button class="bg-error text-white font-headline-md py-3 rounded-2xl neomorph-btn text-lg flex items-center justify-center gap-1" onclick="resetSettings()" type="button">
+          <span class="material-symbols-outlined !text-2xl">restart_alt</span>
+          초기화
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="fixed inset-0 bg-black/40 backdrop-blur-sm z-[110] hidden items-center justify-center p-6" id="reward-modal">
+  <div class="bg-surface w-full max-w-3xl rounded-[2.5rem] border-[6px] border-secondary-container p-8 shadow-2xl relative animate-[pop_0.3s_ease-out]">
+    <button class="absolute top-5 right-5 w-11 h-11 bg-surface-variant rounded-full flex items-center justify-center border-2 border-outline" onclick="closeRewardModal()" aria-label="닫기">
+      <span class="material-symbols-outlined">close</span>
+    </button>
+    <h3 class="font-headline-md text-secondary mb-6 text-3xl flex items-center gap-2">
+      <span class="material-symbols-outlined !text-4xl">military_tech</span>
+      보상 목록
+    </h3>
+
+    <div class="bg-white border-4 border-outline-variant rounded-3xl p-6">
+      <div class="flex items-center justify-between gap-4 mb-5">
+        <p class="font-label-lg text-on-surface-variant">발자국을 채워 깃발 보상을 열어보세요</p>
+        <p class="font-headline-md text-primary text-xl" id="reward-progress-label">0 / 100점</p>
+      </div>
+
+      <div class="flex items-center gap-1.5 md:gap-2 pb-2 w-full" id="reward-track"></div>
+
+      <div class="mt-6 flex justify-end">
+        <button class="rounded-2xl border-4 border-outline-variant bg-surface-container-high px-6 py-3 text-on-surface-variant font-headline-md text-lg transition-all disabled:opacity-60 disabled:cursor-not-allowed" id="reward-claim-btn" onclick="claimReward()" type="button" disabled>
+          깃발 보상 받기
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="fixed inset-0 bg-black/40 backdrop-blur-sm z-[115] hidden items-center justify-center p-6" id="cat-house-modal">
+  <div class="bg-surface w-full max-w-4xl rounded-[2.5rem] border-[6px] border-outline-variant p-8 shadow-2xl relative animate-[pop_0.3s_ease-out]">
+    <button class="absolute top-5 right-5 w-11 h-11 bg-surface-variant rounded-full flex items-center justify-center border-2 border-outline" onclick="closeCatHouseModal()" aria-label="닫기">
+      <span class="material-symbols-outlined">close</span>
+    </button>
+    <div class="cat-house-head mb-4">
+      <h3 class="cat-house-headline">
+        <span class="material-symbols-outlined !text-4xl">home</span>
+        고양이 집
+      </h3>
+      <p class="cat-house-count" id="cat-house-count">고양이 0마리</p>
+    </div>
+    <p class="cat-house-note mb-3">같은 색 고양이를 드래그해서 붙이면 다음 레벨로 합쳐져요.</p>
+    <div class="cat-house-mat" id="cat-house-mat"></div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'childMorningDataV2';
+const defaultMissions = ['옷입기', '가방싸기', '물통 채우기', '양치하기', '양말신기'];
+const LOOP_VIDEO_SRC = './assets/child-morning/cat-loop.mp4';
+const HAPPY_VIDEO_SRC = './assets/child-morning/cat-happy.mp4';
+const LOOP_SEGMENT_END_SEC = 7.55;
+const CHEER_TEXTS = ['야호!', '최고야!', '짝짝짝!', '잘했어!', '멋져!', '대단해!'];
+const REWARD_STEP_COUNT = 10;
+const CAT_LEVEL_EMOJIS = ['😺', '😸', '😻', '😼', '🐱', '🐈', '🐈‍⬛'];
+const CAT_SIZE_PX = 54;
+
+let happyPlaybackTimeoutId = null;
+let isHappyPlaying = false;
+let countdownIntervalId = null;
+let countdownRunning = false;
+let countdownRemainingSeconds = 0;
+let settingsFileHandle = null;
+let missionFitRafId = null;
+let catAnimRafId = null;
+let draggingCatId = null;
+let dragOffsetX = 0;
+let dragOffsetY = 0;
+
+let state = {
+  childName: '하린',
+  wakeTime: '07:30',
+  leaveTime: '08:30',
+  missions: defaultMissions,
+  todayScore: 0,
+  totalScore: 0,
+  rewardTargetScore: 100,
+  rewardBaseScore: 0,
+  completed: {},
+  dayStamp: '',
+  lastCatRewardDate: '',
+  catIdSeed: 1,
+  cats: []
+};
+
+function getTodayStamp() {
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const dd = String(now.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function ensureDailyState() {
+  const today = getTodayStamp();
+  if (state.dayStamp === today) return false;
+
+  state.dayStamp = today;
+  state.completed = {};
+  state.todayScore = 0;
+  return true;
+}
+
+function normalizeRewardState() {
+  const rawTarget = Number(state.rewardTargetScore);
+  const roundedTarget = Number.isFinite(rawTarget) ? Math.round(rawTarget / 10) * 10 : 100;
+  state.rewardTargetScore = Math.min(500, Math.max(10, roundedTarget));
+
+  const rawBase = Number(state.rewardBaseScore);
+  state.rewardBaseScore = Number.isFinite(rawBase) ? Math.max(0, rawBase) : 0;
+  if (state.rewardBaseScore > state.totalScore) {
+    state.rewardBaseScore = state.totalScore;
+  }
+}
+
+function normalizeCatHouseState() {
+  const rawSeed = Number(state.catIdSeed);
+  state.catIdSeed = Number.isFinite(rawSeed) ? Math.max(1, Math.floor(rawSeed)) : 1;
+  state.dayStamp = typeof state.dayStamp === 'string' ? state.dayStamp : '';
+  state.lastCatRewardDate = typeof state.lastCatRewardDate === 'string' ? state.lastCatRewardDate : '';
+
+  if (!Array.isArray(state.cats)) {
+    state.cats = [];
+    return;
+  }
+
+  state.cats = state.cats
+    .map((cat) => ({
+      id: Number(cat.id),
+      level: Number(cat.level) || 0,
+      x: Number(cat.x),
+      y: Number(cat.y),
+      vx: Number(cat.vx),
+      vy: Number(cat.vy)
+    }))
+    .filter((cat) => Number.isFinite(cat.id) && Number.isFinite(cat.x) && Number.isFinite(cat.y))
+    .map((cat) => ({
+      ...cat,
+      level: Math.min(CAT_LEVEL_EMOJIS.length - 1, Math.max(0, Math.floor(cat.level))),
+      vx: Number.isFinite(cat.vx) ? cat.vx : (Math.random() * 0.6 + 0.2) * (Math.random() > 0.5 ? 1 : -1),
+      vy: Number.isFinite(cat.vy) ? cat.vy : (Math.random() * 0.6 + 0.2) * (Math.random() > 0.5 ? 1 : -1)
+    }));
+
+  const maxId = state.cats.reduce((acc, cat) => Math.max(acc, cat.id), 0);
+  if (maxId >= state.catIdSeed) {
+    state.catIdSeed = maxId + 1;
+  }
+}
+
+function areAllMissionsCompleted() {
+  if (!Array.isArray(state.missions) || state.missions.length === 0) return false;
+  return state.missions.every((_, idx) => !!state.completed[idx]);
+}
+
+function loadState() {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (!raw) return;
+  try {
+    const parsed = JSON.parse(raw);
+    state = { ...state, ...parsed };
+  } catch (_) {
+    // ignore parse errors
+  }
+}
+
+function persistState() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function applySettingsFromInputs() {
+  state.childName = document.getElementById('child-name').value.trim() || '하린';
+  state.wakeTime = document.getElementById('wake-time').value || '07:30';
+  state.leaveTime = document.getElementById('leave-time').value || '08:30';
+  state.missions = document.getElementById('missions').value.split('\n').map(v => v.trim()).filter(Boolean);
+  state.rewardTargetScore = Number(document.getElementById('reward-score-range').value) || 100;
+  state.completed = {};
+  state.todayScore = 0;
+  normalizeRewardState();
+}
+
+function refreshAfterStateChange() {
+  persistState();
+  renderMissions();
+  renderScores();
+  renderRewardProgress();
+  renderCatHouse();
+  renderHeaderTitle();
+  updateHeaderClock();
+  syncCountdownDisplay();
+}
+
+function updateRewardTargetPreview(value) {
+  const normalized = Math.min(500, Math.max(10, Math.round(Number(value || 100) / 10) * 10));
+  const el = document.getElementById('reward-score-value');
+  if (el) {
+    el.textContent = `${normalized}점`;
+  }
+}
+
+function downloadSettingsJson() {
+  const dataStr = JSON.stringify(state, null, 2);
+  const blob = new Blob([dataStr], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = 'child_morning_settings.json';
+  anchor.click();
+  URL.revokeObjectURL(url);
+}
+
+async function saveSettingsToPickedFile() {
+  const dataStr = JSON.stringify(state, null, 2);
+  const pickerSupported = typeof window.showSaveFilePicker === 'function';
+
+  if (!pickerSupported) {
+    downloadSettingsJson();
+    return true;
+  }
+
+  try {
+    if (!settingsFileHandle) {
+      settingsFileHandle = await window.showSaveFilePicker({
+        suggestedName: 'child_morning_settings.json',
+        types: [{
+          description: 'JSON Files',
+          accept: { 'application/json': ['.json'] }
+        }]
+      });
+    }
+
+    const writable = await settingsFileHandle.createWritable();
+    await writable.write(dataStr);
+    await writable.close();
+    return true;
+  } catch (error) {
+    if (error && error.name === 'AbortError') {
+      return false;
+    }
+    settingsFileHandle = null;
+    downloadSettingsJson();
+    return true;
+  }
+}
+
+async function saveSettingsAsJson() {
+  applySettingsFromInputs();
+  refreshAfterStateChange();
+  const saved = await saveSettingsToPickedFile();
+  if (saved) {
+    toggleSettings();
+  }
+}
+
+function loadSettingsFromInput(event) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (loadEvent) => {
+    try {
+      const loadedState = JSON.parse(loadEvent.target.result);
+      state = {
+        ...state,
+        ...loadedState,
+        missions: Array.isArray(loadedState.missions) ? loadedState.missions : state.missions,
+        completed: loadedState.completed && typeof loadedState.completed === 'object' ? loadedState.completed : {}
+      };
+      normalizeRewardState();
+      refreshAfterStateChange();
+      toggleSettings();
+      alert('JSON 설정을 불러왔어요.');
+    } catch (_) {
+      alert('JSON 파일 형식을 확인해주세요.');
+    } finally {
+      event.target.value = '';
+    }
+  };
+  reader.readAsText(file);
+}
+
+function resetSettings() {
+  if (!confirm('설정을 초기화할까요? 이 작업은 되돌릴 수 없어요.')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  stopCountdownTimer();
+  countdownRemainingSeconds = 0;
+  state = {
+    childName: '하린',
+    wakeTime: '07:30',
+    leaveTime: '08:30',
+    missions: [...defaultMissions],
+    todayScore: 0,
+    totalScore: 0,
+    rewardTargetScore: 100,
+    rewardBaseScore: 0,
+    completed: {},
+    dayStamp: '',
+    lastCatRewardDate: '',
+    catIdSeed: 1,
+    cats: []
+  };
+  normalizeRewardState();
+  normalizeCatHouseState();
+  refreshAfterStateChange();
+  toggleSettings();
+}
+
+function formatScore(prefix, value) {
+  return `${prefix} ${Number(value || 0).toLocaleString('ko-KR')}`;
+}
+
+function renderScores() {
+  document.getElementById('today-score').textContent = formatScore('⭐', state.todayScore);
+  document.getElementById('total-score').textContent = formatScore('🏆', state.totalScore);
+}
+
+function getRewardProgressInfo() {
+  const target = Math.max(10, Number(state.rewardTargetScore) || 100);
+  const current = Math.max(0, state.totalScore - state.rewardBaseScore);
+  const ratio = Math.min(1, current / target);
+  const filledSteps = Math.floor(ratio * REWARD_STEP_COUNT);
+  const unlocked = ratio >= 1;
+  return { target, current, ratio, filledSteps, unlocked };
+}
+
+function buildRewardTrackMarkup(filledSteps, unlocked) {
+  const nodes = [];
+  for (let i = 0; i < REWARD_STEP_COUNT; i += 1) {
+    const isFilled = i < filledSteps;
+    nodes.push(`
+      <span class="rounded-full border-2 border-outline flex items-center justify-center shrink-0 transition-all" style="width:clamp(1.55rem,4.6vw,2.35rem); height:clamp(1.55rem,4.6vw,2.35rem); background:${isFilled ? '#ffb95a' : '#d7d7d7'}; color:${isFilled ? '#6f4600' : '#7a7a7a'};">
+        <span class="material-symbols-outlined" style="font-size:clamp(0.95rem,2.8vw,1.35rem); font-variation-settings: 'FILL' 1, 'wght' 600;">pets</span>
+      </span>
+    `);
+    if (i < REWARD_STEP_COUNT - 1) {
+      nodes.push(`<span class="h-1 rounded-full flex-1 min-w-0" style="background:${isFilled ? '#ffb95a' : '#d7d7d7'};"></span>`);
+    }
+  }
+
+  nodes.push(`
+    <span class="h-8 w-0.5 mx-0.5 rounded-full shrink-0" style="background:${unlocked ? '#ff7f50' : '#d7d7d7'};"></span>
+    <button class="rounded-full border-2 border-outline flex items-center justify-center shrink-0 transition-all" style="width:clamp(1.9rem,5.2vw,2.55rem); height:clamp(1.9rem,5.2vw,2.55rem); background:${unlocked ? '#74aacf' : '#d7d7d7'}; color:${unlocked ? '#003e5a' : '#7a7a7a'};" type="button" onclick="claimReward()" ${unlocked ? '' : 'disabled'} aria-label="깃발 보상 받기">
+      <span class="material-symbols-outlined" style="font-size:clamp(1.05rem,3vw,1.5rem); font-variation-settings: 'FILL' 1, 'wght' 600;">flag</span>
+    </button>
+  `);
+
+  return nodes.join('');
+}
+
+function renderRewardProgress() {
+  const label = document.getElementById('reward-progress-label');
+  const track = document.getElementById('reward-track');
+  const claimButton = document.getElementById('reward-claim-btn');
+  if (!label || !track || !claimButton) return;
+
+  const { target, current, filledSteps, unlocked } = getRewardProgressInfo();
+  label.textContent = `${Math.min(current, target)} / ${target}점`;
+  track.innerHTML = buildRewardTrackMarkup(filledSteps, unlocked);
+
+  claimButton.disabled = !unlocked;
+  claimButton.textContent = unlocked ? '깃발 보상 받기' : '깃발 잠금 중';
+  claimButton.style.background = unlocked ? '#74aacf' : '#e5e5e5';
+  claimButton.style.color = unlocked ? '#003e5a' : '#7a7a7a';
+}
+
+function openRewardModal() {
+  renderRewardProgress();
+  const modal = document.getElementById('reward-modal');
+  if (!modal) return;
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+}
+
+function closeRewardModal() {
+  const modal = document.getElementById('reward-modal');
+  if (!modal) return;
+  modal.classList.add('hidden');
+  modal.classList.remove('flex');
+}
+
+function openCatHouseModal() {
+  const modal = document.getElementById('cat-house-modal');
+  if (!modal) return;
+  renderCatHouse();
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+}
+
+function closeCatHouseModal() {
+  const modal = document.getElementById('cat-house-modal');
+  if (!modal) return;
+  modal.classList.add('hidden');
+  modal.classList.remove('flex');
+}
+
+function claimReward() {
+  const { unlocked } = getRewardProgressInfo();
+  if (!unlocked) return;
+  if (!confirm('보상을 주시겠습니까?')) return;
+
+  state.rewardBaseScore = state.totalScore;
+  persistState();
+  renderRewardProgress();
+  alert('보상을 지급했어요. 다음 보상 구간이 새로 시작됩니다!');
+}
+
+function getKoreanSubjectParticle(name) {
+  const value = (name || '').trim();
+  if (!value) return '의';
+  const lastChar = value[value.length - 1];
+  const code = lastChar.charCodeAt(0) - 44032;
+  if (code < 0 || code > 11171) return '의';
+  const jongseong = code % 28;
+  return jongseong === 0 ? '의' : '이';
+}
+
+function renderHeaderTitle() {
+  const title = document.getElementById('planner-title');
+  if (!title) return;
+  const particle = getKoreanSubjectParticle(state.childName);
+  const nameText = state.childName || '하린';
+  title.innerHTML = `<span>🐾</span><span>${nameText}${particle} 아침 준비 플래너</span>`;
+}
+
+function missionCard(label, checked, idx) {
+  return `
+  <label class="mission-card cursor-pointer">
+    <div class="mission-icon-wrap relative flex items-center justify-center shrink-0">
+      <input class="hidden peer" type="checkbox" ${checked ? 'checked' : ''} onchange="completeMission(${idx}, this.checked)">
+      <span class="mission-icon material-symbols-outlined text-outline-variant transition-all peer-checked:text-primary-container" style="font-variation-settings: 'FILL' ${checked ? 1 : 0};">pets</span>
+    </div>
+    <div class="flex-1 min-w-0 px-1">
+      <p class="mission-label text-on-surface font-bold ${checked ? 'line-through opacity-50' : ''}">${label}</p>
+    </div>
+    <div class="mission-score-badge shrink-0 rounded-full bg-secondary-container border-4 border-secondary flex items-center justify-center shadow-[inset_0px_2px_6px_rgba(0,0,0,0.08)]">
+      <span class="mission-score-text text-secondary leading-none font-extrabold">10</span>
+    </div>
+  </label>`;
+}
+
+function missionPlaceholderCard() {
+  return `
+  <div class="mission-card-empty"></div>`;
+}
+
+function fitMissionLabels() {
+  const list = document.getElementById('mission-list');
+  if (!list) return;
+
+  const isLarge = list.dataset.size === 'large';
+  const maxPx = isLarge ? 240 : 108;
+  const minPx = isLarge ? 48 : 36;
+  const labels = list.querySelectorAll('.mission-label');
+
+  labels.forEach((label) => {
+    const wrap = label.parentElement;
+    if (!wrap) return;
+
+    let low = minPx;
+    let high = maxPx;
+    let best = minPx;
+
+    while (low <= high) {
+      const mid = Math.floor((low + high) / 2);
+      label.style.fontSize = `${mid}px`;
+
+      const fitsWidth = label.scrollWidth <= wrap.clientWidth + 2;
+      const fitsHeight = label.scrollHeight <= Math.floor(wrap.clientHeight * 0.95);
+
+      if (fitsWidth && fitsHeight) {
+        best = mid;
+        low = mid + 1;
+      } else {
+        high = mid - 1;
+      }
+    }
+
+    label.style.fontSize = `${Math.max(minPx, best)}px`;
+  });
+}
+
+function scheduleMissionLabelFit() {
+  if (missionFitRafId) {
+    cancelAnimationFrame(missionFitRafId);
+  }
+  missionFitRafId = requestAnimationFrame(() => {
+    missionFitRafId = null;
+    fitMissionLabels();
+  });
+}
+
+function renderMissions() {
+  const list = document.getElementById('mission-list');
+  const cards = state.missions.map((m, i) => missionCard(m, !!state.completed[i], i));
+
+  if (cards.length % 2 !== 0) {
+    cards.push(missionPlaceholderCard());
+  }
+
+  while (cards.length < 6) {
+    cards.push(missionPlaceholderCard());
+  }
+
+  if (cards.length <= 6) {
+    list.dataset.size = 'large';
+    list.style.gridTemplateRows = 'repeat(3, minmax(0, 1fr))';
+    list.style.gridAutoRows = '';
+    list.style.overflowY = 'hidden';
+  } else {
+    list.dataset.size = 'compact';
+    list.style.gridTemplateRows = '';
+    list.style.gridAutoRows = 'minmax(6.6rem, auto)';
+    list.style.overflowY = 'auto';
+  }
+
+  list.innerHTML = cards.join('');
+  scheduleMissionLabelFit();
+}
+
+function randomCatVelocity() {
+  const speed = Math.random() * 0.55 + 0.2;
+  const angle = Math.random() * Math.PI * 2;
+  return {
+    vx: Math.cos(angle) * speed,
+    vy: Math.sin(angle) * speed
+  };
+}
+
+function getCatMatBounds() {
+  const mat = document.getElementById('cat-house-mat');
+  if (!mat) return { width: 0, height: 0 };
+  if (mat.clientWidth === 0 || mat.clientHeight === 0) {
+    return { width: 640, height: 420 };
+  }
+  return {
+    width: mat.clientWidth,
+    height: mat.clientHeight
+  };
+}
+
+function clampCatToMat(cat) {
+  const { width, height } = getCatMatBounds();
+  const maxX = Math.max(0, width - CAT_SIZE_PX);
+  const maxY = Math.max(0, height - CAT_SIZE_PX);
+  cat.x = Math.min(maxX, Math.max(0, cat.x));
+  cat.y = Math.min(maxY, Math.max(0, cat.y));
+}
+
+function createCat(level = 0, x = null, y = null) {
+  const { width, height } = getCatMatBounds();
+  const maxX = Math.max(0, width - CAT_SIZE_PX);
+  const maxY = Math.max(0, height - CAT_SIZE_PX);
+  const velocity = randomCatVelocity();
+  const next = {
+    id: state.catIdSeed,
+    level: Math.min(CAT_LEVEL_EMOJIS.length - 1, Math.max(0, level)),
+    x: x === null ? Math.random() * maxX : x,
+    y: y === null ? Math.random() * maxY : y,
+    vx: velocity.vx,
+    vy: velocity.vy
+  };
+
+  state.catIdSeed += 1;
+  clampCatToMat(next);
+  state.cats.push(next);
+  return next;
+}
+
+function renderCatHouse() {
+  const mat = document.getElementById('cat-house-mat');
+  const count = document.getElementById('cat-house-count');
+  if (!mat || !count) return;
+
+  count.textContent = `고양이 ${state.cats.length}마리`;
+  mat.innerHTML = state.cats.map((cat) => {
+    const emoji = CAT_LEVEL_EMOJIS[cat.level] || CAT_LEVEL_EMOJIS[CAT_LEVEL_EMOJIS.length - 1];
+    return `
+      <button
+        class="house-cat level-${Math.min(cat.level, CAT_LEVEL_EMOJIS.length - 1)}"
+        data-cat-id="${cat.id}"
+        onpointerdown="startDragCat(event, ${cat.id})"
+        aria-label="${cat.level + 1}레벨 고양이"
+        type="button"
+        style="left:${cat.x}px; top:${cat.y}px;"
+      >${emoji}</button>
+    `;
+  }).join('');
+}
+
+function updateCatDomPosition(catId) {
+  const node = document.querySelector(`.house-cat[data-cat-id="${catId}"]`);
+  const cat = state.cats.find((item) => item.id === catId);
+  if (!node || !cat) return;
+  node.style.left = `${cat.x}px`;
+  node.style.top = `${cat.y}px`;
+}
+
+function startDragCat(event, catId) {
+  event.preventDefault();
+
+  const node = document.querySelector(`.house-cat[data-cat-id="${catId}"]`);
+  const cat = state.cats.find((item) => item.id === catId);
+  const mat = document.getElementById('cat-house-mat');
+  if (!node || !cat || !mat) return;
+
+  const matRect = mat.getBoundingClientRect();
+  draggingCatId = catId;
+  dragOffsetX = event.clientX - (matRect.left + cat.x);
+  dragOffsetY = event.clientY - (matRect.top + cat.y);
+  node.classList.add('dragging');
+
+  if (event.pointerId !== undefined && node.setPointerCapture) {
+    node.setPointerCapture(event.pointerId);
+  }
+}
+
+function moveDraggingCat(clientX, clientY) {
+  if (draggingCatId === null) return;
+
+  const cat = state.cats.find((item) => item.id === draggingCatId);
+  const mat = document.getElementById('cat-house-mat');
+  if (!cat || !mat) return;
+
+  const rect = mat.getBoundingClientRect();
+  cat.x = clientX - rect.left - dragOffsetX;
+  cat.y = clientY - rect.top - dragOffsetY;
+  clampCatToMat(cat);
+  updateCatDomPosition(cat.id);
+}
+
+function tryMergeCats(baseCat) {
+  const other = state.cats.find((cat) => {
+    if (cat.id === baseCat.id) return false;
+    if (cat.level !== baseCat.level) return false;
+
+    const dx = (cat.x + CAT_SIZE_PX / 2) - (baseCat.x + CAT_SIZE_PX / 2);
+    const dy = (cat.y + CAT_SIZE_PX / 2) - (baseCat.y + CAT_SIZE_PX / 2);
+    return Math.hypot(dx, dy) < CAT_SIZE_PX * 0.72;
+  });
+
+  if (!other) return false;
+
+  const nextLevel = Math.min(CAT_LEVEL_EMOJIS.length - 1, baseCat.level + 1);
+  const mergedX = (baseCat.x + other.x) / 2;
+  const mergedY = (baseCat.y + other.y) / 2;
+
+  state.cats = state.cats.filter((cat) => cat.id !== baseCat.id && cat.id !== other.id);
+  const newCat = createCat(nextLevel, mergedX, mergedY);
+  persistState();
+  renderCatHouse();
+
+  const mergedNode = document.querySelector(`.house-cat[data-cat-id="${newCat.id}"]`);
+  if (mergedNode) {
+    mergedNode.classList.add('merge-pop');
+    setTimeout(() => mergedNode.classList.remove('merge-pop'), 260);
+  }
+
+  return true;
+}
+
+function endDragCat() {
+  if (draggingCatId === null) return;
+
+  const cat = state.cats.find((item) => item.id === draggingCatId);
+  const node = document.querySelector(`.house-cat[data-cat-id="${draggingCatId}"]`);
+  if (node) {
+    node.classList.remove('dragging');
+  }
+
+  if (cat) {
+    const merged = tryMergeCats(cat);
+    if (!merged) {
+      persistState();
+    }
+  }
+
+  draggingCatId = null;
+}
+
+function animateCats() {
+  const { width, height } = getCatMatBounds();
+
+  state.cats.forEach((cat) => {
+    if (draggingCatId === cat.id) return;
+
+    cat.x += cat.vx;
+    cat.y += cat.vy;
+
+    const maxX = Math.max(0, width - CAT_SIZE_PX);
+    const maxY = Math.max(0, height - CAT_SIZE_PX);
+
+    if (cat.x <= 0 || cat.x >= maxX) {
+      cat.vx *= -1;
+      cat.x = Math.max(0, Math.min(maxX, cat.x));
+    }
+    if (cat.y <= 0 || cat.y >= maxY) {
+      cat.vy *= -1;
+      cat.y = Math.max(0, Math.min(maxY, cat.y));
+    }
+
+    updateCatDomPosition(cat.id);
+  });
+
+  catAnimRafId = requestAnimationFrame(animateCats);
+}
+
+function ensureCatAnimation() {
+  if (catAnimRafId) return;
+  catAnimRafId = requestAnimationFrame(animateCats);
+}
+
+function grantDailyCatRewardIfNeeded() {
+  if (!areAllMissionsCompleted()) return;
+
+  const today = getTodayStamp();
+  if (state.lastCatRewardDate === today) return;
+
+  state.lastCatRewardDate = today;
+  createCat(0);
+  persistState();
+  renderCatHouse();
+}
+
+function safeVideoPlay(video) {
+  const p = video.play();
+  if (p && typeof p.catch === 'function') {
+    p.catch(() => {});
+  }
+}
+
+function playLoopVideo() {
+  const video = document.getElementById('cat-video');
+  if (!video) return;
+
+  if (happyPlaybackTimeoutId) {
+    clearTimeout(happyPlaybackTimeoutId);
+    happyPlaybackTimeoutId = null;
+  }
+
+  isHappyPlaying = false;
+  video.loop = false;
+  video.classList.add('cat-loop-mirrored');
+  video.classList.remove('cat-happy-offset');
+
+  if (video._loopSegmentHandler) {
+    video.removeEventListener('timeupdate', video._loopSegmentHandler);
+  }
+
+  video._loopSegmentHandler = () => {
+    if (isHappyPlaying || video.currentTime < LOOP_SEGMENT_END_SEC) return;
+    video.currentTime = 0;
+    safeVideoPlay(video);
+  };
+  video.addEventListener('timeupdate', video._loopSegmentHandler);
+  video.onended = null;
+
+  if (video.getAttribute('src') !== LOOP_VIDEO_SRC) {
+    video.setAttribute('src', LOOP_VIDEO_SRC);
+    video.load();
+  }
+
+  video.currentTime = 0;
+  safeVideoPlay(video);
+}
+
+function playHappyScene() {
+  const video = document.getElementById('cat-video');
+  if (!video) return;
+
+  if (happyPlaybackTimeoutId) {
+    clearTimeout(happyPlaybackTimeoutId);
+    happyPlaybackTimeoutId = null;
+  }
+
+  isHappyPlaying = true;
+  video.loop = false;
+  video.classList.remove('cat-loop-mirrored');
+  video.classList.add('cat-happy-offset');
+
+  const runSegment = () => {
+    const duration = Number.isFinite(video.duration) ? video.duration : 8;
+    const startSec = Math.min(2, Math.max(0, duration - 0.1));
+    const endSec = Math.min(8, duration);
+    const segmentMs = Math.max(300, (endSec - startSec) * 1000);
+
+    video.currentTime = startSec;
+    safeVideoPlay(video);
+
+    happyPlaybackTimeoutId = setTimeout(() => {
+      isHappyPlaying = false;
+      playLoopVideo();
+    }, segmentMs);
+  };
+
+  if (video.getAttribute('src') !== HAPPY_VIDEO_SRC) {
+    video.setAttribute('src', HAPPY_VIDEO_SRC);
+    video.load();
+  }
+
+  if (video.readyState >= 1) {
+    runSegment();
+  } else {
+    video.addEventListener('loadedmetadata', runSegment, { once: true });
+  }
+
+  video.onended = () => {
+    if (isHappyPlaying) {
+      isHappyPlaying = false;
+      playLoopVideo();
+    }
+  };
+}
+
+function showRandomCheer() {
+  const cheer = document.getElementById('cat-cheer');
+  if (!cheer) return;
+
+  const next = CHEER_TEXTS[Math.floor(Math.random() * CHEER_TEXTS.length)];
+  cheer.textContent = next;
+  cheer.style.transform = 'scale(1.08)';
+  setTimeout(() => {
+    cheer.style.transform = 'scale(1)';
+  }, 220);
+}
+
+function completeMission(idx, checked) {
+  const cat = document.getElementById('cat-character');
+  const wasChecked = !!state.completed[idx];
+  state.completed[idx] = checked;
+
+  if (!wasChecked && checked) {
+    state.todayScore += 10;
+    state.totalScore += 10;
+    showRandomCheer();
+    playHappyScene();
+    cat.style.transform = 'scale(1.12) rotate(8deg)';
+    setTimeout(() => {
+      cat.style.transform = 'scale(1) rotate(0deg)';
+    }, 350);
+  }
+  if (wasChecked && !checked) {
+    state.todayScore = Math.max(0, state.todayScore - 10);
+    state.totalScore = Math.max(0, state.totalScore - 10);
+  }
+
+  renderScores();
+  renderRewardProgress();
+  grantDailyCatRewardIfNeeded();
+  persistState();
+  renderMissions();
+}
+
+function parseTimeToday(timeStr) {
+  const [h, m] = (timeStr || '08:30').split(':').map(Number);
+  const dt = new Date();
+  dt.setHours(h || 0, m || 0, 0, 0);
+  if (dt.getTime() <= Date.now()) {
+    dt.setDate(dt.getDate() + 1);
+  }
+  return dt;
+}
+
+function updateHeaderClock() {
+  const weekdayNames = ['일', '월', '화', '수', '목', '금', '토'];
+  const now = new Date();
+  const hour12 = now.getHours() % 12 || 12;
+  const ampm = now.getHours() < 12 ? '오전' : '오후';
+  const dateText = `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일 ${weekdayNames[now.getDay()]}요일 ${ampm}`;
+  document.getElementById('countdown-date').textContent = dateText;
+  document.getElementById('countdown-hour').textContent = `${hour12}시`;
+  document.getElementById('countdown-minute').textContent = `${now.getMinutes()}분`;
+  document.getElementById('countdown-second').textContent = `${String(now.getSeconds()).padStart(2, '0')}초`;
+}
+
+function updateCountdownTimer() {
+  countdownRemainingSeconds = Math.max(0, countdownRemainingSeconds - 1);
+  const mm = String(Math.floor(countdownRemainingSeconds / 60)).padStart(2, '0');
+  const ss = String(countdownRemainingSeconds % 60).padStart(2, '0');
+  document.getElementById('countdown-large-minutes').textContent = mm;
+  document.getElementById('countdown-large-seconds').textContent = ss;
+
+  if (countdownRemainingSeconds === 0 && countdownRunning) {
+    stopCountdownTimer();
+  }
+}
+
+function syncCountdownDisplay() {
+  const target = parseTimeToday(state.leaveTime);
+  const diff = Math.max(0, Math.floor((target.getTime() - Date.now()) / 1000));
+  countdownRemainingSeconds = diff;
+  const mm = String(Math.floor(diff / 60)).padStart(2, '0');
+  const ss = String(diff % 60).padStart(2, '0');
+  document.getElementById('countdown-large-minutes').textContent = mm;
+  document.getElementById('countdown-large-seconds').textContent = ss;
+}
+
+function renderCountdownToggle() {
+  const icon = document.getElementById('countdown-toggle-icon');
+  const button = document.getElementById('countdown-toggle');
+  if (!icon || !button) return;
+
+  icon.textContent = countdownRunning ? 'pause' : 'play_arrow';
+  button.setAttribute('aria-label', countdownRunning ? '타이머 정지' : '타이머 시작');
+  button.classList.toggle('bg-primary-fixed', !countdownRunning);
+  button.classList.toggle('text-primary', !countdownRunning);
+  button.classList.toggle('bg-secondary-container', countdownRunning);
+  button.classList.toggle('text-on-surface', countdownRunning);
+}
+
+function startCountdownTimer() {
+  if (countdownRunning) return;
+  syncCountdownDisplay();
+  countdownRunning = true;
+  countdownIntervalId = window.setInterval(updateCountdownTimer, 1000);
+  renderCountdownToggle();
+}
+
+function stopCountdownTimer() {
+  countdownRunning = false;
+  if (countdownIntervalId) {
+    clearInterval(countdownIntervalId);
+    countdownIntervalId = null;
+  }
+  renderCountdownToggle();
+}
+
+function toggleCountdownTimer() {
+  if (countdownRunning) {
+    stopCountdownTimer();
+    return;
+  }
+  startCountdownTimer();
+}
+
+function toggleSettings() {
+  const modal = document.getElementById('settings-modal');
+  if (modal.classList.contains('hidden')) {
+    document.getElementById('child-name').value = state.childName;
+    document.getElementById('wake-time').value = state.wakeTime;
+    document.getElementById('leave-time').value = state.leaveTime;
+    document.getElementById('missions').value = state.missions.join('\n');
+    document.getElementById('reward-score-range').value = state.rewardTargetScore;
+    updateRewardTargetPreview(state.rewardTargetScore);
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+  } else {
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }
+}
+
+function saveSettings() {
+  applySettingsFromInputs();
+  refreshAfterStateChange();
+  toggleSettings();
+}
+
+loadState();
+normalizeRewardState();
+normalizeCatHouseState();
+const didResetDaily = ensureDailyState();
+if (didResetDaily) {
+  persistState();
+}
+renderMissions();
+renderScores();
+renderRewardProgress();
+renderHeaderTitle();
+renderCatHouse();
+playLoopVideo();
+updateHeaderClock();
+syncCountdownDisplay();
+renderCountdownToggle();
+grantDailyCatRewardIfNeeded();
+ensureCatAnimation();
+
+window.addEventListener('pointermove', (event) => {
+  moveDraggingCat(event.clientX, event.clientY);
+});
+window.addEventListener('pointerup', () => {
+  endDragCat();
+});
+window.addEventListener('pointercancel', () => {
+  endDragCat();
+});
+
+setInterval(updateHeaderClock, 1000);
+window.addEventListener('resize', () => {
+  scheduleMissionLabelFit();
+  state.cats.forEach(clampCatToMat);
+  renderCatHouse();
+});
+</script>
+</body>
+</html>
