@@ -6,7 +6,7 @@
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
-<title>아침 준비</title>
+<title>저녁 루틴</title>
 <script id="tailwind-config">
 tailwind.config = {
   darkMode: "class",
@@ -97,7 +97,7 @@ tailwind.config = {
 body {
   font-family: 'Quicksand', sans-serif;
   overflow: hidden;
-  background: linear-gradient(180deg, #ffdbcf 0%, #fff9ee 100%);
+  background: radial-gradient(120% 120% at 10% 0%, #3a2f8d 0%, #1b215f 35%, #0a1233 100%);
   min-height: 100vh;
   display: flex;
   align-items: center;
@@ -105,7 +105,7 @@ body {
   transition: background 0.45s ease, filter 0.35s ease;
 }
 body.phase-switching {
-  filter: brightness(0.85);
+  filter: brightness(0.8);
 }
 .stage {
   --ui-scale: 1;
@@ -127,8 +127,8 @@ body.phase-switching {
   margin: 0;
   position: relative;
   overflow: hidden;
-  border-left: 6px solid #f0e8d2;
-  border-right: 6px solid #f0e8d2;
+  border-left: 6px solid #394288;
+  border-right: 6px solid #394288;
 }
 .parallax-track {
   position: absolute;
@@ -579,6 +579,137 @@ body.phase-switching {
 .stage.ultra-compact #mission-title {
   margin-bottom: 0.35rem !important;
 }
+.stage.tablet-tight-layout .mission-panel {
+  padding: 0.68rem !important;
+}
+.stage.tablet-tight-layout #mission-title {
+  margin-bottom: 0.32rem !important;
+  gap: 0.35rem !important;
+  font-size: clamp(1.08rem, calc(1.5rem * var(--ui-scale)), 1.7rem) !important;
+}
+.stage.tablet-tight-layout #mission-title .material-symbols-outlined {
+  font-size: clamp(1.2rem, calc(1.58rem * var(--ui-scale)), 1.82rem) !important;
+}
+.stage.tablet-tight-layout #mission-list {
+  gap: 0.34rem !important;
+}
+.stage.tablet-tight-layout .mission-card {
+  padding-top: 0.42rem !important;
+  padding-bottom: 0.42rem !important;
+}
+.stage.tablet-tight-layout #mission-list[data-size="large"] .mission-icon-wrap {
+  width: clamp(2.35rem, calc(6.2vh * var(--mission-density) * var(--ui-scale)), 5.4rem);
+  height: clamp(2.35rem, calc(6.2vh * var(--mission-density) * var(--ui-scale)), 5.4rem);
+}
+.stage.tablet-tight-layout #mission-list[data-size="large"] .mission-icon {
+  font-size: clamp(1.55rem, calc(4.8vh * var(--mission-density) * var(--ui-scale)), 3.8rem);
+}
+.stage.tablet-tight-layout #mission-list[data-size="large"] .mission-label {
+  font-size: clamp(0.82rem, calc(1.5rem * var(--ui-scale) * var(--mission-density)), 2.1rem);
+}
+.stage.tablet-tight-layout #mission-list[data-size="large"] .mission-score-badge {
+  width: clamp(2rem, calc(4.8vh * var(--mission-density) * var(--ui-scale)), 3.8rem);
+  height: clamp(2rem, calc(4.8vh * var(--mission-density) * var(--ui-scale)), 3.8rem);
+}
+.stage.tablet-tight-layout #mission-list[data-size="large"] .mission-score-text {
+  font-size: clamp(0.74rem, calc(1.8vh * var(--mission-density) * var(--ui-scale)), 1.5rem);
+}
+.stage.tablet-tight-layout #mission-list[data-size="compact"] .mission-icon-wrap {
+  width: clamp(2.2rem, calc(4.5rem * var(--mission-density) * var(--ui-scale)), 4.9rem);
+  height: clamp(2.2rem, calc(4.5rem * var(--mission-density) * var(--ui-scale)), 4.9rem);
+}
+.stage.tablet-tight-layout #mission-list[data-size="compact"] .mission-icon {
+  font-size: clamp(1.45rem, calc(3.7rem * var(--mission-density) * var(--ui-scale)), 3.6rem);
+}
+.stage.tablet-tight-layout #mission-list[data-size="compact"] .mission-label {
+  font-size: clamp(0.78rem, calc(1.34rem * var(--ui-scale) * var(--mission-density)), 1.9rem);
+}
+.stage.tablet-tight-layout #mission-list[data-size="compact"] .mission-score-badge {
+  width: clamp(2rem, calc(4.5rem * var(--mission-density) * var(--ui-scale)), 4.9rem);
+  height: clamp(2rem, calc(4.5rem * var(--mission-density) * var(--ui-scale)), 4.9rem);
+}
+.stage.tablet-tight-layout #mission-list[data-size="compact"] .mission-score-text {
+  font-size: clamp(0.7rem, calc(1.65rem * var(--mission-density) * var(--ui-scale)), 1.78rem);
+}
+.hill-back {
+  opacity: 0.65;
+}
+.hill-front {
+  opacity: 0.75;
+}
+#top-header,
+#bottom-nav,
+.mission-panel,
+.arrival-card,
+.score-panel,
+#settings-modal > div,
+#reward-modal > div,
+#cat-house-modal > div {
+  transition: background-color 0.45s ease, border-color 0.45s ease, color 0.45s ease, box-shadow 0.45s ease;
+}
+#top-header {
+  background: rgba(10, 18, 51, 0.82) !important;
+  border-bottom: 1px solid rgba(151, 157, 220, 0.25);
+}
+#top-header h1 {
+  color: #f1f2ff !important;
+}
+#countdown {
+  background: #1f2864 !important;
+  border-color: #7f8de2 !important;
+}
+.countdown-date {
+  color: #b9c6ff !important;
+}
+.countdown-time {
+  color: #eef1ff !important;
+}
+.arrival-card,
+.mission-panel,
+.score-panel {
+  background: linear-gradient(180deg, rgba(27, 33, 95, 0.95) 0%, rgba(16, 22, 66, 0.95) 100%) !important;
+  border-color: #6f79cf !important;
+  box-shadow: 0 10px 24px rgba(7, 10, 34, 0.36) !important;
+}
+.mission-card {
+  background: rgba(19, 25, 74, 0.9) !important;
+  border-color: #7b86df !important;
+  color: #f1f3ff !important;
+}
+.mission-label,
+#mission-title,
+.score-panel span,
+.arrival-label {
+  color: #eef1ff !important;
+}
+#bottom-nav {
+  background: rgba(10, 18, 51, 0.88) !important;
+  border-top-color: #6f79cf !important;
+}
+#bottom-nav a {
+  color: #d6dcff !important;
+}
+#bottom-nav a:first-child {
+  background: linear-gradient(180deg, #5667dc 0%, #6f46d7 100%) !important;
+  color: #ffffff !important;
+}
+.cat-house-count,
+.cat-house-note,
+.cat-house-headline {
+  color: #e7ebff !important;
+}
+.cat-house-count {
+  background: #1f2864 !important;
+  border-color: #7f8de2 !important;
+}
+.cat-house-mat {
+  border-color: #7f8de2 !important;
+  background:
+    radial-gradient(circle at 14% 20%, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0) 34%),
+    radial-gradient(circle at 82% 72%, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 38%),
+    repeating-linear-gradient(45deg, #1f2864 0, #1f2864 14px, #1a2258 14px, #1a2258 28px),
+    repeating-linear-gradient(-45deg, rgba(130, 154, 255, 0.08) 0, rgba(130, 154, 255, 0.08) 9px, rgba(130, 154, 255, 0) 9px, rgba(130, 154, 255, 0) 18px) !important;
+}
 @keyframes driftSlow {
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }
@@ -607,7 +738,7 @@ body.phase-switching {
     <div class="flex justify-between items-center w-full max-w-7xl mx-auto">
       <h1 id="planner-title" class="flex items-center gap-2 text-primary font-bold leading-tight whitespace-nowrap" style="font-size:clamp(1.25rem,calc(1.72rem * var(--ui-scale)),2.1rem);">
         <span>🐾</span>
-        <span>아침 준비</span>
+        <span>저녁 루틴</span>
       </h1>
       <div class="flex gap-1 md:gap-2 items-center min-w-0">
         <div class="bg-surface-container-low border-4 border-outline-variant rounded-full px-3 py-2 md:px-6 md:py-3 text-primary-container font-bold leading-tight whitespace-nowrap tabular-nums countdown-chip" id="countdown" style="font-size:clamp(1.12rem,calc(1.36rem * var(--ui-scale)),1.72rem);">
@@ -618,8 +749,8 @@ body.phase-switching {
             <span class="countdown-time-part countdown-second" id="countdown-second">00초</span>
           </span>
         </div>
-        <button class="text-outline hover:scale-110 transition-transform active:translate-y-1" onclick="switchPhaseManually()" aria-label="페이즈 전환" type="button" id="phase-toggle-btn" title="저녁 페이즈로 전환">
-          <span class="material-symbols-outlined !text-3xl md:!text-4xl" id="phase-toggle-icon">dark_mode</span>
+        <button class="text-outline hover:scale-110 transition-transform active:translate-y-1" onclick="switchPhaseManually()" aria-label="페이즈 전환" type="button" id="phase-toggle-btn" title="아침 페이즈로 전환">
+          <span class="material-symbols-outlined !text-3xl md:!text-4xl" id="phase-toggle-icon">light_mode</span>
         </button>
         <button class="text-outline hover:scale-110 transition-transform active:translate-y-1" onclick="toggleFullscreenMode()" aria-label="전체화면 전환" type="button">
           <span class="material-symbols-outlined !text-3xl md:!text-4xl" id="fullscreen-toggle-icon">fullscreen</span>
@@ -638,7 +769,7 @@ body.phase-switching {
       <div class="bg-surface-container-low border-[6px] border-outline-variant rounded-[2.5rem] px-4 md:px-8 py-4 md:py-7 shadow-[8px_8px_0px_0px_rgba(222,192,182,1)] arrival-card" style="font-size:clamp(1.2rem,calc(1.45rem * var(--ui-scale)),1.8rem);">
         <div class="arrival-inline">
           <div class="arrival-copy">
-            <p class="font-label-lg text-secondary font-extrabold arrival-label" id="arrival-label">등교까지</p>
+            <p class="font-label-lg text-secondary font-extrabold arrival-label" id="arrival-label">취침까지</p>
             <div class="font-headline-md text-primary-container tabular-nums arrival-timer" id="countdown-large">
               <span class="arrival-time-part" id="countdown-large-minutes">00</span>
               <span class="arrival-time-colon">:</span>
@@ -653,10 +784,10 @@ body.phase-switching {
 
       <div class="cat-panel relative z-10 w-full flex-1 flex justify-center items-center min-h-[240px] mt-2">
         <div class="relative w-[26rem] h-[22.1rem] cursor-pointer transition-transform duration-300 overflow-visible" id="cat-character">
-          <div class="absolute inset-0 overflow-hidden rounded-[18%] border-4 border-primary">
+          <div class="absolute inset-0 overflow-hidden rounded-[18%] border-4 border-[#7f8de2]">
             <video id="cat-video" class="cat-loop-mirrored w-full h-full object-cover rounded-[18%] shadow-lg cat-happy-offset"
               style="--cat-y:50%; --cat-scale:100%;"
-              src="./assets/child-morning/cat-loop.mp4" autoplay loop muted playsinline preload="auto" poster="https://placehold.co/320x320/ffd9cc/a43c12?text=CAT">
+              src="./assets/child-evening/cat-night-loop.mp4" autoplay loop muted playsinline preload="auto" poster="https://placehold.co/320x320/1b215f/d6dcff?text=NIGHT+CAT">
               브라우저가 동영상을 지원하지 않습니다.
             </video>
           </div>
@@ -716,7 +847,7 @@ body.phase-switching {
             <input class="w-full bg-white border-4 border-outline-variant rounded-full px-6 py-3 font-body-md text-xl focus:border-primary-container outline-none transition-all" id="child-name" placeholder="이름을 적어줘요!" type="text">
           </div>
           <div>
-            <label class="block font-label-lg text-secondary mb-2" for="leave-time" id="leave-time-label">출발 시간</label>
+            <label class="block font-label-lg text-secondary mb-2" for="leave-time" id="leave-time-label">취침 시간</label>
             <input class="w-full bg-white border-4 border-outline-variant rounded-full px-4 py-3 font-body-md text-xl focus:border-primary-container outline-none transition-all" id="leave-time" type="time" value="08:30">
           </div>
         </div>
@@ -832,7 +963,7 @@ body.phase-switching {
 
 <script>
 const STORAGE_KEY = 'childMorningDataV2';
-const CURRENT_PHASE = 'morning';
+const CURRENT_PHASE = 'evening';
 const PHASE_FILES = {
   morning: 'Child Morning.html',
   evening: 'Child Evening.html'
@@ -1756,6 +1887,8 @@ function fitMissionLabels() {
   if (!list) return;
 
   const isLarge = list.dataset.size === 'large';
+  const stage = document.querySelector('.stage');
+  const isTightLayout = !!(stage && (stage.classList.contains('tablet-tight-layout') || stage.classList.contains('ultra-compact')));
   const labels = list.querySelectorAll('.mission-label');
 
   labels.forEach((label) => {
@@ -1768,13 +1901,15 @@ function fitMissionLabels() {
 
     const wrapWidth = Math.max(1, wrap.clientWidth);
     const wrapHeight = Math.max(1, wrap.clientHeight);
-    const preferredPx = Math.round(iconFontPx * 0.9);
+    const preferredPx = Math.round(iconFontPx * (isTightLayout ? (isLarge ? 0.58 : 0.64) : 0.9));
     const maxPx = Math.floor(Math.min(
-      preferredPx * 1.05,
-      wrapHeight * (isLarge ? 0.94 : 0.96),
-      wrapWidth * (isLarge ? 0.98 : 1)
+      preferredPx * (isTightLayout ? 1.04 : 1.05),
+      wrapHeight * (isTightLayout ? (isLarge ? 0.74 : 0.82) : (isLarge ? 0.94 : 0.96)),
+      wrapWidth * (isTightLayout ? (isLarge ? 0.62 : 0.7) : (isLarge ? 0.98 : 1))
     ));
-    const minPx = Math.max(isLarge ? 18 : 14, Math.round(iconFontPx * 0.72));
+    const minPx = isTightLayout
+      ? Math.max(isLarge ? 11 : 10, Math.round(iconFontPx * (isLarge ? 0.34 : 0.38)))
+      : Math.max(isLarge ? 18 : 14, Math.round(iconFontPx * 0.72));
 
     if (isLarge) {
       label.style.fontSize = `${preferredPx}px`;
@@ -1806,15 +1941,14 @@ function fitMissionLabels() {
 
     label.style.fontSize = `${Math.max(minPx, best)}px`;
 
-    // 4글자 초과 + 띄어쓰기 있을 때만 줄바꿈, 그 외엔 한 줄 유지
     const text = label.textContent;
     const hasSpace = text.includes(' ');
-    if (text.length > 4 && hasSpace) {
+    if (isTightLayout && (label.scrollWidth > wrap.clientWidth + 4 || (text.length > 4 && hasSpace))) {
       label.style.whiteSpace = 'normal';
       label.style.wordBreak = 'keep-all';
       label.style.overflowWrap = 'normal';
     } else {
-      label.style.whiteSpace = 'nowrap';
+      label.style.whiteSpace = (!isTightLayout && !(text.length > 4 && hasSpace)) ? 'nowrap' : 'normal';
       label.style.wordBreak = '';
       label.style.overflowWrap = '';
     }
@@ -2464,12 +2598,15 @@ function updateResponsiveLayout() {
 
   const height = stage.clientHeight;
   const width = stage.clientWidth;
-  const compactMode = height < 730 || (height < 790 && width < 1300);
-  const pressure = compactMode ? Math.min(1, Math.max(0, (790 - height) / 170)) : 0;
+  const tabletTightMode = width >= 680 && width <= 1040 && height <= 520;
+  const compactMode = tabletTightMode || height < 730 || (height < 790 && width < 1300);
+  const basePressure = compactMode ? Math.max(0, (790 - height) / 170) : 0;
+  const pressure = Math.min(1, Math.max(0, Math.max(basePressure, tabletTightMode ? 0.86 : 0)));
   const ultraCompactMode = height < 670 || pressure > 0.72;
 
   stage.classList.toggle('compact-ui', compactMode);
   stage.classList.toggle('ultra-compact', ultraCompactMode);
+  stage.classList.toggle('tablet-tight-layout', tabletTightMode);
   stage.style.setProperty('--chrome-density', (1 - (pressure * 0.24)).toFixed(3));
   stage.style.setProperty('--content-density', (1 - (pressure * 0.12)).toFixed(3));
   stage.style.setProperty('--mission-density', (1 - (pressure * 0.14)).toFixed(3));
