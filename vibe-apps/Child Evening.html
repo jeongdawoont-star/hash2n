@@ -579,58 +579,6 @@ body.phase-switching {
 .stage.ultra-compact #mission-title {
   margin-bottom: 0.35rem !important;
 }
-.stage.tablet-tight-layout .mission-panel {
-  padding: 0.68rem !important;
-}
-.stage.tablet-tight-layout #mission-title {
-  margin-bottom: 0.32rem !important;
-  gap: 0.35rem !important;
-  font-size: clamp(1.08rem, calc(1.5rem * var(--ui-scale)), 1.7rem) !important;
-}
-.stage.tablet-tight-layout #mission-title .material-symbols-outlined {
-  font-size: clamp(1.2rem, calc(1.58rem * var(--ui-scale)), 1.82rem) !important;
-}
-.stage.tablet-tight-layout #mission-list {
-  gap: 0.34rem !important;
-}
-.stage.tablet-tight-layout .mission-card {
-  padding-top: 0.42rem !important;
-  padding-bottom: 0.42rem !important;
-}
-.stage.tablet-tight-layout #mission-list[data-size="large"] .mission-icon-wrap {
-  width: clamp(2.35rem, calc(6.2vh * var(--mission-density) * var(--ui-scale)), 5.4rem);
-  height: clamp(2.35rem, calc(6.2vh * var(--mission-density) * var(--ui-scale)), 5.4rem);
-}
-.stage.tablet-tight-layout #mission-list[data-size="large"] .mission-icon {
-  font-size: clamp(1.55rem, calc(4.8vh * var(--mission-density) * var(--ui-scale)), 3.8rem);
-}
-.stage.tablet-tight-layout #mission-list[data-size="large"] .mission-label {
-  font-size: clamp(0.82rem, calc(1.5rem * var(--ui-scale) * var(--mission-density)), 2.1rem);
-}
-.stage.tablet-tight-layout #mission-list[data-size="large"] .mission-score-badge {
-  width: clamp(2rem, calc(4.8vh * var(--mission-density) * var(--ui-scale)), 3.8rem);
-  height: clamp(2rem, calc(4.8vh * var(--mission-density) * var(--ui-scale)), 3.8rem);
-}
-.stage.tablet-tight-layout #mission-list[data-size="large"] .mission-score-text {
-  font-size: clamp(0.74rem, calc(1.8vh * var(--mission-density) * var(--ui-scale)), 1.5rem);
-}
-.stage.tablet-tight-layout #mission-list[data-size="compact"] .mission-icon-wrap {
-  width: clamp(2.2rem, calc(4.5rem * var(--mission-density) * var(--ui-scale)), 4.9rem);
-  height: clamp(2.2rem, calc(4.5rem * var(--mission-density) * var(--ui-scale)), 4.9rem);
-}
-.stage.tablet-tight-layout #mission-list[data-size="compact"] .mission-icon {
-  font-size: clamp(1.45rem, calc(3.7rem * var(--mission-density) * var(--ui-scale)), 3.6rem);
-}
-.stage.tablet-tight-layout #mission-list[data-size="compact"] .mission-label {
-  font-size: clamp(0.78rem, calc(1.34rem * var(--ui-scale) * var(--mission-density)), 1.9rem);
-}
-.stage.tablet-tight-layout #mission-list[data-size="compact"] .mission-score-badge {
-  width: clamp(2rem, calc(4.5rem * var(--mission-density) * var(--ui-scale)), 4.9rem);
-  height: clamp(2rem, calc(4.5rem * var(--mission-density) * var(--ui-scale)), 4.9rem);
-}
-.stage.tablet-tight-layout #mission-list[data-size="compact"] .mission-score-text {
-  font-size: clamp(0.7rem, calc(1.65rem * var(--mission-density) * var(--ui-scale)), 1.78rem);
-}
 .hill-back {
   opacity: 0.65;
 }
@@ -883,20 +831,6 @@ body.phase-switching {
           <button class="mt-3 w-full bg-secondary text-white font-headline-md py-3 rounded-2xl neomorph-btn text-lg" onclick="applyPhaseOverrideFromSettings()" type="button">페이즈 지금 적용</button>
         </div>
 
-        <div>
-          <div class="flex items-center justify-between mb-2">
-            <label class="block font-label-lg text-secondary" for="debug-viewport-mode">디버그 화면 크기</label>
-            <span class="text-sm font-bold text-on-surface-variant">검증용 강제 뷰포트</span>
-          </div>
-          <select class="w-full bg-white border-4 border-outline-variant rounded-full px-4 py-3 font-body-md text-lg focus:border-primary-container outline-none transition-all" id="debug-viewport-mode">
-            <option value="auto">자동 (실제 창 크기)</option>
-            <option value="mobile">모바일 375x667</option>
-            <option value="tablet">태블릿 768x1024</option>
-            <option value="desktop">데스크탑 1366x768</option>
-          </select>
-          <button class="mt-3 w-full bg-tertiary text-white font-headline-md py-3 rounded-2xl neomorph-btn text-lg" onclick="setDebugViewportModeFromSettings()" type="button">디버그 적용</button>
-        </div>
-
         <div class="flex md:flex-col gap-3 md:sticky md:top-2">
           <button class="flex-1 bg-primary-container text-white font-headline-md py-3 rounded-2xl neomorph-btn text-lg flex items-center justify-center gap-1" onclick="saveSettingsAsJson()" type="button">
             <span class="material-symbols-outlined !text-2xl">download</span>
@@ -993,6 +927,7 @@ const CAT_LEVEL_EMOJIS = ['😺', '😸', '😻', '😼', '🐱', '🐈', '🐈�
 const CAT_SIZE_PX = 54;
 const AUDIO_MASTER_GAIN = 0.05;
 const MIN_MISSION_EDITOR_ROWS = 8;
+const FULLSCREEN_RESTORE_KEY = 'childPhaseFullscreenRestore';
 const DEBUG_VIEWPORT_MODES = {
   auto: null,
   mobile: { width: 375, height: 667 },
@@ -1123,9 +1058,35 @@ function ensurePhaseSettings() {
   if (!state.phaseSettings.evening) {
     state.phaseSettings.evening = defaultPhaseSettings('evening');
   }
+
+  syncChildNameAcrossPhases();
+}
+
+function resolveUnifiedChildName() {
+  const stateName = typeof state.childName === 'string' ? state.childName.trim() : '';
+  const morningName = state.phaseSettings && state.phaseSettings.morning && typeof state.phaseSettings.morning.childName === 'string'
+    ? state.phaseSettings.morning.childName.trim()
+    : '';
+  const eveningName = state.phaseSettings && state.phaseSettings.evening && typeof state.phaseSettings.evening.childName === 'string'
+    ? state.phaseSettings.evening.childName.trim()
+    : '';
+  return stateName || morningName || eveningName || '하린';
+}
+
+function syncChildNameAcrossPhases() {
+  const unifiedName = resolveUnifiedChildName();
+  state.childName = unifiedName;
+
+  if (state.phaseSettings && state.phaseSettings.morning) {
+    state.phaseSettings.morning.childName = unifiedName;
+  }
+  if (state.phaseSettings && state.phaseSettings.evening) {
+    state.phaseSettings.evening.childName = unifiedName;
+  }
 }
 
 function applyCurrentPhaseSettingsToState() {
+  syncChildNameAcrossPhases();
   const phaseSettings = state.phaseSettings && state.phaseSettings[CURRENT_PHASE]
     ? state.phaseSettings[CURRENT_PHASE]
     : defaultPhaseSettings(CURRENT_PHASE);
@@ -1133,7 +1094,7 @@ function applyCurrentPhaseSettingsToState() {
   const normalizedMissionItems = normalizeMissionItems(phaseSettings.missionItems, phaseSettings.missions);
   currentPhaseMissionItems = normalizedMissionItems.map((item) => ({ ...item }));
 
-  state.childName = phaseSettings.childName || '하린';
+  state.childName = resolveUnifiedChildName();
   state.leaveTime = phaseSettings.leaveTime || (CURRENT_PHASE === 'morning' ? '08:30' : '21:00');
   state.missions = getEnabledMissionTexts(normalizedMissionItems);
   state.completed = phaseSettings.completed && typeof phaseSettings.completed === 'object'
@@ -1152,6 +1113,7 @@ function persistCurrentPhaseSettings() {
     missionItems: missionItemsToSave.map((item) => ({ ...item })),
     completed: { ...state.completed }
   };
+  syncChildNameAcrossPhases();
 }
 
 function applyDebugViewportMode(mode = 'auto') {
@@ -1214,6 +1176,14 @@ function redirectToPhase(phase) {
 
   const currentPath = window.location.pathname.split('/').pop() || '';
   if (currentPath.toLowerCase() === target.toLowerCase()) return;
+
+  if (document.fullscreenElement) {
+    try {
+      sessionStorage.setItem(FULLSCREEN_RESTORE_KEY, '1');
+    } catch (_) {
+      // ignore storage errors
+    }
+  }
 
   document.body.classList.add('phase-switching');
   window.setTimeout(() => {
@@ -1593,6 +1563,7 @@ function handleMissionEditorEnter(event, idx) {
 
 function applySettingsFromInputs() {
   state.childName = document.getElementById('child-name').value.trim() || '하린';
+  syncChildNameAcrossPhases();
   state.leaveTime = document.getElementById('leave-time').value || '08:30';
   currentPhaseMissionItems = getMissionEditorRows(false);
   state.missions = getEnabledMissionTexts(currentPhaseMissionItems);
@@ -1887,8 +1858,6 @@ function fitMissionLabels() {
   if (!list) return;
 
   const isLarge = list.dataset.size === 'large';
-  const stage = document.querySelector('.stage');
-  const isTightLayout = !!(stage && (stage.classList.contains('tablet-tight-layout') || stage.classList.contains('ultra-compact')));
   const labels = list.querySelectorAll('.mission-label');
 
   labels.forEach((label) => {
@@ -1901,15 +1870,13 @@ function fitMissionLabels() {
 
     const wrapWidth = Math.max(1, wrap.clientWidth);
     const wrapHeight = Math.max(1, wrap.clientHeight);
-    const preferredPx = Math.round(iconFontPx * (isTightLayout ? (isLarge ? 0.58 : 0.64) : 0.9));
+    const preferredPx = Math.round(iconFontPx * 0.9);
     const maxPx = Math.floor(Math.min(
-      preferredPx * (isTightLayout ? 1.04 : 1.05),
-      wrapHeight * (isTightLayout ? (isLarge ? 0.74 : 0.82) : (isLarge ? 0.94 : 0.96)),
-      wrapWidth * (isTightLayout ? (isLarge ? 0.62 : 0.7) : (isLarge ? 0.98 : 1))
+      preferredPx * 1.05,
+      wrapHeight * (isLarge ? 0.94 : 0.96),
+      wrapWidth * (isLarge ? 0.98 : 1)
     ));
-    const minPx = isTightLayout
-      ? Math.max(isLarge ? 11 : 10, Math.round(iconFontPx * (isLarge ? 0.34 : 0.38)))
-      : Math.max(isLarge ? 18 : 14, Math.round(iconFontPx * 0.72));
+    const minPx = Math.max(isLarge ? 18 : 14, Math.round(iconFontPx * 0.72));
 
     if (isLarge) {
       label.style.fontSize = `${preferredPx}px`;
@@ -1941,14 +1908,15 @@ function fitMissionLabels() {
 
     label.style.fontSize = `${Math.max(minPx, best)}px`;
 
+    // 4글자 초과 + 띄어쓰기 있을 때만 줄바꿈, 그 외엔 한 줄 유지
     const text = label.textContent;
     const hasSpace = text.includes(' ');
-    if (isTightLayout && (label.scrollWidth > wrap.clientWidth + 4 || (text.length > 4 && hasSpace))) {
+    if (text.length > 4 && hasSpace) {
       label.style.whiteSpace = 'normal';
       label.style.wordBreak = 'keep-all';
       label.style.overflowWrap = 'normal';
     } else {
-      label.style.whiteSpace = (!isTightLayout && !(text.length > 4 && hasSpace)) ? 'nowrap' : 'normal';
+      label.style.whiteSpace = 'nowrap';
       label.style.wordBreak = '';
       label.style.overflowWrap = '';
     }
@@ -2503,6 +2471,41 @@ async function toggleFullscreenMode() {
   }
 }
 
+function restoreFullscreenAfterPhaseSwitch() {
+  let shouldRestore = false;
+  try {
+    shouldRestore = sessionStorage.getItem(FULLSCREEN_RESTORE_KEY) === '1';
+    sessionStorage.removeItem(FULLSCREEN_RESTORE_KEY);
+  } catch (_) {
+    shouldRestore = false;
+  }
+
+  if (!shouldRestore || document.fullscreenElement) return;
+
+  const tryEnterFullscreen = async () => {
+    try {
+      await document.documentElement.requestFullscreen();
+    } catch (_) {
+      // Some browsers require a fresh user gesture after navigation.
+    } finally {
+      renderFullscreenToggle();
+    }
+  };
+
+  const retryOnGesture = async () => {
+    window.removeEventListener('pointerdown', retryOnGesture, true);
+    window.removeEventListener('keydown', retryOnGesture, true);
+    await tryEnterFullscreen();
+  };
+
+  tryEnterFullscreen().then(() => {
+    if (!document.fullscreenElement) {
+      window.addEventListener('pointerdown', retryOnGesture, { capture: true, once: true });
+      window.addEventListener('keydown', retryOnGesture, { capture: true, once: true });
+    }
+  });
+}
+
 function renderCountdownToggle() {
   const icon = document.getElementById('countdown-toggle-icon');
   const button = document.getElementById('countdown-toggle');
@@ -2561,10 +2564,6 @@ function toggleSettings() {
     document.getElementById('reward-score-range').value = state.rewardTargetScore;
     normalizePhaseOverride();
     document.getElementById('phase-override').value = state.phaseOverride;
-    const debugSelect = document.getElementById('debug-viewport-mode');
-    if (debugSelect) {
-      debugSelect.value = debugViewportMode;
-    }
     updateRewardTargetPreview(state.rewardTargetScore);
     modal.classList.remove('hidden');
     modal.classList.add('flex');
@@ -2598,15 +2597,12 @@ function updateResponsiveLayout() {
 
   const height = stage.clientHeight;
   const width = stage.clientWidth;
-  const tabletTightMode = width >= 680 && width <= 1040 && height <= 520;
-  const compactMode = tabletTightMode || height < 730 || (height < 790 && width < 1300);
-  const basePressure = compactMode ? Math.max(0, (790 - height) / 170) : 0;
-  const pressure = Math.min(1, Math.max(0, Math.max(basePressure, tabletTightMode ? 0.86 : 0)));
+  const compactMode = height < 730 || (height < 790 && width < 1300);
+  const pressure = compactMode ? Math.min(1, Math.max(0, (790 - height) / 170)) : 0;
   const ultraCompactMode = height < 670 || pressure > 0.72;
 
   stage.classList.toggle('compact-ui', compactMode);
   stage.classList.toggle('ultra-compact', ultraCompactMode);
-  stage.classList.toggle('tablet-tight-layout', tabletTightMode);
   stage.style.setProperty('--chrome-density', (1 - (pressure * 0.24)).toFixed(3));
   stage.style.setProperty('--content-density', (1 - (pressure * 0.12)).toFixed(3));
   stage.style.setProperty('--mission-density', (1 - (pressure * 0.14)).toFixed(3));
@@ -2699,6 +2695,7 @@ syncCountdownDisplay();
 renderFullscreenToggle();
 renderCountdownToggle();
 renderPhaseToggleIcon();
+restoreFullscreenAfterPhaseSwitch();
 applyDebugViewportMode('auto');
 grantDailyCatRewardIfNeeded();
 ensureCatAnimation();

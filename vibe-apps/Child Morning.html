@@ -752,20 +752,6 @@ body.phase-switching {
           <button class="mt-3 w-full bg-secondary text-white font-headline-md py-3 rounded-2xl neomorph-btn text-lg" onclick="applyPhaseOverrideFromSettings()" type="button">페이즈 지금 적용</button>
         </div>
 
-        <div>
-          <div class="flex items-center justify-between mb-2">
-            <label class="block font-label-lg text-secondary" for="debug-viewport-mode">디버그 화면 크기</label>
-            <span class="text-sm font-bold text-on-surface-variant">검증용 강제 뷰포트</span>
-          </div>
-          <select class="w-full bg-white border-4 border-outline-variant rounded-full px-4 py-3 font-body-md text-lg focus:border-primary-container outline-none transition-all" id="debug-viewport-mode">
-            <option value="auto">자동 (실제 창 크기)</option>
-            <option value="mobile">모바일 375x667</option>
-            <option value="tablet">태블릿 768x1024</option>
-            <option value="desktop">데스크탑 1366x768</option>
-          </select>
-          <button class="mt-3 w-full bg-tertiary text-white font-headline-md py-3 rounded-2xl neomorph-btn text-lg" onclick="setDebugViewportModeFromSettings()" type="button">디버그 적용</button>
-        </div>
-
         <div class="flex md:flex-col gap-3 md:sticky md:top-2">
           <button class="flex-1 bg-primary-container text-white font-headline-md py-3 rounded-2xl neomorph-btn text-lg flex items-center justify-center gap-1" onclick="saveSettingsAsJson()" type="button">
             <span class="material-symbols-outlined !text-2xl">download</span>
@@ -862,6 +848,7 @@ const CAT_LEVEL_EMOJIS = ['😺', '😸', '😻', '😼', '🐱', '🐈', '🐈�
 const CAT_SIZE_PX = 54;
 const AUDIO_MASTER_GAIN = 0.05;
 const MIN_MISSION_EDITOR_ROWS = 8;
+const FULLSCREEN_RESTORE_KEY = 'childPhaseFullscreenRestore';
 const DEBUG_VIEWPORT_MODES = {
   auto: null,
   mobile: { width: 375, height: 667 },
@@ -992,9 +979,35 @@ function ensurePhaseSettings() {
   if (!state.phaseSettings.evening) {
     state.phaseSettings.evening = defaultPhaseSettings('evening');
   }
+
+  syncChildNameAcrossPhases();
+}
+
+function resolveUnifiedChildName() {
+  const stateName = typeof state.childName === 'string' ? state.childName.trim() : '';
+  const morningName = state.phaseSettings && state.phaseSettings.morning && typeof state.phaseSettings.morning.childName === 'string'
+    ? state.phaseSettings.morning.childName.trim()
+    : '';
+  const eveningName = state.phaseSettings && state.phaseSettings.evening && typeof state.phaseSettings.evening.childName === 'string'
+    ? state.phaseSettings.evening.childName.trim()
+    : '';
+  return stateName || morningName || eveningName || '하린';
+}
+
+function syncChildNameAcrossPhases() {
+  const unifiedName = resolveUnifiedChildName();
+  state.childName = unifiedName;
+
+  if (state.phaseSettings && state.phaseSettings.morning) {
+    state.phaseSettings.morning.childName = unifiedName;
+  }
+  if (state.phaseSettings && state.phaseSettings.evening) {
+    state.phaseSettings.evening.childName = unifiedName;
+  }
 }
 
 function applyCurrentPhaseSettingsToState() {
+  syncChildNameAcrossPhases();
   const phaseSettings = state.phaseSettings && state.phaseSettings[CURRENT_PHASE]
     ? state.phaseSettings[CURRENT_PHASE]
     : defaultPhaseSettings(CURRENT_PHASE);
@@ -1002,7 +1015,7 @@ function applyCurrentPhaseSettingsToState() {
   const normalizedMissionItems = normalizeMissionItems(phaseSettings.missionItems, phaseSettings.missions);
   currentPhaseMissionItems = normalizedMissionItems.map((item) => ({ ...item }));
 
-  state.childName = phaseSettings.childName || '하린';
+  state.childName = resolveUnifiedChildName();
   state.leaveTime = phaseSettings.leaveTime || (CURRENT_PHASE === 'morning' ? '08:30' : '21:00');
   state.missions = getEnabledMissionTexts(normalizedMissionItems);
   state.completed = phaseSettings.completed && typeof phaseSettings.completed === 'object'
@@ -1021,6 +1034,7 @@ function persistCurrentPhaseSettings() {
     missionItems: missionItemsToSave.map((item) => ({ ...item })),
     completed: { ...state.completed }
   };
+  syncChildNameAcrossPhases();
 }
 
 function applyDebugViewportMode(mode = 'auto') {
@@ -1083,6 +1097,14 @@ function redirectToPhase(phase) {
 
   const currentPath = window.location.pathname.split('/').pop() || '';
   if (currentPath.toLowerCase() === target.toLowerCase()) return;
+
+  if (document.fullscreenElement) {
+    try {
+      sessionStorage.setItem(FULLSCREEN_RESTORE_KEY, '1');
+    } catch (_) {
+      // ignore storage errors
+    }
+  }
 
   document.body.classList.add('phase-switching');
   window.setTimeout(() => {
@@ -1462,6 +1484,7 @@ function handleMissionEditorEnter(event, idx) {
 
 function applySettingsFromInputs() {
   state.childName = document.getElementById('child-name').value.trim() || '하린';
+  syncChildNameAcrossPhases();
   state.leaveTime = document.getElementById('leave-time').value || '08:30';
   currentPhaseMissionItems = getMissionEditorRows(false);
   state.missions = getEnabledMissionTexts(currentPhaseMissionItems);
@@ -2369,6 +2392,41 @@ async function toggleFullscreenMode() {
   }
 }
 
+function restoreFullscreenAfterPhaseSwitch() {
+  let shouldRestore = false;
+  try {
+    shouldRestore = sessionStorage.getItem(FULLSCREEN_RESTORE_KEY) === '1';
+    sessionStorage.removeItem(FULLSCREEN_RESTORE_KEY);
+  } catch (_) {
+    shouldRestore = false;
+  }
+
+  if (!shouldRestore || document.fullscreenElement) return;
+
+  const tryEnterFullscreen = async () => {
+    try {
+      await document.documentElement.requestFullscreen();
+    } catch (_) {
+      // Some browsers require a fresh user gesture after navigation.
+    } finally {
+      renderFullscreenToggle();
+    }
+  };
+
+  const retryOnGesture = async () => {
+    window.removeEventListener('pointerdown', retryOnGesture, true);
+    window.removeEventListener('keydown', retryOnGesture, true);
+    await tryEnterFullscreen();
+  };
+
+  tryEnterFullscreen().then(() => {
+    if (!document.fullscreenElement) {
+      window.addEventListener('pointerdown', retryOnGesture, { capture: true, once: true });
+      window.addEventListener('keydown', retryOnGesture, { capture: true, once: true });
+    }
+  });
+}
+
 function renderCountdownToggle() {
   const icon = document.getElementById('countdown-toggle-icon');
   const button = document.getElementById('countdown-toggle');
@@ -2427,10 +2485,6 @@ function toggleSettings() {
     document.getElementById('reward-score-range').value = state.rewardTargetScore;
     normalizePhaseOverride();
     document.getElementById('phase-override').value = state.phaseOverride;
-    const debugSelect = document.getElementById('debug-viewport-mode');
-    if (debugSelect) {
-      debugSelect.value = debugViewportMode;
-    }
     updateRewardTargetPreview(state.rewardTargetScore);
     modal.classList.remove('hidden');
     modal.classList.add('flex');
@@ -2562,6 +2616,7 @@ syncCountdownDisplay();
 renderFullscreenToggle();
 renderCountdownToggle();
 renderPhaseToggleIcon();
+restoreFullscreenAfterPhaseSwitch();
 applyDebugViewportMode('auto');
 grantDailyCatRewardIfNeeded();
 ensureCatAnimation();
