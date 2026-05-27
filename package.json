@@ -1,0 +1,19 @@
+{
+  "name": "hash2n-site",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Hardening pipeline for hash2n static site",
+  "type": "module",
+  "scripts": {
+    "harden:b": "node tools/hardening/build-b.mjs",
+    "harden:c": "node tools/hardening/obfuscate-c.mjs",
+    "predeploy:check": "node tools/hardening/predeploy-check.mjs",
+    "harden:all": "npm run harden:b && npm run harden:c && npm run predeploy:check"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.5",
+    "fast-glob": "^3.3.3",
+    "html-minifier-terser": "^7.2.0",
+    "javascript-obfuscator": "^4.1.1"
+  }
+}

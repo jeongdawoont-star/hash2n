@@ -34,7 +34,7 @@ export const RECORDS = [
     title: "아이 아침 플래너",
     desc: "등교 준비가 힘든 아이를 위해 만들었다.\n아침에 해야할 일들을 입력하면\n체크박스로 하나씩 체크하면서 준비할 수 있다.\n하루 미션 완료 시 고양이가 자동으로 집에 들어온다.",
     tags: "copilot",
-    link: "https://jeongdawoont-star.github.io/hash2n/vibe-apps/Child%20Morning.html",
+    link: "./vibe-apps/Child%20Morning.html",
     image: "img-re/15.avif",
   },
 
@@ -42,7 +42,7 @@ export const RECORDS = [
     title: "두근두근 보물찾기",
     desc: "보물찾기를 좋아하는 아이를 위해 만들었다.\n고전 지뢰찾기를 응용함.\n2인 플레이 하다보면 시간이 금방 간다.",
     tags: "gemini",
-    link: "https://jeongdawoont-star.github.io/hash2n/vibe-apps/find-tresure.html",
+    link: "./vibe-apps/find-tresure.html",
     image: "img-re/14.avif",
   },
 
@@ -50,7 +50,7 @@ export const RECORDS = [
     title: "도블 메이커",
     desc: "아이랑 게임하려고 만들었다.\n실제 도블과는 다르지만 직접 그림과 사진을 넣는 것이 포인트.\n끌어 놓아야 매칭이 된다.",
     tags: "gemini",
-    link: "https://jeongdawoont-star.github.io/hash2n/vibe-apps/doble-maker.html",
+    link: "./vibe-apps/doble-maker.html",
     image: "img-re/13.avif",
   },
 
@@ -58,7 +58,7 @@ export const RECORDS = [
     title: "충역 - 왜란의 그림자",
     desc: "임진왜란판 레지스탕스 아발론.\n진화된 마피아 게임이라고 생각하면 된다.\n보드게임을 진행자 없이, 실물 카드 없이 할 수 있게 개조했다.\n토요한글학교에서 아이들과 하려고 제작.\n태블릿1대로 10명까지 플레이 가능.\n모바일 크롬에서 잘 됨",
     tags: "claude, gemini",
-    link: "http://jeongdawoont-star.github.io/hash2n/vibe-apps/Choong-Yeok-the-Loyalty-and-Traitor.html",
+    link: "./vibe-apps/Choong-Yeok-the-Loyalty-and-Traitor.html",
     image: "img-re/12.avif",
   },
 
@@ -74,7 +74,7 @@ export const RECORDS = [
     title: "학생 과제 트랙커 (데모)",
     desc: "나는 이게 너무 쓸모있다.\n15년간 종이 명렬표에 과제 체크하던걸 셀프 터치로 바꿨다.\n애들이 탭에 체크하면 내 엑셀에 기록된다.",
     tags: "copilot",
-    link: "https://jeongdawoont-star.github.io/hash2n/vibe-apps/student-tracker-demo.html",
+    link: "./vibe-apps/student-tracker-demo.html",
     image: "img-re/10.avif",
   },
 
@@ -90,7 +90,7 @@ export const RECORDS = [
     title: "학급 사건 조사서 (데모)",
     desc: "막대한 학급 송사를 처리하려고 만들었다\n\n학생 입력-서버 기록-AI 분석\n학생에겐 지도내용을\n학부모에겐 안내문자를 써줌\n누가 기록도 되고\n자동으로 폰에 메시지로 넘어옴",
     tags: "gemini, firebase",
-    link: "https://jeongdawoont-star.github.io/hash2n/vibe-apps/songsabot.html",
+    link: "./vibe-apps/songsabot.html",
     image: "img-re/8.avif",
   },
 
@@ -98,7 +98,7 @@ export const RECORDS = [
     title: "받아쓰기 음성 생성기",
     desc: "받아쓰기 급수표는 있는데 음성은 없다니\n교사의 목을 아껴주기 위해 만들었다\n텍스트만 넣으면 음성 생성 가능",
     tags: "",
-    link: "https://jeongdawoont-star.github.io/hash2n/vibe-apps/%EB%B0%9B%EC%95%84%EC%93%B0%EA%B8%B0%20Studio.html",
+    link: "./vibe-apps/%EB%B0%9B%EC%95%84%EC%93%B0%EA%B8%B0%20Studio.html",
     image: "img-re/7.avif",
   },
 
@@ -106,7 +106,7 @@ export const RECORDS = [
     title: "주간학습/알림장 자동화 (데모)",
     desc: "학년부장 업무 중\n매일 알림장\n매주 주간학습 엑셀로 만들어 공유하기\n매번 새시트 만들고 내용쓰기 번거로워\n몽땅 때려넣고 클릭만 하면\n자동 생성되게 만들었다\n\n제작툴: gemini",
     tags: "",
-    link: "https://jeongdawoont-star.github.io/hash2n/vibe-apps/weekly-notice-automation.html",
+    link: "./vibe-apps/weekly-notice-automation.html",
     image: "img-re/6.avif",
   },
 
@@ -114,7 +114,7 @@ export const RECORDS = [
     title: "미술 조형요소 자동수업",
     desc: "조형요소와 조형원리를 설명해주고\n어떻게 표현하는지 알려주는 수업세트\n음성도 출력된다",
     tags: "claude",
-    link: "https://jeongdawoont-star.github.io/hash2n/vibe-apps/%EC%A1%B0%ED%98%95%EC%9A%94%EC%86%8C%20%EC%8A%AC%EB%9D%BC%EC%9D%B4%EB%93%9C.html",
+    link: "./vibe-apps/%EC%A1%B0%ED%98%95%EC%9A%94%EC%86%8C%20%EC%8A%AC%EB%9D%BC%EC%9D%B4%EB%93%9C.html",
     image: "img-re/5.avif",
   },
 
@@ -122,7 +122,7 @@ export const RECORDS = [
     title: "사회 공개수업 활동자료 (5학년 날씨와 기후)",
     desc: "교육과정 개정되면서 자료가 하나도 없어서\nhtml로 학습지랑 퀴즈 자료 만들었다",
     tags: "gemini",
-    link: "https://jeongdawoont-star.github.io/hash2n/vibe-apps/%EC%82%AC%ED%9A%8C%EA%B3%B5%EA%B0%9C%EC%88%98%EC%97%85%EB%8C%80%EB%B3%B8.html",
+    link: "./vibe-apps/%EC%82%AC%ED%9A%8C%EA%B3%B5%EA%B0%9C%EC%88%98%EC%97%85%EB%8C%80%EB%B3%B8.html",
     image: "img-re/4.avif",
   },
 

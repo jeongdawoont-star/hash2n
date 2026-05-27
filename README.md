@@ -19,3 +19,18 @@
 
 - robots.txt
 - sitemap.xml
+
+하드닝(코드 노출 최소화) 기본 운영
+
+- 작업 연속성/기준 문서: `WORK_CONTINUITY.md`
+- 의존성 설치: `npm install`
+- B단계(최소 필수): `npm run harden:b`
+- C단계(선택): `npm run harden:c`
+- 배포 전 점검: `npm run predeploy:check`
+- 일괄 실행: `npm run harden:all`
+
+권장 규칙
+
+- `records.js` 내부 앱 링크는 상대경로(`./vibe-apps/...`) 사용
+- 배포 산출물은 `.deploy-hardened` 폴더 기준으로 점검
+- 소스맵 파일(`*.map`)은 배포하지 않음

@@ -1,0 +1,30 @@
+{
+  "sourceDir": ".",
+  "outDir": ".deploy-hardened",
+  "copyIgnore": [
+    ".git/**",
+    ".github/**",
+    ".venv/**",
+    "node_modules/**",
+    ".deploy-hardened/**"
+  ],
+  "minify": {
+    "html": true,
+    "css": true,
+    "js": true
+  },
+  "obfuscation": {
+    "enabled": true,
+    "targets": [
+      "js/main.js",
+      "vibe-apps/hotfix-client.js"
+    ],
+    "exclude": [
+      "vibe-apps/Choong-Yeok-the-Loyalty-and-Traitor.html",
+      "vibe-apps/design-elements-slide.html",
+      "vibe-apps/조형요소 슬라이드.html",
+      "vibe-apps/dictation-studio.html",
+      "vibe-apps/받아쓰기 Studio.html"
+    ]
+  }
+}
