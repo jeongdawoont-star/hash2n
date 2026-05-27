@@ -5,6 +5,29 @@ import { RECORDS } from '../records.js';
 // ────────────────────────────────────────────────────
 let currentSearch = '';
 
+const LEGACY_SITE_HOSTS = new Set(['jeongdawoont-star.github.io']);
+const LEGACY_SITE_PATH_PREFIX = '/hash2n/';
+
+function resolveRecordLink(rawLink) {
+  const fallback = '#';
+  if (!rawLink || typeof rawLink !== 'string') return fallback;
+
+  try {
+    const url = new URL(rawLink, window.location.href);
+    const isLegacyHost = LEGACY_SITE_HOSTS.has(url.hostname);
+    const isLegacyPath = url.pathname.startsWith(LEGACY_SITE_PATH_PREFIX);
+
+    if (isLegacyHost && isLegacyPath) {
+      const normalizedPath = url.pathname.replace(/^\/hash2n/, '') || '/';
+      return `${window.location.origin}${normalizedPath}${url.search}${url.hash}`;
+    }
+
+    return url.toString();
+  } catch (err) {
+    return rawLink;
+  }
+}
+
 // ────────────────────────────────────────────────────
 // 유틸
 // ────────────────────────────────────────────────────
@@ -81,6 +104,7 @@ function renderCards(container) {
     const desc       = item.desc  || '';
     const tags       = item.tags ? item.tags.split(',').map(t => t.trim()).filter(Boolean) : [];
     const displayNum = RECORDS.length - RECORDS.indexOf(item);
+    const resolvedLink = resolveRecordLink(item.link);
 
     const tagsHtml = tags.map(tag =>
       `<span class="bg-tertiary-fixed text-on-tertiary-fixed text-[10px] label-font px-2 py-0.5 rounded-full uppercase">${tag}</span>`
@@ -112,7 +136,7 @@ function renderCards(container) {
           <div class="mt-2 flex flex-wrap justify-center gap-2">${tagsHtml}</div>
         </div>
 
-        <a href="${item.link}" target="_blank" rel="noopener noreferrer" class="w-full mt-4">
+        <a href="${resolvedLink}" target="_blank" rel="noopener noreferrer" class="w-full mt-4">
           <button class="w-full bg-primary text-[#fff7f6] label-font px-6 py-4 rounded-2xl hover:shadow-[0_10px_20px_rgba(124,85,86,0.15)] transition-all active:scale-95 flex items-center justify-center gap-2">
             바로가기
             <span class="material-symbols-outlined text-sm">arrow_outward</span>
@@ -121,7 +145,7 @@ function renderCards(container) {
 
         <button
           onclick="toggleQr(this)"
-          data-link="${item.link.replace(/"/g, '&quot;')}"
+          data-link="${resolvedLink.replace(/"/g, '&quot;')}"
           class="mt-1 w-full flex items-center justify-center gap-1.5 text-[#b2b2ad] hover:text-[#7c5556] transition-colors label-font text-xs py-1.5 rounded-xl hover:bg-[#f5f0ea]">
           <span class="material-symbols-outlined text-sm">qr_code</span>
           QR 코드 열기
