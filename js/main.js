@@ -7,6 +7,11 @@ let currentSearch = '';
 
 const LEGACY_SITE_HOSTS = new Set(['jeongdawoont-star.github.io']);
 const LEGACY_SITE_PATH_PREFIX = '/hash2n/';
+const GITHUB_PAGES_HOST = 'jeongdawoont-star.github.io';
+
+function getCurrentSiteBasePath() {
+  return window.location.hostname === GITHUB_PAGES_HOST ? '/hash2n' : '';
+}
 
 function resolveRecordLink(rawLink) {
   const fallback = '#';
@@ -19,7 +24,8 @@ function resolveRecordLink(rawLink) {
 
     if (isLegacyHost && isLegacyPath) {
       const normalizedPath = url.pathname.replace(/^\/hash2n/, '') || '/';
-      return `${window.location.origin}${normalizedPath}${url.search}${url.hash}`;
+      const basePath = getCurrentSiteBasePath();
+      return `${window.location.origin}${basePath}${normalizedPath}${url.search}${url.hash}`;
     }
 
     return url.toString();
