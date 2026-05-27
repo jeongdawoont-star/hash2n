@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://jeongdawoont-star.github.io/hash2n/sitemap.xml
+Sitemap: https://hash2n.vercel.app/sitemap.xml
