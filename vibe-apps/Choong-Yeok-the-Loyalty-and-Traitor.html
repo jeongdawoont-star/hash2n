@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>忠逆 — 왜란의 그림자</title>
+<script>
+window.CHUNGYEOK_APP_VERSION = '1.0.0';
+window.CHUNGYEOK_HOTFIX_CONFIG = {
+  enabled: false,
+  manifestUrl: 'https://hash2n.vercel.app/Patch/ChungYeok/version.json',
+  requestTimeoutMs: 6000
+};
+</script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{
@@ -79,6 +87,13 @@ button, input { font-family: Georgia, serif; outline: none; cursor: pointer; }
 .s-head { padding: calc(clamp(12px, 1.5vw + 1.5vh, 24px) * var(--safe-head-pad)) 20px; }
 .s-foot { flex-shrink: 0; padding: calc(clamp(12px, 1.5vw + 1.5vh, 24px) * var(--ui-scale) * var(--safe-foot-pad)) 20px calc((20px * var(--ui-scale) * var(--safe-foot-pad)) + env(safe-area-inset-bottom, 0px)); display: flex; gap: calc(12px * var(--ui-scale) * var(--safe-foot-pad)); justify-content: center; align-items: center; background: linear-gradient(transparent, var(--bg) 20%); flex-wrap: wrap;}
 .s-foot .btn { max-width: 100%; }
+.nav-foot { justify-content: center; }
+.nav-foot .btn.big {
+  flex: 0 0 auto;
+  min-width: clamp(130px, 16vw, 190px);
+  max-width: clamp(160px, 22vw, 240px);
+  border-radius: 10px;
+}
 
 /* ── 공통 UI 컴포넌트 ── */
 .ycenter{align-items:center;justify-content:center}
@@ -109,6 +124,13 @@ body[data-mobile-safe="2"] {
   --safe-btn-scale: 0.84;
 }
 
+body[data-mobile-safe="3"] {
+  --safe-head-pad: 0.66;
+  --safe-body-pad: 0.62;
+  --safe-foot-pad: 0.62;
+  --safe-btn-scale: 0.74;
+}
+
 body[data-mobile-safe="2"] #s-intro .s-body {
   justify-content: flex-start;
   overflow-y: auto;
@@ -117,6 +139,16 @@ body[data-mobile-safe="2"] #s-intro .s-body {
 body[data-mobile-safe="2"] #s-intro .s-body-inner {
   margin: 0;
   padding-bottom: 8px;
+}
+
+body[data-mobile-safe="3"] #s-intro .s-body {
+  justify-content: flex-start;
+  overflow-y: auto;
+}
+
+body[data-mobile-safe="3"] #s-intro .s-body-inner {
+  margin: 0;
+  padding-bottom: 6px;
 }
 
 .lbl{font-size:clamp(11px, 0.8vw + 0.8vh, 20px);color:var(--gold);letter-spacing:.2em;font-family:sans-serif;text-transform:uppercase}
@@ -239,6 +271,15 @@ body[data-mobile-safe="2"] #s-intro .s-body-inner {
 @media (max-height: 540px), (max-width: 900px) {
   .s-foot { justify-content: stretch; }
   .s-foot .btn.big { flex: 1 1 100%; }
+  .nav-foot { justify-content: center; }
+  .nav-foot .btn.big { flex: 0 0 auto; width: clamp(130px, 40vw, 190px); }
+}
+
+@media (max-height: 460px) {
+  .s-head { padding: 6px 10px; }
+  .s-body { padding: 4px 8px 8px; }
+  .s-foot { padding: 6px 8px calc(8px + env(safe-area-inset-bottom, 0px)); gap: 6px; }
+  .btn.big { padding: 8px 12px; }
 }
 </style>
 </head>
@@ -263,7 +304,6 @@ body[data-mobile-safe="2"] #s-intro .s-body-inner {
     </div>
   </div>
   <div class="s-foot">
-    <button class="btn dim big" onclick="toggleFullScreen()">⛶ 전체화면</button>
     <button class="btn gold big" onclick="goRulesWithPrecheck()">게임 방법 보기 →</button>
   </div>
 </div>
@@ -298,7 +338,7 @@ body[data-mobile-safe="2"] #s-intro .s-body-inner {
       </div>
     </div>
   </div>
-  <div class="s-foot">
+  <div class="s-foot nav-foot">
     <button class="btn dim big" onclick="show('s-intro')">← 이전</button>
     <button class="btn gold big" onclick="SFX.init(); show('s-setup')">인원 설정하기 →</button>
   </div>
@@ -318,7 +358,7 @@ body[data-mobile-safe="2"] #s-intro .s-body-inner {
       </div>
     </div>
   </div>
-  <div class="s-foot">
+  <div class="s-foot nav-foot">
     <button class="btn dim big" onclick="show('s-rules')">← 이전</button>
     <button class="btn gold big" onclick="goNames()">이름 확인하기 →</button>
   </div>
@@ -334,7 +374,7 @@ body[data-mobile-safe="2"] #s-intro .s-body-inner {
       </div>
     </div>
   </div>
-  <div class="s-foot">
+  <div class="s-foot nav-foot">
     <button class="btn dim big" onclick="show('s-setup')">← 이전</button>
     <button class="btn gold big" onclick="showCardChoice()">역할 분배 방식 선택 →</button>
   </div>
@@ -364,7 +404,7 @@ body[data-mobile-safe="2"] #s-intro .s-body-inner {
       <div class="cgrid" id="cardsGrid"></div>
     </div>
   </div>
-  <div class="s-foot">
+  <div class="s-foot nav-foot">
     <button class="btn dim big" onclick="show('s-cards-choice')">← 뒤로</button>
     <button class="btn gold big" onclick="goNight()">카드 확인 완료 → 밤 페이즈 ▶</button>
   </div>
@@ -432,7 +472,6 @@ body[data-mobile-safe="2"] #s-intro .s-body-inner {
   <div class="board-right">
     <div class="bh" style="justify-content:flex-end;">
       <div class="bh-timer">
-        <button class="tbtn" onclick="toggleFullScreen()" title="전체화면" style="margin-right: 12px; font-size: clamp(12px, 0.9vw + 0.9vh, 20px); border:none; padding:4px;">⛶ 전체화면</button>
         <button class="tbtn" onclick="toggleFlip()" style="margin-right: 16px; font-size: clamp(14px, 1vw + 1vh, 26px); border:none; padding:4px;" title="화면 180도 회전">🔃 화면반전</button>
         
         <div class="tdisp" id="tDisp" style="font-size: clamp(20px, 1.5vw + 1.5vh, 38px);">3:00</div>
@@ -735,7 +774,7 @@ let mMissionVotes = [];
 let mMissionIdx = 0;
 let countdownTimer = null;
 const TTS_STATE = {
-  enabled: 'speechSynthesis' in window,
+  enabled: false,
   voice: null,
   voicesLoaded: false,
   unlocked: false,
@@ -797,6 +836,8 @@ const BUNDLED_AUDIO_FILE_NAMES = [
 ];
 
 const COUNTDOWN_KO = { 10: '십', 9: '구', 8: '팔', 7: '칠', 6: '육', 5: '오', 4: '사', 3: '삼', 2: '이', 1: '일' };
+const NIGHT_YI_EXCLUDE_TEXT = '이순신은 고개를 드세요. 그리고 도요토미를 제외한 적군 팀은 엎드린 채로 엄지손가락을 위로 들어주세요.';
+const NIGHT_YI_EXCLUDE_HTML = '<strong style="color:#c9a84c">이순신</strong>은 고개를 드세요.<br>그리고 <span style="color:#d94040">도요토미</span>를 제외한 <span style="color:#d94040">적군 팀</span>은 엎드린 채로 <strong>엄지손가락</strong>을 위로 들어주세요.';
 
 function stopGuideAudio() {
   if (!activeGuideAudio) return;
@@ -815,7 +856,8 @@ function findBundledAudioFileName(prefix) {
   return BUNDLED_AUDIO_FILE_NAMES.find(name => name.startsWith(prefix)) || null;
 }
 
-async function playBundledAudioByKey(key) {
+async function playBundledAudioByKey(key, options = {}) {
+  const { waitForEnd = true } = options;
   const prefix = BUNDLED_AUDIO_PREFIX_MAP[key];
   if (!prefix) return false;
 
@@ -831,11 +873,20 @@ async function playBundledAudioByKey(key) {
     audio.preload = 'auto';
     activeGuideAudio = audio;
 
+    if (!waitForEnd) {
+      const playPromise = audio.play();
+      if (playPromise && typeof playPromise.then === 'function') {
+        playPromise.catch(() => {});
+      }
+      return true;
+    }
+
     await new Promise((resolve, reject) => {
       let done = false;
       const finish = (ok) => {
         if (done) return;
         done = true;
+        clearTimeout(watchdog);
         audio.onended = null;
         audio.onerror = null;
         ok ? resolve() : reject(new Error('audio playback failed'));
@@ -843,6 +894,9 @@ async function playBundledAudioByKey(key) {
 
       audio.onended = () => finish(true);
       audio.onerror = () => finish(false);
+
+      // Some WebView builds fail to fire onended reliably; force-finish so the game can continue.
+      const watchdog = setTimeout(() => finish(false), 14000);
 
       const playPromise = audio.play();
       if (playPromise && typeof playPromise.then === 'function') {
@@ -995,11 +1049,11 @@ function updateUIScaleByViewport() {
   const vv = window.visualViewport;
   const vw = Math.round(vv ? vv.width : window.innerWidth);
   const vh = Math.round(vv ? vv.height : window.innerHeight);
-  const scaleW = Math.min(1, Math.max(0.78, vw / 980));
-  const scaleH = Math.min(1, Math.max(0.76, vh / 560));
+  const scaleW = Math.min(1, Math.max(0.64, vw / 980));
+  const scaleH = Math.min(1, Math.max(0.58, vh / 560));
   const safeLevel = Number(document.body.getAttribute('data-mobile-safe') || '0');
-  const safeFactor = safeLevel === 2 ? 0.9 : safeLevel === 1 ? 0.96 : 1;
-  const scale = Math.max(0.68, Math.min(scaleW, scaleH) * safeFactor);
+  const safeFactor = safeLevel === 3 ? 0.8 : safeLevel === 2 ? 0.88 : safeLevel === 1 ? 0.95 : 1;
+  const scale = Math.max(0.52, Math.min(scaleW, scaleH) * safeFactor);
   document.documentElement.style.setProperty('--ui-scale', String(scale));
 }
 
@@ -1039,13 +1093,23 @@ function updateMobileSafeMode() {
   if (mobile) {
     if (vh < 780) level = 1;
     if (vh < 640) level = 2;
+    if (vh < 520) level = 3;
 
     const overflow = calcIntroOverflow(vh);
     if (overflow > 16) level = Math.max(level, 1);
     if (overflow > 80) level = Math.max(level, 2);
+    if (overflow > 150) level = Math.max(level, 3);
   }
 
   document.body.setAttribute('data-mobile-safe', String(level));
+}
+
+function tryLockLandscape() {
+  const orientationApi = screen.orientation;
+  if (!orientationApi || typeof orientationApi.lock !== 'function') return;
+  orientationApi.lock('landscape').catch(() => {
+    // Some browsers/webviews require fullscreen or user gesture.
+  });
 }
 
 async function playPrecheckGreeting() {
@@ -1056,9 +1120,7 @@ async function playPrecheckGreeting() {
   const usedBundled = await playBundledAudioByKey('welcome');
   if (usedBundled) return;
 
-  if (!TTS_STATE.enabled) return;
-  await primeTTS();
-  await speakOnce('임진왜란의 전장 속으로 오신 걸 환영합니다.', 0.94);
+  // TTS fallback disabled on app builds to avoid WebView compatibility stalls.
 }
 
 function goRulesWithPrecheck() {
@@ -1084,10 +1146,10 @@ function fitBodyContent(bodyEl) {
   const availW = bodyEl.clientWidth - 4;
   const availH = bodyEl.clientHeight - 4;
   const needW = target.scrollWidth;
-  const needH = target.scrollHeight;
+  const needH = target.scrollHeight + 8;
   if (!needW || !needH) return;
 
-  const scale = Math.max(0.62, Math.min(1, availW / needW, availH / needH));
+  const scale = Math.max(0.5, Math.min(1, availW / needW, availH / needH));
   if ('zoom' in target.style) {
     target.style.zoom = String(scale);
   } else {
@@ -1105,6 +1167,7 @@ function requestFitLayout() {
     updateMobileSafeMode();
     updateUIScaleByViewport();
     fitActiveScreenLayout();
+    tryLockLandscape();
   }));
 }
 
@@ -1118,6 +1181,7 @@ function toggleFullScreen() {
 }
 
 (function init(){
+  tryLockLandscape();
   const pg=document.getElementById('pnumGrid');
   [5,6,7,8,9,10].forEach(n=>{const b=document.createElement('button');b.className='pbtn';b.textContent=n;b.onclick=()=>{SFX.init(); pickCount(n);};pg.appendChild(b);});
   
@@ -1141,6 +1205,15 @@ function pop(id,open){
   else el.classList.remove('on');
   updateMobileSafeMode();
   requestFitLayout();
+}
+function updateRecheckButtonVisibility() {
+  const btn = document.getElementById('btnRecheck');
+  if (!btn) return;
+
+  const canRecheck = Array.isArray(G.assignedRoles) && G.assignedRoles.length > 0;
+  btn.style.display = 'inline-block';
+  btn.style.opacity = canRecheck ? '1' : '0.55';
+  btn.style.cursor = canRecheck ? 'pointer' : 'not-allowed';
 }
 function toggleFlip() {
   isFlipped = !isFlipped;
@@ -1199,9 +1272,10 @@ function optPhysical() {
     d.innerHTML=`<div><div class="ccn">${card.n}</div><div class="ccr">${card.t}</div></div><span class="ccb">${good?'아군':'적군'}</span>`;
     cg.appendChild(d);
   });
-  
-  // 내 역할 다시보기 버튼 숨김 (실물 카드 진행)
-  document.getElementById('btnRecheck').style.display = 'none';
+
+  // 실물 카드 모드에서는 앱 내부 역할 다시보기를 비활성 처리
+  G.assignedRoles = [];
+  updateRecheckButtonVisibility();
   
   show('s-cards-physical');
 }
@@ -1227,9 +1301,8 @@ function optDigital() {
   
   G.assignedRoles = deck.map((r, i) => ({ player: G.players[i], role: r }));
   G.roleCheckIdx = 0;
-  
-  // 내 역할 다시보기 버튼 노출 (기기 진행)
-  document.getElementById('btnRecheck').style.display = 'inline-block';
+
+  updateRecheckButtonVisibility();
   
   renderRoleCheck();
   pop('pop-rolecheck', true);
@@ -1275,7 +1348,10 @@ function nextRoleCheck() {
    인게임 내 역할 다시 확인하기 (Digital 모드 한정)
    ==================================================== */
 function openRecheck() {
-  if (!G.assignedRoles || G.assignedRoles.length === 0) return;
+  if (!G.assignedRoles || G.assignedRoles.length === 0) {
+    toast('기기 역할 분배 모드에서만 현재 역할을 다시 확인할 수 있습니다.');
+    return;
+  }
   const container = document.getElementById('recheckBtns');
   container.innerHTML = '';
   G.assignedRoles.forEach(r => {
@@ -1323,7 +1399,7 @@ function goNight(){
   NSTEPS = [
     {ico:'🌙', txt:'모두 책상에 <strong style="color:#d4c9a8">엎드리고 눈을 감으세요.</strong>'},
     {ico:'⚔️', txt:eWakeTxt},
-    {ico:'👁️', txt:'<strong style="color:#c9a84c">이순신</strong>은 고개를 드세요.<br>그리고 <span style="color:#d94040">도요토미</span>를 제외한 <span style="color:#d94040">적군 팀</span>은 엎드린 채로 <strong>엄지손가락</strong>을 위로 들어주세요.'},
+    {ico:'👁️', txt:NIGHT_YI_EXCLUDE_HTML},
     {ico:'🏹', txt: gwakTxt},
     {ico:'☀️', txt:'모두 <strong style="color:#d4c9a8">고개를 드세요!</strong><br>이제 기기를 리더에게 넘기고 낮 토론을 시작합니다.'}
   ];
@@ -1332,13 +1408,9 @@ function goNight(){
   nd.innerHTML = '';
   NSTEPS.forEach((_,i)=>{const d=document.createElement('div');d.className='ndot';d.id=`ndot${i}`;nd.appendChild(d);});
   
-  // TTS 호환성 경고 표시
+  // TTS 비활성화: 경고를 노출하지 않고 오디오 가이드 중심으로 진행
   const ttsWarning = document.getElementById('ttsWarning');
-  if (!('speechSynthesis' in window)) {
-    ttsWarning.style.display = 'block';
-  } else {
-    ttsWarning.style.display = 'none';
-  }
+  ttsWarning.style.display = 'none';
   
   document.getElementById('ncardBox').style.display = 'none';
   document.getElementById('btnStartNightVoice').style.display = 'inline-block';
@@ -1358,15 +1430,8 @@ function speakWait(text, rate = 0.95, bundledKey = '') {
     const plain = stripTags(text);
     if (!plain) return;
 
-    if (!TTS_STATE.enabled) {
-      await wait(Math.max(700, plain.length * 45));
-      return;
-    }
-
-    const ok = await speakOnce(plain, rate);
-    if (!ok) {
-      await wait(Math.max(900, plain.length * 55));
-    }
+    // TTS fallback disabled. Keep pacing so phase timing remains understandable.
+    await wait(Math.max(900, plain.length * 55));
   })();
 }
 
@@ -1385,34 +1450,27 @@ async function play10SecCountdown() {
   const cdEl = document.getElementById('nsCountdown');
   document.getElementById('nsTxt').style.display = 'none';
   cdEl.style.display = 'block';
+  let cadenceMs = 1000;
   
   for(let i=10; i>=1; i--) {
     cdEl.textContent = i;
 
-    const usedBundled = await playBundledAudioByKey(`count_${i}`);
+    const startedAt = Date.now();
+    const usedBundled = i === 10
+      ? await playBundledAudioByKey(`count_${i}`)
+      : await playBundledAudioByKey(`count_${i}`, { waitForEnd: false });
+
     if (usedBundled) {
-      await delay(30);
+      if (i === 10) {
+        cadenceMs = Math.max(900, Math.min(1500, Date.now() - startedAt));
+      }
+      await delay(Math.max(20, cadenceMs));
+      stopGuideAudio();
       continue;
     }
 
-    try {
-      const cu = new SpeechSynthesisUtterance(COUNTDOWN_KO[i] || i.toString());
-      cu.lang = 'ko-KR'; 
-      cu.rate = 1.3;
-      cu.volume = 1;
-      cu.pitch = 1;
-      cu.onerror = () => {}; // 에러 무시
-      
-      const voices = speechSynthesis.getVoices();
-      const korVoice = voices.find(v => v.lang.startsWith('ko'));
-      if(korVoice) cu.voice = korVoice;
-      
-      speechSynthesis.cancel();
-      speechSynthesis.speak(cu);
-    } catch(err) {
-      console.warn('카운트다운 TTS 실패:', err);
-    }
-    await delay(1000); 
+    // Keep a fixed rhythm based on the first count when bundled audio is unavailable.
+    await delay(cadenceMs); 
   }
   cdEl.style.display = 'none';
   document.getElementById('nsTxt').style.display = 'block';
@@ -1422,7 +1480,6 @@ async function runNightPhaseAuto() {
   if (nightVoiceRunning) return;
   nightVoiceRunning = true;
   SFX.init(); 
-  await primeTTS();
   document.getElementById('btnStartNightVoice').style.display = 'none';
   document.getElementById('btnSkipNight').style.display = 'none';
   document.getElementById('ncardBox').style.display = 'flex';
@@ -1445,7 +1502,7 @@ async function runNightPhaseAuto() {
     await delay(2000);
 
     updateNightUI(2);
-    await speakWait("이순신은 고개를 드세요. 그리고 도요토미를 제외한 적군 팀은 엎드린 채로 엄지손가락을 위로 들어주세요.", 0.95, 'night_yi_check');
+    await speakWait(NIGHT_YI_EXCLUDE_TEXT, 0.95, 'night_yi_check');
     await play10SecCountdown();
     await speakWait("적군은 엄지를 내리고, 이순신은 다시 엎드리세요.", 0.95, 'night_yi_sleep');
     await delay(2000);
@@ -1477,7 +1534,7 @@ async function runNightPhaseAuto() {
 /* ==================================================== */
 
 function showLeaderIntro() {
-  speechSynthesis.cancel();
+  if (TTS_STATE.enabled) speechSynthesis.cancel();
   G.leader = Math.floor(Math.random() * G.players.length);
   G.qi = 0; G.results = []; G.sc = 0; G.fc = 0; G.rc = 0; G.team = [];
   
@@ -1523,6 +1580,7 @@ function showLeaderOrder() {
 function startBoardFromIntro() {
   pop('pop-leader-intro', false);
   // 게임 보드 화면으로 전환
+  updateRecheckButtonVisibility();
   show('s-board'); setPhase('team'); renderBoard();
   addLog(`게임 시작! 첫 리더: ${G.players[G.leader]}`, 'i');
   showRoundIntro(); // 첫 라운드 안내
@@ -1554,7 +1612,7 @@ function showNightTextGuide() {
     {
       num: 3,
       title: '이순신 확인',
-      desc: '이순신은 고개를 드세요. 그리고 도요토미를 제외한 적군 팀은 엎드린 채로 엄지손가락을 위로 들어주세요.<br><strong style="color:var(--gold);">[10초 경과]</strong>',
+      desc: `${NIGHT_YI_EXCLUDE_TEXT}<br><strong style="color:var(--gold);">[10초 경과]</strong>`,
       time: '약 15초'
     },
     {
@@ -1616,8 +1674,9 @@ function showRoundIntro() {
 }
 
 function startBoard(){
-  speechSynthesis.cancel(); 
+  if (TTS_STATE.enabled) speechSynthesis.cancel(); 
   G.leader=Math.floor(Math.random()*G.players.length);G.qi=0;G.results=[];G.sc=0;G.fc=0;G.rc=0;G.team=[];
+  updateRecheckButtonVisibility();
   show('s-board');setPhase('team');renderBoard();addLog(`게임 시작! 첫 리더: ${G.players[G.leader]}`,'i');
 }
 function renderBoard(){renderQuests();renderScore();renderLeader();renderChips();renderPips();}
@@ -1859,12 +1918,13 @@ function endGame(win, reason){
 }
 
 function restartGame() {
-  speechSynthesis.cancel();
+  if (TTS_STATE.enabled) speechSynthesis.cancel();
   if(countdownTimer) clearInterval(countdownTimer);
   timerReset();
   
   G.leader=0; G.qi=0; G.results=[]; G.sc=0; G.fc=0; G.rc=0; G.team=[]; G.accuseSel=null; G.assignedRoles=[]; G.roleCheckIdx=0; G.nightStep=0;
   mMissionVotes = []; mMissionIdx = 0;
+  updateRecheckButtonVisibility();
   
   document.getElementById('logBox').innerHTML = '';
   document.getElementById('nsCountdown').style.display = 'none';
@@ -1903,6 +1963,11 @@ function addLog(msg,t){const el=document.getElementById('logBox');if(!el)return;
 let toastT;
 function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('on'),2500);}
 updTimer();
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') requestFitLayout();
+});
+document.addEventListener('click', tryLockLandscape, { passive: true });
+document.addEventListener('touchstart', tryLockLandscape, { passive: true });
 window.addEventListener('resize', requestFitLayout);
 window.addEventListener('orientationchange', requestFitLayout);
 window.addEventListener('fullscreenchange', requestFitLayout);
@@ -1935,5 +2000,6 @@ updateMobileSafeMode();
 updateUIScaleByViewport();
 requestFitLayout();
 </script>
+<script src="./hotfix-client.js"></script>
 </body>
 </html>
