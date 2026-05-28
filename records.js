@@ -58,7 +58,7 @@ export const RECORDS = [
     title: "충역 - 왜란의 그림자",
     desc: "임진왜란판 레지스탕스 아발론.\n진화된 마피아 게임이라고 생각하면 된다.\n보드게임을 진행자 없이, 실물 카드 없이 할 수 있게 개조했다.\n토요한글학교에서 아이들과 하려고 제작.\n태블릿1대로 10명까지 플레이 가능.\n모바일 크롬에서 잘 됨",
     tags: "claude, gemini",
-    link: "./vibe-apps/Choong-Yeok-the-Loyalty-and-Traitor.html",
+    link: "./vibe-apps/Choong-Yeok-the-Loyalty-and-Traitor-web.html",
     image: "img-re/12.avif",
   },
 
