@@ -1,0 +1,8 @@
+{
+  "version": "1.0.2",
+  "minAppVersion": "1.0.0",
+  "maxAppVersion": "1.9.9",
+  "patchUrl": "./patch-1.0.2.js",
+  "force": false,
+  "notes": "ChungYeok patch route for Vercel hosting"
+}
