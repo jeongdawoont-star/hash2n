@@ -51,3 +51,8 @@
 ## Notes
 - Frontend code cannot be fully hidden. This baseline reduces exposure while preserving runtime stability.
 - Sensitive logic and secret keys must stay server-side.
+
+## ChungYeok Web/App Boundary
+- Read `CHUNGYEOK_VERSION_BOUNDARY.md` before touching ChungYeok files.
+- Do not overwrite `vibe-apps/Choong-Yeok-the-Loyalty-and-Traitor-web.html` from the Android app source.
+- `Choong-Yeok-the-Loyalty-and-Traitor-web.html` is the web published version and must stay separate from the AAB source file.
