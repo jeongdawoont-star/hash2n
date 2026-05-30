@@ -31,6 +31,14 @@ export const RECORDS = [
   // ▼ 여기에 새 기록을 붙여넣으세요 (최신 항목을 맨 위에) ▼
 
   {
+    title: "바탕화면 선긋기 매니저",
+    desc: "지저분한 바탕화면 아이콘을 깔끔하게 묶어 준다.\nOpenCV를 활용해 아이콘 배치 영역을 자동으로 감지하여\n바탕화면에 예쁜 테두리와 라벨을 그려주는 초경량 무설치 유틸리티다.",
+    tags: "gemini, opencv",
+    link: "https://github.com/jeongdawoont-star/wallpaper_line",
+    image: "img-re/16.avif",
+  },
+
+  {
     title: "아이 아침 플래너",
     desc: "등교 준비가 힘든 아이를 위해 만들었다.\n아침에 해야할 일들을 입력하면\n체크박스로 하나씩 체크하면서 준비할 수 있다.\n하루 미션 완료 시 고양이가 자동으로 집에 들어온다.",
     tags: "copilot",
