@@ -11,9 +11,13 @@
  * GitHub Actions에서 자동 실행됨 (.github/workflows/optimize-images.yml)
  */
 
-const sharp = require('sharp');
-const fs    = require('fs');
-const path  = require('path');
+import sharp from 'sharp';
+import fs    from 'fs';
+import path  from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const IMG_DIR  = path.join(__dirname, '..', 'img');
 const OUT_DIR  = path.join(__dirname, '..', 'img-re');
