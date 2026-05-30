@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>忠逆 — 왜란의 그림자</title>
 <script>
-window.CHUNGYEOK_APP_VERSION = '1.0.0';
+window.CHUNGYEOK_APP_VERSION = '1.0.5';
 window.CHUNGYEOK_HOTFIX_CONFIG = {
-  enabled: false,
+  enabled: true,
   manifestUrl: 'https://hash2n.vercel.app/Patch/ChungYeok/version.json',
   requestTimeoutMs: 6000
 };
@@ -90,9 +90,16 @@ button, input { font-family: Georgia, serif; outline: none; cursor: pointer; }
 .nav-foot { justify-content: center; }
 .nav-foot .btn.big {
   flex: 0 0 auto;
-  min-width: clamp(130px, 16vw, 190px);
-  max-width: clamp(160px, 22vw, 240px);
-  border-radius: 10px;
+  min-width: clamp(160px, 32vw, 210px);
+  max-width: clamp(320px, 60vw, 420px);
+  width: auto;
+  border-radius: 12px;
+  white-space: normal;
+  line-height: 1.22;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  padding-left: 22px;
+  padding-right: 22px;
 }
 
 /* ── 공통 UI 컴포넌트 ── */
@@ -272,7 +279,17 @@ body[data-mobile-safe="3"] #s-intro .s-body-inner {
   .s-foot { justify-content: stretch; }
   .s-foot .btn.big { flex: 1 1 100%; }
   .nav-foot { justify-content: center; }
-  .nav-foot .btn.big { flex: 0 0 auto; width: clamp(130px, 40vw, 190px); }
+  .nav-foot .btn.big {
+    flex: 0 0 auto;
+    min-width: clamp(120px, 38vw, 170px);
+    max-width: clamp(260px, 80vw, 340px);
+    width: auto;
+    white-space: normal;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
 }
 
 @media (max-height: 460px) {
@@ -432,12 +449,7 @@ body[data-mobile-safe="3"] #s-intro .s-body-inner {
   <div class="s-body">
     <div class="s-body-inner">
       <div class="hint" style="margin-bottom: 24px; border-left-color:var(--teal); max-width:clamp(500px, 75vw, 960px); text-align:center; font-size:clamp(13px, 1vw + 1vh, 26px); color:var(--text);">
-        기기를 테이블 중앙에 두고 볼륨을 키워주세요.<br>시작 버튼을 누르면 모든 과정이 <strong>터치 없이 자동 음성으로 진행</strong>됩니다.
-      </div>
-      <div id="ttsWarning" class="hint" style="display:none; margin-bottom:20px; border-left-color:var(--red2); background:rgba(217,64,64,0.08); max-width:clamp(500px, 75vw, 960px); font-size:clamp(12px, 0.9vw + 0.9vh, 22px);">
-        ⚠️ <strong>TTS 호환성 주의</strong><br>
-        이 기기에서는 음성 재생이 지연될 수 있어 자동 복구를 시도합니다.<br>
-        <span style="color:var(--gold);">음성이 계속 안 나오면 [텍스트 가이드]로 바로 진행하세요.</span>
+        기기를 테이블 중앙에 두고 볼륨을 키워주세요.<br>시작 버튼을 누르면 녹음된 안내 음성으로 밤 페이즈가 진행됩니다.
       </div>
       <div class="ndots" id="nightDots"></div>
       <div class="ncard" id="ncardBox" style="display:none; transition:0.3s;">
@@ -446,8 +458,8 @@ body[data-mobile-safe="3"] #s-intro .s-body-inner {
         <div id="nsCountdown"></div>
       </div>
       
-      <button class="btn teal big" id="btnStartNightVoice" style="font-size:clamp(18px, 1.5vw + 1.5vh, 38px); padding:clamp(14px, 2.5vh, 28px) clamp(28px, 5vw, 56px); border-radius:12px; margin-top:20px;" onclick="runNightPhaseAuto()">▶ 오토 보이스 시작하기</button>
-      <button class="btn gold big" id="btnSkipNight" style="margin-top:20px; text-decoration:underline;" onclick="showNightTextGuide()">📋 텍스트 가이드 보기 (음성 제공 안 함)</button>
+      <button class="btn teal big" id="btnStartNightVoice" style="font-size:clamp(18px, 1.5vw + 1.5vh, 38px); padding:clamp(14px, 2.5vh, 28px) clamp(28px, 5vw, 56px); border-radius:12px; margin-top:20px;" onclick="runNightPhaseAuto()">▶ 오디오 안내 시작하기</button>
+      <button class="btn gold big" id="btnSkipNight" style="margin-top:20px; text-decoration:underline;" onclick="showNightTextGuide()">📋 텍스트 가이드 보기</button>
     </div>
   </div>
 </div>
@@ -773,14 +785,7 @@ let isFlipped = false;
 let mMissionVotes = [];
 let mMissionIdx = 0;
 let countdownTimer = null;
-const TTS_STATE = {
-  enabled: false,
-  voice: null,
-  voicesLoaded: false,
-  unlocked: false,
-  speaking: false,
-  lastGreetingAt: 0,
-};
+let lastGreetingAt = 0;
 let nightVoiceRunning = false;
 let activeGuideAudio = null;
 
@@ -865,7 +870,6 @@ async function playBundledAudioByKey(key, options = {}) {
   if (!fileName) return false;
 
   try {
-    if (TTS_STATE.enabled) speechSynthesis.cancel();
     stopGuideAudio();
 
     const src = `${BUNDLED_AUDIO_REL_DIR}${encodeURIComponent(fileName)}`;
@@ -918,131 +922,6 @@ function stripTags(text) {
 
 function wait(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-async function loadVoicesWithRetry(maxWaitMs = 1600) {
-  if (!TTS_STATE.enabled) return [];
-
-  let voices = speechSynthesis.getVoices();
-  if (voices.length > 0) {
-    TTS_STATE.voicesLoaded = true;
-    return voices;
-  }
-
-  const started = Date.now();
-  while (Date.now() - started < maxWaitMs) {
-    await wait(120);
-    voices = speechSynthesis.getVoices();
-    if (voices.length > 0) {
-      TTS_STATE.voicesLoaded = true;
-      return voices;
-    }
-  }
-
-  return voices;
-}
-
-function pickBestKoreanVoice(voices) {
-  if (!voices || voices.length === 0) return null;
-
-  const exact = voices.find(v => v.lang === 'ko-KR');
-  if (exact) return exact;
-
-  const koPrefix = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('ko'));
-  if (koPrefix) return koPrefix;
-
-  return voices[0] || null;
-}
-
-async function primeTTS() {
-  if (!TTS_STATE.enabled) return false;
-
-  try {
-    const voices = await loadVoicesWithRetry();
-    TTS_STATE.voice = pickBestKoreanVoice(voices);
-
-    speechSynthesis.cancel();
-    const warmup = new SpeechSynthesisUtterance(' ');
-    warmup.lang = 'ko-KR';
-    warmup.volume = 0;
-    warmup.rate = 1;
-    warmup.pitch = 1;
-    if (TTS_STATE.voice) warmup.voice = TTS_STATE.voice;
-
-    await new Promise(resolve => {
-      let settled = false;
-      const done = () => {
-        if (settled) return;
-        settled = true;
-        resolve();
-      };
-      warmup.onend = done;
-      warmup.onerror = done;
-      setTimeout(done, 320);
-      speechSynthesis.speak(warmup);
-    });
-
-    TTS_STATE.unlocked = true;
-    return true;
-  } catch (err) {
-    console.warn('TTS 초기화 실패:', err);
-    return false;
-  }
-}
-
-async function speakOnce(text, rate) {
-  if (!TTS_STATE.enabled) return false;
-  if (TTS_STATE.speaking) return false;
-
-  const plain = stripTags(text);
-  if (!plain) return true;
-
-  const voices = await loadVoicesWithRetry();
-  const selectedVoice = TTS_STATE.voice || pickBestKoreanVoice(voices);
-  TTS_STATE.voice = selectedVoice;
-
-  return new Promise(resolve => {
-    let settled = false;
-    const done = (ok) => {
-      if (settled) return;
-      settled = true;
-      TTS_STATE.speaking = false;
-      resolve(ok);
-    };
-
-    try {
-      TTS_STATE.speaking = true;
-      if (speechSynthesis.paused) speechSynthesis.resume();
-
-      const u = new SpeechSynthesisUtterance(plain);
-      u.lang = 'ko-KR';
-      u.rate = rate;
-      u.volume = 1;
-      u.pitch = 1;
-      if (selectedVoice) u.voice = selectedVoice;
-
-      const hardTimeout = setTimeout(() => {
-        speechSynthesis.cancel();
-        done(false);
-      }, Math.max(2600, plain.length * 140));
-
-      u.onend = () => {
-        clearTimeout(hardTimeout);
-        done(true);
-      };
-      u.onerror = () => {
-        clearTimeout(hardTimeout);
-        done(false);
-      };
-
-      speechSynthesis.cancel();
-      speechSynthesis.speak(u);
-    } catch (err) {
-      console.warn('TTS speak 예외:', err);
-      TTS_STATE.speaking = false;
-      done(false);
-    }
-  });
 }
 
 function updateUIScaleByViewport() {
@@ -1108,19 +987,16 @@ function tryLockLandscape() {
   const orientationApi = screen.orientation;
   if (!orientationApi || typeof orientationApi.lock !== 'function') return;
   orientationApi.lock('landscape').catch(() => {
-    // Some browsers/webviews require fullscreen or user gesture.
+    // Some browsers/webviews require a user gesture.
   });
 }
 
 async function playPrecheckGreeting() {
   const now = Date.now();
-  if (now - TTS_STATE.lastGreetingAt < 2500) return;
-  TTS_STATE.lastGreetingAt = now;
+  if (now - lastGreetingAt < 2500) return;
+  lastGreetingAt = now;
 
-  const usedBundled = await playBundledAudioByKey('welcome');
-  if (usedBundled) return;
-
-  // TTS fallback disabled on app builds to avoid WebView compatibility stalls.
+  await playBundledAudioByKey('welcome');
 }
 
 function goRulesWithPrecheck() {
@@ -1169,15 +1045,6 @@ function requestFitLayout() {
     fitActiveScreenLayout();
     tryLockLandscape();
   }));
-}
-
-function toggleFullScreen() {
-  SFX.init();
-  if (!document.fullscreenElement) {
-    document.documentElement.requestFullscreen().catch(err => { toast("전체화면을 지원하지 않는 브라우저입니다."); });
-  } else {
-    if (document.exitFullscreen) document.exitFullscreen();
-  }
 }
 
 (function init(){
@@ -1408,10 +1275,6 @@ function goNight(){
   nd.innerHTML = '';
   NSTEPS.forEach((_,i)=>{const d=document.createElement('div');d.className='ndot';d.id=`ndot${i}`;nd.appendChild(d);});
   
-  // TTS 비활성화: 경고를 노출하지 않고 오디오 가이드 중심으로 진행
-  const ttsWarning = document.getElementById('ttsWarning');
-  ttsWarning.style.display = 'none';
-  
   document.getElementById('ncardBox').style.display = 'none';
   document.getElementById('btnStartNightVoice').style.display = 'inline-block';
   document.getElementById('btnSkipNight').style.display = 'inline-block';
@@ -1534,7 +1397,6 @@ async function runNightPhaseAuto() {
 /* ==================================================== */
 
 function showLeaderIntro() {
-  if (TTS_STATE.enabled) speechSynthesis.cancel();
   G.leader = Math.floor(Math.random() * G.players.length);
   G.qi = 0; G.results = []; G.sc = 0; G.fc = 0; G.rc = 0; G.team = [];
   
@@ -1674,7 +1536,6 @@ function showRoundIntro() {
 }
 
 function startBoard(){
-  if (TTS_STATE.enabled) speechSynthesis.cancel(); 
   G.leader=Math.floor(Math.random()*G.players.length);G.qi=0;G.results=[];G.sc=0;G.fc=0;G.rc=0;G.team=[];
   updateRecheckButtonVisibility();
   show('s-board');setPhase('team');renderBoard();addLog(`게임 시작! 첫 리더: ${G.players[G.leader]}`,'i');
@@ -1918,7 +1779,6 @@ function endGame(win, reason){
 }
 
 function restartGame() {
-  if (TTS_STATE.enabled) speechSynthesis.cancel();
   if(countdownTimer) clearInterval(countdownTimer);
   timerReset();
   
@@ -1970,13 +1830,10 @@ document.addEventListener('click', tryLockLandscape, { passive: true });
 document.addEventListener('touchstart', tryLockLandscape, { passive: true });
 window.addEventListener('resize', requestFitLayout);
 window.addEventListener('orientationchange', requestFitLayout);
-window.addEventListener('fullscreenchange', requestFitLayout);
 window.addEventListener('resize', updateAppViewportHeight);
 window.addEventListener('orientationchange', updateAppViewportHeight);
-window.addEventListener('fullscreenchange', updateAppViewportHeight);
 window.addEventListener('resize', updateMobileSafeMode);
 window.addEventListener('orientationchange', updateMobileSafeMode);
-window.addEventListener('fullscreenchange', updateMobileSafeMode);
 window.addEventListener('resize', updateUIScaleByViewport);
 window.addEventListener('orientationchange', updateUIScaleByViewport);
 if (window.visualViewport) {
@@ -1985,15 +1842,6 @@ if (window.visualViewport) {
   window.visualViewport.addEventListener('resize', updateMobileSafeMode);
   window.visualViewport.addEventListener('scroll', updateMobileSafeMode);
   window.visualViewport.addEventListener('resize', updateUIScaleByViewport);
-}
-if (TTS_STATE.enabled) {
-  speechSynthesis.onvoiceschanged = () => {
-    const voices = speechSynthesis.getVoices();
-    if (voices.length > 0) {
-      TTS_STATE.voicesLoaded = true;
-      TTS_STATE.voice = pickBestKoreanVoice(voices);
-    }
-  };
 }
 updateAppViewportHeight();
 updateMobileSafeMode();

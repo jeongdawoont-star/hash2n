@@ -34,7 +34,7 @@ export const RECORDS = [
     title: "바탕화면 선긋기 매니저",
     desc: "지저분한 바탕화면 아이콘을 깔끔하게 묶어 준다.\nOpenCV를 활용해 아이콘 배치 영역을 자동으로 감지하여\n바탕화면에 예쁜 테두리와 라벨을 그려주는 초경량 무설치 유틸리티다.",
     tags: "gemini, opencv",
-    link: "https://github.com/jeongdawoont-star/wallpaper_line",
+    link: "https://jeongdawoont-star.github.io/wallpaper_line",
     image: "img-re/16.avif",
   },
 
