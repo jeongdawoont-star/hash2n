@@ -492,7 +492,7 @@ body.phase-switching {
   overflow: hidden;
   background:
     linear-gradient(180deg, rgba(255, 247, 229, 0.24) 0%, rgba(255, 239, 210, 0.12) 100%),
-    url('assets/img-planner/town.png') center/cover no-repeat;
+    url('../img/town.png') center/cover no-repeat;
 }
 @media (max-width: 900px), (max-aspect-ratio: 3/4) {
   .cat-house-title-row {
@@ -1169,10 +1169,11 @@ body.phase-switching {
 
 <script>
 const STORAGE_KEY = 'childMorningDataV2';
+const CAT_HOUSE_IMPORT_BACKUP_KEY = `${STORAGE_KEY}:catHouseImportBackup`;
 const CURRENT_PHASE = 'morning';
 const PHASE_FILES = {
-  morning: 'Child Morning.html',
-  evening: 'Child Evening.html'
+  morning: 'Child Morning.web.html',
+  evening: 'Child Evening.web.html'
 };
 const PHASE_TITLES = {
   morning: '아침 준비 플래너',
@@ -1227,7 +1228,7 @@ const CAT_ROLE_NAMES = [
 ];
 const CAT_JOB_COUNT = 100;
 const CAT_JOB_VARIANTS_PER_BAND = 5;
-const CAT_JOB_IMAGE_BASE_PATH = 'assets/img-planner/job-cats';
+const CAT_JOB_IMAGE_BASE_PATH = '../img/job-cats';
 const CAT_VILLAGE_SCHEMA_VERSION = 'job-cat-100-clean-v7';
 const HOTFIX_MANIFEST_URL = './hotfixes/cat-planner.hotfix.json';
 const CAT_SIZE_PX = 72;
@@ -2018,6 +2019,129 @@ function normalizeRewardState() {
   }
 }
 
+function cloneCatHouseSnapshot(source) {
+  const sourceState = source && typeof source === 'object' ? source : {};
+  return {
+    catVillageSchemaVersion: typeof sourceState.catVillageSchemaVersion === 'string'
+      ? sourceState.catVillageSchemaVersion
+      : '',
+    catIdSeed: Number.isFinite(Number(sourceState.catIdSeed))
+      ? Math.max(1, Math.floor(Number(sourceState.catIdSeed)))
+      : 1,
+    speciesHistory: Array.isArray(sourceState.speciesHistory)
+      ? sourceState.speciesHistory.map((id) => Number(id)).filter((id) => Number.isFinite(id))
+      : [],
+    cats: Array.isArray(sourceState.cats)
+      ? sourceState.cats
+        .filter((cat) => cat && typeof cat === 'object')
+        .map((cat) => ({ ...cat }))
+      : []
+  };
+}
+
+function preserveCatHouseSnapshotBeforeImport(snapshot) {
+  if (!snapshot || !Array.isArray(snapshot.cats) || snapshot.cats.length === 0) return;
+
+  try {
+    localStorage.setItem(CAT_HOUSE_IMPORT_BACKUP_KEY, JSON.stringify({
+      savedAt: new Date().toISOString(),
+      ...snapshot
+    }));
+  } catch (_) {
+    // Ignore storage errors; the in-memory merge below still protects this import.
+  }
+}
+
+function catsMatchForImportMerge(a, b) {
+  const aLevel = Number.isFinite(Number(a && a.level)) ? Math.floor(Number(a.level)) : 0;
+  const bLevel = Number.isFinite(Number(b && b.level)) ? Math.floor(Number(b.level)) : 0;
+  if (aLevel !== bLevel) return false;
+
+  const aHasSpecies = hasExplicitSpeciesId(a && a.speciesId);
+  const bHasSpecies = hasExplicitSpeciesId(b && b.speciesId);
+  if (aHasSpecies && bHasSpecies && normalizeSpeciesId(a.speciesId) !== normalizeSpeciesId(b.speciesId)) {
+    return false;
+  }
+
+  const aBand = getSavedCatColorBand(a);
+  const bBand = getSavedCatColorBand(b);
+  return aBand === null || bBand === null || aBand === bBand;
+}
+
+function mergeCatHouseSnapshotIntoState(snapshot) {
+  if (!snapshot || !Array.isArray(snapshot.cats) || snapshot.cats.length === 0) return false;
+
+  if (!Array.isArray(state.cats)) {
+    state.cats = [];
+  }
+
+  const existingById = new Map();
+  let maxId = 0;
+  state.cats.forEach((cat) => {
+    const id = Number(cat && cat.id);
+    if (!Number.isFinite(id) || id < 1) return;
+    const normalizedId = Math.floor(id);
+    maxId = Math.max(maxId, normalizedId);
+    if (!existingById.has(normalizedId)) {
+      existingById.set(normalizedId, cat);
+    }
+  });
+
+  let nextId = Math.max(
+    maxId + 1,
+    Number.isFinite(Number(state.catIdSeed)) ? Math.floor(Number(state.catIdSeed)) : 1,
+    Number.isFinite(Number(snapshot.catIdSeed)) ? Math.floor(Number(snapshot.catIdSeed)) : 1
+  );
+  let changed = false;
+
+  const allocateId = () => {
+    while (existingById.has(nextId)) {
+      nextId += 1;
+    }
+    const id = nextId;
+    nextId += 1;
+    return id;
+  };
+
+  snapshot.cats.forEach((cat) => {
+    if (!cat || typeof cat !== 'object') return;
+
+    const rawId = Number(cat.id);
+    const normalizedId = Number.isFinite(rawId) && rawId >= 1 ? Math.floor(rawId) : null;
+    const existing = normalizedId === null ? null : existingById.get(normalizedId);
+
+    if (existing && catsMatchForImportMerge(existing, cat)) {
+      return;
+    }
+
+    const nextCat = { ...cat };
+    if (existing || normalizedId === null || existingById.has(normalizedId)) {
+      nextCat.id = allocateId();
+    } else {
+      nextCat.id = normalizedId;
+    }
+
+    existingById.set(nextCat.id, nextCat);
+    maxId = Math.max(maxId, nextCat.id);
+    state.cats.push(nextCat);
+    changed = true;
+  });
+
+  if (!changed) return false;
+
+  const mergedHistory = [
+    ...(Array.isArray(state.speciesHistory) ? state.speciesHistory : []),
+    ...(Array.isArray(snapshot.speciesHistory) ? snapshot.speciesHistory : [])
+  ];
+  state.speciesHistory = mergedHistory
+    .map((id) => Number(id))
+    .filter((id) => Number.isFinite(id) && id >= 0)
+    .map((id) => normalizeSpeciesId(id))
+    .slice(-CAT_SPECIES_HISTORY_LIMIT);
+  state.catIdSeed = Math.max(nextId, maxId + 1);
+  return true;
+}
+
 function normalizeCatHouseState() {
   const rawSeed = Number(state.catIdSeed);
   state.catIdSeed = Number.isFinite(rawSeed) ? Math.max(1, Math.floor(rawSeed)) : 1;
@@ -2055,27 +2179,38 @@ function normalizeCatHouseState() {
     state.catRewardStampByPhase.morning = state.lastCatRewardDate;
   }
 
-  if (state.catVillageSchemaVersion !== CAT_VILLAGE_SCHEMA_VERSION) {
-    state.cats = [];
-    state.speciesHistory = [];
-    state.catIdSeed = 1;
+  let catHouseStateChanged = state.catVillageSchemaVersion !== CAT_VILLAGE_SCHEMA_VERSION;
+  if (catHouseStateChanged) {
     state.catVillageSchemaVersion = CAT_VILLAGE_SCHEMA_VERSION;
-    persistState();
-    return;
   }
 
   if (!Array.isArray(state.cats)) {
     state.cats = [];
     state.catVillageSchemaVersion = CAT_VILLAGE_SCHEMA_VERSION;
+    if (catHouseStateChanged) {
+      persistState();
+    }
     return;
   }
 
+  const catSize = getCatSizePx();
+  const { width, height } = getCatMatBounds();
+  const maxX = Math.max(0, width - catSize);
+  const maxY = Math.max(0, height - catSize);
+  const maxExistingCatId = state.cats.reduce((acc, cat) => {
+    const id = Number(cat && cat.id);
+    return Number.isFinite(id) && id >= 1 ? Math.max(acc, Math.floor(id)) : acc;
+  }, 0);
+  let nextRecoveredCatId = Math.max(state.catIdSeed, maxExistingCatId + 1);
+
   state.cats = state.cats
+    .filter((cat) => cat && typeof cat === 'object')
     .map((cat) => {
       const savedColorBand = getSavedCatColorBand(cat);
-      const currentSpeciesId = Number.isFinite(Number(cat.speciesId))
+      const hasSpeciesId = cat && cat.speciesId !== undefined && cat.speciesId !== null && cat.speciesId !== '' && Number.isFinite(Number(cat.speciesId));
+      const currentSpeciesId = hasSpeciesId
         ? normalizeSpeciesId(Number(cat.speciesId))
-        : Math.floor(Math.random() * Math.max(1, catCatalog.length));
+        : pickSpeciesIdForBand(Number(cat.level) || 0);
       const speciesId = savedColorBand === null
         ? currentSpeciesId
         : (
@@ -2083,14 +2218,17 @@ function normalizeCatHouseState() {
             ? currentSpeciesId
             : getPrimarySpeciesIdForBand(savedColorBand)
         );
+      const rawId = Number(cat.id);
+      const rawX = Number(cat.x);
+      const rawY = Number(cat.y);
 
       return {
-        id: Number(cat.id),
+        id: Number.isFinite(rawId) && rawId >= 1 ? Math.floor(rawId) : nextRecoveredCatId++,
         level: Number(cat.level) || 0,
         speciesId,
         colorBand: getSpeciesColorBand(speciesId),
-        x: Number(cat.x),
-        y: Number(cat.y),
+        x: Number.isFinite(rawX) ? rawX : Math.random() * maxX,
+        y: Number.isFinite(rawY) ? rawY : Math.random() * maxY,
         vx: Number(cat.vx),
         vy: Number(cat.vy)
       };
@@ -2105,6 +2243,23 @@ function normalizeCatHouseState() {
       vy: Number.isFinite(cat.vy) ? cat.vy : (Math.random() * 0.6 + 0.2) * (Math.random() > 0.5 ? 1 : -1)
     }));
 
+  if (nextRecoveredCatId > state.catIdSeed) {
+    state.catIdSeed = nextRecoveredCatId;
+    catHouseStateChanged = true;
+  }
+
+  const usedCatIds = new Set();
+  state.cats = state.cats.map((cat) => {
+    if (!usedCatIds.has(cat.id)) {
+      usedCatIds.add(cat.id);
+      return cat;
+    }
+    const nextCat = { ...cat, id: nextRecoveredCatId++ };
+    usedCatIds.add(nextCat.id);
+    catHouseStateChanged = true;
+    return nextCat;
+  });
+
   if (!Array.isArray(state.speciesHistory) || state.speciesHistory.length === 0) {
     state.speciesHistory = state.cats
       .map((cat) => Number(cat.speciesId))
@@ -2118,9 +2273,10 @@ function normalizeCatHouseState() {
   const maxId = state.cats.reduce((acc, cat) => Math.max(acc, cat.id), 0);
   if (maxId >= state.catIdSeed) {
     state.catIdSeed = maxId + 1;
+    catHouseStateChanged = true;
   }
 
-  if (jobCatStateChanged) {
+  if (catHouseStateChanged || jobCatStateChanged) {
     persistState();
   }
 }
@@ -2354,16 +2510,20 @@ function loadSettingsFromInput(event) {
   reader.onload = (loadEvent) => {
     try {
       const loadedState = JSON.parse(loadEvent.target.result);
+      const currentCatHouseSnapshot = cloneCatHouseSnapshot(state);
+      preserveCatHouseSnapshotBeforeImport(currentCatHouseSnapshot);
       state = {
         ...state,
         ...loadedState,
         missions: Array.isArray(loadedState.missions) ? loadedState.missions : state.missions,
         completed: loadedState.completed && typeof loadedState.completed === 'object' ? loadedState.completed : {}
       };
+      mergeCatHouseSnapshotIntoState(currentCatHouseSnapshot);
       normalizePhaseOverride();
       ensurePhaseSettings();
       applyCurrentPhaseSettingsToState();
       normalizeRewardState();
+      normalizeCatHouseState();
       refreshAfterStateChange();
       toggleSettings();
       showAppAlert('JSON 설정을 불러왔어요.', '설정');
