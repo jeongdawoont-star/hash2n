@@ -1,0 +1,14 @@
+{
+  "version": "2026.06.01-hotfix-1",
+  "rewardTargetMax": 1000,
+  "video": {
+    "morning": {
+      "loop": "./assets/child-morning/cat-loop.mp4",
+      "happy": "./assets/child-morning/cat-happy.mp4"
+    },
+    "evening": {
+      "loop": "./assets/child-evening/cat-night-loop.mp4",
+      "happy": "./assets/child-evening/cat-night-happy.mp4"
+    }
+  }
+}

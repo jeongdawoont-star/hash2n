@@ -377,62 +377,155 @@ body.phase-switching {
 .cat-house-wrap {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 1rem;
   height: 100%;
   min-height: 0;
 }
 .cat-house-head {
+  background: linear-gradient(180deg, rgba(255, 251, 241, 0.96) 0%, rgba(255, 244, 222, 0.94) 100%);
+  border: 3px solid #f3c37a;
+  border-radius: 1.3rem;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 0.5rem;
+  align-items: stretch;
+  gap: 0.65rem;
+  padding: 0.85rem 1rem;
+}
+.cat-house-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
 }
 .cat-house-headline {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.7rem;
-  font-size: 1.9rem;
+  font-size: clamp(1.45rem, 2.6vw, 2.1rem);
   color: #845400;
   font-weight: 700;
+  text-align: center;
+  letter-spacing: 0.01em;
 }
 .cat-house-count {
   background: #ffffff;
-  border: 3px solid #dec0b6;
+  border: 3px solid #f4c98c;
   border-radius: 9999px;
-  padding: 0.4rem 0.95rem;
-  font-size: 1.12rem;
-  color: #57423b;
+  padding: 0.46rem 1rem;
+  font-size: 1.05rem;
+  color: #6e4424;
   font-weight: 700;
+  box-shadow: 0 6px 14px rgba(175, 113, 41, 0.2);
 }
 .cat-house-note {
   color: #6f4600;
-  font-size: 1.05rem;
+  background: rgba(255, 216, 146, 0.33);
+  border-radius: 9999px;
+  padding: 0.42rem 0.9rem;
+  font-size: 0.95rem;
   font-weight: 700;
+  text-align: center;
+  line-height: 1.3;
+}
+.cat-zoom-row {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  width: min(100%, 28rem);
+  margin: 0 auto;
+  padding: 0.55rem 0.75rem;
+  border-radius: 9999px;
+  background: rgba(255, 247, 227, 0.88);
+  border: 2px solid rgba(244, 201, 140, 0.72);
+}
+.cat-zoom-label {
+  font-size: 0.86rem;
+  font-weight: 800;
+  color: #7a5130;
+  white-space: nowrap;
+}
+.cat-zoom-input {
+  flex: 1;
+  accent-color: #6f4600;
+}
+.cat-zoom-value {
+  min-width: 3.2rem;
+  text-align: right;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: #6f4600;
+}
+.cat-band-legend {
+  display: grid;
+  grid-template-columns: repeat(20, minmax(0, 1fr));
+  gap: 0.22rem;
+  margin-bottom: 0.7rem;
+}
+.cat-band-heart {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  min-height: 1.18rem;
+  border-radius: 0.4rem;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+.cat-band-heart .material-symbols-outlined {
+  font-size: 0.95rem;
+  font-variation-settings: 'FILL' 1, 'wght' 650;
+  -webkit-text-stroke: 0.8px rgba(52, 37, 22, 0.85);
+  text-shadow: 0 0 1px rgba(255, 255, 255, 0.95);
 }
 .cat-house-mat {
   position: relative;
   flex: 1;
-  min-height: 16rem;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  min-height: clamp(24rem, 64vh, 46rem);
+  max-height: 72vh;
   border-radius: 2rem;
-  border: 5px solid #c9aca2;
+  border: 5px solid #f1c07d;
   overflow: hidden;
   background:
-    radial-gradient(circle at 14% 20%, rgba(255, 255, 255, 0.26) 0%, rgba(255, 255, 255, 0) 34%),
-    radial-gradient(circle at 82% 72%, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0) 38%),
-    repeating-linear-gradient(45deg, #e8d4be 0, #e8d4be 14px, #e2ccb3 14px, #e2ccb3 28px),
-    repeating-linear-gradient(-45deg, rgba(175, 130, 95, 0.08) 0, rgba(175, 130, 95, 0.08) 9px, rgba(175, 130, 95, 0) 9px, rgba(175, 130, 95, 0) 18px);
+    linear-gradient(180deg, rgba(255, 247, 229, 0.24) 0%, rgba(255, 239, 210, 0.12) 100%),
+    url('assets/img-planner/town.png') center/cover no-repeat;
+}
+@media (max-width: 900px), (max-aspect-ratio: 3/4) {
+  .cat-house-title-row {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .cat-house-head {
+    align-items: center;
+    text-align: center;
+    padding: 0.75rem 0.8rem;
+  }
+  .cat-house-note {
+    width: 100%;
+  }
+  .cat-band-legend {
+    grid-template-columns: repeat(10, minmax(0, 1fr));
+    gap: 0.26rem;
+  }
+  .cat-house-mat {
+    min-height: clamp(18rem, 55vh, 30rem);
+  }
 }
 .house-cat {
   position: absolute;
-  width: 3.4rem;
-  height: 3.4rem;
-  border-radius: 9999px;
-  border: 3px solid rgba(255, 255, 255, 0.8);
+  width: var(--cat-size, 3.4rem);
+  height: var(--cat-size, 3.4rem);
+  border: 0;
+  background: transparent;
+  padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 6px 14px rgba(87, 66, 59, 0.22);
+  box-shadow: none;
   font-size: 1.85rem;
   user-select: none;
   cursor: grab;
@@ -447,13 +540,53 @@ body.phase-switching {
 .house-cat.merge-pop {
   animation: pop 0.22s ease;
 }
-.house-cat.level-0 { background: #ffd66a; }
-.house-cat.level-1 { background: #ffb95a; }
-.house-cat.level-2 { background: #ff9cb1; }
-.house-cat.level-3 { background: #a7d8ff; }
-.house-cat.level-4 { background: #c9b0ff; }
-.house-cat.level-5 { background: #a7e5b4; }
-.house-cat.level-6 { background: #ffd29e; }
+.house-cat.level-0,
+.house-cat.level-1,
+.house-cat.level-2,
+.house-cat.level-3,
+.house-cat.level-4,
+.house-cat.level-5,
+.house-cat.level-6 {
+  background: transparent;
+}
+.house-cat-avatar {
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 0;
+  object-fit: contain;
+  display: block;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+.house-cat-avatar.job-cat-image {
+  filter:
+    drop-shadow(2px 0 0 var(--cat-accent, #ffffff))
+    drop-shadow(-2px 0 0 var(--cat-accent, #ffffff))
+    drop-shadow(0 2px 0 var(--cat-accent, #ffffff))
+    drop-shadow(0 -2px 0 var(--cat-accent, #ffffff))
+    drop-shadow(0 1px 0 rgba(0, 0, 0, 0.24));
+}
+.house-cat-avatar.placeholder {
+  border-radius: 0.42rem;
+  border: 2px solid rgba(255, 255, 255, 0.86);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.72) 0%, rgba(255, 255, 255, 0.28) 100%);
+  box-shadow: inset 0 0 0 1px rgba(34, 26, 20, 0.18);
+}
+.house-cat-name {
+  position: absolute;
+  left: 50%;
+  bottom: -1rem;
+  transform: translateX(-50%);
+  background: rgba(31, 27, 14, 0.78);
+  color: #fff9ee;
+  border-radius: 9999px;
+  font-size: 0.56rem;
+  font-weight: 700;
+  line-height: 1;
+  padding: 0.2rem 0.45rem;
+  white-space: nowrap;
+  pointer-events: none;
+}
 #mission-list[data-size="large"] .mission-card {
   padding: calc(0.85rem * var(--mission-density)) calc(0.95rem * var(--mission-density));
   gap: calc(0.5rem * var(--mission-density));
@@ -596,6 +729,159 @@ body.phase-switching {
   0% { transform: scale(0.8); opacity: 0; }
   100% { transform: scale(1); opacity: 1; }
 }
+.reward-draw-stage {
+  margin-top: 1rem;
+  border: 4px dashed #ffd277;
+  border-radius: 1.2rem;
+  padding: 0.9rem 0.8rem;
+  background: radial-gradient(circle at 50% -30%, rgba(255, 228, 155, 0.72), rgba(255, 245, 218, 0.86));
+}
+.reward-draw-stage.hidden {
+  display: none;
+}
+.reward-draw-reel {
+  position: relative;
+  min-height: 9.2rem;
+  border-radius: 1rem;
+  border: 3px solid #ffbd5b;
+  background: rgba(255, 255, 255, 0.96);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  overflow: hidden;
+}
+.reward-draw-avatar {
+  width: 4.3rem;
+  height: 4.3rem;
+  border-radius: 9999px;
+  background: linear-gradient(180deg, #fff6df 0%, #ffe7be 100%);
+  border: 3px solid #ffbf63;
+  box-shadow: 0 8px 14px rgba(201, 126, 35, 0.24);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+}
+.reward-draw-avatar img {
+  width: 92%;
+  height: 92%;
+  object-fit: contain;
+  border-radius: 0;
+  image-rendering: pixelated;
+}
+.reward-draw-name {
+  font-weight: 800;
+  color: #7c4a00;
+  text-align: center;
+  padding: 0 0.7rem;
+}
+.reward-draw-rolling .reward-draw-avatar {
+  animation: rewardDrawPulse 0.28s ease-in-out infinite;
+}
+.reward-draw-reveal {
+  animation: rewardDrawReveal 0.52s cubic-bezier(0.2, 0.95, 0.3, 1.25);
+}
+.reward-draw-fireworks {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.reward-draw-spark {
+  position: absolute;
+  left: 50%;
+  top: 58%;
+  width: 0.46rem;
+  height: 0.46rem;
+  border-radius: 9999px;
+  background: var(--spark-color, #ff8a00);
+  opacity: 0;
+  transform: translate(-50%, -50%);
+  animation: rewardSparkBurst 0.95s ease-out forwards;
+  animation-delay: var(--delay, 0ms);
+}
+@keyframes rewardDrawPulse {
+  0% { transform: scale(0.9) rotate(-6deg); }
+  50% { transform: scale(1.05) rotate(0deg); }
+  100% { transform: scale(0.92) rotate(6deg); }
+}
+@keyframes rewardDrawReveal {
+  0% { transform: scale(0.8); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes rewardSparkBurst {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(0.6);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--dx, 0px)), calc(-50% + var(--dy, -80px))) scale(0.1);
+  }
+}
+.app-dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 140;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(16, 14, 10, 0.38);
+  backdrop-filter: blur(4px);
+}
+.app-dialog.open {
+  display: flex;
+}
+.app-dialog-card {
+  width: min(32rem, calc(100vw - 2rem));
+  background: linear-gradient(180deg, #fffaf2 0%, #fff6e8 100%);
+  border: 5px solid #ffb95a;
+  border-radius: 1.4rem;
+  box-shadow: 0 16px 28px rgba(65, 40, 10, 0.28);
+  padding: 1rem 1rem 1.1rem;
+  animation: pop 0.2s ease-out;
+}
+.app-dialog-title {
+  color: #7c4a00;
+  font-size: clamp(1.05rem, 2.4vw, 1.4rem);
+  font-weight: 900;
+  margin-bottom: 0.35rem;
+}
+.app-dialog-message {
+  color: #3a2a10;
+  font-weight: 700;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  min-height: 2.2rem;
+}
+.app-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.55rem;
+  margin-top: 0.9rem;
+}
+.app-dialog-btn {
+  border: 3px solid #8c5523;
+  border-radius: 9999px;
+  font-weight: 900;
+  padding: 0.44rem 1.15rem;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.app-dialog-btn:active {
+  transform: translateY(1px) scale(0.98);
+}
+.app-dialog-btn.cancel {
+  background: #fff;
+  color: #6c4a2d;
+}
+.app-dialog-btn.confirm {
+  background: #8c5523;
+  color: #fff7ee;
+  box-shadow: inset 0 -2px 0 rgba(255, 255, 255, 0.18);
+}
 </style>
 </head>
 <body>
@@ -624,6 +910,9 @@ body.phase-switching {
         <button class="text-outline hover:scale-110 transition-transform active:translate-y-1" onclick="toggleFullscreenMode()" aria-label="전체화면 전환" type="button">
           <span class="material-symbols-outlined !text-3xl md:!text-4xl" id="fullscreen-toggle-icon">fullscreen</span>
         </button>
+        <button class="text-outline hover:scale-110 transition-transform active:translate-y-1" onclick="togglePipTimer()" aria-label="타이머" type="button">
+          <span class="material-symbols-outlined !text-3xl md:!text-4xl">timer</span>
+        </button>
         <button class="text-outline hover:scale-110 transition-transform active:translate-y-1" onclick="toggleSettings()" aria-label="설정">
           <span class="material-symbols-outlined !text-3xl md:!text-4xl">settings</span>
         </button>
@@ -639,7 +928,7 @@ body.phase-switching {
         <div class="arrival-inline">
           <div class="arrival-copy">
             <p class="font-label-lg text-secondary font-extrabold arrival-label" id="arrival-label">등교까지</p>
-            <div class="font-headline-md text-primary-container tabular-nums arrival-timer" id="countdown-large">
+            <div class="font-headline-md text-primary-container tabular-nums arrival-timer cursor-pointer" id="countdown-large" role="button" tabindex="0" onclick="triggerMainTimerDrawIfEligible()" onkeydown="handleMainClockKeydown(event)" title="오늘의 첫 고양이 뽑기" aria-label="오늘의 첫 고양이 뽑기">
               <span class="arrival-time-part" id="countdown-large-minutes">00</span>
               <span class="arrival-time-colon">:</span>
               <span class="arrival-time-part" id="countdown-large-seconds">00</span>
@@ -656,7 +945,7 @@ body.phase-switching {
           <div class="absolute inset-0 overflow-hidden rounded-[18%] border-4 border-primary">
             <video id="cat-video" class="cat-loop-mirrored w-full h-full object-cover rounded-[18%] shadow-lg cat-happy-offset"
               style="--cat-y:50%; --cat-scale:100%;"
-              src="./assets/child-morning/cat-loop.mp4" autoplay loop muted playsinline preload="auto" poster="https://placehold.co/320x320/ffd9cc/a43c12?text=CAT">
+              src="./assets/child-morning/cat-loop.mp4" autoplay loop muted playsinline preload="auto" poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==">
               브라우저가 동영상을 지원하지 않습니다.
             </video>
           </div>
@@ -691,9 +980,9 @@ body.phase-switching {
       <span class="material-symbols-outlined !text-3xl" style="font-variation-settings: 'FILL' 1;">pets</span>
       <span class="font-label-lg nav-label">미션</span>
     </a>
-    <a class="flex flex-col items-center justify-center text-on-surface-variant p-3 hover:bg-surface-variant rounded-2xl transition-all" href="#" onclick="openCatHouseModal(); return false;" aria-label="고양이 집 탭">
+    <a class="flex flex-col items-center justify-center text-on-surface-variant p-3 hover:bg-surface-variant rounded-2xl transition-all" href="#" onclick="openCatHouseModal(); return false;" aria-label="고양이 마을 탭">
       <span class="material-symbols-outlined !text-3xl">home</span>
-      <span class="font-label-lg nav-label">고양이 집</span>
+      <span class="font-label-lg nav-label">고양이 마을</span>
     </a>
     <a class="flex flex-col items-center justify-center text-on-surface-variant p-3 hover:bg-surface-variant rounded-2xl transition-all" href="#" onclick="openRewardModal(); return false;" aria-label="보상 탭">
       <span class="material-symbols-outlined !text-3xl">military_tech</span>
@@ -712,7 +1001,7 @@ body.phase-switching {
       <div class="md:col-span-7 space-y-6">
         <div class="md:w-[80%] grid grid-cols-1 md:grid-cols-[2fr_3fr] gap-4">
           <div>
-            <label class="block font-label-lg text-secondary mb-2" for="child-name">모험가 이름</label>
+            <label class="block font-label-lg text-secondary mb-2" for="child-name">이름</label>
             <input class="w-full bg-white border-4 border-outline-variant rounded-full px-6 py-3 font-body-md text-xl focus:border-primary-container outline-none transition-all" id="child-name" placeholder="이름을 적어줘요!" type="text">
           </div>
           <div>
@@ -734,15 +1023,14 @@ body.phase-switching {
         <div>
           <div class="flex items-center justify-between mb-2">
             <label class="block font-label-lg text-secondary" for="reward-score-range">보상 점수 구간</label>
-            <span class="font-headline-md text-primary text-xl" id="reward-score-value">100점</span>
+            <span class="font-headline-md text-primary text-xl" id="reward-score-value">1000점</span>
           </div>
-          <input class="w-full accent-primary-container" id="reward-score-range" type="range" min="10" max="500" step="10" value="100" oninput="updateRewardTargetPreview(this.value)">
+          <input class="w-full accent-primary-container" id="reward-score-range" type="range" min="10" max="1000" step="10" value="1000" oninput="updateRewardTargetPreview(this.value)">
         </div>
 
         <div>
           <div class="flex items-center justify-between mb-2">
             <label class="block font-label-lg text-secondary" for="phase-override">페이즈 모드</label>
-            <span class="text-sm font-bold text-on-surface-variant">테스트용 임시 고정 가능</span>
           </div>
           <select class="w-full bg-white border-4 border-outline-variant rounded-full px-4 py-3 font-body-md text-lg focus:border-primary-container outline-none transition-all" id="phase-override">
             <option value="auto">자동 (시간 기준)</option>
@@ -785,34 +1073,97 @@ body.phase-switching {
     <div class="bg-white border-4 border-outline-variant rounded-3xl p-6">
       <div class="flex items-center justify-between gap-4 mb-5">
         <p class="font-label-lg text-on-surface-variant">발자국을 채워 깃발 보상을 열어보세요</p>
-        <p class="font-headline-md text-primary text-xl" id="reward-progress-label">0 / 100점</p>
+        <p class="font-headline-md text-primary text-xl" id="reward-progress-label">0 / 1000점</p>
       </div>
 
       <div class="flex items-center gap-1.5 md:gap-2 pb-2 w-full" id="reward-track"></div>
 
-      <div class="mt-6 flex justify-end">
-        <button class="rounded-2xl border-4 border-outline-variant bg-surface-container-high px-4 md:px-8 py-2 md:py-3 text-on-surface-variant font-headline-md transition-all disabled:opacity-60 disabled:cursor-not-allowed" id="reward-claim-btn" onclick="claimReward()" type="button" disabled style="font-size:clamp(1.05rem,2vw,1.25rem);">
-          깃발 보상 받기
+      <div class="mt-6 grid grid-cols-2 gap-3">
+        <button class="rounded-2xl border-4 border-outline-variant bg-surface-container-high px-4 md:px-8 py-2 md:py-3 text-on-surface-variant font-headline-md transition-all disabled:opacity-60 disabled:cursor-not-allowed" id="reward-claim-btn" onclick="claimRewardBonus()" type="button" disabled style="font-size:clamp(1.05rem,2vw,1.25rem);">
+          보상 받기
+        </button>
+        <button class="rounded-2xl border-4 border-outline-variant bg-surface-container-high px-4 md:px-8 py-2 md:py-3 text-on-surface-variant font-headline-md transition-all disabled:opacity-60 disabled:cursor-not-allowed" id="reward-draw-btn" onclick="drawRewardCat()" type="button" disabled style="font-size:clamp(1.05rem,2vw,1.25rem);">
+          고양이 뽑기
         </button>
       </div>
     </div>
   </div>
 </div>
 
-<div class="fixed inset-0 bg-black/40 backdrop-blur-sm z-[115] hidden items-center justify-center p-6" id="cat-house-modal">
-  <div class="bg-surface w-full max-w-4xl rounded-[2.5rem] border-[6px] border-outline-variant p-8 shadow-2xl relative animate-[pop_0.3s_ease-out]">
+<div class="fixed inset-0 bg-black/45 backdrop-blur-sm z-[112] hidden items-center justify-center p-4" id="reward-draw-modal">
+  <div class="bg-surface w-full max-w-md rounded-[2rem] border-[6px] border-secondary-container p-4 md:p-5 shadow-2xl relative animate-[pop_0.25s_ease-out]">
+    <button class="absolute top-4 right-4 w-10 h-10 bg-surface-variant rounded-full flex items-center justify-center border-2 border-outline" onclick="closeRewardDrawModal()" aria-label="닫기">
+      <span class="material-symbols-outlined">close</span>
+    </button>
+    <div class="reward-draw-stage" id="reward-draw-stage" aria-live="polite">
+      <div class="reward-draw-reel" id="reward-draw-reel">
+        <div class="reward-draw-avatar" id="reward-draw-avatar">🐾</div>
+        <p class="reward-draw-name" id="reward-draw-name">어떤 고양이가 나올까요?</p>
+        <div class="reward-draw-fireworks" id="reward-draw-fireworks"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="fixed inset-0 bg-black/35 backdrop-blur-sm z-[108] hidden items-center justify-center p-6" id="pip-timer-modal">
+  <div class="bg-surface w-full max-w-md rounded-[2rem] border-[6px] border-outline-variant p-6 shadow-2xl relative animate-[pop_0.25s_ease-out]">
+    <button class="absolute top-4 right-4 w-10 h-10 bg-surface-variant rounded-full flex items-center justify-center border-2 border-outline" onclick="togglePipTimer()" aria-label="닫기">
+      <span class="material-symbols-outlined">close</span>
+    </button>
+    <h3 class="font-headline-md text-primary mb-4 text-2xl flex items-center gap-2">
+      <span class="material-symbols-outlined">timer</span>
+      타이머
+    </h3>
+    <div class="bg-white border-4 border-outline-variant rounded-3xl p-5 text-center mb-4">
+      <p class="font-headline-md text-primary text-5xl tabular-nums" id="pip-timer-display">05:00</p>
+    </div>
+    <div class="grid grid-cols-3 gap-2 mb-4">
+      <button class="bg-surface-container text-on-surface rounded-xl py-2 font-bold" onclick="setPipPreset(5)" type="button">5분</button>
+      <button class="bg-surface-container text-on-surface rounded-xl py-2 font-bold" onclick="setPipPreset(10)" type="button">10분</button>
+      <button class="bg-surface-container text-on-surface rounded-xl py-2 font-bold" onclick="setPipPreset(15)" type="button">15분</button>
+    </div>
+    <div class="grid grid-cols-3 gap-2">
+      <button class="bg-primary-container text-white rounded-xl py-2 font-bold" onclick="startPipTimer()" type="button">시작</button>
+      <button class="bg-secondary text-white rounded-xl py-2 font-bold" onclick="pausePipTimer()" type="button">일시정지</button>
+      <button class="bg-tertiary text-white rounded-xl py-2 font-bold" onclick="resetPipTimer()" type="button">리셋</button>
+    </div>
+  </div>
+</div>
+
+<div class="fixed inset-0 bg-black/40 backdrop-blur-sm z-[115] hidden items-center justify-center p-3 md:p-6" id="cat-house-modal">
+  <div class="bg-surface w-full max-w-5xl rounded-[2.5rem] border-[6px] border-outline-variant p-5 md:p-8 shadow-2xl relative animate-[pop_0.3s_ease-out]">
     <button class="absolute top-5 right-5 w-11 h-11 bg-surface-variant rounded-full flex items-center justify-center border-2 border-outline" onclick="closeCatHouseModal()" aria-label="닫기">
       <span class="material-symbols-outlined">close</span>
     </button>
-    <div class="cat-house-head mb-4">
-      <h3 class="cat-house-headline">
-        <span class="material-symbols-outlined !text-4xl">home</span>
-        고양이 집
-      </h3>
-      <p class="cat-house-count" id="cat-house-count">고양이 0마리</p>
+    <div class="cat-house-wrap">
+      <div class="cat-house-head">
+        <div class="cat-house-title-row">
+          <h3 class="cat-house-headline">
+            <span class="material-symbols-outlined !text-4xl">home</span>
+            고양이 마을
+          </h3>
+          <p class="cat-house-count" id="cat-house-count">고양이 0마리</p>
+        </div>
+        <p class="cat-house-note">같은 색의 고양이를 합쳐보세요.</p>
+        <div class="cat-zoom-row">
+          <input class="cat-zoom-input" id="cat-village-zoom" type="range" min="70" max="140" step="5" value="100" oninput="updateCatVillageZoom(this.value)">
+          <span class="cat-zoom-value" id="cat-village-zoom-value">100%</span>
+        </div>
+      </div>
+      <div class="cat-band-legend mb-1" id="cat-color-tier-legend"></div>
+      <div class="cat-house-mat" id="cat-house-mat"></div>
     </div>
-    <p class="cat-house-note mb-3">같은 색 고양이를 드래그해서 붙이면 다음 레벨로 합쳐져요.</p>
-    <div class="cat-house-mat" id="cat-house-mat"></div>
+  </div>
+</div>
+
+<div class="app-dialog" id="app-dialog" role="dialog" aria-modal="true" aria-live="assertive">
+  <div class="app-dialog-card">
+    <h4 class="app-dialog-title" id="app-dialog-title">알림</h4>
+    <p class="app-dialog-message" id="app-dialog-message"></p>
+    <div class="app-dialog-actions">
+      <button class="app-dialog-btn cancel" id="app-dialog-cancel" type="button" onclick="closeAppDialog(false)">취소</button>
+      <button class="app-dialog-btn confirm" id="app-dialog-confirm" type="button" onclick="closeAppDialog(true)">확인</button>
+    </div>
   </div>
 </div>
 
@@ -845,10 +1196,51 @@ const NIGHT_HAPPY_SEGMENT_TWO_START_SEC = 4.2;
 const CHEER_TEXTS = ['야호!', '최고야!', '짝짝짝!', '잘했어!', '멋져!', '대단해!'];
 const REWARD_STEP_COUNT = 10;
 const CAT_LEVEL_EMOJIS = ['😺', '😸', '😻', '😼', '🐱', '🐈', '🐈‍⬛'];
-const CAT_SIZE_PX = 54;
+const CAT_COLOR_BAND_COUNT = 20;
+const CAT_COLOR_BANDS = [
+  '#ffffff', '#ffe600', '#ff9800', '#8bc34a', '#00a651',
+  '#00bfa5', '#00b8d4', '#2196f3', '#1565c0', '#3949ab',
+  '#7e57c2', '#9c27b0', '#ec407a', '#ff5fa2', '#8d6e63',
+  '#6d4c41', '#e53935', '#d4af37', '#111111', '#00e676'
+];
+const CAT_ROLE_NAMES = [
+  '의사 고양이', '치과의사 고양이', '한의사 고양이', '수의사 고양이', '약사 고양이',
+  '간호사 고양이', '물리치료사 고양이', '임상병리사 고양이', '응급구조사 고양이', '방사선사 고양이',
+  '판사 고양이', '검사 고양이', '변호사 고양이', '노무사 고양이', '관세사 고양이',
+  '세무사 고양이', '회계사 고양이', '경찰관 고양이', '소방관 고양이', '군인 고양이',
+  '초등교사 고양이', '중등교사 고양이', '특수교사 고양이', '보육교사 고양이', '상담교사 고양이',
+  '직업상담사 고양이', '사회복지사 고양이', '심리상담사 고양이', '교수 고양이', '연구원 고양이',
+  '기자 고양이', '아나운서 고양이', 'PD 고양이', '작가 고양이', '번역가 고양이',
+  '통역사 고양이', '콘텐츠크리에이터 고양이', '사진작가 고양이', '영상편집자 고양이', '성우 고양이',
+  '소프트웨어개발자 고양이', '게임개발자 고양이', '앱개발자 고양이', '데이터과학자 고양이', '인공지능연구원 고양이',
+  '정보보안전문가 고양이', '클라우드엔지니어 고양이', '네트워크엔지니어 고양이', 'UX디자이너 고양이', '그래픽디자이너 고양이',
+  '건축가 고양이', '건축공학자 고양이', '토목공학자 고양이', '기계공학자 고양이', '전기공학자 고양이',
+  '전자공학자 고양이', '반도체엔지니어 고양이', '로봇공학자 고양이', '항공우주공학자 고양이', '자동차연구원 고양이',
+  '파일럿 고양이', '항공정비사 고양이', '항공관제사 고양이', '선장 고양이', '선박기관사 고양이',
+  '철도기관사 고양이', '버스기사 고양이', '지하철기관사 고양이', '드론조종사 고양이', '물류관리사 고양이',
+  '셰프 고양이', '제빵사 고양이', '바리스타 고양이', '영양사 고양이', '농부 고양이',
+  '스마트팜전문가 고양이', '원예사 고양이', '동물훈련사 고양이', '미용사 고양이', '메이크업아티스트 고양이',
+  '야구선수 고양이', '축구선수 고양이', '농구선수 고양이', '배구선수 고양이', '수영선수 고양이',
+  '피겨스케이팅 선수 고양이', '체조선수 고양이', '태권도선수 고양이', 'e스포츠선수 고양이', '스포츠해설가 고양이',
+  '음악가 고양이', '작곡가 고양이', '지휘자 고양이', '무용가 고양이', '배우 고양이',
+  '뮤지컬배우 고양이', '일러스트레이터 고양이', '애니메이터 고양이', '게임아티스트 고양이', '박물관큐레이터 고양이'
+];
+const CAT_JOB_COUNT = 100;
+const CAT_JOB_VARIANTS_PER_BAND = 5;
+const CAT_JOB_IMAGE_BASE_PATH = 'assets/img-planner/job-cats';
+const CAT_VILLAGE_SCHEMA_VERSION = 'job-cat-100-clean-v7';
+const HOTFIX_MANIFEST_URL = './hotfixes/cat-planner.hotfix.json';
+const CAT_SIZE_PX = 72;
+const CAT_SPECIES_HISTORY_LIMIT = 360;
+const CAT_VILLAGE_ZOOM_MIN = 70;
+const CAT_VILLAGE_ZOOM_MAX = 140;
+const CAT_VILLAGE_ZOOM_DEFAULT = 100;
 const AUDIO_MASTER_GAIN = 0.05;
 const MIN_MISSION_EDITOR_ROWS = 8;
 const FULLSCREEN_RESTORE_KEY = 'childPhaseFullscreenRestore';
+const FULLSCREEN_LOCK_KEY = 'childPhaseFullscreenLock';
+const VIDEO_FALLBACK_POSTER = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';
+const DEFAULT_REWARD_TARGET_MAX = 1000;
 const DEBUG_VIEWPORT_MODES = {
   auto: null,
   mobile: { width: 375, height: 667 },
@@ -861,29 +1253,78 @@ let isHappyPlaying = false;
 let countdownIntervalId = null;
 let countdownRunning = false;
 let countdownRemainingSeconds = 0;
+let countdownTargetTimestamp = 0;
 let settingsFileHandle = null;
 let missionFitRafId = null;
 let catAnimRafId = null;
 let responsiveLayoutRafId = null;
 let responsiveResizeObserver = null;
+let appDialogResolver = null;
 let draggingCatId = null;
 let dragOffsetX = 0;
 let dragOffsetY = 0;
 let audioContext = null;
 let audioMasterGain = null;
 let lastUiSoundAt = 0;
+let rewardDrawAnimating = false;
 let currentPhaseMissionItems = [];
 let debugViewportMode = 'auto';
+let rewardTargetMax = DEFAULT_REWARD_TARGET_MAX;
+let catVillagePinchState = {
+  active: false,
+  startDistance: 0,
+  startZoom: CAT_VILLAGE_ZOOM_DEFAULT
+};
+function getJobCatImagePath(index) {
+  return `${CAT_JOB_IMAGE_BASE_PATH}/job-${String(index + 1).padStart(2, '0')}.png`;
+}
+
+function createDefaultCatCatalog() {
+  return CAT_ROLE_NAMES.slice(0, CAT_JOB_COUNT).map((name, index) => ({
+    id: `cat-${String(index + 1).padStart(2, '0')}`,
+    name,
+    image: getJobCatImagePath(index),
+    colorBand: Math.floor(index / CAT_JOB_VARIANTS_PER_BAND)
+  }));
+}
+
+function normalizeCatCatalogItems(items) {
+  const defaults = createDefaultCatCatalog();
+  if (!Array.isArray(items) || items.length === 0) return defaults;
+
+  return defaults.map((fallback, index) => {
+    const item = items[index] || {};
+    const name = String(item.name || fallback.name).trim() || fallback.name;
+    const image = typeof item.image === 'string' && item.image.trim()
+      ? item.image.trim()
+      : fallback.image;
+    const colorBand = Number.isFinite(Number(item.colorBand))
+      ? normalizeColorBand(Number(item.colorBand))
+      : fallback.colorBand;
+
+    return {
+      id: String(item.id || fallback.id),
+      name,
+      image,
+      colorBand
+    };
+  });
+}
+
+let catCatalog = createDefaultCatCatalog();
+let pipTimerSeconds = 300;
+let pipTimerRunning = false;
+let pipTimerIntervalId = null;
 
 let state = {
-  childName: '하린',
+  childName: '우리 아이',
   leaveTime: '08:30',
   missions: defaultMissions,
   phaseOverride: 'auto',
   phaseSettings: {},
   todayScore: 0,
   totalScore: 0,
-  rewardTargetScore: 100,
+  rewardTargetScore: 1000,
   rewardBaseScore: 0,
   completed: {},
   dayStamp: '',
@@ -891,6 +1332,14 @@ let state = {
     morning: '',
     evening: ''
   },
+  timerDrawStampByPhase: {
+    morning: '',
+    evening: ''
+  },
+  mainClockDrawStamp: '',
+  catVillageZoom: CAT_VILLAGE_ZOOM_DEFAULT,
+  catVillageSchemaVersion: '',
+  speciesHistory: [],
   lastCatRewardDate: '',
   catIdSeed: 1,
   cats: []
@@ -944,7 +1393,7 @@ function getEnabledMissionTexts(items) {
 function defaultPhaseSettings(phase) {
   if (phase === 'evening') {
     return clonePhaseSettings({
-      childName: '하린',
+      childName: '우리 아이',
       leaveTime: '21:00',
       missions: eveningDefaultMissions,
       missionItems: eveningDefaultMissions.map((text) => ({ text, enabled: true })),
@@ -953,7 +1402,7 @@ function defaultPhaseSettings(phase) {
   }
 
   return clonePhaseSettings({
-    childName: '하린',
+    childName: '우리 아이',
     leaveTime: '08:30',
     missions: defaultMissions,
     missionItems: defaultMissions.map((text) => ({ text, enabled: true })),
@@ -968,7 +1417,7 @@ function ensurePhaseSettings() {
 
   if (!state.phaseSettings.morning) {
     state.phaseSettings.morning = clonePhaseSettings({
-      childName: state.childName || '하린',
+      childName: state.childName || '우리 아이',
       leaveTime: state.leaveTime || '08:30',
       missions: Array.isArray(state.missions) && state.missions.length > 0 ? state.missions : defaultMissions,
       missionItems: Array.isArray(state.missions) ? state.missions.map((text) => ({ text, enabled: true })) : defaultMissions.map((text) => ({ text, enabled: true })),
@@ -991,7 +1440,9 @@ function resolveUnifiedChildName() {
   const eveningName = state.phaseSettings && state.phaseSettings.evening && typeof state.phaseSettings.evening.childName === 'string'
     ? state.phaseSettings.evening.childName.trim()
     : '';
-  return stateName || morningName || eveningName || '하린';
+  const customName = [stateName, morningName, eveningName]
+    .find((name) => name && name !== '하린' && name !== '우리 아이');
+  return customName || '우리 아이';
 }
 
 function syncChildNameAcrossPhases() {
@@ -1098,7 +1549,7 @@ function redirectToPhase(phase) {
   const currentPath = window.location.pathname.split('/').pop() || '';
   if (currentPath.toLowerCase() === target.toLowerCase()) return;
 
-  if (document.fullscreenElement) {
+  if (document.fullscreenElement || getFullscreenLockEnabled()) {
     try {
       sessionStorage.setItem(FULLSCREEN_RESTORE_KEY, '1');
     } catch (_) {
@@ -1112,7 +1563,17 @@ function redirectToPhase(phase) {
   }, 180);
 }
 
+function isPhaseSwitchDeferredByUi() {
+  if (rewardDrawAnimating) return true;
+  const blockingModalIds = ['settings-modal', 'reward-modal', 'reward-draw-modal', 'pip-timer-modal', 'cat-house-modal', 'app-dialog'];
+  return blockingModalIds.some((id) => {
+    const node = document.getElementById(id);
+    return node && !node.classList.contains('hidden');
+  });
+}
+
 function maybeAutoSwitchPhase() {
+  if (isPhaseSwitchDeferredByUi()) return;
   const target = getPreferredPhase();
   if (target !== CURRENT_PHASE) {
     redirectToPhase(target);
@@ -1166,6 +1627,177 @@ function getLoopVideoSrc() {
 
 function getHappyVideoSrc() {
   return (PHASE_VIDEO[CURRENT_PHASE] && PHASE_VIDEO[CURRENT_PHASE].happy) || PHASE_VIDEO.morning.happy;
+}
+
+function updateRewardSliderBounds() {
+  const range = document.getElementById('reward-score-range');
+  if (!range) return;
+
+  range.max = String(rewardTargetMax);
+  range.value = String(Math.min(rewardTargetMax, Math.max(10, Number(state.rewardTargetScore) || 1000)));
+  updateRewardTargetPreview(range.value);
+}
+
+function applyHotfixManifest(manifest) {
+  if (!manifest || typeof manifest !== 'object') return;
+
+  const maxFromManifest = Number(manifest.rewardTargetMax);
+  if (Number.isFinite(maxFromManifest) && maxFromManifest >= 100) {
+    rewardTargetMax = Math.round(maxFromManifest / 10) * 10;
+  }
+
+  if (manifest.video && typeof manifest.video === 'object') {
+    ['morning', 'evening'].forEach((phase) => {
+      const video = manifest.video[phase];
+      if (!video || typeof video !== 'object') return;
+      if (typeof video.loop === 'string' && video.loop.trim()) {
+        PHASE_VIDEO[phase].loop = video.loop.trim();
+      }
+      if (typeof video.happy === 'string' && video.happy.trim()) {
+        PHASE_VIDEO[phase].happy = video.happy.trim();
+      }
+    });
+  }
+
+  if (Array.isArray(manifest.catCatalog) && manifest.catCatalog.length > 0) {
+    catCatalog = normalizeCatCatalogItems(manifest.catCatalog);
+  }
+
+  normalizeRewardState();
+  updateRewardSliderBounds();
+  renderRewardProgress();
+  renderCatHouse();
+}
+
+async function fetchAndApplyHotfixManifest() {
+  try {
+    const response = await fetch(`${HOTFIX_MANIFEST_URL}?t=${Date.now()}`, { cache: 'no-store' });
+    if (!response.ok) return;
+    const manifest = await response.json();
+    applyHotfixManifest(manifest);
+  } catch (_) {
+    // Keep app running even when manifest is absent.
+  }
+}
+
+function updatePipTimerDisplay() {
+  const display = document.getElementById('pip-timer-display');
+  if (!display) return;
+  const mm = String(Math.floor(pipTimerSeconds / 60)).padStart(2, '0');
+  const ss = String(pipTimerSeconds % 60).padStart(2, '0');
+  display.textContent = `${mm}:${ss}`;
+}
+
+function closeAppDialog(result) {
+  const dialog = document.getElementById('app-dialog');
+  if (dialog) {
+    dialog.classList.remove('open');
+  }
+  const resolver = appDialogResolver;
+  appDialogResolver = null;
+  if (resolver) {
+    resolver(Boolean(result));
+  }
+}
+
+function openAppDialog({
+  title = '알림',
+  message = '',
+  confirmText = '확인',
+  cancelText = '취소',
+  mode = 'alert'
+}) {
+  return new Promise((resolve) => {
+    const dialog = document.getElementById('app-dialog');
+    const titleEl = document.getElementById('app-dialog-title');
+    const messageEl = document.getElementById('app-dialog-message');
+    const confirmBtn = document.getElementById('app-dialog-confirm');
+    const cancelBtn = document.getElementById('app-dialog-cancel');
+    if (!dialog || !titleEl || !messageEl || !confirmBtn || !cancelBtn) {
+      resolve(mode === 'alert');
+      return;
+    }
+
+    titleEl.textContent = title;
+    messageEl.textContent = message;
+    confirmBtn.textContent = confirmText;
+    cancelBtn.textContent = cancelText;
+    cancelBtn.style.display = mode === 'confirm' ? 'inline-flex' : 'none';
+    appDialogResolver = resolve;
+    dialog.classList.add('open');
+    confirmBtn.focus({ preventScroll: true });
+  });
+}
+
+function showAppAlert(message, title = '알림') {
+  return openAppDialog({ title, message, mode: 'alert', confirmText: '확인' });
+}
+
+function showAppConfirm(message, title = '확인', confirmText = '확인', cancelText = '취소') {
+  return openAppDialog({ title, message, mode: 'confirm', confirmText, cancelText });
+}
+
+function togglePipTimer() {
+  const modal = document.getElementById('pip-timer-modal');
+  if (!modal) return;
+  const opening = modal.classList.contains('hidden');
+  modal.classList.toggle('hidden', !opening);
+  modal.classList.toggle('flex', opening);
+  if (opening) {
+    updatePipTimerDisplay();
+  }
+}
+
+function setPipPreset(minutes) {
+  pipTimerSeconds = Math.max(60, Math.floor(Number(minutes) || 5) * 60);
+  updatePipTimerDisplay();
+}
+
+function startPipTimer() {
+  if (pipTimerRunning) return;
+  pipTimerRunning = true;
+  pipTimerIntervalId = window.setInterval(() => {
+    pipTimerSeconds = Math.max(0, pipTimerSeconds - 1);
+    updatePipTimerDisplay();
+    if (pipTimerSeconds === 0) {
+      pausePipTimer();
+      showAppAlert('타이머가 끝났어요!', '타이머');
+    }
+  }, 1000);
+}
+
+function pausePipTimer() {
+  pipTimerRunning = false;
+  if (pipTimerIntervalId) {
+    clearInterval(pipTimerIntervalId);
+    pipTimerIntervalId = null;
+  }
+}
+
+function resetPipTimer() {
+  pausePipTimer();
+  pipTimerSeconds = 300;
+  updatePipTimerDisplay();
+}
+
+function primePhaseVideoCache() {
+  const cache = [];
+  Object.keys(PHASE_VIDEO).forEach((phase) => {
+    const source = PHASE_VIDEO[phase];
+    if (!source) return;
+
+    [source.loop, source.happy].forEach((src) => {
+      if (!src) return;
+      const video = document.createElement('video');
+      video.preload = 'auto';
+      video.muted = true;
+      video.playsInline = true;
+      video.src = src;
+      video.load();
+      cache.push(video);
+    });
+  });
+  window.__childPhaseVideoCache = cache;
 }
 
 function getTodayStamp() {
@@ -1308,6 +1940,46 @@ function playMergeSound(level = 0) {
   }, 42);
 }
 
+function playRewardDrawRollSound() {
+  for (let i = 0; i < 7; i += 1) {
+    window.setTimeout(() => {
+      playSynthTone({
+        frequency: 300 + i * 34,
+        frequencyEnd: 360 + i * 38,
+        type: 'square',
+        duration: 0.06,
+        volume: 0.12,
+        attack: 0.002,
+        decay: 0.055
+      });
+    }, i * 120);
+  }
+}
+
+function playRewardDrawWinSound() {
+  playSynthTone({
+    frequency: 520,
+    frequencyEnd: 900,
+    type: 'triangle',
+    duration: 0.22,
+    volume: 0.24,
+    attack: 0.003,
+    decay: 0.19
+  });
+  window.setTimeout(() => {
+    playSynthTone({
+      frequency: 740,
+      frequencyEnd: 1280,
+      type: 'sine',
+      duration: 0.26,
+      volume: 0.26,
+      attack: 0.003,
+      decay: 0.22,
+      detune: 7
+    });
+  }, 120);
+}
+
 function refreshForNewDay() {
   const didReset = ensureDailyState();
   if (!didReset) return false;
@@ -1336,8 +2008,8 @@ function handleInteractivePointerDown(event) {
 
 function normalizeRewardState() {
   const rawTarget = Number(state.rewardTargetScore);
-  const roundedTarget = Number.isFinite(rawTarget) ? Math.round(rawTarget / 10) * 10 : 100;
-  state.rewardTargetScore = Math.min(500, Math.max(10, roundedTarget));
+  const roundedTarget = Number.isFinite(rawTarget) ? Math.round(rawTarget / 10) * 10 : 1000;
+  state.rewardTargetScore = Math.min(rewardTargetMax, Math.max(10, roundedTarget));
 
   const rawBase = Number(state.rewardBaseScore);
   state.rewardBaseScore = Number.isFinite(rawBase) ? Math.max(0, rawBase) : 0;
@@ -1358,37 +2030,98 @@ function normalizeCatHouseState() {
     morning: typeof rewardByPhase.morning === 'string' ? rewardByPhase.morning : '',
     evening: typeof rewardByPhase.evening === 'string' ? rewardByPhase.evening : ''
   };
+  const drawByPhase = state.timerDrawStampByPhase && typeof state.timerDrawStampByPhase === 'object'
+    ? state.timerDrawStampByPhase
+    : {};
+  state.timerDrawStampByPhase = {
+    morning: typeof drawByPhase.morning === 'string' ? drawByPhase.morning : '',
+    evening: typeof drawByPhase.evening === 'string' ? drawByPhase.evening : ''
+  };
+  state.mainClockDrawStamp = typeof state.mainClockDrawStamp === 'string' ? state.mainClockDrawStamp : '';
+  state.speciesHistory = Array.isArray(state.speciesHistory)
+    ? state.speciesHistory
+      .map((id) => Number(id))
+      .filter((id) => Number.isFinite(id) && id >= 0)
+      .map((id) => normalizeSpeciesId(id))
+      .slice(-CAT_SPECIES_HISTORY_LIMIT)
+    : [];
+  const rawZoom = Number(state.catVillageZoom);
+  state.catVillageZoom = Number.isFinite(rawZoom)
+    ? Math.max(CAT_VILLAGE_ZOOM_MIN, Math.min(CAT_VILLAGE_ZOOM_MAX, Math.round(rawZoom)))
+    : CAT_VILLAGE_ZOOM_DEFAULT;
 
   // Legacy migration: older saves had one shared date field only.
   if (!state.catRewardStampByPhase.morning && !state.catRewardStampByPhase.evening && state.lastCatRewardDate) {
     state.catRewardStampByPhase.morning = state.lastCatRewardDate;
   }
 
+  if (state.catVillageSchemaVersion !== CAT_VILLAGE_SCHEMA_VERSION) {
+    state.cats = [];
+    state.speciesHistory = [];
+    state.catIdSeed = 1;
+    state.catVillageSchemaVersion = CAT_VILLAGE_SCHEMA_VERSION;
+    persistState();
+    return;
+  }
+
   if (!Array.isArray(state.cats)) {
     state.cats = [];
+    state.catVillageSchemaVersion = CAT_VILLAGE_SCHEMA_VERSION;
     return;
   }
 
   state.cats = state.cats
-    .map((cat) => ({
-      id: Number(cat.id),
-      level: Number(cat.level) || 0,
-      x: Number(cat.x),
-      y: Number(cat.y),
-      vx: Number(cat.vx),
-      vy: Number(cat.vy)
-    }))
+    .map((cat) => {
+      const savedColorBand = getSavedCatColorBand(cat);
+      const currentSpeciesId = Number.isFinite(Number(cat.speciesId))
+        ? normalizeSpeciesId(Number(cat.speciesId))
+        : Math.floor(Math.random() * Math.max(1, catCatalog.length));
+      const speciesId = savedColorBand === null
+        ? currentSpeciesId
+        : (
+          getSpeciesColorBand(currentSpeciesId) === savedColorBand
+            ? currentSpeciesId
+            : getPrimarySpeciesIdForBand(savedColorBand)
+        );
+
+      return {
+        id: Number(cat.id),
+        level: Number(cat.level) || 0,
+        speciesId,
+        colorBand: getSpeciesColorBand(speciesId),
+        x: Number(cat.x),
+        y: Number(cat.y),
+        vx: Number(cat.vx),
+        vy: Number(cat.vy)
+      };
+    })
     .filter((cat) => Number.isFinite(cat.id) && Number.isFinite(cat.x) && Number.isFinite(cat.y))
     .map((cat) => ({
       ...cat,
       level: Math.min(CAT_LEVEL_EMOJIS.length - 1, Math.max(0, Math.floor(cat.level))),
+      speciesId: normalizeSpeciesId(cat.speciesId),
+      colorBand: getSpeciesColorBand(cat.speciesId),
       vx: Number.isFinite(cat.vx) ? cat.vx : (Math.random() * 0.6 + 0.2) * (Math.random() > 0.5 ? 1 : -1),
       vy: Number.isFinite(cat.vy) ? cat.vy : (Math.random() * 0.6 + 0.2) * (Math.random() > 0.5 ? 1 : -1)
     }));
 
+  if (!Array.isArray(state.speciesHistory) || state.speciesHistory.length === 0) {
+    state.speciesHistory = state.cats
+      .map((cat) => Number(cat.speciesId))
+      .filter((id) => Number.isFinite(id) && id >= 0)
+      .map((id) => normalizeSpeciesId(id))
+      .slice(-CAT_SPECIES_HISTORY_LIMIT);
+  }
+
+  const jobCatStateChanged = syncJobCatVillageState();
+
   const maxId = state.cats.reduce((acc, cat) => Math.max(acc, cat.id), 0);
   if (maxId >= state.catIdSeed) {
     state.catIdSeed = maxId + 1;
+  }
+
+  if (jobCatStateChanged) {
+    persistState();
   }
 }
 
@@ -1406,6 +2139,47 @@ function loadState() {
   } catch (_) {
     // ignore parse errors
   }
+}
+
+function getFullscreenLockEnabled() {
+  try {
+    return localStorage.getItem(FULLSCREEN_LOCK_KEY) === '1';
+  } catch (_) {
+    return false;
+  }
+}
+
+function setFullscreenLockEnabled(enabled) {
+  try {
+    if (enabled) {
+      localStorage.setItem(FULLSCREEN_LOCK_KEY, '1');
+    } else {
+      localStorage.removeItem(FULLSCREEN_LOCK_KEY);
+    }
+  } catch (_) {
+    // ignore storage errors
+  }
+}
+
+function reconcileCompletedByMissionText(previousMissions, previousCompleted, nextMissions) {
+  const prev = Array.isArray(previousMissions) ? previousMissions : [];
+  const next = Array.isArray(nextMissions) ? nextMissions : [];
+  const completed = previousCompleted && typeof previousCompleted === 'object' ? previousCompleted : {};
+
+  const completedTexts = new Set(
+    prev
+      .map((text, idx) => ({ text: String(text || '').trim(), checked: !!completed[idx] }))
+      .filter((item) => item.checked && item.text.length > 0)
+      .map((item) => item.text)
+  );
+
+  const merged = {};
+  next.forEach((text, idx) => {
+    if (completedTexts.has(String(text || '').trim())) {
+      merged[idx] = true;
+    }
+  });
+  return merged;
 }
 
 function persistState() {
@@ -1483,16 +2257,18 @@ function handleMissionEditorEnter(event, idx) {
 }
 
 function applySettingsFromInputs() {
-  state.childName = document.getElementById('child-name').value.trim() || '하린';
+  const previousMissions = Array.isArray(state.missions) ? [...state.missions] : [];
+  const previousCompleted = state.completed && typeof state.completed === 'object' ? { ...state.completed } : {};
+
+  state.childName = document.getElementById('child-name').value.trim() || '우리 아이';
   syncChildNameAcrossPhases();
   state.leaveTime = document.getElementById('leave-time').value || '08:30';
   currentPhaseMissionItems = getMissionEditorRows(false);
   state.missions = getEnabledMissionTexts(currentPhaseMissionItems);
-  state.rewardTargetScore = Number(document.getElementById('reward-score-range').value) || 100;
+  state.completed = reconcileCompletedByMissionText(previousMissions, previousCompleted, state.missions);
+  state.rewardTargetScore = Number(document.getElementById('reward-score-range').value) || 1000;
   state.phaseOverride = document.getElementById('phase-override').value || 'auto';
   normalizePhaseOverride();
-  state.completed = {};
-  state.todayScore = 0;
   normalizeRewardState();
   persistCurrentPhaseSettings();
 }
@@ -1509,7 +2285,7 @@ function refreshAfterStateChange() {
 }
 
 function updateRewardTargetPreview(value) {
-  const normalized = Math.min(500, Math.max(10, Math.round(Number(value || 100) / 10) * 10));
+  const normalized = Math.min(rewardTargetMax, Math.max(10, Math.round(Number(value || 1000) / 10) * 10));
   const el = document.getElementById('reward-score-value');
   if (el) {
     el.textContent = `${normalized}점`;
@@ -1590,9 +2366,9 @@ function loadSettingsFromInput(event) {
       normalizeRewardState();
       refreshAfterStateChange();
       toggleSettings();
-      alert('JSON 설정을 불러왔어요.');
+      showAppAlert('JSON 설정을 불러왔어요.', '설정');
     } catch (_) {
-      alert('JSON 파일 형식을 확인해주세요.');
+      showAppAlert('JSON 파일 형식을 확인해주세요.', '설정');
     } finally {
       event.target.value = '';
     }
@@ -1600,20 +2376,21 @@ function loadSettingsFromInput(event) {
   reader.readAsText(file);
 }
 
-function resetSettings() {
-  if (!confirm('설정을 초기화할까요? 이 작업은 되돌릴 수 없어요.')) return;
+async function resetSettings() {
+  const accepted = await showAppConfirm('설정을 초기화할까요?\n이 작업은 되돌릴 수 없어요.', '초기화 확인', '초기화', '취소');
+  if (!accepted) return;
   localStorage.removeItem(STORAGE_KEY);
   stopCountdownTimer();
   countdownRemainingSeconds = 0;
   state = {
-    childName: '하린',
+    childName: '우리 아이',
     leaveTime: '08:30',
     missions: [...defaultMissions],
     phaseOverride: 'auto',
     phaseSettings: {},
     todayScore: 0,
     totalScore: 0,
-    rewardTargetScore: 100,
+    rewardTargetScore: 1000,
     rewardBaseScore: 0,
     completed: {},
     dayStamp: '',
@@ -1621,6 +2398,14 @@ function resetSettings() {
       morning: '',
       evening: ''
     },
+    timerDrawStampByPhase: {
+      morning: '',
+      evening: ''
+    },
+    mainClockDrawStamp: '',
+    catVillageZoom: CAT_VILLAGE_ZOOM_DEFAULT,
+    catVillageSchemaVersion: CAT_VILLAGE_SCHEMA_VERSION,
+    speciesHistory: [],
     lastCatRewardDate: '',
     catIdSeed: 1,
     cats: []
@@ -1643,7 +2428,7 @@ function renderScores() {
 }
 
 function getRewardProgressInfo() {
-  const target = Math.max(10, Number(state.rewardTargetScore) || 100);
+  const target = Math.max(10, Number(state.rewardTargetScore) || 1000);
   const current = Math.max(0, state.totalScore - state.rewardBaseScore);
   const ratio = Math.min(1, current / target);
   const filledSteps = Math.floor(ratio * REWARD_STEP_COUNT);
@@ -1667,7 +2452,7 @@ function buildRewardTrackMarkup(filledSteps, unlocked) {
 
   nodes.push(`
     <span class="h-8 w-0.5 mx-0.5 rounded-full shrink-0" style="background:${unlocked ? '#ff7f50' : '#d7d7d7'};"></span>
-    <button class="rounded-full border-2 border-outline flex items-center justify-center shrink-0 transition-all" style="width:clamp(1.9rem,5.2vw,2.55rem); height:clamp(1.9rem,5.2vw,2.55rem); background:${unlocked ? '#74aacf' : '#d7d7d7'}; color:${unlocked ? '#003e5a' : '#7a7a7a'};" type="button" onclick="claimReward()" ${unlocked ? '' : 'disabled'} aria-label="깃발 보상 받기">
+    <button class="rounded-full border-2 border-outline flex items-center justify-center shrink-0 transition-all" style="width:clamp(1.9rem,5.2vw,2.55rem); height:clamp(1.9rem,5.2vw,2.55rem); background:${unlocked ? '#74aacf' : '#d7d7d7'}; color:${unlocked ? '#003e5a' : '#7a7a7a'};" type="button" onclick="openRewardModal()" ${unlocked ? '' : 'disabled'} aria-label="보상 선택 열기">
       <span class="material-symbols-outlined" style="font-size:clamp(1.05rem,3vw,1.5rem); font-variation-settings: 'FILL' 1, 'wght' 600;">flag</span>
     </button>
   `);
@@ -1679,16 +2464,22 @@ function renderRewardProgress() {
   const label = document.getElementById('reward-progress-label');
   const track = document.getElementById('reward-track');
   const claimButton = document.getElementById('reward-claim-btn');
-  if (!label || !track || !claimButton) return;
+  const drawButton = document.getElementById('reward-draw-btn');
+  if (!label || !track || !claimButton || !drawButton) return;
 
   const { target, current, filledSteps, unlocked } = getRewardProgressInfo();
   label.textContent = `${Math.min(current, target)} / ${target}점`;
   track.innerHTML = buildRewardTrackMarkup(filledSteps, unlocked);
 
   claimButton.disabled = !unlocked;
-  claimButton.textContent = unlocked ? '깃발 보상 받기' : '깃발 잠금 중';
+  claimButton.textContent = unlocked ? '보상 받기' : '보상 잠금 중';
   claimButton.style.background = unlocked ? '#74aacf' : '#e5e5e5';
   claimButton.style.color = unlocked ? '#003e5a' : '#7a7a7a';
+
+  drawButton.disabled = !unlocked;
+  drawButton.textContent = unlocked ? '고양이 뽑기' : '뽑기 잠금 중';
+  drawButton.style.background = unlocked ? '#ffb95a' : '#e5e5e5';
+  drawButton.style.color = unlocked ? '#6f4600' : '#7a7a7a';
 }
 
 function openRewardModal() {
@@ -1709,6 +2500,8 @@ function closeRewardModal() {
 function openCatHouseModal() {
   const modal = document.getElementById('cat-house-modal');
   if (!modal) return;
+  initCatVillageTouchZoom();
+  updateCatVillageZoom(state.catVillageZoom, false, false);
   renderCatHouse();
   modal.classList.remove('hidden');
   modal.classList.add('flex');
@@ -1717,19 +2510,217 @@ function openCatHouseModal() {
 function closeCatHouseModal() {
   const modal = document.getElementById('cat-house-modal');
   if (!modal) return;
+  catVillagePinchState.active = false;
   modal.classList.add('hidden');
   modal.classList.remove('flex');
 }
 
-function claimReward() {
+async function claimRewardBonus() {
   const { unlocked } = getRewardProgressInfo();
   if (!unlocked) return;
-  if (!confirm('보상을 주시겠습니까?')) return;
+  const accepted = await showAppConfirm('보상을 주시겠습니까?', '보상 확인', '지급', '취소');
+  if (!accepted) return;
 
   state.rewardBaseScore = state.totalScore;
   persistState();
   renderRewardProgress();
-  alert('보상을 지급했어요. 다음 보상 구간이 새로 시작됩니다!');
+  await showAppAlert('보상을 지급했어요. 다음 보상 구간이 새로 시작됩니다!', '보상 완료');
+}
+
+function claimReward() {
+  claimRewardBonus();
+}
+
+function pickRandomSpeciesId(candidateSpeciesIds = null) {
+  const candidates = Array.from(new Set((Array.isArray(candidateSpeciesIds) && candidateSpeciesIds.length > 0
+    ? candidateSpeciesIds
+    : getDrawCandidateSpeciesIds())
+    .map((id) => Number(id))
+    .filter((id) => Number.isFinite(id) && id >= 0)
+    .map((id) => normalizeSpeciesId(id))));
+
+  if (candidates.length === 0) return 0;
+  return candidates[Math.floor(Math.random() * candidates.length)];
+}
+
+function renderRewardDrawPreview(species, labelText) {
+  const avatarEl = document.getElementById('reward-draw-avatar');
+  const nameEl = document.getElementById('reward-draw-name');
+  if (!avatarEl || !nameEl) return;
+
+  if (!species) {
+    avatarEl.textContent = '?';
+    avatarEl.style.borderColor = '#ffbf63';
+    nameEl.textContent = labelText || '어떤 고양이가 나올까요?';
+    return;
+  }
+
+  const emoji = CAT_LEVEL_EMOJIS[0] || '🐾';
+  avatarEl.style.borderColor = getColorBandHex(species.colorBand);
+  if (species.image) {
+    avatarEl.innerHTML = `<img src="${species.image}" alt="${species.name}" loading="lazy">`;
+  } else {
+    avatarEl.textContent = emoji;
+  }
+  nameEl.textContent = labelText || `${species.name} 준비 중...`;
+}
+
+function spawnRewardFireworks() {
+  const holder = document.getElementById('reward-draw-fireworks');
+  if (!holder) return;
+  holder.innerHTML = '';
+  const colors = ['#ff8a00', '#ffd166', '#ff5d8f', '#6ed3ff', '#8bf18b'];
+
+  for (let i = 0; i < 22; i += 1) {
+    const spark = document.createElement('span');
+    spark.className = 'reward-draw-spark';
+    const angle = (Math.PI * 2 * i) / 22;
+    const distance = 54 + Math.random() * 72;
+    spark.style.setProperty('--dx', `${Math.cos(angle) * distance}px`);
+    spark.style.setProperty('--dy', `${Math.sin(angle) * distance}px`);
+    spark.style.setProperty('--delay', `${Math.floor(Math.random() * 110)}ms`);
+    spark.style.setProperty('--spark-color', colors[i % colors.length]);
+    holder.appendChild(spark);
+  }
+
+  window.setTimeout(() => {
+    holder.innerHTML = '';
+  }, 1100);
+}
+
+function waitMs(ms) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+function openRewardDrawModal() {
+  const modal = document.getElementById('reward-draw-modal');
+  if (!modal) return;
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+}
+
+function closeRewardDrawModal() {
+  if (rewardDrawAnimating) return;
+  const modal = document.getElementById('reward-draw-modal');
+  if (!modal) return;
+  modal.classList.add('hidden');
+  modal.classList.remove('flex');
+}
+
+async function runRewardDrawSequence(finalSpeciesId, candidateSpeciesIds = null) {
+  openRewardDrawModal();
+  const modal = document.getElementById('reward-draw-modal');
+  const stage = document.getElementById('reward-draw-stage');
+  const reel = document.getElementById('reward-draw-reel');
+  if (!modal || !stage || !reel) return;
+
+  const pool = Array.isArray(catCatalog) && catCatalog.length > 0
+    ? catCatalog
+    : [{ id: 'fallback', name: '기본 고양이', image: '' }];
+  const previewPool = (Array.isArray(candidateSpeciesIds) && candidateSpeciesIds.length > 0
+    ? candidateSpeciesIds
+        .map((id) => pool[normalizeSpeciesId(id)])
+        .filter(Boolean)
+    : pool);
+  const clampedIndex = Math.max(0, Math.min(pool.length - 1, Number(finalSpeciesId) || 0));
+  const finalSpecies = pool[clampedIndex];
+
+  reel.classList.add('reward-draw-rolling');
+  renderRewardDrawPreview(null, '어떤 고양이가 나올까요?');
+  playRewardDrawRollSound();
+
+  for (let i = 0; i < 15; i += 1) {
+    const isQuestion = i % 4 === 3;
+    if (isQuestion) {
+      renderRewardDrawPreview(null, '어떤 고양이가 나올까요?');
+    } else {
+      const candidate = previewPool[Math.floor(Math.random() * previewPool.length)] || finalSpecies;
+      renderRewardDrawPreview(candidate, `${candidate.name}...`);
+    }
+    await waitMs(120 + i * 7);
+  }
+
+  reel.classList.remove('reward-draw-rolling');
+  reel.classList.add('reward-draw-reveal');
+  renderRewardDrawPreview(finalSpecies, `와! ${finalSpecies.name} 고양이가 나타났어요! 짝짝짝!`);
+  spawnRewardFireworks();
+  playRewardDrawWinSound();
+  await waitMs(1600);
+
+  reel.classList.remove('reward-draw-reveal');
+  modal.classList.add('hidden');
+  modal.classList.remove('flex');
+}
+
+async function drawRewardCat() {
+  const { unlocked } = getRewardProgressInfo();
+  if (!unlocked) return;
+  if (rewardDrawAnimating) return;
+  const accepted = await showAppConfirm('고양이 뽑기를 진행할까요?', '고양이 뽑기', '시작', '취소');
+  if (!accepted) return;
+
+  rewardDrawAnimating = true;
+  const drawButton = document.getElementById('reward-draw-btn');
+  const claimButton = document.getElementById('reward-claim-btn');
+  if (drawButton) drawButton.disabled = true;
+  if (claimButton) claimButton.disabled = true;
+
+  const candidateSpeciesIds = getDrawCandidateSpeciesIds();
+  const finalSpeciesId = pickRandomSpeciesId(candidateSpeciesIds);
+
+  try {
+    await runRewardDrawSequence(finalSpeciesId, candidateSpeciesIds);
+
+    state.rewardBaseScore = state.totalScore;
+    const cat = grantRandomCatFromCurrentPool('reward', finalSpeciesId);
+    persistState();
+    renderRewardProgress();
+    if (cat) {
+      const species = getCatSpecies(cat);
+      await showAppAlert(`축하해요! ${species.name} 고양이를 만났어요!`, '획득 성공');
+    }
+  } finally {
+    rewardDrawAnimating = false;
+    renderRewardProgress();
+  }
+}
+
+async function triggerMainTimerDrawIfEligible() {
+  const today = getTodayStamp();
+  const alreadyDrewToday =
+    state.mainClockDrawStamp === today ||
+    state.timerDrawStampByPhase.morning === today ||
+    state.timerDrawStampByPhase.evening === today;
+  if (alreadyDrewToday) return;
+  if (rewardDrawAnimating) return;
+
+  rewardDrawAnimating = true;
+  state.mainClockDrawStamp = today;
+  state.timerDrawStampByPhase.morning = today;
+  state.timerDrawStampByPhase.evening = today;
+  const candidateSpeciesIds = getDrawCandidateSpeciesIds();
+  const finalSpeciesId = pickRandomSpeciesId(candidateSpeciesIds);
+
+  try {
+    await runRewardDrawSequence(finalSpeciesId, candidateSpeciesIds);
+
+    const cat = grantRandomCatFromCurrentPool('main-timer', finalSpeciesId);
+    persistCurrentPhaseSettings();
+    persistState();
+    if (cat) {
+      const species = getCatSpecies(cat);
+      await showAppAlert(`오늘의 첫 시작! ${species.name} 고양이를 획득했어요!`, '첫 시작 뽑기');
+    }
+  } finally {
+    rewardDrawAnimating = false;
+    renderRewardProgress();
+  }
+}
+
+function handleMainClockKeydown(event) {
+  if (!event || (event.key !== 'Enter' && event.key !== ' ')) return;
+  event.preventDefault();
+  triggerMainTimerDrawIfEligible();
 }
 
 function getKoreanSubjectParticle(name) {
@@ -1746,7 +2737,7 @@ function renderHeaderTitle() {
   const title = document.getElementById('planner-title');
   if (!title) return;
   const particle = getKoreanSubjectParticle(state.childName);
-  const nameText = state.childName || '하린';
+  const nameText = state.childName || '우리 아이';
   const phaseTitle = PHASE_TITLES[CURRENT_PHASE] || PHASE_TITLES.morning;
   const phaseEmoji = CURRENT_PHASE === 'evening' ? '🌙' : '🌞';
   title.innerHTML = `<span>🐾</span><span>${nameText}${particle} ${phaseTitle}</span>`;
@@ -1915,22 +2906,414 @@ function getCatMatBounds() {
   };
 }
 
+function getTouchDistance(touches) {
+  if (!touches || touches.length < 2) return 0;
+  const dx = touches[0].clientX - touches[1].clientX;
+  const dy = touches[0].clientY - touches[1].clientY;
+  return Math.hypot(dx, dy);
+}
+
+function handleCatVillageTouchStart(event) {
+  if (!event.touches || event.touches.length < 2) return;
+  endDragCat();
+  catVillagePinchState.active = true;
+  catVillagePinchState.startDistance = getTouchDistance(event.touches);
+  catVillagePinchState.startZoom = state.catVillageZoom;
+}
+
+function handleCatVillageTouchMove(event) {
+  if (!catVillagePinchState.active || !event.touches || event.touches.length < 2) return;
+  event.preventDefault();
+
+  const currentDistance = getTouchDistance(event.touches);
+  if (catVillagePinchState.startDistance < 10 || currentDistance < 10) return;
+
+  const ratio = currentDistance / catVillagePinchState.startDistance;
+  const nextZoom = Math.round(catVillagePinchState.startZoom * ratio);
+  updateCatVillageZoom(nextZoom, false, true);
+}
+
+function handleCatVillageTouchEnd(event) {
+  if (!catVillagePinchState.active) return;
+  if (event.touches && event.touches.length >= 2) return;
+  catVillagePinchState.active = false;
+  persistState();
+}
+
+function initCatVillageTouchZoom() {
+  const mat = document.getElementById('cat-house-mat');
+  if (!mat || mat.dataset.touchZoomBound === '1') return;
+
+  mat.dataset.touchZoomBound = '1';
+  mat.addEventListener('touchstart', handleCatVillageTouchStart, { passive: true });
+  mat.addEventListener('touchmove', handleCatVillageTouchMove, { passive: false });
+  mat.addEventListener('touchend', handleCatVillageTouchEnd, { passive: true });
+  mat.addEventListener('touchcancel', handleCatVillageTouchEnd, { passive: true });
+}
+
+function getAutoCatScaleFactor() {
+  const count = Array.isArray(state.cats) ? state.cats.length : 0;
+  if (count >= 180) return 0.6;
+  if (count >= 140) return 0.68;
+  if (count >= 100) return 0.76;
+  if (count >= 70) return 0.86;
+  if (count >= 40) return 0.94;
+  return 1;
+}
+
+function getCatSizePx() {
+  const zoom = Number.isFinite(Number(state.catVillageZoom))
+    ? Math.max(CAT_VILLAGE_ZOOM_MIN, Math.min(CAT_VILLAGE_ZOOM_MAX, Number(state.catVillageZoom)))
+    : CAT_VILLAGE_ZOOM_DEFAULT;
+  const scaled = CAT_SIZE_PX * (zoom / 100) * getAutoCatScaleFactor();
+  return Math.max(34, Math.round(scaled));
+}
+
+function updateCatVillageZoom(value, shouldPersist = true, shouldRender = true) {
+  const parsed = Number(value);
+  const zoom = Number.isFinite(parsed)
+    ? Math.max(CAT_VILLAGE_ZOOM_MIN, Math.min(CAT_VILLAGE_ZOOM_MAX, Math.round(parsed)))
+    : CAT_VILLAGE_ZOOM_DEFAULT;
+  state.catVillageZoom = zoom;
+
+  const input = document.getElementById('cat-village-zoom');
+  if (input && Number(input.value) !== zoom) {
+    input.value = String(zoom);
+  }
+  const label = document.getElementById('cat-village-zoom-value');
+  if (label) {
+    label.textContent = `${zoom}%`;
+  }
+
+  if (shouldPersist) {
+    persistState();
+  }
+  if (shouldRender) {
+    renderCatHouse();
+  }
+}
+
+function rememberSpeciesUsage(speciesId) {
+  const normalized = normalizeSpeciesId(speciesId);
+  if (!Array.isArray(state.speciesHistory)) {
+    state.speciesHistory = [];
+  }
+  state.speciesHistory.push(normalized);
+  if (state.speciesHistory.length > CAT_SPECIES_HISTORY_LIMIT) {
+    state.speciesHistory = state.speciesHistory.slice(-CAT_SPECIES_HISTORY_LIMIT);
+  }
+}
+
+function pickLeastUsedSpeciesId(candidates) {
+  const normalizedCandidates = Array.from(new Set((Array.isArray(candidates) ? candidates : [])
+    .map((id) => Number(id))
+    .filter((id) => Number.isFinite(id) && id >= 0)
+    .map((id) => normalizeSpeciesId(id))))
+    .sort((a, b) => a - b);
+
+  if (normalizedCandidates.length === 0) return 0;
+
+  const history = Array.isArray(state.speciesHistory) ? state.speciesHistory : [];
+
+  let bestId = normalizedCandidates[0];
+  let bestCount = Number.POSITIVE_INFINITY;
+  let bestDistance = -1;
+
+  normalizedCandidates.forEach((candidate) => {
+    let count = 0;
+    let lastIndex = -1;
+
+    for (let i = 0; i < history.length; i += 1) {
+      if (history[i] === candidate) {
+        count += 1;
+        lastIndex = i;
+      }
+    }
+
+    const distance = lastIndex === -1 ? Number.MAX_SAFE_INTEGER : (history.length - 1 - lastIndex);
+    if (count < bestCount || (count === bestCount && distance > bestDistance)) {
+      bestId = candidate;
+      bestCount = count;
+      bestDistance = distance;
+    }
+  });
+
+  return bestId;
+}
+
+function pickSpeciesIdForBand(colorBand, excludeSpeciesIds = []) {
+  const band = normalizeColorBand(colorBand);
+  const candidates = getAvailableSpeciesIdsForBand(band, excludeSpeciesIds);
+
+  if (candidates.length > 0) {
+    return pickLeastUsedSpeciesId(candidates);
+  }
+  return pickLeastUsedSpeciesId([band % Math.max(1, catCatalog.length)]);
+}
+
 function clampCatToMat(cat) {
+  const catSize = getCatSizePx();
   const { width, height } = getCatMatBounds();
-  const maxX = Math.max(0, width - CAT_SIZE_PX);
-  const maxY = Math.max(0, height - CAT_SIZE_PX);
+  const maxX = Math.max(0, width - catSize);
+  const maxY = Math.max(0, height - catSize);
   cat.x = Math.min(maxX, Math.max(0, cat.x));
   cat.y = Math.min(maxY, Math.max(0, cat.y));
 }
 
-function createCat(level = 0, x = null, y = null) {
+function getCatSpecies(cat) {
+  const pool = Array.isArray(catCatalog) && catCatalog.length > 0 ? catCatalog : [{ id: 'fallback', name: '기본 고양이', image: '' }];
+  const idx = normalizeSpeciesId(cat && cat.speciesId);
+  return pool[idx] || pool[0];
+}
+
+function normalizeSpeciesId(value) {
+  const poolSize = Math.max(1, catCatalog.length);
+  const n = Number(value);
+  if (!Number.isFinite(n)) {
+    return Math.floor(Math.random() * poolSize);
+  }
+  const floored = Math.floor(n);
+  return ((floored % poolSize) + poolSize) % poolSize;
+}
+
+function hasExplicitSpeciesId(value) {
+  return value !== null && value !== undefined && value !== '' && Number.isFinite(Number(value));
+}
+
+function getSavedCatColorBand(cat) {
+  if (Number.isFinite(Number(cat && cat.colorBand))) {
+    return normalizeColorBand(Number(cat.colorBand));
+  }
+  if (cat && Number.isFinite(Number(cat.speciesId))) {
+    return getSpeciesColorBand(Number(cat.speciesId));
+  }
+  return null;
+}
+
+function normalizeColorBand(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return 0;
+  return Math.max(0, Math.min(CAT_COLOR_BAND_COUNT - 1, Math.floor(n)));
+}
+
+function getSpeciesColorBand(speciesId) {
+  const poolSize = Math.max(1, catCatalog.length);
+  const idx = Number.isFinite(Number(speciesId)) ? Number(speciesId) : 0;
+  const clamped = Math.max(0, Math.min(poolSize - 1, Math.floor(idx)));
+  const species = catCatalog[clamped];
+  if (species && Number.isFinite(Number(species.colorBand))) {
+    return normalizeColorBand(Number(species.colorBand));
+  }
+  return normalizeColorBand(Math.floor(clamped / CAT_JOB_VARIANTS_PER_BAND));
+}
+
+function getSpeciesIdsForBand(colorBand) {
+  const poolSize = Math.max(1, catCatalog.length);
+  const band = normalizeColorBand(colorBand);
+  const ids = [];
+  for (let i = 0; i < poolSize; i += 1) {
+    if (getSpeciesColorBand(i) === band) {
+      ids.push(i);
+    }
+  }
+  return ids;
+}
+
+function getPrimarySpeciesIdForBand(colorBand) {
+  const ids = getSpeciesIdsForBand(colorBand);
+  if (ids.length > 0) return ids[0];
+  return normalizeSpeciesId(colorBand);
+}
+
+function getMaxCatalogColorBand() {
+  const poolSize = Math.max(1, catCatalog.length);
+  let maxBand = 0;
+  for (let i = 0; i < poolSize; i += 1) {
+    maxBand = Math.max(maxBand, getSpeciesColorBand(i));
+  }
+  return maxBand;
+}
+
+function getOwnedSpeciesIdSet() {
+  return new Set((Array.isArray(state.cats) ? state.cats : [])
+    .map((cat) => Number(cat && cat.speciesId))
+    .filter((id) => Number.isFinite(id) && id >= 0)
+    .map((id) => normalizeSpeciesId(id)));
+}
+
+function getFreshSpeciesIdsForBand(colorBand, excludeSpeciesIds = []) {
+  const owned = getOwnedSpeciesIdSet();
+  const excluded = new Set((Array.isArray(excludeSpeciesIds) ? excludeSpeciesIds : [])
+    .map((id) => Number(id))
+    .filter((id) => Number.isFinite(id) && id >= 0)
+    .map((id) => normalizeSpeciesId(id)));
+
+  return getSpeciesIdsForBand(colorBand).filter((id) => !owned.has(id) && !excluded.has(id));
+}
+
+function getAvailableSpeciesIdsForBand(colorBand, excludeSpeciesIds = []) {
+  const ids = getSpeciesIdsForBand(colorBand);
+  const fresh = getFreshSpeciesIdsForBand(colorBand, excludeSpeciesIds);
+  if (fresh.length > 0) return fresh;
+
+  const excluded = new Set((Array.isArray(excludeSpeciesIds) ? excludeSpeciesIds : [])
+    .map((id) => Number(id))
+    .filter((id) => Number.isFinite(id) && id >= 0)
+    .map((id) => normalizeSpeciesId(id)));
+  const notExcluded = ids.filter((id) => !excluded.has(id));
+  return notExcluded.length > 0 ? notExcluded : ids;
+}
+
+function getHighestCatColorBand() {
+  if (!Array.isArray(state.cats) || state.cats.length === 0) return 0;
+  return state.cats.reduce((acc, cat) => Math.max(acc, getCatColorBand(cat)), 0);
+}
+
+function getDrawCandidateSpeciesIds() {
+  const maxBand = getDrawMaxLevel();
+  const all = [];
+  const fresh = [];
+
+  for (let band = 0; band <= maxBand; band += 1) {
+    all.push(...getSpeciesIdsForBand(band));
+    fresh.push(...getFreshSpeciesIdsForBand(band));
+  }
+
+  if (fresh.length > 0) return Array.from(new Set(fresh));
+  if (all.length > 0) return Array.from(new Set(all));
+  return [0];
+}
+
+function dedupeCatSpeciesWithinBands() {
+  if (!Array.isArray(state.cats) || state.cats.length === 0) return false;
+
+  const used = new Set();
+  let changed = false;
+  state.cats = state.cats.map((cat) => {
+    const currentSpeciesId = normalizeSpeciesId(cat && cat.speciesId);
+    if (!used.has(currentSpeciesId)) {
+      used.add(currentSpeciesId);
+      return cat;
+    }
+
+    const band = getSpeciesColorBand(currentSpeciesId);
+    const replacementIds = getSpeciesIdsForBand(band).filter((id) => !used.has(id));
+    const replacementId = replacementIds.length > 0
+      ? pickLeastUsedSpeciesId(replacementIds)
+      : currentSpeciesId;
+
+    used.add(replacementId);
+    if (replacementId !== currentSpeciesId) {
+      changed = true;
+    }
+    return {
+      ...cat,
+      speciesId: replacementId,
+      colorBand: getSpeciesColorBand(replacementId)
+    };
+  });
+
+  return changed;
+}
+
+function syncJobCatVillageState() {
+  if (!Array.isArray(state.cats)) return false;
+
+  if (state.cats.length === 0) {
+    const changed = state.catVillageSchemaVersion !== CAT_VILLAGE_SCHEMA_VERSION;
+    state.catVillageSchemaVersion = CAT_VILLAGE_SCHEMA_VERSION;
+    return changed;
+  }
+
+  let changed = state.catVillageSchemaVersion !== CAT_VILLAGE_SCHEMA_VERSION;
+
+  state.cats = state.cats.map((cat) => {
+    const savedColorBand = getSavedCatColorBand(cat);
+    const currentSpeciesId = normalizeSpeciesId(cat && cat.speciesId);
+    const speciesId = savedColorBand === null
+      ? currentSpeciesId
+      : (
+        getSpeciesColorBand(currentSpeciesId) === savedColorBand
+          ? currentSpeciesId
+          : getPrimarySpeciesIdForBand(savedColorBand)
+      );
+    const colorBand = getSpeciesColorBand(speciesId);
+
+    if (Number(cat.speciesId) !== speciesId || Number(cat.colorBand) !== colorBand) {
+      changed = true;
+    }
+
+    return {
+      ...cat,
+      speciesId,
+      colorBand
+    };
+  });
+
+  if (dedupeCatSpeciesWithinBands()) {
+    changed = true;
+  }
+
+  state.speciesHistory = state.cats
+    .map((cat) => normalizeSpeciesId(cat.speciesId))
+    .slice(-CAT_SPECIES_HISTORY_LIMIT);
+  state.catVillageSchemaVersion = CAT_VILLAGE_SCHEMA_VERSION;
+  return changed;
+}
+
+function getColorBandHex(band) {
+  return CAT_COLOR_BANDS[normalizeColorBand(band)] || CAT_COLOR_BANDS[0];
+}
+
+function getCatColorBand(cat) {
+  if (cat && Number.isFinite(Number(cat.speciesId))) {
+    return getSpeciesColorBand(Number(cat.speciesId));
+  }
+  if (Number.isFinite(Number(cat && cat.colorBand))) {
+    return normalizeColorBand(Number(cat.colorBand));
+  }
+  return 0;
+}
+
+function renderCatColorTierLegend() {
+  const legend = document.getElementById('cat-color-tier-legend');
+  if (!legend) return;
+  legend.innerHTML = CAT_COLOR_BANDS.map((color, index) => `
+    <span class="cat-band-heart" title="${index + 1}단계 컬러">
+      <span class="material-symbols-outlined" style="color:${color};">favorite</span>
+    </span>
+  `).join('');
+}
+
+function getDrawMaxLevel() {
+  return Math.max(0, Math.min(getMaxCatalogColorBand(), getHighestCatColorBand()));
+}
+
+function grantRandomCatFromCurrentPool(_source = 'reward', forcedSpeciesId = null) {
+  const speciesId = hasExplicitSpeciesId(forcedSpeciesId)
+    ? normalizeSpeciesId(Number(forcedSpeciesId))
+    : pickRandomSpeciesId();
+  const level = Math.min(CAT_LEVEL_EMOJIS.length - 1, getSpeciesColorBand(speciesId));
+  const cat = createCat(level, null, null, speciesId);
+  renderCatHouse();
+  return cat;
+}
+
+function createCat(level = 0, x = null, y = null, forcedSpeciesId = null) {
+  const catSize = getCatSizePx();
   const { width, height } = getCatMatBounds();
-  const maxX = Math.max(0, width - CAT_SIZE_PX);
-  const maxY = Math.max(0, height - CAT_SIZE_PX);
+  const maxX = Math.max(0, width - catSize);
+  const maxY = Math.max(0, height - catSize);
   const velocity = randomCatVelocity();
+  const normalizedLevel = Math.min(CAT_LEVEL_EMOJIS.length - 1, Math.max(0, Math.floor(Number(level) || 0)));
+  const speciesId = hasExplicitSpeciesId(forcedSpeciesId)
+    ? normalizeSpeciesId(Number(forcedSpeciesId))
+    : pickSpeciesIdForBand(normalizedLevel);
   const next = {
     id: state.catIdSeed,
-    level: Math.min(CAT_LEVEL_EMOJIS.length - 1, Math.max(0, level)),
+    level: normalizedLevel,
+    speciesId,
+    colorBand: getSpeciesColorBand(speciesId),
     x: x === null ? Math.random() * maxX : x,
     y: y === null ? Math.random() * maxY : y,
     vx: velocity.vx,
@@ -1940,6 +3323,7 @@ function createCat(level = 0, x = null, y = null) {
   state.catIdSeed += 1;
   clampCatToMat(next);
   state.cats.push(next);
+  rememberSpeciesUsage(speciesId);
   return next;
 }
 
@@ -1948,18 +3332,29 @@ function renderCatHouse() {
   const count = document.getElementById('cat-house-count');
   if (!mat || !count) return;
 
+  updateCatVillageZoom(state.catVillageZoom, false, false);
+  renderCatColorTierLegend();
   count.textContent = `고양이 ${state.cats.length}마리`;
+  const catSize = getCatSizePx();
+  const avatarSize = Math.max(30, Math.round(catSize * 1.26));
+  const nameBottom = -Math.max(11, Math.round(catSize * 0.3));
+  const nameFont = Math.max(8, Math.round(catSize * 0.17));
   mat.innerHTML = state.cats.map((cat) => {
-    const emoji = CAT_LEVEL_EMOJIS[cat.level] || CAT_LEVEL_EMOJIS[CAT_LEVEL_EMOJIS.length - 1];
+    const colorBand = getCatColorBand(cat);
+    const colorHex = getColorBandHex(colorBand);
+    const species = getCatSpecies(cat);
+    const avatar = species.image
+      ? `<img class="house-cat-avatar job-cat-image" src="${species.image}" alt="${species.name}" loading="lazy" decoding="async" style="width:${avatarSize}px;height:${avatarSize}px;">`
+      : `<span class="house-cat-avatar placeholder" aria-hidden="true" style="width:${avatarSize}px;height:${avatarSize}px;"></span>`;
     return `
       <button
-        class="house-cat level-${Math.min(cat.level, CAT_LEVEL_EMOJIS.length - 1)}"
+        class="house-cat"
         data-cat-id="${cat.id}"
         onpointerdown="startDragCat(event, ${cat.id})"
         aria-label="${cat.level + 1}레벨 고양이"
         type="button"
-        style="left:${cat.x}px; top:${cat.y}px;"
-      >${emoji}</button>
+        style="left:${cat.x}px; top:${cat.y}px; --cat-accent:${colorHex}; --cat-size:${catSize}px;"
+      >${avatar}<span class="house-cat-name" style="bottom:${nameBottom}px;font-size:${nameFont}px;">${species.name}</span></button>
     `;
   }).join('');
 }
@@ -2006,23 +3401,26 @@ function moveDraggingCat(clientX, clientY) {
 }
 
 function tryMergeCats(baseCat) {
+  const catSize = getCatSizePx();
   const other = state.cats.find((cat) => {
     if (cat.id === baseCat.id) return false;
-    if (cat.level !== baseCat.level) return false;
+    if (getCatColorBand(cat) !== getCatColorBand(baseCat)) return false;
 
-    const dx = (cat.x + CAT_SIZE_PX / 2) - (baseCat.x + CAT_SIZE_PX / 2);
-    const dy = (cat.y + CAT_SIZE_PX / 2) - (baseCat.y + CAT_SIZE_PX / 2);
-    return Math.hypot(dx, dy) < CAT_SIZE_PX * 0.72;
+    const dx = (cat.x + catSize / 2) - (baseCat.x + catSize / 2);
+    const dy = (cat.y + catSize / 2) - (baseCat.y + catSize / 2);
+    return Math.hypot(dx, dy) < catSize * 0.72;
   });
 
   if (!other) return false;
 
-  const nextLevel = Math.min(CAT_LEVEL_EMOJIS.length - 1, baseCat.level + 1);
+  const nextLevel = Math.min(CAT_LEVEL_EMOJIS.length - 1, Math.max(baseCat.level, other.level) + 1);
   const mergedX = (baseCat.x + other.x) / 2;
   const mergedY = (baseCat.y + other.y) / 2;
+  const mergedBand = Math.min(getMaxCatalogColorBand(), getCatColorBand(baseCat) + 1);
+  const mergedSpeciesId = pickSpeciesIdForBand(mergedBand, [baseCat.speciesId, other.speciesId]);
 
   state.cats = state.cats.filter((cat) => cat.id !== baseCat.id && cat.id !== other.id);
-  const newCat = createCat(nextLevel, mergedX, mergedY);
+  const newCat = createCat(nextLevel, mergedX, mergedY, mergedSpeciesId);
   persistState();
   renderCatHouse();
   playMergeSound(nextLevel);
@@ -2056,6 +3454,7 @@ function endDragCat() {
 }
 
 function animateCats() {
+  const catSize = getCatSizePx();
   const { width, height } = getCatMatBounds();
 
   state.cats.forEach((cat) => {
@@ -2064,8 +3463,8 @@ function animateCats() {
     cat.x += cat.vx;
     cat.y += cat.vy;
 
-    const maxX = Math.max(0, width - CAT_SIZE_PX);
-    const maxY = Math.max(0, height - CAT_SIZE_PX);
+    const maxX = Math.max(0, width - catSize);
+    const maxY = Math.max(0, height - catSize);
 
     if (cat.x <= 0 || cat.x >= maxX) {
       cat.vx *= -1;
@@ -2113,6 +3512,7 @@ function playLoopVideo() {
   const video = document.getElementById('cat-video');
   if (!video) return;
   const loopVideoSrc = getLoopVideoSrc();
+  video.poster = VIDEO_FALLBACK_POSTER;
 
   if (happyPlaybackTimeoutId) {
     clearTimeout(happyPlaybackTimeoutId);
@@ -2160,6 +3560,7 @@ function playHappyScene() {
   const video = document.getElementById('cat-video');
   if (!video) return;
   const happyVideoSrc = getHappyVideoSrc();
+  video.poster = VIDEO_FALLBACK_POSTER;
 
   if (happyPlaybackTimeoutId) {
     clearTimeout(happyPlaybackTimeoutId);
@@ -2349,7 +3750,11 @@ function updateHeaderClock() {
 }
 
 function updateCountdownTimer() {
-  countdownRemainingSeconds = Math.max(0, countdownRemainingSeconds - 1);
+  if (!countdownTargetTimestamp) {
+    syncCountdownDisplay();
+  }
+
+  countdownRemainingSeconds = Math.max(0, Math.floor((countdownTargetTimestamp - Date.now()) / 1000));
   const mm = String(Math.floor(countdownRemainingSeconds / 60)).padStart(2, '0');
   const ss = String(countdownRemainingSeconds % 60).padStart(2, '0');
   document.getElementById('countdown-large-minutes').textContent = mm;
@@ -2362,8 +3767,9 @@ function updateCountdownTimer() {
 
 function syncCountdownDisplay() {
   const target = parseTimeToday(state.leaveTime);
+  countdownTargetTimestamp = target.getTime();
   updateArrivalLabelByTarget(target);
-  const diff = Math.max(0, Math.floor((target.getTime() - Date.now()) / 1000));
+  const diff = Math.max(0, Math.floor((countdownTargetTimestamp - Date.now()) / 1000));
   countdownRemainingSeconds = diff;
   const mm = String(Math.floor(diff / 60)).padStart(2, '0');
   const ss = String(diff % 60).padStart(2, '0');
@@ -2375,15 +3781,43 @@ function syncCountdownDisplay() {
 function renderFullscreenToggle() {
   const icon = document.getElementById('fullscreen-toggle-icon');
   if (!icon) return;
-  icon.textContent = document.fullscreenElement ? 'fullscreen_exit' : 'fullscreen';
+  icon.textContent = (document.fullscreenElement || getFullscreenLockEnabled()) ? 'fullscreen_exit' : 'fullscreen';
+}
+
+async function requestFullscreenWithRetry() {
+  if (document.fullscreenElement || !getFullscreenLockEnabled()) return;
+
+  try {
+    await document.documentElement.requestFullscreen();
+  } catch (_) {
+    const retryOnGesture = async () => {
+      window.removeEventListener('pointerdown', retryOnGesture, true);
+      window.removeEventListener('keydown', retryOnGesture, true);
+      if (!getFullscreenLockEnabled() || document.fullscreenElement) return;
+      try {
+        await document.documentElement.requestFullscreen();
+      } catch (_) {
+        // gesture retry can still fail depending on browser policy
+      } finally {
+        renderFullscreenToggle();
+      }
+    };
+
+    window.addEventListener('pointerdown', retryOnGesture, { capture: true, once: true });
+    window.addEventListener('keydown', retryOnGesture, { capture: true, once: true });
+  }
 }
 
 async function toggleFullscreenMode() {
   try {
-    if (document.fullscreenElement) {
-      await document.exitFullscreen();
+    if (document.fullscreenElement || getFullscreenLockEnabled()) {
+      setFullscreenLockEnabled(false);
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+      }
     } else {
-      await document.documentElement.requestFullscreen();
+      setFullscreenLockEnabled(true);
+      await requestFullscreenWithRetry();
     }
   } catch (_) {
     // ignore unsupported fullscreen requests
@@ -2402,15 +3836,11 @@ function restoreFullscreenAfterPhaseSwitch() {
   }
 
   if (!shouldRestore || document.fullscreenElement) return;
+  setFullscreenLockEnabled(true);
 
   const tryEnterFullscreen = async () => {
-    try {
-      await document.documentElement.requestFullscreen();
-    } catch (_) {
-      // Some browsers require a fresh user gesture after navigation.
-    } finally {
-      renderFullscreenToggle();
-    }
+    await requestFullscreenWithRetry();
+    renderFullscreenToggle();
   };
 
   const retryOnGesture = async () => {
@@ -2443,6 +3873,7 @@ function renderCountdownToggle() {
 function startCountdownTimer() {
   if (countdownRunning) return;
   syncCountdownDisplay();
+  triggerMainTimerDrawIfEligible();
   countdownRunning = true;
   countdownIntervalId = window.setInterval(updateCountdownTimer, 1000);
   renderCountdownToggle();
@@ -2483,6 +3914,7 @@ function toggleSettings() {
     );
     renderMissionEditor();
     document.getElementById('reward-score-range').value = state.rewardTargetScore;
+    updateRewardSliderBounds();
     normalizePhaseOverride();
     document.getElementById('phase-override').value = state.phaseOverride;
     updateRewardTargetPreview(state.rewardTargetScore);
@@ -2602,6 +4034,9 @@ ensurePhaseSettings();
 applyCurrentPhaseSettingsToState();
 normalizeRewardState();
 normalizeCatHouseState();
+updatePipTimerDisplay();
+updateRewardSliderBounds();
+primePhaseVideoCache();
 refreshForNewDay();
 updateUiScale();
 updateResponsiveLayout();
@@ -2617,12 +4052,17 @@ renderFullscreenToggle();
 renderCountdownToggle();
 renderPhaseToggleIcon();
 restoreFullscreenAfterPhaseSwitch();
+if (getFullscreenLockEnabled()) {
+  requestFullscreenWithRetry();
+}
 applyDebugViewportMode('auto');
 grantDailyCatRewardIfNeeded();
 ensureCatAnimation();
+initCatVillageTouchZoom();
 initResponsiveObserver();
 scheduleResponsiveLayout();
 maybeAutoSwitchPhase();
+fetchAndApplyHotfixManifest();
 
 if (document.fonts && document.fonts.ready) {
   document.fonts.ready.then(() => {
@@ -2648,8 +4088,38 @@ window.addEventListener('pointercancel', () => {
 setInterval(updateHeaderClock, 1000);
 setInterval(refreshForNewDay, 1000);
 setInterval(fitArrivalTimer, 1000);
+setInterval(syncCountdownDisplay, 15000);
 setInterval(maybeAutoSwitchPhase, 30000);
-document.addEventListener('fullscreenchange', renderFullscreenToggle);
+setInterval(fetchAndApplyHotfixManifest, 180000);
+document.addEventListener('fullscreenchange', () => {
+  renderFullscreenToggle();
+  if (!document.fullscreenElement && getFullscreenLockEnabled()) {
+    requestFullscreenWithRetry();
+  }
+});
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') {
+    updateHeaderClock();
+    syncCountdownDisplay();
+    if (getFullscreenLockEnabled()) {
+      requestFullscreenWithRetry();
+    }
+  }
+});
+window.addEventListener('focus', () => {
+  updateHeaderClock();
+  syncCountdownDisplay();
+  if (getFullscreenLockEnabled()) {
+    requestFullscreenWithRetry();
+  }
+});
+window.addEventListener('pageshow', () => {
+  updateHeaderClock();
+  syncCountdownDisplay();
+  if (getFullscreenLockEnabled()) {
+    requestFullscreenWithRetry();
+  }
+});
 window.addEventListener('resize', () => {
   updateUiScale();
   scheduleResponsiveLayout();
