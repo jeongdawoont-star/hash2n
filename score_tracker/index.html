@@ -677,7 +677,7 @@ body {
       <button class="muted-btn" type="button" onclick="triggerConfigFileLoad()">📂 파일 불러오기</button>
       <input type="file" id="configFileInput" accept=".json,application/json" style="display:none;">
     </div>
-    <div class="setup-tools-hint">설정값은 GitHub 대신 이 기기 또는 로컬 JSON 파일로만 보관할 수 있습니다.</div>
+    <div class="setup-tools-hint">한 번 저장하거나 불러온 설정은 현재 브라우저에 보관되어 다음 시작 때 자동으로 복원됩니다.</div>
     <button class="connect-btn" id="connectBtn" onclick="connectApp()">🚀 시작하기</button>
     <button class="muted-btn" id="cancelEditBtn" onclick="cancelConfigEdit()" style="width:100%;margin-top:10px;display:none;">취소</button>
   </div>
@@ -819,9 +819,40 @@ function updateConfigFileStatus(state, detail = '') {
 
 // ── 설정 저장/로드 ──────────────────────────────────────────
 const RUNTIME_CONFIG_KEY = 'tracker_cfg_runtime';
-function saveConfig(cfg) { sessionStorage.setItem(RUNTIME_CONFIG_KEY, JSON.stringify(cfg)); }
+const PERSISTED_CONFIG_KEY = 'tracker_cfg_saved';
+const PERSISTED_CONFIG_LABEL_KEY = 'tracker_cfg_saved_label';
+
+function readStoredConfig(storage, key) {
+  try {
+    return normalizeConfig(JSON.parse(storage.getItem(key) || '{}'));
+  } catch {
+    return {};
+  }
+}
+
+function saveConfig(cfg, label = null) {
+  const normalized = normalizeConfig(cfg);
+  const serialized = JSON.stringify(normalized);
+  try { sessionStorage.setItem(RUNTIME_CONFIG_KEY, serialized); } catch {}
+  try {
+    localStorage.setItem(PERSISTED_CONFIG_KEY, serialized);
+    if (label !== null) {
+      if (label) localStorage.setItem(PERSISTED_CONFIG_LABEL_KEY, label);
+      else localStorage.removeItem(PERSISTED_CONFIG_LABEL_KEY);
+    }
+  } catch {}
+  return normalized;
+}
+
 function loadConfig() {
-  try { return JSON.parse(sessionStorage.getItem(RUNTIME_CONFIG_KEY)) || {}; } catch { return {}; }
+  const runtimeCfg = readStoredConfig(sessionStorage, RUNTIME_CONFIG_KEY);
+  if (runtimeCfg.projectId && runtimeCfg.apiKey) return runtimeCfg;
+
+  return readStoredConfig(localStorage, PERSISTED_CONFIG_KEY);
+}
+
+function loadConfigLabel() {
+  try { return localStorage.getItem(PERSISTED_CONFIG_LABEL_KEY) || ''; } catch { return ''; }
 }
 
 window.saveConfigToFile = function() {
@@ -840,7 +871,9 @@ window.saveConfigToFile = function() {
   link.click();
   link.remove();
   URL.revokeObjectURL(url);
-  updateConfigFileStatus('ok', '로컬 설정 파일 저장 완료');
+  lastLoadedConfigLabel = 'tracker-config.local.json';
+  saveConfig(cfg, lastLoadedConfigLabel);
+  updateConfigFileStatus('ok', '로컬 설정 파일 저장 완료 및 자동 복원 준비');
   showToast('설정 파일을 저장했습니다');
 };
 
@@ -861,7 +894,7 @@ async function importConfigFile(file) {
 
   lastLoadedConfigLabel = file.name || 'tracker-config.local.json';
   applyConfigToInputs(cfg);
-  saveConfig(cfg);
+  saveConfig(cfg, lastLoadedConfigLabel);
   updateConfigFileStatus('ok', `로컬 파일 불러옴: ${lastLoadedConfigLabel}`);
   showToast('로컬 설정 파일을 불러왔습니다');
   await initApp(cfg);
@@ -874,8 +907,8 @@ window.connectApp = async function() {
   isEditingConfig = false;
   document.getElementById('cancelEditBtn').style.display = 'none';
   document.getElementById('connectBtn').textContent = '🚀 시작하기';
-  saveConfig(cfg);
-  updateConfigFileStatus('ok', lastLoadedConfigLabel ? `로컬 파일 불러옴: ${lastLoadedConfigLabel}` : '현재 탭 설정 사용 중');
+  saveConfig(cfg, lastLoadedConfigLabel);
+  updateConfigFileStatus('ok', lastLoadedConfigLabel ? `로컬 파일 불러옴: ${lastLoadedConfigLabel}` : '기기 저장 설정 자동 복원 준비');
   await initApp(cfg);
 };
 
@@ -1664,13 +1697,14 @@ window.showToast = function(msg) {
     });
   }
 
+  lastLoadedConfigLabel = loadConfigLabel();
   const saved = normalizeConfig(loadConfig());
   const bootCfg = saved;
 
   if (bootCfg.projectId && bootCfg.apiKey) {
     applyConfigToInputs(bootCfg);
-    saveConfig(bootCfg);
-    updateConfigFileStatus('ok', '현재 탭 설정 사용 중');
+    saveConfig(bootCfg, lastLoadedConfigLabel);
+    updateConfigFileStatus('ok', lastLoadedConfigLabel ? `자동 복원됨: ${lastLoadedConfigLabel}` : '기기 저장 설정 자동 복원됨');
     initApp(bootCfg);
   } else {
     updateConfigFileStatus('idle', '로컬 설정 파일 또는 현재 탭 설정이 필요합니다');
