@@ -1,0 +1,1563 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>✨ 랜덤 짝뽑기</title>
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Black+Han+Sans&family=Noto+Sans+KR:wght@300;400;700;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+  :root {
+    --bg: #fff8ea;
+    --card: #ffffff;
+    --accent: #ff6f61;
+    --accent2: #ffc83d;
+    --accent3: #22c7a9;
+    --theme-a: #ff6f61;
+    --theme-b: #ffc83d;
+    --text: #26324a;
+    --muted: #667085;
+    --line: #f0d8c7;
+    --radius: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background:
+      repeating-linear-gradient(135deg, rgba(255,200,61,0.14) 0 10px, transparent 10px 24px),
+      linear-gradient(180deg, #fff8ea 0%, #effff9 55%, #f7f2ff 100%);
+    background-attachment: fixed;
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    text-align: center;
+    padding: 32px 20px 12px;
+    position: relative;
+  }
+  .header h1 {
+    font-family: 'Black Han Sans', sans-serif;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 50%, var(--accent3) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: 2px;
+    text-shadow: 0 4px 0 rgba(255,200,61,0.16);
+  }
+  .header p { color: var(--muted); margin-top: 8px; font-size: 0.95rem; }
+
+  /* ── TABS ── */
+  .tabs {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    padding: 16px 20px;
+    flex-wrap: wrap;
+  }
+  .tab-btn {
+    padding: 10px 22px;
+    border-radius: 50px;
+    border: 2px solid rgba(38,50,74,0.08);
+    background: var(--card);
+    color: var(--muted);
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s;
+    box-shadow: 0 4px 0 rgba(38,50,74,0.06);
+  }
+  .tab-btn.active {
+    background: linear-gradient(135deg, #ff6f61, #ff9f1c);
+    color: #fff;
+    border-color: var(--accent);
+  }
+  .tab-btn:hover:not(.active) { border-color: var(--accent2); color: var(--text); }
+
+  /* ── PANELS ── */
+  .panel { display: none; padding: 0 20px 60px; max-width: 1200px; margin: 0 auto; }
+  .panel.active { display: block; }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 28px;
+    margin-bottom: 20px;
+    border: 2px solid rgba(38,50,74,0.07);
+    box-shadow: 0 8px 0 rgba(255,200,61,0.14), 0 18px 36px rgba(38,50,74,0.08);
+  }
+  .card h2 {
+    font-family: 'Black Han Sans', sans-serif;
+    font-size: 1.3rem;
+    margin-bottom: 16px;
+    color: #ff8a00;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* ── BUTTONS ── */
+  .btn {
+    padding: 12px 28px;
+    border-radius: 50px;
+    border: 2px solid transparent;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 0 rgba(38,50,74,0.1);
+  }
+  .btn-primary { background: linear-gradient(135deg, var(--accent), #ff8f70); color: #fff; }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(255,107,107,0.4); }
+  .btn-secondary { background: #fff; color: var(--text); border-color: rgba(38,50,74,0.1); }
+  .btn-secondary:hover { background: #fff7d6; border-color: rgba(255,200,61,0.5); }
+  .btn-success { background: linear-gradient(135deg, #8ff3df, #ffc83d); color: #17324d; border-color: rgba(23,50,77,0.12); }
+  .btn-success:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(107,203,119,0.4); }
+  .btn-warning { background: linear-gradient(135deg, var(--accent2), #ffe066); color: #1f2937; }
+  .btn-warning:hover { transform: translateY(-2px); }
+  .btn-sm { padding: 8px 16px; font-size: 0.85rem; }
+
+  /* ── STUDENT LIST ── */
+  .student-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .student-tag {
+    background: #fff7d6;
+    border-radius: 50px;
+    padding: 6px 14px;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid rgba(255,200,61,0.38);
+    color: var(--text);
+  }
+  .student-tag .remove {
+    cursor: pointer;
+    color: var(--accent);
+    font-size: 1rem;
+    line-height: 1;
+    padding: 0 2px;
+  }
+
+  .input-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .input-row input {
+    flex: 1;
+    min-width: 160px;
+    padding: 11px 18px;
+    border-radius: 50px;
+    border: 2px solid rgba(38,50,74,0.1);
+    background: #fff;
+    color: var(--text);
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .input-row input:focus { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(255,111,97,0.14); }
+
+  /* ── FILE UPLOAD ── */
+  .file-drop {
+    border: 2px dashed rgba(34,199,169,0.45);
+    border-radius: var(--radius);
+    padding: 32px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.25s;
+    background: linear-gradient(180deg, #ffffff 0%, #f0fffb 100%);
+  }
+  .file-drop:hover { border-color: var(--accent); background: #fff7ed; }
+  .file-drop input { display: none; }
+  .file-drop .icon { font-size: 2.5rem; margin-bottom: 8px; }
+  .file-drop p { color: var(--muted); font-size: 0.9rem; }
+
+  /* ── DRAW SECTION ── */
+  .draw-config {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .config-item {
+    background: #fffaf1;
+    border-radius: var(--radius);
+    padding: 16px;
+    border: 1px solid rgba(255,200,61,0.32);
+  }
+  .config-item label {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .config-item select {
+    width: 100%;
+    padding: 9px 14px;
+    border-radius: var(--radius);
+    border: 1px solid rgba(38,50,74,0.12);
+    background: #fff;
+    color: var(--text);
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 0.95rem;
+    cursor: pointer;
+    outline: none;
+  }
+  .config-item select option { background: #fff; color: var(--text); }
+  #drawDate {
+    border: 1px solid rgba(38,50,74,0.12) !important;
+    background: #fff !important;
+    color: var(--text) !important;
+    border-radius: var(--radius) !important;
+  }
+
+  /* ── RESULT DISPLAY ── */
+  #result-area {
+    position: relative;
+  }
+
+  /* ── PNG OUTPUT CANVAS ── */
+  #png-canvas {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background:
+      repeating-linear-gradient(135deg, rgba(255,200,61,0.12) 0 9px, transparent 9px 24px),
+      linear-gradient(180deg, #fff8ea 0%, #effff9 100%);
+    color: var(--text);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 20px;
+    border: 2px solid rgba(255,168,76,0.38);
+    box-shadow: 0 10px 0 rgba(34,199,169,0.14), 0 18px 36px rgba(38,50,74,0.12);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .result-header-bar {
+    display: grid;
+    grid-template-columns: minmax(190px, 0.85fr) minmax(330px, 1.35fr) 104px minmax(150px, auto);
+    gap: 18px;
+    align-items: center;
+    padding: 22px 34px;
+    position: relative;
+    overflow: hidden;
+    background: rgba(255,255,255,0.82);
+    flex: 0 0 auto;
+  }
+  .result-header-bar::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 5px;
+    background: linear-gradient(90deg, var(--theme-a), var(--theme-b));
+  }
+  .result-date-info { }
+  .result-date-info .date-big {
+    font-family: 'Black Han Sans', sans-serif;
+    font-size: 2.28rem;
+    line-height: 1;
+    text-shadow: 0 3px 0 rgba(255,255,255,0.9);
+  }
+  .result-date-info .day-label {
+    font-size: 1rem;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+  .result-meta {
+    text-align: right;
+  }
+  .result-meta .school { font-size: 0.85rem; color: var(--muted); margin-bottom: 4px; }
+  .result-meta .title-big {
+    font-family: 'Black Han Sans', sans-serif;
+    font-size: 1.6rem;
+    background: #ffffff;
+    -webkit-background-clip: border-box;
+    -webkit-text-fill-color: var(--theme-ink, #24324a);
+    background-clip: border-box;
+    color: var(--theme-ink, #24324a);
+    display: inline-block;
+    padding: 7px 14px 5px;
+    border-radius: var(--radius);
+    border: 3px solid var(--theme-a);
+    box-shadow: 0 5px 0 rgba(38,50,74,0.12);
+  }
+
+  .header-mission, .header-time {
+    background: #fff;
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    border: 2px solid rgba(38,50,74,0.07);
+    border-left: 8px solid var(--box-accent, var(--theme-a));
+    box-shadow: 0 5px 0 rgba(255,200,61,0.16);
+    min-width: 0;
+  }
+  .box-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    margin-bottom: 6px;
+    font-weight: 900;
+  }
+  .box-value {
+    font-family: 'Black Han Sans', sans-serif;
+    font-size: 1.2rem;
+    line-height: 1.25;
+    color: #24324a;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .header-time {
+    text-align: center;
+    width: 104px;
+    height: 78px;
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    align-items: center;
+    justify-content: center;
+    border-left-width: 2px;
+    border: 3px solid rgba(34,199,169,0.38);
+    box-shadow: 0 6px 0 rgba(34,199,169,0.16);
+  }
+  .header-time .clock-icon { font-size: 1.55rem; display: block; }
+  .header-time .time-text {
+    font-family: 'Black Han Sans', sans-serif;
+    font-size: 1.1rem;
+    color: var(--theme-ink, #24324a);
+  }
+
+  /* ── PAIRS GRID ── */
+  .pairs-grid {
+    display: grid;
+    grid-template-columns: repeat(var(--pair-cols, 6), minmax(0, 1fr));
+    grid-template-rows: repeat(var(--pair-rows, 3), minmax(0, 1fr));
+    gap: 16px;
+    padding: 28px 34px 34px;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+  .pair-card {
+    --pair-soft: #fff6dc;
+    background: linear-gradient(180deg, var(--pair-soft) 0%, #fff 68%);
+    border-radius: var(--radius);
+    padding: 16px 14px 15px;
+    border: 2px solid rgba(38,50,74,0.08);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    min-height: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    box-shadow: 0 5px 0 rgba(38,50,74,0.08);
+  }
+  .pair-card:nth-child(4n+2) { --pair-soft: #eafff9; }
+  .pair-card:nth-child(4n+3) { --pair-soft: #fff0f4; }
+  .pair-card:nth-child(4n) { --pair-soft: #f4f0ff; }
+  .pair-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 5px;
+    background: linear-gradient(90deg, var(--theme-a), var(--theme-b));
+  }
+  .pair-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    align-self: center;
+    background: rgba(255,255,255,0.76);
+    border: 1px solid rgba(38,50,74,0.08);
+    border-radius: 50px;
+    padding: 2px 10px;
+    font-size: 0.82rem;
+    color: #526071;
+    font-weight: 900;
+    margin-bottom: 8px;
+    letter-spacing: 0;
+  }
+  .pair-names {
+    font-family: 'Black Han Sans', sans-serif;
+    font-size: 1.5rem;
+    line-height: 1.25;
+    color: #1f2937;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .pair-heart {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: inline-grid;
+    place-items: center;
+    background: #ffffff;
+    color: var(--theme-ink, #24324a);
+    border: 3px solid var(--theme-a);
+    margin: 0;
+    font-style: normal;
+    font-size: 1rem;
+    line-height: 1;
+    box-shadow: 0 3px 0 rgba(38,50,74,0.12);
+  }
+  .pair-solo {
+    color: var(--muted);
+    font-size: 0.8rem;
+    font-family: 'Noto Sans KR';
+    margin-top: 4px;
+  }
+  .pair-activity {
+    align-self: center;
+    margin-top: 10px;
+    padding: 5px 11px;
+    border-radius: 50px;
+    background: #ffffff;
+    border: 2px solid rgba(34,199,169,0.28);
+    color: #17324d;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 900;
+    line-height: 1.15;
+    box-shadow: 0 3px 0 rgba(34,199,169,0.12);
+  }
+
+  /* ── HISTORY ── */
+  .history-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+  }
+  .history-table th {
+    background: #fff2cc;
+    padding: 10px 14px;
+    text-align: left;
+    color: var(--muted);
+    font-weight: 700;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .history-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid rgba(38,50,74,0.08);
+  }
+  .history-table tr:hover td { background: #f4fffb; }
+  .pair-chip {
+    display: inline-block;
+    background: #fff7d6;
+    border-radius: 50px;
+    padding: 3px 10px;
+    font-size: 0.8rem;
+    margin: 2px;
+  }
+  .activity-chip {
+    display: inline-block;
+    background: #eafff9;
+    border: 1px solid rgba(34,199,169,0.25);
+    border-radius: 50px;
+    color: #17324d;
+    font-size: 0.72rem;
+    font-weight: 900;
+    margin-left: 5px;
+    padding: 1px 7px;
+    vertical-align: middle;
+  }
+
+  /* ── STATUS BAR ── */
+  .status-bar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .stat-chip {
+    background: #ffffff;
+    border-radius: 50px;
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid rgba(38,50,74,0.08);
+    box-shadow: 0 3px 0 rgba(38,50,74,0.06);
+  }
+  .stat-chip span { color: #ff8a00; font-weight: 900; }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: #fff;
+    color: var(--text);
+    padding: 14px 28px;
+    border-radius: 50px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    box-shadow: 0 8px 32px rgba(38,50,74,0.22);
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    z-index: 9999;
+    white-space: nowrap;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* ── SPINNER ── */
+  .spinning {
+    animation: spin 0.5s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── ANIMATED DRAW ── */
+  @keyframes popIn {
+    0% { transform: scale(0.88); opacity: 1; }
+    70% { transform: scale(1.04); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .pair-card.animate { animation: popIn 0.34s ease forwards; }
+  #png-canvas.capture-ready .pair-card,
+  #png-canvas.capture-ready .pair-card.animate {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: #fff7ea; }
+  ::-webkit-scrollbar-thumb { background: rgba(38,50,74,0.22); border-radius: 3px; }
+
+  /* ── THEME SWATCHES ── */
+  .theme-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+  .swatch {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 3px solid transparent;
+    transition: all 0.2s;
+  }
+  .swatch.active { border-color: var(--text); transform: scale(1.15); }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+  }
+  .empty-state .icon { font-size: 3rem; margin-bottom: 12px; }
+  .empty-state p { font-size: 1rem; }
+
+  /* info badge */
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+  .badge-warn { background: rgba(255,217,61,0.2); color: var(--accent2); }
+  .badge-ok { background: rgba(107,203,119,0.2); color: var(--accent3); }
+
+  /* progress bar */
+  .pair-progress {
+    height: 4px;
+    background: rgba(38,50,74,0.08);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 8px;
+  }
+  .pair-progress-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    transition: width 0.6s ease;
+  }
+
+  /* Download btn row */
+  .action-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+
+  @media (max-width: 720px) {
+    .panel { padding: 0 14px 44px; }
+    .card { padding: 20px; }
+    #png-canvas {
+      min-width: 720px;
+    }
+    .result-header-bar {
+      grid-template-columns: 1fr 1.4fr 92px 120px;
+      gap: 12px;
+      padding: 16px;
+    }
+    .result-date-info .date-big { font-size: 1.7rem; }
+    .result-date-info .day-label { font-size: 0.82rem; }
+    .result-meta .school { font-size: 0.72rem; }
+    .result-meta .title-big { font-size: 1.05rem; padding: 5px 9px 4px; }
+    .header-mission { padding: 11px 13px; }
+    .header-time { width: 92px; height: 64px; }
+    .box-label { font-size: 0.66rem; }
+    .box-value { font-size: 1rem; }
+    .pairs-grid {
+      padding: 20px 16px 18px;
+      gap: 10px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>✨ 랜덤 짝뽑기</h1>
+  <p>엑셀 명단 업로드 · 중복없는 랜덤 매칭 · PNG 자동 출력</p>
+</div>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('tab-students')">👥 명단 관리</button>
+  <button class="tab-btn" onclick="switchTab('tab-draw')">🎲 짝뽑기</button>
+  <button class="tab-btn" onclick="switchTab('tab-history')">📋 기록</button>
+  <button class="tab-btn" onclick="switchTab('tab-settings')">⚙️ 미션·활동</button>
+</div>
+
+<!-- ═══ TAB 1: 명단 관리 ═══ -->
+<div class="panel active" id="tab-students">
+  <div class="card">
+    <h2>📂 엑셀 파일 업로드</h2>
+    <div class="file-drop" onclick="document.getElementById('fileInput').click()">
+      <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" onchange="handleFileUpload(event)">
+      <div class="icon">📊</div>
+      <p><strong>클릭하거나 파일을 드래그하세요</strong></p>
+      <p style="margin-top:6px">Excel (.xlsx, .xls) 또는 CSV · 첫 번째 열의 이름을 읽어옵니다</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>✏️ 직접 추가</h2>
+    <div class="input-row">
+      <input type="text" id="studentInput" placeholder="학생 이름 입력 후 Enter" onkeydown="if(event.key==='Enter') addStudent()">
+      <button class="btn btn-primary" onclick="addStudent()">+ 추가</button>
+      <button class="btn btn-secondary" onclick="clearStudents()">전체 삭제</button>
+    </div>
+    <div id="studentList" class="student-grid">
+      <div class="empty-state" style="width:100%;padding:20px">
+        <p>아직 명단이 없습니다. 엑셀 업로드 또는 직접 추가하세요.</p>
+      </div>
+    </div>
+    <div class="status-bar" style="margin-top:16px;margin-bottom:0">
+      <div class="stat-chip">총 학생 <span id="totalCount">0</span>명</div>
+      <div class="stat-chip" id="pairCountStat">예상 짝 <span>0</span>쌍</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TAB 2: 짝뽑기 ═══ -->
+<div class="panel" id="tab-draw">
+
+  <div class="card">
+    <h2>🎨 오늘의 설정</h2>
+    <div class="draw-config">
+      <div class="config-item">
+        <label>📅 날짜</label>
+        <input type="date" id="drawDate" style="width:100%;padding:9px 14px;border-radius:var(--radius);border:1px solid rgba(38,50,74,0.12);background:#fff;color:var(--text);font-family:'Noto Sans KR',sans-serif;font-size:0.95rem;outline:none;">
+      </div>
+      <div class="config-item">
+        <label>🎯 오늘의 미션</label>
+        <select id="missionSelect">
+          <option value="random">🎲 랜덤 선택</option>
+        </select>
+      </div>
+      <div class="config-item">
+        <label>🏃 활동 배정</label>
+        <select id="activitySelect">
+          <option value="balanced">🤹 활동 목록에서 골고루 배정</option>
+        </select>
+      </div>
+      <div class="config-item">
+        <label>🎨 컬러 테마</label>
+        <select id="themeSelect" onchange="applyTheme(this.value)">
+          <option value="auto">🌈 날짜별 자동</option>
+          <option value="coral">🔴 코랄 레드</option>
+          <option value="ocean">🔵 오션 블루</option>
+          <option value="forest">🟢 포레스트</option>
+          <option value="sunset">🟠 선셋</option>
+          <option value="violet">🟣 바이올렛</option>
+          <option value="mint">🩵 민트</option>
+          <option value="rose">🩷 로즈</option>
+        </select>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="drawPairs()" style="font-size:1.1rem;padding:14px 36px">
+        🎲 짝 뽑기!
+      </button>
+      <button class="btn btn-secondary" onclick="resetTodayDraw()">↺ 오늘 다시뽑기</button>
+    </div>
+  </div>
+
+  <div id="result-area">
+    <div class="empty-state card">
+      <div class="icon">🎲</div>
+      <p>위에서 <strong>짝 뽑기!</strong> 버튼을 눌러보세요</p>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══ TAB 3: 기록 ═══ -->
+<div class="panel" id="tab-history">
+  <div class="card">
+    <h2>📋 짝 기록</h2>
+    <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+      <button class="btn btn-secondary btn-sm" onclick="exportHistoryCSV()">📥 CSV 내보내기</button>
+      <button class="btn btn-secondary btn-sm" onclick="clearHistory()">🗑️ 기록 삭제</button>
+    </div>
+    <div id="historyArea">
+      <div class="empty-state" style="padding:40px 0">
+        <div class="icon">📭</div>
+        <p>아직 짝뽑기 기록이 없습니다</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>🔗 짝 횟수 분석</h2>
+    <p style="color:var(--muted);font-size:0.9rem;margin-bottom:16px">같이 짝지어진 횟수 (높을수록 자주 짝이 됨)</p>
+    <div id="pairAnalysis">
+      <div class="empty-state" style="padding:20px 0">
+        <p>기록이 쌓이면 분석이 나타납니다</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TAB 4: 설정 ═══ -->
+<div class="panel" id="tab-settings">
+  <div class="card">
+    <h2>🎯 미션 목록 (100종)</h2>
+    <p style="color:var(--muted);font-size:0.85rem;margin-bottom:12px">기본 100종이 내장되어 있습니다. 직접 추가·삭제할 수 있어요.</p>
+    <div class="input-row">
+      <input type="text" id="missionInput" placeholder="새 미션 추가">
+      <button class="btn btn-primary btn-sm" onclick="addMission()">추가</button>
+    </div>
+    <div id="missionList" style="max-height:300px;overflow-y:auto;"></div>
+  </div>
+
+  <div class="card">
+    <h2>🏃 활동 목록 (10종)</h2>
+    <p style="color:var(--muted);font-size:0.85rem;margin-bottom:12px">기본 10종이 내장되어 있습니다.</p>
+    <div class="input-row">
+      <input type="text" id="activityInput" placeholder="새 활동 추가">
+      <button class="btn btn-primary btn-sm" onclick="addActivity()">추가</button>
+    </div>
+    <div id="activityList" style="max-height:200px;overflow-y:auto;"></div>
+  </div>
+
+  <div class="card">
+    <h2>🔄 데이터 관리</h2>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn btn-secondary btn-sm" onclick="exportAllData()">📦 전체 데이터 내보내기</button>
+      <button class="btn btn-secondary btn-sm" onclick="document.getElementById('importInput').click()">📂 데이터 불러오기</button>
+      <input type="file" id="importInput" accept=".json" style="display:none" onchange="importAllData(event)">
+      <button class="btn btn-secondary btn-sm" onclick="resetMissions()">↺ 미션 기본값 복원</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════
+// DATA
+// ═══════════════════════════════════
+
+const DEFAULT_MISSIONS = [
+  "취미 확인하기","좋아하는 음식 물어보기","오늘 기분 나누기","어제 뭐했는지 이야기하기",
+  "가장 좋아하는 과목 맞추기","꿈이 뭔지 이야기하기","가족 소개하기","좋아하는 색깔 맞추기",
+  "좋아하는 동물 이야기하기","지금까지 가본 여행지 이야기하기","좋아하는 계절 이야기하기",
+  "어릴 때 꿈 이야기하기","좋아하는 책 추천하기","짝의 장점 찾아서 말해주기",
+  "서로 닮은 점 3가지 찾기","서로 다른 점 3가지 찾기","좋아하는 노래 추천하기",
+  "가장 기억에 남는 선생님 이야기하기","방과 후 뭐 하는지 이야기하기","좋아하는 운동 이야기하기",
+  "잘 할 수 있는 것 3가지 말하기","요즘 관심 있는 것 이야기하기","좋아하는 영화 추천하기",
+  "좋아하는 음악 장르 이야기하기","요즘 읽는 책 이야기하기","유튜브에서 뭘 보는지 이야기하기",
+  "가장 재미있었던 수업 이야기하기","학교에서 가장 기억에 남는 일 이야기하기",
+  "쉬는 시간에 뭘 하고 싶은지 이야기하기","가장 어려운 과목 함께 이야기하기",
+  "서로의 강점을 칭찬해주기","함께 가보고 싶은 여행지 이야기하기","좋아하는 급식 메뉴 이야기하기",
+  "오늘 아침에 무엇을 먹었는지 이야기하기","오늘 입은 옷에서 공통점 찾기",
+  "좋아하는 게임 이야기하기","최근에 행복했던 일 이야기하기","짝에게 도움이 될 조언 해주기",
+  "짝이 잘 모르는 자신의 특기 말하기","가장 웃겼던 기억 이야기하기","짝의 이름으로 삼행시 짓기",
+  "서로 별명 지어주기","1년 후 내 모습 상상해서 이야기하기","올해 꼭 이루고 싶은 목표 이야기하기",
+  "짝이 좋아할 것 같은 선물 추천하기","나를 동물로 표현하면 뭔지 이야기하기",
+  "짝을 식물로 표현하면 뭔지 말해주기","무인도에 하나만 가져간다면 이야기하기",
+  "초능력이 생긴다면 어떤 초능력을 원하는지 이야기하기","과거로 돌아간다면 언제로 가고 싶은지 이야기하기",
+  "미래에 어떤 나라에서 살고 싶은지 이야기하기","하루 종일 먹어도 질리지 않는 음식 이야기하기",
+  "지금 가장 하고 싶은 일 이야기하기","짝의 좋은 점 5가지 찾아 말해주기",
+  "우리 반에서 제일 웃긴 일 이야기하기","오늘 날씨처럼 내 기분을 날씨로 표현하기",
+  "좋아하는 계절 이유와 함께 이야기하기","짝에게 배우고 싶은 것 이야기하기",
+  "함께 하고 싶은 것 한 가지 정하기","내가 선생님이라면 어떤 수업을 하고 싶은지",
+  "지금 이 순간 가장 감사한 것 이야기하기","나의 하루 중 가장 좋은 시간은 언제인지",
+  "요즘 배우고 싶은 것 이야기하기","주말에 뭐할지 계획 이야기하기",
+  "살면서 꼭 해보고 싶은 것 이야기하기","내 방에서 가장 소중한 물건 이야기하기",
+  "오늘 기분을 색깔로 표현하기","짝에게 고마운 점 이야기하기",
+  "나만의 재미있는 습관 소개하기","아직 아무도 모르는 나의 비밀 취미 이야기하기",
+  "가장 좋아하는 만화나 애니메이션 이야기하기","먹고 싶은 세계 음식 이야기하기",
+  "함께 만들고 싶은 물건 이야기하기","짝이 요리사라면 어떤 음식을 만들어줄 것 같은지",
+  "나의 스트레스 해소법 이야기하기","짝의 첫인상과 지금 인상 비교하기",
+  "학교에서 제일 좋아하는 공간 이야기하기","좋아하는 날씨와 이유 이야기하기",
+  "오늘 배운 것 중 가장 인상 깊은 것 이야기하기","나에게 영향을 준 사람 이야기하기",
+  "집에서 가장 좋아하는 공간 이야기하기","아침에 일어나면 제일 먼저 하는 일 이야기하기",
+  "자기 전에 꼭 하는 것 이야기하기","가장 행복한 기억 이야기하기",
+  "짝이 주인공인 이야기 한 문장으로 만들기","내 이름의 뜻 이야기하기",
+  "좋아하는 숫자와 이유 이야기하기","좋아하는 속담이나 명언 이야기하기",
+  "짝과 함께 하고 싶은 체험학습 활동 이야기하기","서로의 꿈을 응원하는 말 해주기",
+  "오늘 가장 잘한 일 이야기하기","내가 자주 쓰는 말버릇 이야기하기",
+  "짝에게 생일 선물을 준다면 무엇을 줄지 이야기하기","지금 이 순간 어떤 음악을 듣고 싶은지"
+];
+
+const DEFAULT_ACTIVITIES = [
+  "플로깅(줍깅)","산책하기","공기놀이","체스 두기","그림 그리기",
+  "블록 쌓기","종이접기","끝말잇기","스트레칭","협동 그림 그리기"
+];
+
+const THEMES = {
+  coral:  { a: '#ff6f61', b: '#ffc83d', ink: '#a33b2f', bg: '#fff8ea' },
+  ocean:  { a: '#00a6d6', b: '#38d9a9', ink: '#075985', bg: '#eefaff' },
+  forest: { a: '#2fbf71', b: '#ffd166', ink: '#166534', bg: '#f2fff4' },
+  sunset: { a: '#ff9f1c', b: '#ff5d8f', ink: '#9a3412', bg: '#fff2df' },
+  violet: { a: '#845ef7', b: '#ff85a1', ink: '#5b21b6', bg: '#f5f0ff' },
+  mint:   { a: '#00b8a9', b: '#7bdff2', ink: '#0f766e', bg: '#effffb' },
+  rose:   { a: '#f06595', b: '#ffd166', ink: '#be185d', bg: '#fff0f5' },
+};
+
+// Auto theme by day of week
+const DAY_THEMES = ['ocean','coral','forest','sunset','violet','mint','rose'];
+
+// ── STATE ──
+let students = JSON.parse(localStorage.getItem('pairStudents') || '[]');
+let pairHistory = JSON.parse(localStorage.getItem('pairHistory') || '[]');
+let missions = JSON.parse(localStorage.getItem('pairMissions') || JSON.stringify(DEFAULT_MISSIONS));
+let activities = JSON.parse(localStorage.getItem('pairActivities') || JSON.stringify(DEFAULT_ACTIVITIES));
+let currentTheme = 'coral';
+
+// ── INIT ──
+window.onload = () => {
+  const today = new Date();
+  document.getElementById('drawDate').value = today.toISOString().split('T')[0];
+  renderStudents();
+  renderMissionList();
+  renderActivityList();
+  populateSelects();
+  renderHistory();
+  renderPairAnalysis();
+  updateThemeByDate(today);
+};
+
+// ═══════════════════════════════════
+// THEME
+// ═══════════════════════════════════
+function updateThemeByDate(date) {
+  const sel = document.getElementById('themeSelect').value;
+  if (sel === 'auto') {
+    const dow = date.getDay();
+    applyTheme(DAY_THEMES[dow]);
+  } else {
+    applyTheme(sel);
+  }
+}
+
+function applyTheme(name) {
+  if (name === 'auto') {
+    const d = new Date(document.getElementById('drawDate').value || new Date());
+    const dow = d.getDay();
+    name = DAY_THEMES[dow];
+  }
+  const t = THEMES[name] || THEMES.coral;
+  document.documentElement.style.setProperty('--theme-a', t.a);
+  document.documentElement.style.setProperty('--theme-b', t.b);
+  currentTheme = name;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('drawDate').addEventListener('change', (e) => {
+    const sel = document.getElementById('themeSelect').value;
+    if (sel === 'auto') updateThemeByDate(new Date(e.target.value));
+  });
+});
+
+// ═══════════════════════════════════
+// TABS
+// ═══════════════════════════════════
+function switchTab(id) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ═══════════════════════════════════
+// FILE UPLOAD
+// ═══════════════════════════════════
+function handleFileUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const ext = file.name.split('.').pop().toLowerCase();
+
+  if (ext === 'csv') {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const lines = ev.target.result.split('\n');
+      const names = lines.map(l => l.split(',')[0].trim()).filter(n => n && n !== '이름' && n !== 'name' && n !== 'Name');
+      addStudentsBulk(names);
+    };
+    reader.readAsText(file, 'UTF-8');
+  } else {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const data = new Uint8Array(ev.target.result);
+      const wb = XLSX.read(data, { type: 'array' });
+      const sheet = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+      const names = rows.map(r => String(r[0] || '').trim())
+        .filter(n => n && !['이름','name','Name','학생이름','성명'].includes(n));
+      addStudentsBulk(names);
+    };
+    reader.readAsArrayBuffer(file);
+  }
+}
+
+function addStudentsBulk(names) {
+  names.forEach(n => { if (!students.includes(n)) students.push(n); });
+  saveStudents();
+  renderStudents();
+  toast(`✅ ${names.length}명 추가 완료!`);
+}
+
+// ═══════════════════════════════════
+// STUDENTS
+// ═══════════════════════════════════
+function addStudent() {
+  const input = document.getElementById('studentInput');
+  const name = input.value.trim();
+  if (!name) return;
+  if (students.includes(name)) { toast('⚠️ 이미 있는 이름입니다'); return; }
+  students.push(name);
+  input.value = '';
+  saveStudents();
+  renderStudents();
+}
+
+function removeStudent(name) {
+  students = students.filter(s => s !== name);
+  saveStudents();
+  renderStudents();
+}
+
+function clearStudents() {
+  if (!confirm('명단을 전체 삭제할까요?')) return;
+  students = [];
+  saveStudents();
+  renderStudents();
+}
+
+function saveStudents() {
+  localStorage.setItem('pairStudents', JSON.stringify(students));
+}
+
+function renderStudents() {
+  const el = document.getElementById('studentList');
+  if (!students.length) {
+    el.innerHTML = '<div class="empty-state" style="width:100%;padding:20px"><p>아직 명단이 없습니다.</p></div>';
+  } else {
+    el.innerHTML = students.map(s =>
+      `<div class="student-tag">👤 ${s} <span class="remove" onclick="removeStudent('${s.replace(/'/g,"\\'")}')">✕</span></div>`
+    ).join('');
+  }
+  document.getElementById('totalCount').textContent = students.length;
+  document.querySelector('#pairCountStat span').textContent = Math.floor(students.length / 2);
+}
+
+// ═══════════════════════════════════
+// PAIR DRAW
+// ═══════════════════════════════════
+function drawPairs() {
+  if (students.length < 2) { toast('⚠️ 학생이 2명 이상 필요합니다'); return; }
+
+  const dateStr = document.getElementById('drawDate').value || new Date().toISOString().split('T')[0];
+  const date = new Date(dateStr);
+
+  // Apply theme
+  const themeVal = document.getElementById('themeSelect').value;
+  updateThemeByDate(date);
+
+  // Mission
+  const missionSel = document.getElementById('missionSelect').value;
+  const mission = missionSel === 'random' ? missions[Math.floor(Math.random() * missions.length)] : missionSel;
+  const activityPool = getActivityPool();
+  if (activityPool.length < 2) { toast('⚠️ 활동이 2개 이상 필요합니다'); return; }
+
+  // Smart shuffle - avoid recent pairs
+  const recentPairs = getRecentPairSet();
+  const pairs = smartShuffle(students, recentPairs);
+  const pairActivities = assignActivitiesToPairs(pairs, activityPool);
+
+  // Save to history
+  const record = {
+    id: Date.now(),
+    date: dateStr,
+    mission,
+    activity: summarizeActivityList(pairActivities),
+    pairActivities,
+    pairs,
+    theme: currentTheme
+  };
+  pairHistory.unshift(record);
+  localStorage.setItem('pairHistory', JSON.stringify(pairHistory));
+
+  renderResult(record);
+  renderHistory();
+  renderPairAnalysis();
+
+  switchTabDirect('tab-draw');
+}
+
+function getRecentPairSet() {
+  const set = new Set();
+  const recent = pairHistory.slice(0, 5);
+  recent.forEach(r => {
+    r.pairs.forEach(p => {
+      if (p.length === 2) {
+        const key = [p[0], p[1]].sort().join('|');
+        set.add(key);
+      }
+    });
+  });
+  return set;
+}
+
+function smartShuffle(names, recentPairs, maxAttempts = 200) {
+  let best = null;
+  let bestScore = -1;
+
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const shuffled = [...names].sort(() => Math.random() - 0.5);
+    const pairs = [];
+    for (let i = 0; i < shuffled.length - 1; i += 2) {
+      pairs.push([shuffled[i], shuffled[i + 1]]);
+    }
+    if (shuffled.length % 2 === 1) pairs.push([shuffled[shuffled.length - 1]]);
+
+    // Score: higher = fewer repeat pairs
+    let score = 0;
+    pairs.forEach(p => {
+      if (p.length === 2) {
+        const key = [p[0], p[1]].sort().join('|');
+        if (!recentPairs.has(key)) score++;
+      }
+    });
+
+    if (score > bestScore) {
+      bestScore = score;
+      best = pairs;
+      if (score === pairs.filter(p => p.length === 2).length) break; // perfect
+    }
+  }
+  return best;
+}
+
+function getActivityPool() {
+  const seen = new Set();
+  const pool = [];
+  activities.forEach(a => {
+    const activity = String(a || '').trim();
+    if (activity && !seen.has(activity)) {
+      seen.add(activity);
+      pool.push(activity);
+    }
+  });
+  return pool.length ? pool : ['자유 활동'];
+}
+
+function getPairActivity(record, index) {
+  if (Array.isArray(record.pairActivities)) {
+    return record.pairActivities[index] || record.activity || '자유 활동';
+  }
+  if (Array.isArray(record.activityAssignments)) {
+    const item = record.activityAssignments[index];
+    if (typeof item === 'string') return item;
+    if (item && item.activity) return item.activity;
+  }
+  return record.activity || '자유 활동';
+}
+
+function getRecordActivities(record) {
+  if (!record || !Array.isArray(record.pairs)) return [];
+  return record.pairs.map((_, i) => getPairActivity(record, i)).filter(Boolean);
+}
+
+function summarizeActivityList(activityList) {
+  const unique = [...new Set(activityList.filter(Boolean))];
+  if (!unique.length) return '활동 없음';
+  if (unique.length === 1) return unique[0];
+  return `${unique.length}가지 활동`;
+}
+
+function summarizeRecordActivities(record) {
+  const list = getRecordActivities(record);
+  return summarizeActivityList(list.length ? list : [record.activity].filter(Boolean));
+}
+
+function getPairGridColumns(count) {
+  if (count <= 1) return 1;
+  if (count <= 4) return count;
+  return Math.min(6, Math.ceil(Math.sqrt(count * 16 / 9)));
+}
+
+function buildActivityHistory() {
+  const studentCounts = {};
+  const activityTotals = {};
+  const lastActivity = {};
+
+  pairHistory.forEach(record => {
+    const pairs = Array.isArray(record.pairs) ? record.pairs : [];
+    pairs.forEach((pair, i) => {
+      const activity = getPairActivity(record, i);
+      if (!activity) return;
+
+      pair.forEach(student => {
+        if (!student) return;
+        if (!studentCounts[student]) studentCounts[student] = {};
+        studentCounts[student][activity] = (studentCounts[student][activity] || 0) + 1;
+        activityTotals[activity] = (activityTotals[activity] || 0) + 1;
+        if (!lastActivity[student]) lastActivity[student] = activity;
+      });
+    });
+  });
+
+  return { studentCounts, activityTotals, lastActivity };
+}
+
+function assignActivitiesToPairs(pairs, activityPool) {
+  const pool = activityPool.length ? activityPool : ['자유 활동'];
+  const { studentCounts, activityTotals, lastActivity } = buildActivityHistory();
+  const roundTotals = {};
+
+  return pairs.map(pair => {
+    const choice = pool
+      .map(activity => {
+        const repeatCount = pair.filter(student => lastActivity[student] === activity).length;
+        const studentUseCount = pair.reduce((sum, student) =>
+          sum + ((studentCounts[student] && studentCounts[student][activity]) || 0), 0);
+        const roundCount = roundTotals[activity] || 0;
+        const totalCount = activityTotals[activity] || 0;
+
+        return {
+          activity,
+          score: (repeatCount * 10000) + (studentUseCount * 120) + (roundCount * 45) + (totalCount * 3) + Math.random()
+        };
+      })
+      .sort((a, b) => a.score - b.score)[0].activity;
+
+    roundTotals[choice] = (roundTotals[choice] || 0) + pair.length;
+    activityTotals[choice] = (activityTotals[choice] || 0) + pair.length;
+    pair.forEach(student => {
+      if (!studentCounts[student]) studentCounts[student] = {};
+      studentCounts[student][choice] = (studentCounts[student][choice] || 0) + 1;
+      lastActivity[student] = choice;
+    });
+
+    return choice;
+  });
+}
+
+function resetTodayDraw() {
+  if (!pairHistory.length) return;
+  const today = document.getElementById('drawDate').value;
+  pairHistory = pairHistory.filter(r => r.date !== today);
+  localStorage.setItem('pairHistory', JSON.stringify(pairHistory));
+  document.getElementById('result-area').innerHTML = `
+    <div class="empty-state card">
+      <div class="icon">🎲</div>
+      <p>오늘 기록이 삭제됐습니다. 다시 뽑아보세요!</p>
+    </div>`;
+  renderHistory();
+  renderPairAnalysis();
+}
+
+// ═══════════════════════════════════
+// RENDER RESULT
+// ═══════════════════════════════════
+function renderResult(record) {
+  const t = THEMES[record.theme] || THEMES.coral;
+  const date = new Date(record.date);
+  const DAYS = ['일','월','화','수','목','금','토'];
+  const dayLabel = `${record.date} (${DAYS[date.getDay()]}요일)`;
+  const pairCount = record.pairs.length;
+  const pairCols = getPairGridColumns(pairCount);
+  const pairRows = Math.ceil(pairCount / pairCols);
+
+  const pairsHtml = record.pairs.map((p, i) => {
+    const activity = getPairActivity(record, i);
+    const activityHtml = `<div class="pair-activity">🏃 ${escapeHTML(activity)}</div>`;
+    if (p.length === 1) {
+      return `<div class="pair-card animate" style="animation-delay:${i * 0.06}s">
+        <div class="pair-number">혼자</div>
+        <div class="pair-names">${escapeHTML(p[0])}</div>
+        <div class="pair-solo">🌟 오늘은 혼자!</div>
+        ${activityHtml}
+      </div>`;
+    }
+    return `<div class="pair-card animate" style="animation-delay:${i * 0.06}s">
+      <div class="pair-number">✦ ${i + 1}번 짝</div>
+      <div class="pair-names">${escapeHTML(p[0])} <i class="pair-heart">♥</i> ${escapeHTML(p[1])}</div>
+      ${activityHtml}
+    </div>`;
+  }).join('');
+
+  document.getElementById('result-area').innerHTML = `
+    <div class="action-row">
+      <button class="btn btn-success" onclick="downloadPNG()">📸 PNG 저장 (1920×1080)</button>
+      <button class="btn btn-warning" onclick="downloadPNG()">🖨️ 1920×1080 캡처</button>
+    </div>
+    <div id="png-canvas">
+      <div class="result-header-bar" style="--theme-a:${t.a};--theme-b:${t.b};--theme-ink:${t.ink}">
+        <div class="result-date-info">
+          <div class="date-big" style="color:${t.ink}">${record.date.replace(/-/g,'.')}</div>
+          <div class="day-label">${DAYS[date.getDay()]}요일 · 짝활동</div>
+        </div>
+        <div class="header-mission" style="--box-accent:${t.a}">
+          <div class="box-label">🎯 오늘의 미션</div>
+          <div class="box-value" title="${escapeHTML(record.mission)}">${escapeHTML(record.mission)}</div>
+        </div>
+        <div class="header-time">
+          <span class="clock-icon">⏱️</span>
+          <span class="time-text">10분</span>
+        </div>
+        <div class="result-meta">
+          <div class="school">KIS · 랜덤 짝뽑기</div>
+          <div class="title-big" style="--theme-a:${t.a};--theme-b:${t.b};--theme-ink:${t.ink}">오늘의 짝!</div>
+        </div>
+      </div>
+      <div class="pairs-grid" style="--theme-a:${t.a};--theme-b:${t.b};--theme-ink:${t.ink};--pair-cols:${pairCols};--pair-rows:${pairRows}">
+        ${pairsHtml}
+      </div>
+    </div>
+  `;
+}
+
+// ═══════════════════════════════════
+// PNG DOWNLOAD
+// ═══════════════════════════════════
+async function downloadPNG() {
+  const el = document.getElementById('png-canvas');
+  if (!el) return;
+
+  toast('📸 이미지 생성 중...');
+  try {
+    el.classList.add('capture-ready');
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+
+    const rect = el.getBoundingClientRect();
+    const canvas = await html2canvas(el, {
+      scale: 1920 / rect.width,
+      useCORS: true,
+      backgroundColor: '#fff8ea',
+      logging: false,
+      width: rect.width,
+      height: rect.height,
+      onclone: (doc) => {
+        const cloned = doc.getElementById('png-canvas');
+        if (cloned) {
+          cloned.classList.add('capture-ready');
+          cloned.style.aspectRatio = '16 / 9';
+        }
+      },
+    });
+
+    const out = document.createElement('canvas');
+    out.width = 1920;
+    out.height = 1080;
+    const ctx = out.getContext('2d');
+    ctx.fillStyle = '#fff8ea';
+    ctx.fillRect(0, 0, 1920, 1080);
+    ctx.drawImage(canvas, 0, 0, 1920, 1080);
+
+    const dateStr = document.getElementById('drawDate').value || 'today';
+    const link = document.createElement('a');
+    link.download = `짝뽑기_${dateStr}_1920x1080.png`;
+    link.href = out.toDataURL('image/png');
+    link.click();
+    toast('✅ PNG 저장 완료!');
+  } catch (e) {
+    toast('❌ 이미지 저장 실패: ' + e.message);
+  } finally {
+    el.classList.remove('capture-ready');
+  }
+}
+
+// ═══════════════════════════════════
+// HISTORY
+// ═══════════════════════════════════
+function renderHistory() {
+  const el = document.getElementById('historyArea');
+  if (!pairHistory.length) {
+    el.innerHTML = '<div class="empty-state" style="padding:40px 0"><div class="icon">📭</div><p>아직 짝뽑기 기록이 없습니다</p></div>';
+    return;
+  }
+
+  const DAYS = ['일','월','화','수','목','금','토'];
+  el.innerHTML = `<table class="history-table">
+    <thead><tr>
+      <th>날짜</th><th>미션</th><th>활동</th><th>짝 결과</th>
+    </tr></thead>
+    <tbody>
+    ${pairHistory.map(r => {
+      const d = new Date(r.date);
+      const pairsStr = r.pairs.map((p, i) => {
+        const activity = getPairActivity(r, i);
+        const names = p.length === 2
+          ? `${escapeHTML(p[0])} ♥ ${escapeHTML(p[1])}`
+          : `🌟${escapeHTML(p[0])}`;
+        return `<span class="pair-chip">${names}<span class="activity-chip">${escapeHTML(activity)}</span></span>`;
+      }).join('');
+      return `<tr>
+        <td><strong>${r.date}</strong><br><small style="color:var(--muted)">${DAYS[d.getDay()]}요일</small></td>
+        <td style="max-width:180px;font-size:0.85rem">${escapeHTML(r.mission)}</td>
+        <td style="font-size:0.85rem">${escapeHTML(summarizeRecordActivities(r))}</td>
+        <td style="max-width:400px">${pairsStr}</td>
+      </tr>`;
+    }).join('')}
+    </tbody>
+  </table>`;
+}
+
+function renderPairAnalysis() {
+  const el = document.getElementById('pairAnalysis');
+  const counts = {};
+  pairHistory.forEach(r => {
+    r.pairs.forEach(p => {
+      if (p.length === 2) {
+        const key = [p[0], p[1]].sort().join(' ♥ ');
+        counts[key] = (counts[key] || 0) + 1;
+      }
+    });
+  });
+  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 20);
+  if (!sorted.length) {
+    el.innerHTML = '<div class="empty-state" style="padding:20px 0"><p>기록이 쌓이면 분석이 나타납니다</p></div>';
+    return;
+  }
+  const max = sorted[0][1];
+  el.innerHTML = sorted.map(([pair, cnt]) => `
+    <div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:0.9rem">
+        <span>${pair}</span>
+        <span style="color:var(--accent2);font-weight:700">${cnt}회</span>
+      </div>
+      <div class="pair-progress">
+        <div class="pair-progress-fill" style="width:${(cnt/max)*100}%"></div>
+      </div>
+    </div>`).join('');
+}
+
+function clearHistory() {
+  if (!confirm('기록을 전체 삭제할까요?')) return;
+  pairHistory = [];
+  localStorage.setItem('pairHistory', JSON.stringify(pairHistory));
+  renderHistory();
+  renderPairAnalysis();
+  toast('🗑️ 기록 삭제 완료');
+}
+
+function exportHistoryCSV() {
+  if (!pairHistory.length) { toast('기록이 없습니다'); return; }
+  let csv = '날짜,미션,활동,짝1,짝2\n';
+  pairHistory.forEach(r => {
+    r.pairs.forEach((p, i) => {
+      const activity = getPairActivity(r, i);
+      csv += `${r.date},"${csvCell(r.mission)}","${csvCell(activity)}","${csvCell(p[0])}","${csvCell(p[1] || '혼자')}"\n`;
+    });
+  });
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '짝뽑기기록.csv';
+  a.click();
+  toast('📥 CSV 내보내기 완료');
+}
+
+// ═══════════════════════════════════
+// MISSIONS & ACTIVITIES
+// ═══════════════════════════════════
+function populateSelects() {
+  const ms = document.getElementById('missionSelect');
+  const as = document.getElementById('activitySelect');
+  ms.innerHTML = '<option value="random">🎲 랜덤 선택</option>' +
+    missions.map(m => `<option value="${escapeHTML(m)}">${escapeHTML(m)}</option>`).join('');
+  as.innerHTML = '<option value="balanced">🤹 활동 목록에서 골고루 배정</option>';
+}
+
+function renderMissionList() {
+  document.getElementById('missionList').innerHTML = missions.map((m, i) =>
+    `<div class="student-tag" style="margin:4px;border-radius:10px;padding:8px 14px">
+      <span style="color:var(--muted);font-size:0.75rem;margin-right:6px">${i+1}</span> ${escapeHTML(m)}
+      <span class="remove" onclick="removeMission(${i})">✕</span>
+    </div>`
+  ).join('');
+  populateSelects();
+}
+
+function renderActivityList() {
+  document.getElementById('activityList').innerHTML = activities.map((a, i) =>
+    `<div class="student-tag" style="margin:4px;border-radius:10px;padding:8px 14px">
+      <span style="color:var(--muted);font-size:0.75rem;margin-right:6px">${i+1}</span> ${escapeHTML(a)}
+      <span class="remove" onclick="removeActivity(${i})">✕</span>
+    </div>`
+  ).join('');
+  populateSelects();
+}
+
+function addMission() {
+  const v = document.getElementById('missionInput').value.trim();
+  if (!v) return;
+  missions.push(v);
+  document.getElementById('missionInput').value = '';
+  localStorage.setItem('pairMissions', JSON.stringify(missions));
+  renderMissionList();
+  toast('✅ 미션 추가!');
+}
+
+function removeMission(i) {
+  missions.splice(i, 1);
+  localStorage.setItem('pairMissions', JSON.stringify(missions));
+  renderMissionList();
+}
+
+function addActivity() {
+  const v = document.getElementById('activityInput').value.trim();
+  if (!v) return;
+  activities.push(v);
+  document.getElementById('activityInput').value = '';
+  localStorage.setItem('pairActivities', JSON.stringify(activities));
+  renderActivityList();
+  toast('✅ 활동 추가!');
+}
+
+function removeActivity(i) {
+  activities.splice(i, 1);
+  localStorage.setItem('pairActivities', JSON.stringify(activities));
+  renderActivityList();
+}
+
+function resetMissions() {
+  if (!confirm('미션을 기본값으로 복원할까요?')) return;
+  missions = [...DEFAULT_MISSIONS];
+  localStorage.setItem('pairMissions', JSON.stringify(missions));
+  renderMissionList();
+  toast('↺ 미션 복원 완료');
+}
+
+// ═══════════════════════════════════
+// DATA EXPORT/IMPORT
+// ═══════════════════════════════════
+function exportAllData() {
+  const data = { students, pairHistory, missions, activities };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '짝뽑기데이터.json';
+  a.click();
+  toast('📦 내보내기 완료');
+}
+
+function importAllData(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const d = JSON.parse(ev.target.result);
+      if (d.students) { students = d.students; saveStudents(); renderStudents(); }
+      if (d.pairHistory) { pairHistory = d.pairHistory; localStorage.setItem('pairHistory', JSON.stringify(pairHistory)); renderHistory(); renderPairAnalysis(); }
+      if (d.missions) { missions = d.missions; localStorage.setItem('pairMissions', JSON.stringify(missions)); renderMissionList(); }
+      if (d.activities) { activities = d.activities; localStorage.setItem('pairActivities', JSON.stringify(activities)); renderActivityList(); }
+      toast('✅ 불러오기 완료!');
+    } catch { toast('❌ 파일 형식 오류'); }
+  };
+  reader.readAsText(file);
+}
+
+// ═══════════════════════════════════
+// UTILS
+// ═══════════════════════════════════
+function escapeHTML(value) {
+  return String(value ?? '').replace(/[&<>"']/g, ch => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  }[ch]));
+}
+
+function csvCell(value) {
+  return String(value ?? '').replace(/"/g, '""');
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+function switchTabDirect(id) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  const idx = ['tab-students','tab-draw','tab-history','tab-settings'].indexOf(id);
+  document.querySelectorAll('.tab-btn')[idx].classList.add('active');
+}
+
+// Drag & Drop for file
+const dropZone = document.querySelector('.file-drop');
+if (dropZone) {
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.style.borderColor = 'var(--accent)'; });
+  dropZone.addEventListener('dragleave', () => { dropZone.style.borderColor = ''; });
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.style.borderColor = '';
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      const fakeEvent = { target: { files: [file] } };
+      handleFileUpload(fakeEvent);
+    }
+  });
+}
+</script>
+</body>
+</html>
