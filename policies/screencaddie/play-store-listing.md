@@ -10,8 +10,8 @@
 
 | 항목 | URL |
 |------|-----|
-| 개인정보처리방침 (한국어) | https://jeongdawoont-star.github.io/hash2n/policies/screencaddie/privacy-policy.ko.html |
-| 개인정보처리방침 (English) | https://jeongdawoont-star.github.io/hash2n/policies/screencaddie/privacy-policy.html |
+| 개인정보처리방침 (한국어) | https://hash2n.vercel.app/policies/screencaddie/privacy-policy.ko.html |
+| 개인정보처리방침 (English) | https://hash2n.vercel.app/policies/screencaddie/privacy-policy.html |
 | 개발자 이메일 | aimaster@kshcm.net |
 
 ---
