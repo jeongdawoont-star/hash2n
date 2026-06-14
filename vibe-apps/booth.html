@@ -316,7 +316,7 @@
 <script type="module">
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
   import {
-    getFirestore, collection, getDocs, doc, updateDoc, query, orderBy
+    getFirestore, initializeFirestore, collection, getDocs, doc, updateDoc, query, orderBy
   } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
   // ── 종료 멘트 ──
@@ -697,7 +697,9 @@
     }
     try {
       const app = initializeApp(cfg);
-      db = getFirestore(app);
+      // 학교망·방화벽·확장프로그램이 실시간 연결을 막아도 동작하도록 long-polling 자동감지
+      try { db = initializeFirestore(app, { experimentalAutoDetectLongPolling: true }); }
+      catch (e) { db = getFirestore(app); }
 
       const bcast = JSON.parse(localStorage.getItem('radioBroadcast') || '{}');
       if (bcast.sessionName) {

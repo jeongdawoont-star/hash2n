@@ -217,7 +217,7 @@
 <!-- Firebase -->
 <script type="module">
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-  import { getFirestore, collection, addDoc, serverTimestamp, query, orderBy, getDocs }
+  import { getFirestore, initializeFirestore, collection, addDoc, serverTimestamp, query, orderBy, getDocs }
     from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
   let db;
@@ -241,7 +241,9 @@
       return false;
     }
     const app = initializeApp(cfg);
-    db = getFirestore(app);
+    // 학교망·방화벽·확장프로그램이 실시간 연결을 막아도 동작하도록 long-polling 자동감지
+    try { db = initializeFirestore(app, { experimentalAutoDetectLongPolling: true }); }
+    catch (e) { db = getFirestore(app); }
 
     const bcast = JSON.parse(localStorage.getItem('radioBroadcast') || '{}');
     if (bcast.sessionName) document.getElementById('sessionTitle').textContent = bcast.sessionName;
