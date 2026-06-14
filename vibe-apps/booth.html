@@ -664,6 +664,7 @@
       setTtsStatus(false, '읽기 완료');
       ytPlay();
       startTimer(perStoryMs, () => {
+        markStoryAsPlayed(s.id);
         ytFadeOut(() => { playStory(idx + 1); });
       });
     }, { karaoke: true });
@@ -672,6 +673,8 @@
   // ── 방송 시작 ──
   window.startBroadcast = async function() {
     if (!stories.length) { alert('사연이 없습니다. 학생들에게 사연을 먼저 받아주세요.'); return; }
+
+    stopSubscribingStories(); // 방송 시작과 함께 사연 목록 구독 해제하여 큐 고정
 
     isBroadcasting = true;
     document.getElementById('startBtn').disabled = true;
@@ -702,6 +705,12 @@
     if (!isBroadcasting) return;
     clearInterval(timerInterval);
     speechSynthesis.cancel();
+    
+    // 현재 스킵하는 사연 완료 처리
+    if (currentIdx >= 0 && stories[currentIdx]) {
+      markStoryAsPlayed(stories[currentIdx].id);
+    }
+    
     ytFadeOut(() => playStory(currentIdx + 1));
   };
 
@@ -709,6 +718,11 @@
   function endBroadcast() {
     isBroadcasting = false;
     clearInterval(timerInterval);
+
+    // 현재 진행 중이던 사연 완료 처리
+    if (currentIdx >= 0 && stories[currentIdx]) {
+      markStoryAsPlayed(stories[currentIdx].id);
+    }
 
     const msg = ALL_MESSAGES[Math.floor(Math.random() * ALL_MESSAGES.length)];
     const bcast = JSON.parse(localStorage.getItem('radioBroadcast') || '{}');
@@ -735,6 +749,46 @@
     } catch (e) { console.warn('설정 링크 해석 실패:', e); }
   }
 
+  // ── Firebase 사연 완료 상태 및 실시간 구독 ──
+  async function markStoryAsPlayed(id) {
+    try {
+      await updateDoc(doc(db, 'stories', id), { played: true });
+    } catch (e) {
+      console.warn('사연 완료 상태 업데이트 실패:', e);
+    }
+  }
+
+  function subscribeStories() {
+    if (unsubscribeStories) return;
+    
+    const q = query(collection(db, 'stories'), orderBy('order', 'asc'));
+    unsubscribeStories = onSnapshot(q, (snap) => {
+      if (isBroadcasting) return; // 방송 진행 중에는 큐 고정
+
+      stories = snap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .filter(s => s.played !== true && s.hidden !== true);
+
+      document.getElementById('totalNum').textContent = stories.length;
+      renderQueue();
+
+      if (!stories.length) {
+        document.getElementById('storyBody').textContent = '아직 사연이 없어요. 학생들에게 사연 페이지 링크를 공유하세요.';
+      } else {
+        document.getElementById('storyBody').textContent = '방송 시작 버튼을 눌러주세요.';
+      }
+    }, (e) => {
+      console.warn('사연 실시간 연동 실패:', e);
+    });
+  }
+
+  function stopSubscribingStories() {
+    if (unsubscribeStories) {
+      unsubscribeStories();
+      unsubscribeStories = null;
+    }
+  }
+
   // ── Firebase 초기화 및 사연 로드 ──
   async function init() {
     applySharedConfig();
@@ -755,16 +809,7 @@
         document.title = bcast.sessionName + ' 부스';
       }
 
-      const q = query(collection(db, 'stories'), orderBy('order', 'asc'));
-      const snap = await getDocs(q);
-      stories = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-
-      document.getElementById('totalNum').textContent = stories.length;
-      renderQueue();
-
-      if (!stories.length) {
-        document.getElementById('storyBody').textContent = '아직 사연이 없어요. 학생들에게 사연 페이지 링크를 공유하세요.';
-      }
+      subscribeStories();
     } catch(e) {
       alert('Firebase 연결 실패: ' + e.message);
     }

@@ -22,7 +22,7 @@
       radial-gradient(45vw 40vh at 100% 110%, rgba(143,191,138,0.18), transparent 55%),
       var(--cream);
     color:var(--text); font-family:var(--body);
-    height:100vh; width:100vw; overflow:hidden;
+    min-height:100vh; width:100vw; overflow-y:auto;
     display:flex; flex-direction:column;
     padding: clamp(14px,2.2vh,28px) clamp(20px,3vw,56px);
   }
@@ -139,6 +139,22 @@
   .modal-close { width:100%; padding:14px; background:var(--coral); color:#fff; border:none; border-radius:16px; font-family:var(--round); font-size:17px; cursor:pointer; box-shadow:0 5px 0 var(--coral-dk); transition:all .15s; }
   .modal-close:hover { background:#FF8C6E; transform:translateY(-2px); box-shadow:0 7px 0 var(--coral-dk); }
   .modal-close:active { transform:translateY(3px); box-shadow:0 2px 0 var(--coral-dk); }
+
+  /* 사연 관리 테이블 추가 */
+  table th, table td { border-bottom: 1px solid var(--line); }
+  .btn-sm { padding: 4px 10px; font-size: 12px; border-radius: 8px; cursor: pointer; border: none; font-family: var(--round); transition: all 0.15s; }
+  .btn-sm-danger { background: var(--coral); color: #fff; box-shadow: 0 3px 0 var(--coral-dk); }
+  .btn-sm-danger:hover { background: #FF8C6E; transform: translateY(-1px); box-shadow: 0 4px 0 var(--coral-dk); }
+  .btn-sm-danger:active { transform: translateY(1px); box-shadow: 0 1px 0 var(--coral-dk); }
+  
+  .btn-sm-secondary { background: #FFF3E4; color: var(--wood-dk); box-shadow: 0 3px 0 #E7CBA3; }
+  .btn-sm-secondary:hover { background: #FFEAD2; transform: translateY(-1px); box-shadow: 0 4px 0 #E7CBA3; }
+  .btn-sm-secondary:active { transform: translateY(1px); box-shadow: 0 1px 0 #E7CBA3; }
+  
+  .status-badge { display: inline-block; padding: 3px 8px; border-radius: 8px; font-size: 12px; font-family: var(--round); color: #fff; }
+  .status-badge.waiting { background: var(--mint); }
+  .status-badge.keep { background: var(--yellow); color: var(--text); }
+  .status-badge.played { background: var(--muted); }
 </style>
 </head>
 <body>
@@ -216,6 +232,72 @@
     </div>
   </div>
 
+  <!-- 사연 관리 패널 -->
+  <div class="card" id="storyManagerCard" style="margin-top: clamp(12px,1.4vw,26px); display: none; flex-direction: column;">
+    <div class="card-title" style="justify-content:space-between; flex-wrap: wrap; gap: 10px; margin-bottom: clamp(10px,1.5vh,18px);">
+      <span style="display:flex;align-items:center;gap:10px"><span class="chip">📋</span>사연 실시간 관리</span>
+      <div style="display:flex; gap:8px; flex-wrap: wrap;">
+        <button class="help-btn" style="background:var(--mint); box-shadow:0 4px 0 #6FA46A;" onclick="resetAllStoriesPlayed()">🔄 모든 사연 대기로 초기화</button>
+        <button class="help-btn" style="background:var(--muted); box-shadow:0 4px 0 #8C755A;" onclick="deleteAllPlayedStories()">🧹 방송 완료 사연만 삭제</button>
+        <button class="help-btn" style="background:var(--coral); box-shadow:0 4px 0 var(--coral-dk);" onclick="deleteAllStories()">⚠️ 모든 사연 삭제</button>
+      </div>
+    </div>
+    
+    <div style="overflow-x: auto;">
+      <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: clamp(13px, 1.5vh, 16px);">
+        <thead>
+          <tr style="border-bottom: 2px solid var(--line); color: var(--wood-dk);">
+            <th style="padding: 10px 8px; width: 60px;">순서</th>
+            <th style="padding: 10px 8px; width: 90px;">신청자</th>
+            <th style="padding: 10px 8px; width: 180px;">신청곡</th>
+            <th style="padding: 10px 8px;">사연 내용</th>
+            <th style="padding: 10px 8px; width: 100px; text-align: center;">방송 포함</th>
+            <th style="padding: 10px 8px; width: 100px; text-align: center;">상태</th>
+            <th style="padding: 10px 8px; width: 140px; text-align: center;">관리</th>
+          </tr>
+        </thead>
+        <tbody id="storyListBody">
+          <tr>
+            <td colspan="7" style="padding: 20px; text-align: center; color: var(--muted);">사연을 불러오는 중...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 사연 관리 패널 -->
+  <div class="card" id="storyManagerCard" style="margin-top: clamp(12px,1.4vw,26px); display: none; flex-direction: column;">
+    <div class="card-title" style="justify-content:space-between; flex-wrap: wrap; gap: 10px; margin-bottom: clamp(10px,1.5vh,18px);">
+      <span style="display:flex;align-items:center;gap:10px"><span class="chip">📋</span>사연 실시간 관리</span>
+      <div style="display:flex; gap:8px; flex-wrap: wrap;">
+        <button class="help-btn" style="background:var(--mint); box-shadow:0 4px 0 #6FA46A;" onclick="resetAllStoriesPlayed()">🔄 모든 사연 대기로 초기화</button>
+        <button class="help-btn" style="background:var(--muted); box-shadow:0 4px 0 #8C755A;" onclick="deleteAllPlayedStories()">🧹 방송 완료 사연만 삭제</button>
+        <button class="help-btn" style="background:var(--coral); box-shadow:0 4px 0 var(--coral-dk);" onclick="deleteAllStories()">⚠️ 모든 사연 삭제</button>
+      </div>
+    </div>
+    
+    <div style="overflow-x: auto;">
+      <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: clamp(13px, 1.5vh, 16px);">
+        <thead>
+          <tr style="border-bottom: 2px solid var(--line); color: var(--wood-dk);">
+            <th style="padding: 10px 8px; width: 60px;">순서</th>
+            <th style="padding: 10px 8px; width: 90px;">신청자</th>
+            <th style="padding: 10px 8px; width: 180px;">신청곡</th>
+            <th style="padding: 10px 8px;">사연 내용</th>
+            <th style="padding: 10px 8px; width: 100px; text-align: center;">방송 포함</th>
+            <th style="padding: 10px 8px; width: 100px; text-align: center;">상태</th>
+            <th style="padding: 10px 8px; width: 140px; text-align: center;">관리</th>
+          </tr>
+        </thead>
+        <tbody id="storyListBody">
+          <tr>
+            <td colspan="7" style="padding: 20px; text-align: center; color: var(--muted);">사연을 불러오는 중...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
 </div>
 
 <div class="toast" id="toast">✅ 저장 완료!</div>
@@ -242,7 +324,15 @@
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script>
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+  import {
+    getFirestore, initializeFirestore, collection, doc, deleteDoc, updateDoc, query, orderBy, onSnapshot, getDocs
+  } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+  let db;
+  let unsubscribeStories = null;
+
   window.onload = function() {
     const cfg = JSON.parse(localStorage.getItem('radioFirebaseConfig') || '{}');
     if (cfg.apiKey) {
@@ -259,9 +349,15 @@
     if (bcast.sessionName) document.getElementById('sessionName').value = bcast.sessionName;
     renderShare();
     updateExpirationDisplay();
+    initFirebaseManager();
   };
 
-  function parsePasted() {
+  // 모듈의 경우 load 이벤트가 이미 실행되었을 수 있으므로 즉시 실행 대응
+  if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    setTimeout(window.onload, 1);
+  }
+
+  window.parsePasted = function() {
     const raw = document.getElementById('pasteConfig').value;
     if (!raw.trim()) { alert('붙여넣은 내용이 없습니다.'); return; }
     const keys = ['apiKey','authDomain','projectId','storageBucket','messagingSenderId','appId'];
@@ -272,7 +368,7 @@
     });
     if (found) showToast(found + '개 항목 자동 입력됨 — 저장을 눌러주세요');
     else alert('설정을 찾지 못했어요. firebaseConfig = { ... } 전체를 붙여넣었는지 확인하세요.');
-  }
+  };
 
   function buildShareUrl(page) {
     const cfg = JSON.parse(localStorage.getItem('radioFirebaseConfig') || '{}');
@@ -284,7 +380,7 @@
     return u.href;
   }
 
-  async function copyShare(page, btn) {
+  window.copyShare = async function(page, btn) {
     const url = buildShareUrl(page);
     if (!url) return;
     try { await navigator.clipboard.writeText(url); }
@@ -292,7 +388,7 @@
     const orig = btn.textContent;
     btn.textContent = '✅ 복사됨!';
     setTimeout(() => { btn.textContent = orig; }, 1800);
-  }
+  };
 
   function renderShare() {
     const cfg = JSON.parse(localStorage.getItem('radioFirebaseConfig') || '{}');
@@ -310,7 +406,7 @@
     wrap.style.display = 'flex';
   }
 
-  function saveConfig() {
+  window.saveConfig = function() {
     const cfg = {
       apiKey: document.getElementById('apiKey').value.trim(),
       authDomain: document.getElementById('authDomain').value.trim(),
@@ -326,7 +422,8 @@
     showToast('Firebase 설정 저장 완료!');
     renderShare();
     updateExpirationDisplay();
-  }
+    initFirebaseManager();
+  };
 
   function updateExpirationDisplay() {
     const savedDateStr = localStorage.getItem('radioConfigSavedDate');
@@ -354,7 +451,7 @@
     }
   }
 
-  function saveBroadcast() {
+  window.saveBroadcast = function() {
     const bcast = {
       totalMinutes: parseInt(document.getElementById('totalMinutes').value) || 10,
       sessionName: document.getElementById('sessionName').value.trim() || '우리반 라디오',
@@ -362,7 +459,7 @@
     localStorage.setItem('radioBroadcast', JSON.stringify(bcast));
     showToast('방송 설정 저장 완료!');
     renderShare();
-  }
+  };
 
   function showToast(msg) {
     const t = document.getElementById('toast');
@@ -371,9 +468,159 @@
     setTimeout(() => t.classList.remove('show'), 2500);
   }
 
-  function openHelp() { document.getElementById('helpModal').classList.add('show'); }
-  function closeHelp() { document.getElementById('helpModal').classList.remove('show'); }
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeHelp(); });
+  window.openHelp = function() { document.getElementById('helpModal').classList.add('show'); };
+  window.closeHelp = function() { document.getElementById('helpModal').classList.remove('show'); };
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') window.closeHelp(); });
+
+  // ── Firebase 사연 실시간 관리 로직 ──
+  async function initFirebaseManager() {
+    const cfg = JSON.parse(localStorage.getItem('radioFirebaseConfig') || '{}');
+    if (!cfg.apiKey) {
+      document.getElementById('storyManagerCard').style.display = 'none';
+      return;
+    }
+    
+    try {
+      const app = initializeApp(cfg);
+      try {
+        db = initializeFirestore(app, { experimentalAutoDetectLongPolling: true });
+      } catch (e) {
+        db = getFirestore(app);
+      }
+      
+      document.getElementById('storyManagerCard').style.display = 'flex';
+      subscribeStoriesList();
+    } catch (e) {
+      console.error('Firebase Manager 초기화 실패:', e);
+    }
+  }
+
+  function subscribeStoriesList() {
+    if (unsubscribeStories) unsubscribeStories();
+    
+    const q = query(collection(db, 'stories'), orderBy('order', 'asc'));
+    unsubscribeStories = onSnapshot(q, (snap) => {
+      const stories = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderStoriesTable(stories);
+    }, (err) => {
+      console.error('사연 구독 실패:', err);
+    });
+  }
+
+  function renderStoriesTable(stories) {
+    const tbody = document.getElementById('storyListBody');
+    if (!stories.length) {
+      tbody.innerHTML = `<tr><td colspan="7" style="padding: 20px; text-align: center; color: var(--muted);">접수된 사연이 없습니다.</td></tr>`;
+      return;
+    }
+    
+    tbody.innerHTML = stories.map((s) => {
+      const isPlayed = s.played === true;
+      const isHidden = s.hidden === true;
+      
+      let statusBadge = '<span class="status-badge waiting">대기 중</span>';
+      if (isPlayed) {
+        statusBadge = '<span class="status-badge played">방송 완료</span>';
+      } else if (isHidden) {
+        statusBadge = '<span class="status-badge keep">보류(킵)</span>';
+      }
+      
+      return `
+        <tr style="${isPlayed ? 'opacity: 0.55; background: rgba(0,0,0,0.02);' : ''}">
+          <td style="padding: 10px 8px; font-family: var(--round); color: var(--wood-dk);">#${s.order}</td>
+          <td style="padding: 10px 8px; font-family: var(--round);">${s.name}</td>
+          <td style="padding: 10px 8px; font-size: 13px; color: var(--wood-dk); line-height: 1.3;">
+            <b>${s.songTitle}</b><br><span style="color: var(--muted);">${s.artist}</span>
+          </td>
+          <td style="padding: 10px 8px; max-width: 320px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px;" title="${escapeHtml(s.story)}">
+            ${escapeHtml(s.story)}
+          </td>
+          <td style="padding: 10px 8px; text-align: center;">
+            <input type="checkbox" ${!isHidden ? 'checked' : ''} ${isPlayed ? 'disabled' : ''} 
+              onchange="toggleStoryVisibility('${s.id}', this.checked)" style="width: 18px; height: 18px; cursor: pointer;">
+          </td>
+          <td style="padding: 10px 8px; text-align: center;">${statusBadge}</td>
+          <td style="padding: 10px 8px; text-align: center;">
+            <div style="display: flex; gap: 6px; justify-content: center; align-items: center;">
+              ${isPlayed ? `<button class="btn-sm btn-sm-secondary" onclick="restoreStory('${s.id}')">되살리기</button>` : ''}
+              <button class="btn-sm btn-sm-danger" onclick="deleteStory('${s.id}')">🗑️ 삭제</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+  }
+
+  window.toggleStoryVisibility = async function(id, isChecked) {
+    try {
+      await updateDoc(doc(db, 'stories', id), { hidden: !isChecked });
+    } catch (e) {
+      alert('설정 변경 실패: ' + e.message);
+    }
+  };
+
+  window.restoreStory = async function(id) {
+    try {
+      await updateDoc(doc(db, 'stories', id), { played: false });
+    } catch (e) {
+      alert('사연 되살리기 실패: ' + e.message);
+    }
+  };
+
+  window.deleteStory = async function(id) {
+    if (!confirm('이 사연을 삭제할까요?')) return;
+    try {
+      await deleteDoc(doc(db, 'stories', id));
+    } catch (e) {
+      alert('삭제 실패: ' + e.message);
+    }
+  };
+
+  window.resetAllStoriesPlayed = async function() {
+    if (!confirm('모든 사연을 방송 대기(미방송) 상태로 초기화할까요?')) return;
+    try {
+      const q = query(collection(db, 'stories'));
+      const snap = await getDocs(q);
+      const promises = snap.docs.map(d => updateDoc(doc(db, 'stories', d.id), { played: false }));
+      await Promise.all(promises);
+      showToast('모든 사연 상태 초기화 완료!');
+    } catch (e) {
+      alert('초기화 실패: ' + e.message);
+    }
+  };
+
+  window.deleteAllPlayedStories = async function() {
+    if (!confirm('방송 완료된 사연을 모두 삭제할까요?')) return;
+    try {
+      const q = query(collection(db, 'stories'));
+      const snap = await getDocs(q);
+      const promises = snap.docs
+        .filter(d => d.data().played === true)
+        .map(d => deleteDoc(doc(db, 'stories', d.id)));
+      await Promise.all(promises);
+      showToast('방송 완료 사연 삭제 완료!');
+    } catch (e) {
+      alert('삭제 실패: ' + e.message);
+    }
+  };
+
+  window.deleteAllStories = async function() {
+    if (!confirm('⚠️ 정말로 모든 사연을 완전히 삭제할까요? 되돌릴 수 없습니다.')) return;
+    try {
+      const q = query(collection(db, 'stories'));
+      const snap = await getDocs(q);
+      const promises = snap.docs.map(d => deleteDoc(doc(db, 'stories', d.id)));
+      await Promise.all(promises);
+      showToast('모든 사연 삭제 완료!');
+    } catch (e) {
+      alert('삭제 실패: ' + e.message);
+    }
+  };
 </script>
 </body>
 </html>
