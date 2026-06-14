@@ -179,7 +179,10 @@
       <div class="field"><label>APP ID</label><input id="appId" type="text" placeholder="1:123:web:abc..."></div>
 
       <button class="btn" style="margin-top:auto" onclick="saveConfig()">💾 설정 저장하기</button>
-      <div class="saved-badge" id="savedBadge"><span class="status-dot ok"></span>설정이 저장되어 있어요</div>
+      <div class="saved-badge" id="savedBadge">
+        <span class="status-dot ok"></span>설정이 저장되어 있어요
+        <div id="expirationWarning" style="margin-top: 6px; font-size: 13px; color: var(--muted); font-family: var(--body); line-height: 1.4;"></div>
+      </div>
     </div>
   </div>
 
@@ -255,6 +258,7 @@
     if (bcast.totalMinutes) document.getElementById('totalMinutes').value = bcast.totalMinutes;
     if (bcast.sessionName) document.getElementById('sessionName').value = bcast.sessionName;
     renderShare();
+    updateExpirationDisplay();
   };
 
   function parsePasted() {
@@ -317,9 +321,37 @@
     };
     if (!cfg.apiKey || !cfg.projectId) { alert('API Key와 Project ID는 필수입니다.'); return; }
     localStorage.setItem('radioFirebaseConfig', JSON.stringify(cfg));
+    localStorage.setItem('radioConfigSavedDate', new Date().toISOString());
     document.getElementById('savedBadge').style.display = 'block';
     showToast('Firebase 설정 저장 완료!');
     renderShare();
+    updateExpirationDisplay();
+  }
+
+  function updateExpirationDisplay() {
+    const savedDateStr = localStorage.getItem('radioConfigSavedDate');
+    const warningEl = document.getElementById('expirationWarning');
+    if (!savedDateStr || !warningEl) {
+      if (warningEl) warningEl.textContent = '';
+      return;
+    }
+    const savedDate = new Date(savedDateStr);
+    const expireDate = new Date(savedDate.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 days later
+    const now = new Date();
+    
+    // Calculate remaining days
+    const diffTime = expireDate - now;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    const formatDate = (d) => `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일`;
+    
+    if (diffDays > 0) {
+      warningEl.innerHTML = `📅 테스트 모드 예상 만료: <b>${formatDate(expireDate)}</b> (D-${diffDays})`;
+      warningEl.style.color = diffDays <= 7 ? 'var(--coral-dk)' : 'var(--muted)';
+    } else {
+      warningEl.innerHTML = `⚠️ 테스트 모드가 만료되었을 수 있습니다 (${formatDate(expireDate)} 만료). 사연 전송이 안 된다면 도움말의 6단계를 참고하여 규칙을 수정해 주세요.`;
+      warningEl.style.color = 'var(--coral-dk)';
+    }
   }
 
   function saveBroadcast() {
