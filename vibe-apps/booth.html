@@ -393,10 +393,14 @@
   let ytReady = false;
 
   window.onYouTubeIframeAPIReady = function() {
+    const playerVars = { autoplay: 0, controls: 1, rel: 0, modestbranding: 1, playsinline: 1 };
+    if (location.protocol !== 'file:') {
+      playerVars.origin = location.origin;
+    }
     window.ytPlayer = new YT.Player('ytFrame', {
       height: '100%',
       width: '100%',
-      playerVars: { autoplay: 0, controls: 1, rel: 0, modestbranding: 1, playsinline: 1, origin: location.origin },
+      playerVars: playerVars,
       events: {
         onReady: () => { ytReady = true; },
         onError: (e) => { console.warn('YouTube 재생 오류 코드:', e.data); },
@@ -409,6 +413,9 @@
     try {
       const u = new URL(url);
       if (u.hostname.includes('youtu.be')) return u.pathname.slice(1);
+      if (u.pathname.includes('/shorts/') || u.pathname.includes('/embed/')) {
+        return u.pathname.split('/').filter(Boolean).pop();
+      }
       return u.searchParams.get('v') || '';
     } catch { return ''; }
   }
