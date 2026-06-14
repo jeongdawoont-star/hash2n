@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, fireEvent, act, cleanup } from '@testing-library/react'
+import { render, fireEvent, act, cleanup, screen } from '@testing-library/react'
 
 const SAVE_KEY = 'potato-remake-classic-v2'
 
@@ -13,6 +13,28 @@ function baseSave(over: Record<string, unknown> = {}) {
     unlockedEndingIds: [], endingSeenCount: {}, runCount: 1,
     careCount: 50, eventLog: [], touchCombo: 0,
     seedSlot: { rolled: true, rerolls: 0, results: [] },
+    ...over,
+  })
+}
+
+function pendingEnding(over: Record<string, unknown> = {}) {
+  return baseSave({
+    screen: 'title',
+    day: 98,
+    resolvingDay: false,
+    currentEnding: {
+      endingId: 'E01',
+      imageIndex: 1,
+      title: '테스트 엔딩',
+      hint: '',
+      tier: 1,
+      statKeys: ['gram'],
+      score: 1,
+      isNew: true,
+      story: '테스트 스토리',
+    },
+    unlockedEndingIds: [],
+    endingSeenCount: {},
     ...over,
   })
 }
@@ -83,4 +105,46 @@ describe('ad slide gate', () => {
     expect(counts[0]).toBe(1) // 별 개수 버그의 원인이던 중복 카운트가 없어야 함
     console.log('[ADSLIDE] OK', save.unlockedEndingIds, save.endingSeenCount)
   }, 120000)
+
+  it('title start with an unwatched ending opens the ad/new-run choice before seed slot', async () => {
+    localStorage.setItem(SAVE_KEY, pendingEnding({ screen: 'title' }))
+    vi.resetModules()
+    const { default: App } = await import('../src/App')
+    render(<App />)
+    await tick(12)
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: '시작하기' }))
+    })
+
+    expect(document.querySelector('.ad-slide-track')).toBeTruthy()
+    const startOver = Array.from(document.querySelectorAll('button')).find((button) =>
+      (button.textContent ?? '').includes('그냥 새로 시작')
+    )
+    expect(startOver).toBeTruthy()
+
+    await act(async () => {
+      fireEvent.click(startOver as HTMLButtonElement)
+    })
+
+    const save = JSON.parse(localStorage.getItem(SAVE_KEY) ?? '{}')
+    expect(save.screen).toBe('intro')
+    expect(save.currentEnding).toBeNull()
+    expect(save.unlockedEndingIds ?? []).toHaveLength(0)
+  })
+
+  it('collection new-run with an unwatched ending opens the same ad/new-run choice', async () => {
+    localStorage.setItem(SAVE_KEY, pendingEnding({ screen: 'collection', collectionReturnScreen: 'title' }))
+    vi.resetModules()
+    const { default: App } = await import('../src/App')
+    render(<App />)
+    await tick(12)
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: '새 회차' }))
+    })
+
+    expect(document.querySelector('.ad-slide-track')).toBeTruthy()
+    expect(document.body.textContent ?? '').toContain('지난 회차 엔딩을 아직 확인하지 않았어요.')
+  })
 })

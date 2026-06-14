@@ -5500,6 +5500,14 @@ function saveGameDirectly(state: GameState) {
   }
 }
 
+function hasPendingEndingGate(state: Pick<GameState, 'currentEnding' | 'unlockedEndingIds' | 'endingSeenCount'>): boolean {
+  const endingId = state.currentEnding?.endingId
+  if (!endingId) return false
+  const hasUnlockedEnding = state.unlockedEndingIds.includes(endingId)
+  const hasSeenEnding = (state.endingSeenCount[endingId] ?? 0) > 0
+  return !hasUnlockedEnding || !hasSeenEnding
+}
+
 function splitHintIntoTwoLines(text: string): React.ReactNode {
   const words = text.split(' ')
   if (words.length <= 2) return text
@@ -6559,6 +6567,7 @@ function App() {
     playMenuClickSound(0.86)
     setHarvestStep(0)
     setShowAd(false)
+    setShowEndingAlert(false)
     setGame((prev) => {
       const nextRunCount = prev.runCount + 1
       const totalClears = getClearBonusCount(prev.endingSeenCount, prev.unlockedEndingIds)
@@ -6577,6 +6586,22 @@ function App() {
       saveGameDirectly(nextState)
       return nextState
     })
+  }
+
+  function requestNewRun(): void {
+    if (hasPendingEndingGate(game)) {
+      playMenuClickSound(0.86)
+      setShowEndingAlert(true)
+      setShowAchievements(false)
+      setShowSettings(false)
+      setShowTitleRecords(false)
+      return
+    }
+    if (game.currentEnding) {
+      startNewRun()
+    } else {
+      beginSeedIntro()
+    }
   }
 
   function openCollection(): void {
@@ -7181,13 +7206,7 @@ function App() {
 
           {game.screen === 'title' ? (
             <TitleOverlay
-              onStart={() => {
-                if (game.currentEnding) {
-                  setShowEndingAlert(true)
-                } else {
-                  beginSeedIntro()
-                }
-              }}
+              onStart={requestNewRun}
               onCollection={openCollection}
               onAchievements={() => setShowAchievements(true)}
               onShowRecords={() => setShowTitleRecords(true)}
@@ -7199,7 +7218,7 @@ function App() {
           {showEndingAlert && (
             <div
               style={{
-                position: 'absolute', inset: 0, zIndex: 200,
+                position: 'absolute', inset: 0, zIndex: 1200,
                 background: 'rgba(0,0,0,0.65)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}
@@ -7252,7 +7271,7 @@ function App() {
                   />
                   <button
                     type="button"
-                    onClick={() => { setShowEndingAlert(false); beginSeedIntro() }}
+                    onClick={startNewRun}
                     style={{
                       fontFamily: 'inherit', fontSize: '14px', fontWeight: 700,
                       background: '#efebe9', border: '2px solid #6b4a2b', borderRadius: '12px',
@@ -7444,7 +7463,7 @@ function App() {
             <EndingOverlay
               ending={game.currentEnding}
               seenCount={game.currentEnding ? (game.endingSeenCount[game.currentEnding.endingId] ?? 1) : 1}
-              onRestart={startNewRun}
+              onRestart={requestNewRun}
               onCollection={openCollection}
               lang={lang}
             />
@@ -7455,7 +7474,7 @@ function App() {
               unlockedIds={game.unlockedEndingIds}
               seenCount={game.endingSeenCount}
               onClose={closeCollection}
-              onRestart={startNewRun}
+              onRestart={requestNewRun}
               onResume={resumeCollection}
               returnScreen={game.collectionReturnScreen}
               lang={lang}
