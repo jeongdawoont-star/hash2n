@@ -816,6 +816,7 @@
 
     const bcast = JSON.parse(localStorage.getItem('radioBroadcast') || '{}');
     const totalSec = (bcast.totalMinutes || 10) * 60;
+    const totalMs = totalSec * 1000;
     const sessionName0 = bcast.sessionName || '우리 반 라디오';
 
     // TTS 글자수 기반 동적 노래 시간 계산 (한국어 rate 0.95 ≈ 초당 3.8자)
