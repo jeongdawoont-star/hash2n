@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<title>감자키우기 — 다중 해상도 미리보기</title>
+<style>
+  body { margin: 0; padding: 20px; background: #1a1410; color: #ffe9b0; font-family: 'Malgun Gothic', sans-serif; }
+  h1 { font-size: 18px; } p { font-size: 13px; color: #c9b48a; }
+  .grid { display: flex; flex-wrap: wrap; gap: 24px; }
+  .device { display: flex; flex-direction: column; gap: 6px; }
+  .device span { font-size: 12px; color: #ffd76e; }
+  iframe { border: 3px solid #4a3a26; border-radius: 10px; background: #000; }
+</style>
+</head>
+<body>
+<h1>🥔 다중 해상도 미리보기 (개발 점검용)</h1>
+<p>빌드 PC에서: <code>potato-remake</code> 폴더에서 <code>npm run build</code> 후 <code>npx vite preview</code> 실행 → 브라우저로
+<code>http://localhost:4173/screen-test.html</code> 접속. 각 칸이 실제 기기 화면비입니다. (각 칸 안에서 직접 플레이도 가능)</p>
+<div class="grid" id="grid"></div>
+<script>
+  // CSS 픽셀 기준 대표 기기 (가로모드)
+  const devices = [
+    ['16:9 구형폰 (667x375)', 667, 375],
+    ['16:9 소형 (640x360)', 640, 360],
+    ['18:9 (720x360)', 720, 360],
+    ['19.5:9 iPhone14 (844x390)', 844, 390],
+    ['19.5:9 갤럭시 (892x412)', 892, 412],
+    ['20:9 (800x360)', 800, 360],
+    ['21:9 (1096x469)', 1096, 469],
+    ['태블릿 4:3 (1180x820)', 1180, 820],
+    ['태블릿 16:10 (1280x800)', 1280, 800],
+  ];
+  const grid = document.getElementById('grid');
+  for (const [name, w, h] of devices) {
+    const scale = Math.min(1, 760 / w);
+    const d = document.createElement('div'); d.className = 'device';
+    d.innerHTML = `<span>${name}</span>`;
+    const wrap = document.createElement('div');
+    wrap.style.cssText = `width:${w*scale}px;height:${h*scale}px;overflow:hidden;`;
+    const f = document.createElement('iframe');
+    f.src = '/index.html'; f.width = w; f.height = h;
+    f.style.cssText = `transform:scale(${scale});transform-origin:top left;`;
+    wrap.appendChild(f); d.appendChild(wrap); grid.appendChild(d);
+  }
+</script>
+</body>
+</html>

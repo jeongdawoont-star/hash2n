@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">&#44048;&#51088;&#53412;&#50864;&#44592;</string>
+    <string name="title_activity_main">&#44048;&#51088;&#53412;&#50864;&#44592;</string>
+    <string name="package_name">com.potato.renpy</string>
+    <string name="custom_url_scheme">com.potato.renpy</string>
+    <!-- AdMob App ID: Replace with your actual App ID from AdMob console before building release AAB -->
+    <string name="admob_app_id">ca-app-pub-5900212892693406~9756986898</string>
+</resources>
