@@ -309,8 +309,7 @@
   <button class="ctrl-btn ctrl-stop" onclick="confirmStop()">■ 방송 종료</button>
 </div>
 
-<!-- YouTube IFrame API -->
-<script src="https://www.youtube.com/iframe_api"></script>
+<!-- YouTube IFrame API will be loaded dynamically in module script to prevent race conditions -->
 
 <!-- Firebase -->
 <script type="module">
@@ -408,6 +407,12 @@
       }
     });
   };
+
+  // Load YouTube API script dynamically *after* window.onYouTubeIframeAPIReady is defined to avoid race conditions in ES modules
+  const tag = document.createElement('script');
+  tag.src = "https://www.youtube.com/iframe_api";
+  const firstScriptTag = document.getElementsByTagName('script')[0];
+  firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
   function ytVideoId(url) {
     try {
