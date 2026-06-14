@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>학급라디오 설정</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap');
+
+  :root {
+    --cream:#FBF1DE; --cream2:#FFF9EF; --card:#FFFDF8;
+    --wood:#B98A5C; --wood-dk:#8C5E36; --line:#ECD9BC;
+    --coral:#FF7A59; --coral-dk:#F2613F; --yellow:#FFC857;
+    --mint:#8FBF8A; --text:#5A4327; --muted:#A98E6F;
+    --round:'Jua',sans-serif; --body:'Gowun Dodum',sans-serif;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { height:100%; }
+  body {
+    background:
+      radial-gradient(55vw 38vh at 50% -10%, #FFE6C7, transparent 60%),
+      radial-gradient(45vw 40vh at 100% 110%, rgba(143,191,138,0.18), transparent 55%),
+      var(--cream);
+    color:var(--text); font-family:var(--body);
+    height:100vh; width:100vw; overflow:hidden;
+    display:flex; flex-direction:column;
+    padding: clamp(14px,2.2vh,28px) clamp(20px,3vw,56px);
+  }
+
+  /* 헤더 */
+  .topbar { display:flex; align-items:center; gap:1vw; flex-shrink:0; margin-bottom: clamp(10px,1.8vh,22px); }
+  .logo-icon {
+    width: clamp(48px,5.6vh,68px); height: clamp(48px,5.6vh,68px);
+    background:linear-gradient(160deg,#FFD27D,var(--coral)); border-radius:20px;
+    display:flex; align-items:center; justify-content:center;
+    font-size: clamp(26px,3vh,38px);
+    box-shadow:0 8px 18px rgba(255,122,89,0.32);
+  }
+  .topbar h1 { font-family:var(--round); font-size: clamp(22px,2.6vh,34px); color:var(--wood-dk); }
+  .topbar .tag { font-family:var(--round); font-size: clamp(12px,1.4vh,15px); color:var(--coral-dk); background:#FFEAD6; padding:4px 14px; border-radius:999px; }
+
+  /* 레이아웃 */
+  .layout {
+    flex:1; min-height:0;
+    display:grid;
+    grid-template-columns: 1.22fr 1fr;
+    gap: clamp(12px,1.4vw,26px);
+  }
+  .col { display:flex; flex-direction:column; gap: clamp(10px,1.4vh,18px); min-height:0; }
+
+  .card {
+    background:var(--card); border:2.5px solid var(--line); border-radius:22px;
+    padding: clamp(14px,2.1vh,24px) clamp(16px,1.5vw,26px);
+    box-shadow:0 7px 0 rgba(184,138,92,0.10);
+  }
+  .card.grow { flex:1; min-height:0; display:flex; flex-direction:column; }
+
+  .card-title { font-family:var(--round); font-size: clamp(15px,1.9vh,20px); color:var(--wood-dk); margin-bottom: clamp(10px,1.5vh,18px); display:flex; align-items:center; gap:10px; }
+  .card-title .chip { width: clamp(28px,3.4vh,36px); height: clamp(28px,3.4vh,36px); border-radius:11px; background:#FFEAD6; display:inline-flex; align-items:center; justify-content:center; font-size: clamp(15px,1.9vh,19px); flex-shrink:0; }
+
+  label { display:block; font-family:var(--round); font-size: clamp(12px,1.4vh,15px); color:var(--wood); margin-bottom:5px; }
+  input, textarea {
+    width:100%; background:var(--cream2); border:2.5px solid var(--line); border-radius:13px;
+    padding: clamp(9px,1.15vh,13px) 14px; color:var(--text); font-family:var(--body);
+    font-size: clamp(13px,1.5vh,16px); outline:none; transition:border-color .2s, background .2s;
+  }
+  input:focus, textarea:focus { border-color:var(--coral); background:#FFF6EC; }
+  input::placeholder, textarea::placeholder { color:var(--muted); opacity:.7; }
+  textarea { line-height:1.5; resize:none; }
+
+  .field { margin-bottom: clamp(8px,1.15vh,14px); }
+  .field:last-child { margin-bottom:0; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap: clamp(8px,0.8vw,14px); }
+  .grid3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap: clamp(8px,0.8vw,14px); }
+
+  .divider { display:flex; align-items:center; gap:12px; margin: clamp(8px,1.2vh,14px) 0; color:var(--muted); font-family:var(--round); font-size: clamp(11px,1.3vh,14px); }
+  .divider::before, .divider::after { content:''; flex:1; height:2.5px; background:var(--line); border-radius:3px; }
+
+  .btn {
+    width:100%; padding: clamp(11px,1.5vh,16px); background:var(--coral); color:#fff; border:none;
+    border-radius:15px; font-family:var(--round); font-size: clamp(14px,1.7vh,18px); cursor:pointer;
+    transition:all .15s; box-shadow:0 5px 0 var(--coral-dk);
+  }
+  .btn:hover { background:#FF8C6E; transform:translateY(-2px); box-shadow:0 7px 0 var(--coral-dk); }
+  .btn:active { transform:translateY(3px); box-shadow:0 2px 0 var(--coral-dk); }
+  .btn-outline { background:#FFF3E4; color:var(--wood-dk); box-shadow:0 5px 0 #E7CBA3; font-size: clamp(13px,1.5vh,16px); }
+  .btn-outline:hover { background:#FFEAD2; box-shadow:0 7px 0 #E7CBA3; }
+  .btn-outline:active { box-shadow:0 2px 0 #E7CBA3; }
+
+  .status-dot { width:10px; height:10px; border-radius:50%; background:var(--muted); display:inline-block; margin-right:6px; }
+  .status-dot.ok { background:var(--mint); }
+  .saved-badge { font-family:var(--round); font-size: clamp(12px,1.4vh,15px); color:var(--mint); margin-top:8px; display:none; }
+
+  .hint { font-size: clamp(12px,1.4vh,15px); color:var(--muted); line-height:1.6; margin-bottom: clamp(8px,1.2vh,14px); }
+
+  .share-btns { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .qr-wrap { display:none; align-items:center; gap:16px; margin-top: clamp(10px,1.5vh,18px); padding-top: clamp(10px,1.5vh,18px); border-top:2.5px dashed var(--line); }
+  .qr-box { background:#fff; padding:10px; border-radius:14px; line-height:0; flex-shrink:0; box-shadow:0 5px 0 rgba(184,138,92,0.15); }
+  .qr-caption { font-family:var(--round); font-size: clamp(13px,1.5vh,16px); color:var(--wood-dk); line-height:1.5; }
+  .qr-caption .muted { color:var(--muted); font-size: clamp(11px,1.2vh,13px); font-family:var(--body); }
+
+  .links { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .link-card { background:var(--card); border:2.5px solid var(--line); border-radius:18px; padding: clamp(12px,1.8vh,20px) 14px; text-decoration:none; color:var(--text); transition:all .15s; text-align:center; box-shadow:0 6px 0 rgba(184,138,92,0.12); }
+  .link-card:hover { transform:translateY(-3px); border-color:var(--coral); box-shadow:0 9px 0 rgba(255,122,89,0.18); }
+  .link-card .icon { font-size: clamp(28px,3.6vh,40px); display:block; }
+  .link-card .name { font-family:var(--round); font-size: clamp(14px,1.7vh,18px); color:var(--wood-dk); margin-top:5px; }
+  .link-card .desc { font-size: clamp(11px,1.2vh,13px); color:var(--muted); margin-top:2px; }
+
+  .toast { position:absolute; bottom:28px; left:50%; transform:translateX(-50%) translateY(90px); background:var(--mint); color:#fff; padding:13px 26px; border-radius:999px; font-family:var(--round); font-size:16px; box-shadow:0 8px 20px rgba(143,191,138,.5); transition:transform .35s cubic-bezier(.34,1.56,.64,1); z-index:99; }
+  .toast.show { transform:translateX(-50%) translateY(0); }
+
+  /* 도움말 버튼 + 팝업 */
+  .help-btn {
+    font-family:var(--round); font-size:clamp(12px,1.5vh,15px); color:#fff;
+    background:var(--mint); border:none; border-radius:999px; padding:6px 15px;
+    cursor:pointer; box-shadow:0 4px 0 #6FA46A; transition:all .15s;
+  }
+  .help-btn:hover { transform:translateY(-2px); box-shadow:0 6px 0 #6FA46A; }
+  .help-btn:active { transform:translateY(2px); box-shadow:0 2px 0 #6FA46A; }
+
+  .modal-overlay { position:fixed; inset:0; background:rgba(60,40,20,0.55); display:none; align-items:center; justify-content:center; z-index:200; padding:4vh 4vw; }
+  .modal-overlay.show { display:flex; }
+  .modal {
+    background:var(--card); border:3px solid var(--line); border-radius:26px;
+    max-width:560px; width:100%; max-height:90vh; overflow-y:auto;
+    padding:26px 30px 30px; box-shadow:0 16px 40px rgba(80,50,20,0.4);
+    animation:modalpop 0.35s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes modalpop { from { transform:scale(0.9); opacity:0; } to { transform:scale(1); opacity:1; } }
+  .modal-x { float:right; background:none; border:none; font-size:22px; color:var(--muted); cursor:pointer; line-height:1; }
+  .modal h2 { font-family:var(--round); font-size:24px; color:var(--wood-dk); display:flex; align-items:center; gap:9px; margin-bottom:8px; }
+  .modal .lead { font-size:14px; color:var(--muted); line-height:1.75; margin-bottom:20px; }
+  .modal .lead b { font-family:var(--round); color:var(--coral-dk); font-weight:normal; }
+  .step { display:flex; gap:13px; margin-bottom:14px; }
+  .step .n { flex-shrink:0; width:30px; height:30px; border-radius:50%; background:var(--coral); color:#fff; font-family:var(--round); display:flex; align-items:center; justify-content:center; font-size:15px; box-shadow:0 3px 0 var(--coral-dk); }
+  .step .tx { font-size:14px; line-height:1.65; color:var(--text); padding-top:3px; }
+  .step .tx b { font-family:var(--round); color:var(--wood-dk); font-weight:normal; }
+  .modal .tip { background:#FFF6E6; border:2px solid #FFE0B0; border-radius:14px; padding:12px 16px; font-size:13px; color:var(--wood-dk); line-height:1.65; margin:8px 0 22px; }
+  .modal-close { width:100%; padding:14px; background:var(--coral); color:#fff; border:none; border-radius:16px; font-family:var(--round); font-size:17px; cursor:pointer; box-shadow:0 5px 0 var(--coral-dk); transition:all .15s; }
+  .modal-close:hover { background:#FF8C6E; transform:translateY(-2px); box-shadow:0 7px 0 var(--coral-dk); }
+  .modal-close:active { transform:translateY(3px); box-shadow:0 2px 0 var(--coral-dk); }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo-icon">📻</div>
+  <h1>우리 반 라디오</h1>
+  <span class="tag">선생님 설정 페이지</span>
+</div>
+
+<div class="layout">
+
+  <!-- 왼쪽: 파이어베이스 -->
+  <div class="col">
+    <div class="card grow">
+      <div class="card-title" style="justify-content:space-between">
+        <span style="display:flex;align-items:center;gap:10px"><span class="chip">🔌</span>파이어베이스 연결</span>
+        <button class="help-btn" onclick="openHelp()">❓ 사용법 간단리뷰</button>
+      </div>
+
+      <div class="field">
+        <label>전체 설정 붙여넣기 (간편)</label>
+        <textarea id="pasteConfig" rows="2" placeholder="Firebase 콘솔의 const firebaseConfig = { ... } 부분을 통째로 붙여넣으세요"></textarea>
+      </div>
+      <button class="btn btn-outline" onclick="parsePasted()">📋 붙여넣은 설정 자동 채우기</button>
+
+      <div class="divider"><span>또는 직접 입력</span></div>
+
+      <div class="grid2">
+        <div class="field"><label>API KEY</label><input id="apiKey" type="text" placeholder="AIzaSy..."></div>
+        <div class="field"><label>AUTH DOMAIN</label><input id="authDomain" type="text" placeholder="project.firebaseapp.com"></div>
+      </div>
+      <div class="grid3">
+        <div class="field"><label>PROJECT ID</label><input id="projectId" type="text" placeholder="project-id"></div>
+        <div class="field"><label>STORAGE BUCKET</label><input id="storageBucket" type="text" placeholder="project.appspot.com"></div>
+        <div class="field"><label>SENDER ID</label><input id="messagingSenderId" type="text" placeholder="123456789"></div>
+      </div>
+      <div class="field"><label>APP ID</label><input id="appId" type="text" placeholder="1:123:web:abc..."></div>
+
+      <button class="btn" style="margin-top:auto" onclick="saveConfig()">💾 설정 저장하기</button>
+      <div class="saved-badge" id="savedBadge"><span class="status-dot ok"></span>설정이 저장되어 있어요</div>
+    </div>
+  </div>
+
+  <!-- 오른쪽: 방송설정 + 공유 + 바로가기 -->
+  <div class="col">
+    <div class="card">
+      <div class="card-title"><span class="chip">⏰</span>방송 설정</div>
+      <div class="grid2">
+        <div class="field"><label>총 방송 시간 (분)</label><input id="totalMinutes" type="number" value="10" min="1" max="60"></div>
+        <div class="field"><label>세션 이름</label><input id="sessionName" type="text" placeholder="우리 반 라디오"></div>
+      </div>
+      <button class="btn" style="margin-top:6px" onclick="saveBroadcast()">저장하기</button>
+    </div>
+
+    <div class="card grow" id="shareCard">
+      <div class="card-title"><span class="chip">📲</span>기기에 공유하기</div>
+      <p class="hint">학생 기기·부스 PC는 설정이 따로 저장돼요. 아래 링크로 열면 설정이 저절로 적용됩니다.</p>
+      <div class="share-btns">
+        <button class="btn btn-outline" onclick="copyShare('submission.html', this)">📱 학생 사연 링크</button>
+        <button class="btn btn-outline" onclick="copyShare('booth.html', this)">🎙️ 부스 링크</button>
+      </div>
+      <div class="qr-wrap" id="qrWrap">
+        <div class="qr-box"><div id="qrcode"></div></div>
+        <div class="qr-caption">학생용 사연 링크 QR<br><span class="muted">휴대폰 카메라로 찰칵!</span></div>
+      </div>
+    </div>
+
+    <div class="links">
+      <a href="submission.html" class="link-card"><span class="icon">✉️</span><div class="name">사연 보내기</div><div class="desc">학생들이 여기로</div></a>
+      <a href="booth.html" class="link-card"><span class="icon">🎙️</span><div class="name">방송 부스</div><div class="desc">PC에서 열기</div></a>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast">✅ 저장 완료!</div>
+
+<!-- 파이어베이스 사용법 팝업 -->
+<div class="modal-overlay" id="helpModal" onclick="if(event.target===this) closeHelp()">
+  <div class="modal">
+    <button class="modal-x" onclick="closeHelp()" aria-label="닫기">✕</button>
+    <h2>📘 파이어베이스 사용법 간단리뷰</h2>
+    <p class="lead">학생들의 사연을 모으려면 무료 데이터베이스인 <b>파이어베이스</b>를 딱 한 번만 연결하면 돼요. 아래 순서대로 따라 해보세요.</p>
+    <div class="step"><div class="n">1</div><div class="tx"><b>firebase.google.com</b> 접속 → 구글 로그인 → <b>시작하기</b> 클릭</div></div>
+    <div class="step"><div class="n">2</div><div class="tx"><b>프로젝트 추가</b> → 이름 입력 (예: classroom-radio) → 애널리틱스는 <b>사용 안 함</b> → 만들기</div></div>
+    <div class="step"><div class="n">3</div><div class="tx">프로젝트 화면 가운데 <b>&lt;/&gt; (웹)</b> 아이콘 클릭 → 앱 닉네임 입력.<br><span style="color:#F2613F">⚠️ 아래 <b style="color:#F2613F">"이 앱의 Firebase 호스팅도 설정"</b> 체크박스는 <b style="color:#F2613F">체크하지 말고 비워두세요.</b></span> → <b>앱 등록</b> 클릭</div></div>
+    <div class="step"><div class="n">4</div><div class="tx">등록하면 <b>"Firebase SDK 추가"</b> 화면이 떠요. 위쪽에 <b>npm</b> / <b>&lt;/&gt; 스크립트 사용</b> 두 개의 탭(버튼)이 있는데, 꼭 <b>&lt;/&gt; 스크립트 사용</b> 쪽을 누르세요.<br><span style="color:#A98E6F">(npm 탭은 설치 명령어만 나와서 설정이 비어 보여요)</span></div></div>
+    <div class="step"><div class="n">5</div><div class="tx">그러면 <b>const firebaseConfig = { apiKey: "…", … }</b> 코드가 나타나요. 이 <b>{ } 부분 전체</b>를 드래그해 복사 → 이 설정창의 <b>전체 설정 붙여넣기</b> 칸에 붙여넣기 → <b>자동 채우기</b> → <b>설정 저장하기</b></div></div>
+    <div class="step"><div class="n">6</div><div class="tx">왼쪽 메뉴 <b>Firestore Database</b> → <b>데이터베이스 만들기</b> → <b>테스트 모드</b> → 위치 <b>asia-northeast3(서울)</b> → 사용 설정</div></div>
+    <div class="tip">💡 설정 화면을 이미 닫았다면? <b>⚙️ 프로젝트 설정 → 일반 → 내 앱 → SDK 설정 및 구성</b>에서 <b>'구성(Config)'</b>을 고르면 firebaseConfig를 다시 볼 수 있어요.</div>
+    <div class="tip">💡 테스트 모드는 30일 후 만료돼요. 행사용으로 잠깐 쓰면 그대로 두어도 되고, 계속 쓰려면 나중에 보안 규칙만 설정하면 됩니다.</div>
+    <button class="modal-close" onclick="closeHelp()">알겠어요! 닫기</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+  window.onload = function() {
+    const cfg = JSON.parse(localStorage.getItem('radioFirebaseConfig') || '{}');
+    if (cfg.apiKey) {
+      document.getElementById('apiKey').value = cfg.apiKey || '';
+      document.getElementById('authDomain').value = cfg.authDomain || '';
+      document.getElementById('projectId').value = cfg.projectId || '';
+      document.getElementById('storageBucket').value = cfg.storageBucket || '';
+      document.getElementById('messagingSenderId').value = cfg.messagingSenderId || '';
+      document.getElementById('appId').value = cfg.appId || '';
+      document.getElementById('savedBadge').style.display = 'block';
+    }
+    const bcast = JSON.parse(localStorage.getItem('radioBroadcast') || '{}');
+    if (bcast.totalMinutes) document.getElementById('totalMinutes').value = bcast.totalMinutes;
+    if (bcast.sessionName) document.getElementById('sessionName').value = bcast.sessionName;
+    renderShare();
+  };
+
+  function parsePasted() {
+    const raw = document.getElementById('pasteConfig').value;
+    if (!raw.trim()) { alert('붙여넣은 내용이 없습니다.'); return; }
+    const keys = ['apiKey','authDomain','projectId','storageBucket','messagingSenderId','appId'];
+    let found = 0;
+    keys.forEach(k => {
+      const m = raw.match(new RegExp(k + '\\s*:\\s*["\\\']([^"\\\']+)["\\\']'));
+      if (m) { document.getElementById(k).value = m[1]; found++; }
+    });
+    if (found) showToast(found + '개 항목 자동 입력됨 — 저장을 눌러주세요');
+    else alert('설정을 찾지 못했어요. firebaseConfig = { ... } 전체를 붙여넣었는지 확인하세요.');
+  }
+
+  function buildShareUrl(page) {
+    const cfg = JSON.parse(localStorage.getItem('radioFirebaseConfig') || '{}');
+    const bcast = JSON.parse(localStorage.getItem('radioBroadcast') || '{}');
+    if (!cfg.apiKey) { alert('먼저 Firebase 설정을 저장해주세요.'); return null; }
+    const payload = btoa(unescape(encodeURIComponent(JSON.stringify({ firebase: cfg, broadcast: bcast }))));
+    const u = new URL(page, location.href);
+    u.hash = 's=' + payload;
+    return u.href;
+  }
+
+  async function copyShare(page, btn) {
+    const url = buildShareUrl(page);
+    if (!url) return;
+    try { await navigator.clipboard.writeText(url); }
+    catch (e) { prompt('아래 링크를 복사하세요:', url); }
+    const orig = btn.textContent;
+    btn.textContent = '✅ 복사됨!';
+    setTimeout(() => { btn.textContent = orig; }, 1800);
+  }
+
+  function renderShare() {
+    const cfg = JSON.parse(localStorage.getItem('radioFirebaseConfig') || '{}');
+    const wrap = document.getElementById('qrWrap');
+    if (!cfg.apiKey) { wrap.style.display = 'none'; return; }
+    const bcast = JSON.parse(localStorage.getItem('radioBroadcast') || '{}');
+    const payload = btoa(unescape(encodeURIComponent(JSON.stringify({ firebase: cfg, broadcast: bcast }))));
+    const u = new URL('submission.html', location.href);
+    u.hash = 's=' + payload;
+    const box = document.getElementById('qrcode');
+    box.innerHTML = '';
+    if (window.QRCode) {
+      new QRCode(box, { text: u.href, width: 120, height: 120, correctLevel: QRCode.CorrectLevel.L });
+    }
+    wrap.style.display = 'flex';
+  }
+
+  function saveConfig() {
+    const cfg = {
+      apiKey: document.getElementById('apiKey').value.trim(),
+      authDomain: document.getElementById('authDomain').value.trim(),
+      projectId: document.getElementById('projectId').value.trim(),
+      storageBucket: document.getElementById('storageBucket').value.trim(),
+      messagingSenderId: document.getElementById('messagingSenderId').value.trim(),
+      appId: document.getElementById('appId').value.trim(),
+    };
+    if (!cfg.apiKey || !cfg.projectId) { alert('API Key와 Project ID는 필수입니다.'); return; }
+    localStorage.setItem('radioFirebaseConfig', JSON.stringify(cfg));
+    document.getElementById('savedBadge').style.display = 'block';
+    showToast('Firebase 설정 저장 완료!');
+    renderShare();
+  }
+
+  function saveBroadcast() {
+    const bcast = {
+      totalMinutes: parseInt(document.getElementById('totalMinutes').value) || 10,
+      sessionName: document.getElementById('sessionName').value.trim() || '우리반 라디오',
+    };
+    localStorage.setItem('radioBroadcast', JSON.stringify(bcast));
+    showToast('방송 설정 저장 완료!');
+    renderShare();
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = '✅ ' + msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  function openHelp() { document.getElementById('helpModal').classList.add('show'); }
+  function closeHelp() { document.getElementById('helpModal').classList.remove('show'); }
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeHelp(); });
+</script>
+</body>
+</html>

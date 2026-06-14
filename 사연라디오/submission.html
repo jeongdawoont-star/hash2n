@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>사연 보내기 📻</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap');
+
+  :root {
+    --cream:#FBF1DE; --cream2:#FFF9EF; --card:#FFFDF8;
+    --wood:#B98A5C; --wood-dk:#8C5E36; --line:#ECD9BC;
+    --coral:#FF7A59; --coral-dk:#F2613F; --mint:#8FBF8A;
+    --text:#5A4327; --muted:#A98E6F;
+    --round:'Jua',sans-serif; --body:'Gowun Dodum',sans-serif;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { height:100%; }
+  body {
+    background:
+      radial-gradient(60vw 30vh at 50% -8%, #FFE6C7, transparent 62%),
+      radial-gradient(50vw 32vh at 100% 112%, rgba(143,191,138,0.18), transparent 55%),
+      var(--cream);
+    color:var(--text); font-family:var(--body);
+    height:100vh; height:100dvh; width:100vw; overflow:hidden;
+  }
+
+  /* ── 공통 페이지 프레임 ── */
+  .page { height:100vh; height:100dvh; display:flex; flex-direction:column; overflow:hidden; }
+
+  header { text-align:center; flex-shrink:0; }
+  .on-air {
+    display:inline-flex; align-items:center; gap:8px; background:#FFEAD6; border:2.5px solid #FFD3B5;
+    padding:5px 16px; border-radius:999px; font-family:var(--round); color:var(--coral-dk);
+  }
+  .on-air-dot { width:9px; height:9px; background:var(--coral); border-radius:50%; animation:blink 1.2s ease-in-out infinite; }
+  @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:.25;} }
+  header h1 { font-family:var(--round); color:var(--wood-dk); }
+  header p { color:var(--muted); }
+
+  .card { background:var(--card); border:2.5px solid var(--line); border-radius:22px; box-shadow:0 7px 0 rgba(184,138,92,0.10); display:flex; flex-direction:column; }
+  .section-label { font-family:var(--round); color:var(--wood-dk); display:flex; align-items:center; gap:9px; flex-shrink:0; }
+  .section-label .chip { border-radius:11px; background:#FFEAD6; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; }
+
+  label { display:block; font-family:var(--round); color:var(--wood); }
+  input, textarea {
+    width:100%; background:var(--cream2); border:2.5px solid var(--line); border-radius:14px;
+    color:var(--text); font-family:var(--body); outline:none; transition:border-color .2s, background .2s;
+    -webkit-appearance:none;
+  }
+  input:focus, textarea:focus { border-color:var(--coral); background:#FFF6EC; }
+  input::placeholder, textarea::placeholder { color:var(--muted); opacity:.7; }
+  textarea { resize:none; line-height:1.6; flex:1; min-height:0; }
+
+  .yt-hint { color:var(--muted); line-height:1.5; }
+  .yt-hint a { color:var(--coral-dk); text-decoration:none; font-family:var(--round); }
+  .char-count { text-align:right; color:var(--muted); font-family:var(--round); flex-shrink:0; }
+  .char-count.warn { color:var(--coral-dk); }
+
+  .btn-submit {
+    width:100%; background:var(--coral); color:#fff; border:none; border-radius:18px;
+    font-family:var(--round); cursor:pointer; transition:all .15s; box-shadow:0 6px 0 var(--coral-dk); flex-shrink:0;
+  }
+  .btn-submit:hover:not(:disabled) { background:#FF8C6E; transform:translateY(-2px); box-shadow:0 8px 0 var(--coral-dk); }
+  .btn-submit:active:not(:disabled) { transform:translateY(4px); box-shadow:0 2px 0 var(--coral-dk); }
+  .btn-submit:disabled { opacity:.6; cursor:not-allowed; box-shadow:0 4px 0 var(--coral-dk); }
+
+  .row2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .form-left, .form-right { display:flex; flex-direction:column; min-height:0; }
+
+  /* 이름 칸은 한 줄로 슬림하게 */
+  .card.name-card { flex-direction:row; align-items:center; gap:14px; padding-top:1.5vh; padding-bottom:1.5vh; }
+  .card.name-card .section-label { margin-bottom:0; flex-shrink:0; }
+  .card.name-card input { flex:1; }
+
+  /* ─────────── 세로(PORTRAIT) 전용 ─────────── */
+  @media (orientation: portrait) {
+    .page { padding: 1.8vh 5vw; gap: 1.3vh; }
+    header { margin-bottom: 0; }
+    .on-air { font-size: clamp(11px,1.4vh,14px); margin-bottom: 0.7vh; }
+    header h1 { font-size: clamp(24px,3.5vh,36px); margin-bottom:0.3vh; }
+    header p { font-size: clamp(13px,1.7vh,16px); }
+
+    /* 세로에선 래퍼를 없애 카드들이 한 흐름으로 균등 배치되게 */
+    .form { flex:1; min-height:0; display:flex; flex-direction:column; gap: 1.3vh; }
+    .form-left, .form-right { display:contents; }
+
+    .card { padding: 1.6vh 4.5vw; }
+    .section-label { font-size: clamp(15px,2.1vh,19px); margin-bottom: 1vh; }
+    .section-label .chip { width: clamp(28px,3.6vh,36px); height: clamp(28px,3.6vh,36px); font-size: clamp(15px,2vh,18px); }
+    label { font-size: clamp(12px,1.6vh,15px); margin-bottom:5px; }
+    input, textarea { padding: 1.3vh 16px; font-size: clamp(15px,1.95vh,18px); }
+    .name-card { flex-shrink:0; }
+    .story-card { flex:1; min-height:0; }
+    .song-card { flex-shrink:0; }
+    .char-count { font-size: clamp(12px,1.5vh,15px); margin-top:4px; }
+    .row2 { margin-bottom: 1.2vh; }
+    .yt-hint { font-size: clamp(11px,1.5vh,14px); margin-top:5px; }
+    .btn-submit { padding: 1.7vh; font-size: clamp(17px,2.5vh,21px); }
+  }
+
+  /* ─────────── 가로(LANDSCAPE) 전용 ─────────── */
+  @media (orientation: landscape) {
+    .page { padding: 3vh 3.5vw; gap: 2vh; }
+    header { display:flex; align-items:center; justify-content:center; gap: 1.5vw; margin-bottom: 0.5vh; }
+    .on-air { font-size: clamp(12px,2.2vh,16px); margin-bottom:0; }
+    header h1 { font-size: clamp(22px,4.5vh,38px); margin-bottom:0; }
+    header p { font-size: clamp(13px,2.3vh,17px); }
+
+    .form { flex:1; min-height:0; display:flex; flex-direction:row; gap: 2vw; }
+    .form-left { flex:1; gap: 2vh; }
+    .form-right { flex:1; gap: 2vh; }
+
+    .card { padding: 2.4vh 1.8vw; }
+    .section-label { font-size: clamp(16px,3vh,21px); margin-bottom: 1.6vh; }
+    .section-label .chip { width: clamp(30px,5vh,38px); height: clamp(30px,5vh,38px); font-size: clamp(16px,2.8vh,19px); }
+    label { font-size: clamp(13px,2.2vh,16px); margin-bottom:6px; }
+    input, textarea { padding: 1.4vh 16px; font-size: clamp(15px,2.5vh,18px); }
+    .name-card { flex-shrink:0; }
+    .story-card { flex:1; min-height:0; }
+    .song-card { flex:1; }
+    .char-count { font-size: clamp(12px,2vh,15px); margin-top:5px; }
+    .row2 { margin-bottom: 1.6vh; }
+    .yt-hint { font-size: clamp(12px,2vh,14px); margin-top:6px; }
+    .btn-submit { padding: 1.8vh; font-size: clamp(17px,3.2vh,22px); }
+  }
+
+  /* 완료 / 에러 / 설정없음 */
+  .success-screen { display:none; height:100vh; height:100dvh; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding: 5vh 6vw; }
+  .success-icon { font-size: clamp(60px,11vh,90px); margin-bottom:2vh; animation:pop .5s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes pop { from{transform:scale(0);opacity:0;} to{transform:scale(1);opacity:1;} }
+  .success-screen h2 { font-family:var(--round); font-size: clamp(24px,4.5vh,32px); color:var(--wood-dk); margin-bottom:1.2vh; }
+  .success-screen p { color:var(--muted); font-size: clamp(15px,2.3vh,18px); line-height:1.8; }
+  .success-detail { background:var(--cream2); border:2.5px solid var(--line); border-radius:20px; padding:2.2vh 26px; margin:2.5vh 0; text-align:left; min-width:min(420px,80vw); }
+  .success-detail .row { display:flex; justify-content:space-between; align-items:baseline; padding:1vh 0; border-bottom:2px dashed var(--line); font-size: clamp(15px,2.2vh,18px); }
+  .success-detail .row:last-child { border-bottom:none; }
+  .success-detail .key { color:var(--wood); font-family:var(--round); font-size: clamp(13px,1.9vh,15px); }
+  .success-detail .val { font-family:var(--round); color:var(--wood-dk); }
+  .btn-again { padding:1.6vh 30px; background:#FFF3E4; border:none; border-radius:16px; color:var(--wood-dk); font-family:var(--round); font-size: clamp(15px,2.2vh,17px); cursor:pointer; transition:all .15s; box-shadow:0 5px 0 #E7CBA3; }
+  .btn-again:hover { background:#FFEAD2; transform:translateY(-2px); box-shadow:0 7px 0 #E7CBA3; }
+  .btn-again:active { box-shadow:0 2px 0 #E7CBA3; }
+
+  .spinner { display:inline-block; width:18px; height:18px; border:3px solid rgba(255,255,255,.4); border-top-color:#fff; border-radius:50%; animation:spin .7s linear infinite; vertical-align:middle; margin-right:8px; }
+  @keyframes spin { to{transform:rotate(360deg);} }
+
+  .error-banner { position:absolute; top:1.5vh; left:50%; transform:translateX(-50%); background:#FFE3DC; border:2.5px solid #FFB9A6; border-radius:16px; padding:12px 20px; font-size:14px; line-height:1.5; color:var(--coral-dk); font-family:var(--round); display:none; z-index:50; max-width:92vw; text-align:center; }
+
+  .no-config { display:none; height:100vh; height:100dvh; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:6vh 8vw; }
+  .no-config .icon { font-size: clamp(48px,9vh,64px); margin-bottom:2vh; }
+  .no-config h2 { font-family:var(--round); font-size: clamp(20px,3.5vh,26px); color:var(--wood-dk); margin-bottom:1.2vh; }
+  .no-config p { font-size: clamp(14px,2.2vh,17px); color:var(--muted); line-height:1.8; }
+  .no-config a { color:var(--coral-dk); text-decoration:none; font-family:var(--round); }
+</style>
+</head>
+<body>
+
+<!-- 설정 없을 때 -->
+<div class="no-config" id="noConfig">
+  <div class="icon">⚙️</div>
+  <h2>설정이 필요해요</h2>
+  <p>선생님께 <a href="index.html">설정 페이지</a>에서<br>연결을 먼저 해달라고 부탁하세요 😊</p>
+</div>
+
+<!-- 에러 배너 -->
+<div class="error-banner" id="errorBanner"></div>
+
+<!-- 메인 폼 -->
+<div class="page" id="mainForm">
+  <header>
+    <div class="on-air"><div class="on-air-dot"></div> ON AIR</div>
+    <h1 id="sessionTitle">우리 반 라디오</h1>
+    <p>나의 사연을 적어서 방송에 보내보아요 🎵</p>
+  </header>
+
+  <div class="form">
+    <div class="form-left">
+      <div class="card name-card">
+        <div class="section-label"><span class="chip">🙋</span>내 이름</div>
+        <input id="name" type="text" placeholder="내 이름을 적어요" maxlength="10">
+      </div>
+
+      <div class="card story-card">
+        <div class="section-label"><span class="chip">💌</span>하고 싶은 말</div>
+        <textarea id="story" placeholder="예) 우리 반 친구들아 안녕? 요즘 날씨가 더워졌는데 다들 감기 조심해! 다음 주 체육대회 같이 열심히 준비하자. 그리고 늘 따뜻하게 챙겨주시는 선생님, 정말 감사합니다. 오늘도 모두 행복한 하루 보내요! 🎵" maxlength="300"></textarea>
+        <div class="char-count" id="charCount">0 / 300</div>
+      </div>
+    </div>
+
+    <div class="form-right">
+      <div class="card song-card">
+        <div class="section-label"><span class="chip">🎵</span>신청곡</div>
+        <div class="row2">
+          <div><label>곡 제목</label><input id="songTitle" type="text" placeholder="노래 제목"></div>
+          <div><label>가수 이름</label><input id="artist" type="text" placeholder="가수"></div>
+        </div>
+        <div>
+          <label>유튜브 링크</label>
+          <input id="ytUrl" type="url" placeholder="https://www.youtube.com/watch?v=...">
+          <div class="yt-hint">유튜브에서 곡을 검색한 뒤 주소창의 링크를 붙여넣어요. <a href="https://youtube.com" target="_blank">유튜브 열기 →</a></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <button class="btn-submit" id="submitBtn" onclick="submitStory()">📮 사연 보내기</button>
+</div>
+
+<!-- 성공 화면 -->
+<div class="success-screen" id="successScreen">
+  <div class="success-icon">🎉</div>
+  <h2>사연이 접수됐어요!</h2>
+  <p>곧 라디오에서 읽어드릴게요.<br>방송 시작을 기다려주세요 🎵</p>
+  <div class="success-detail" id="successDetail"></div>
+  <button class="btn-again" onclick="resetForm()">+ 다른 사연 보내기</button>
+</div>
+
+<!-- Firebase -->
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+  import { getFirestore, initializeFirestore, collection, addDoc, serverTimestamp, query, orderBy, getDocs }
+    from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+  let db;
+
+  function applySharedConfig() {
+    const m = location.hash.match(/[#&]s=([^&]+)/);
+    if (!m) return;
+    try {
+      const data = JSON.parse(decodeURIComponent(escape(atob(decodeURIComponent(m[1])))));
+      if (data.firebase) localStorage.setItem('radioFirebaseConfig', JSON.stringify(data.firebase));
+      if (data.broadcast) localStorage.setItem('radioBroadcast', JSON.stringify(data.broadcast));
+    } catch (e) { console.warn('설정 링크 해석 실패:', e); }
+  }
+  applySharedConfig();
+
+  async function initFirebase() {
+    const cfg = JSON.parse(localStorage.getItem('radioFirebaseConfig') || '{}');
+    if (!cfg.apiKey) {
+      document.getElementById('mainForm').style.display = 'none';
+      document.getElementById('noConfig').style.display = 'flex';
+      return false;
+    }
+    const app = initializeApp(cfg);
+    // 학교망·방화벽·확장프로그램이 실시간 연결을 막아도 동작하도록 long-polling 자동감지
+    try { db = initializeFirestore(app, { experimentalAutoDetectLongPolling: true }); }
+    catch (e) { db = getFirestore(app); }
+
+    const bcast = JSON.parse(localStorage.getItem('radioBroadcast') || '{}');
+    if (bcast.sessionName) document.getElementById('sessionTitle').textContent = bcast.sessionName;
+    return true;
+  }
+
+  async function getNextOrder() {
+    const q = query(collection(db, 'stories'), orderBy('order', 'desc'));
+    const snap = await getDocs(q);
+    if (snap.empty) return 1;
+    return snap.docs[0].data().order + 1;
+  }
+
+  window.submitStory = async function() {
+    const name = document.getElementById('name').value.trim();
+    const story = document.getElementById('story').value.trim();
+    const songTitle = document.getElementById('songTitle').value.trim();
+    const artist = document.getElementById('artist').value.trim();
+    const ytUrl = document.getElementById('ytUrl').value.trim();
+
+    if (!name || !story || !songTitle || !artist || !ytUrl) {
+      showError('모든 항목을 입력해주세요.');
+      return;
+    }
+    if (!ytUrl.includes('youtube.com') && !ytUrl.includes('youtu.be')) {
+      showError('유튜브 링크를 올바르게 입력해주세요.');
+      return;
+    }
+
+    if (!navigator.onLine) { showError('인터넷 연결이 없어요. 연결을 확인하고 다시 시도해주세요.'); return; }
+
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>보내는 중...';
+
+    // 무한로딩 방지: 15초 안에 응답이 없으면 안내 메시지 표시
+    const withTimeout = (p, ms) => Promise.race([
+      p,
+      new Promise((_, rej) => setTimeout(() => rej(new Error(
+        '시간 초과 — Firebase에 연결하지 못했어요. 광고차단 확장프로그램·시크릿(인비고)창·방화벽이 firestore.googleapis.com을 막고 있는지, Firestore가 테스트 모드인지 확인해주세요.'
+      )), ms))
+    ]);
+
+    try {
+      const order = await withTimeout(getNextOrder(), 15000);
+      await withTimeout(addDoc(collection(db, 'stories'), {
+        name, story, songTitle, artist, ytUrl,
+        order, played: false, createdAt: serverTimestamp()
+      }), 15000);
+
+      document.getElementById('mainForm').style.display = 'none';
+      document.getElementById('successScreen').style.display = 'flex';
+      document.getElementById('successDetail').innerHTML = `
+        <div class="row"><span class="key">신청자</span><span class="val">${name}</span></div>
+        <div class="row"><span class="key">신청곡</span><span class="val">${artist} — ${songTitle}</span></div>
+        <div class="row"><span class="key">순서</span><span class="val">${order}번째</span></div>
+      `;
+    } catch(e) {
+      showError('전송 실패: ' + e.message);
+      btn.disabled = false;
+      btn.textContent = '📮 사연 보내기';
+    }
+  };
+
+  window.resetForm = function() {
+    document.getElementById('mainForm').style.display = 'flex';
+    document.getElementById('successScreen').style.display = 'none';
+    document.getElementById('name').value = '';
+    document.getElementById('story').value = '';
+    document.getElementById('songTitle').value = '';
+    document.getElementById('artist').value = '';
+    document.getElementById('ytUrl').value = '';
+    document.getElementById('charCount').textContent = '0 / 300';
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = false;
+    btn.textContent = '📮 사연 보내기';
+  };
+
+  function showError(msg) {
+    const b = document.getElementById('errorBanner');
+    b.textContent = '⚠️ ' + msg;
+    b.style.display = 'block';
+    setTimeout(() => b.style.display = 'none', 4000);
+  }
+
+  document.getElementById('story').addEventListener('input', function() {
+    const len = this.value.length;
+    const el = document.getElementById('charCount');
+    el.textContent = len + ' / 300';
+    el.className = 'char-count' + (len > 250 ? ' warn' : '');
+  });
+
+  initFirebase();
+</script>
+</body>
+</html>

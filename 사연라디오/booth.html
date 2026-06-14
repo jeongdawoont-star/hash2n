@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📻 방송 부스</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&family=Gaegu:wght@400;700&display=swap');
+
+  :root {
+    --cream:#FBEFD8; --cream2:#FFF9EF; --card:#FFFDF8;
+    --wood:#B98A5C; --wood-dk:#8C5E36; --wood-deep:#6E4622; --line:#EAD4B2;
+    --coral:#FF7A59; --coral-dk:#F2613F; --yellow:#FFC857; --mint:#7FB97A; --sky:#7FB5C9;
+    --text:#5A4327; --muted:#A98E6F;
+    --round:'Jua',sans-serif; --body:'Gowun Dodum',sans-serif;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { height:100%; }
+  body {
+    background:
+      radial-gradient(60vw 30vh at 80% -5%, #FFE3BE, transparent 58%),
+      radial-gradient(50vw 36vh at 0% 110%, rgba(127,185,122,0.18), transparent 55%),
+      var(--cream);
+    color:var(--text); font-family:var(--body);
+    height:100vh; width:100vw; overflow:hidden;
+    display:flex; flex-direction:column;
+  }
+
+  /* ── 전광판 (LED 사인보드) ── */
+  .signboard {
+    flex-shrink:0; margin:1vh 1vw 0;
+    background:#241608; border:0.55vh solid #D79A4E; border-radius:1.5vh;
+    padding:0.5vh 0; position:relative; overflow:hidden;
+    box-shadow:0 0.5vh 0 rgba(140,94,54,0.35), inset 0 0 4vh rgba(0,0,0,0.7);
+  }
+  .bulbs {
+    height:0.9vh; margin:0.2vh 0.6vw;
+    background:radial-gradient(circle at center, #FFE7A6 0 38%, transparent 44%);
+    background-size:2.2vh 100%; background-repeat:repeat-x;
+    animation:bulbflash 0.9s steps(1) infinite;
+  }
+  .bulbs.b2 { animation-delay:0.45s; }
+  @keyframes bulbflash { 0%,100% { filter:brightness(1); opacity:1; } 50% { filter:brightness(0.4); opacity:0.5; } }
+  .led-panel { position:relative; overflow:hidden; padding:0.9vh 0; }
+  .led-panel::after {
+    content:''; position:absolute; inset:0; pointer-events:none;
+    background-image:radial-gradient(rgba(0,0,0,0.45) 0.9px, transparent 1.3px);
+    background-size:4px 4px; opacity:0.55;
+  }
+  .marquee-track { display:flex; white-space:nowrap; animation:marquee 20s linear infinite; }
+  .marquee-text {
+    font-family:var(--round); font-size:clamp(15px,1.55vw,25px); color:#FFD27D;
+    padding-right:80px; letter-spacing:1px;
+    text-shadow:0 0 8px rgba(255,170,60,0.85), 0 0 2px rgba(255,210,120,0.9);
+  }
+  @keyframes marquee { 0% { transform:translateX(0); } 100% { transform:translateX(-50%); } }
+
+  /* ── 헤더 ── */
+  .header {
+    background:linear-gradient(180deg,#F6E2C2,#F0D7B0); border-bottom:0.4vh solid #E2C699;
+    padding:1.3vh 2vw; display:flex; align-items:center; justify-content:space-between; flex-shrink:0;
+  }
+  .header-left { display:flex; align-items:center; gap:1.2vw; }
+  .station-name { font-family:var(--round); font-size:clamp(20px,1.7vw,32px); color:var(--wood-deep); }
+  .on-air-badge {
+    display:flex; align-items:center; gap:8px; background:#FFEAD6; border:3px solid #FFC9A8;
+    padding:0.6vh 1vw; border-radius:999px; font-family:var(--round);
+    font-size:clamp(13px,0.95vw,18px); color:var(--coral-dk);
+  }
+  .on-air-badge.off { background:#EFE2CC; border-color:#DCC8A4; color:var(--muted); }
+  .on-air-badge:not(.off) {
+    background:#3A0E0E; border-color:#FF6B6B; color:#FFD8D8;
+    box-shadow:0 0 14px rgba(255,70,70,0.65), inset 0 0 10px rgba(255,70,70,0.25);
+    animation:onair 1.6s ease-in-out infinite;
+  }
+  .on-air-badge:not(.off) .dot-live { background:#FF3B3B; box-shadow:0 0 10px #FF3B3B; }
+  @keyframes onair { 0%,100% { box-shadow:0 0 10px rgba(255,70,70,0.5); } 50% { box-shadow:0 0 22px rgba(255,70,70,0.95); } }
+  .dot-live { width:0.7vw; height:0.7vw; min-width:9px; min-height:9px; background:var(--coral); border-radius:50%; animation:blink 1s ease-in-out infinite; }
+  @keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0.15; } }
+  .header-right { display:flex; align-items:center; }
+  .progress-info { font-family:var(--round); font-size:clamp(13px,0.95vw,18px); color:var(--wood); text-align:right; line-height:1.4; }
+  .progress-info .big { font-size:clamp(22px,1.7vw,32px); color:var(--coral-dk); }
+
+  /* ── 메인 ── */
+  .main { flex:1; min-height:0; display:grid; grid-template-columns:1fr clamp(300px,23vw,440px); overflow:hidden; }
+
+  .stage { padding:2.4vh 2vw; display:flex; flex-direction:column; gap:1.8vh; overflow:hidden; min-height:0; }
+
+  .now-card {
+    background:var(--card); border:0.4vh solid var(--line); border-radius:2.4vh;
+    padding:3.4vh 2.4vw; position:relative; overflow:hidden; flex:1; min-height:0;
+    box-shadow:0 1.2vh 0 rgba(184,138,92,0.13), 0 2.2vh 4vh rgba(140,94,54,0.14);
+    display:flex; flex-direction:column;
+  }
+  .now-card::before { content:''; position:absolute; top:0; left:0; right:0; height:0.9vh; background:linear-gradient(90deg,var(--coral),var(--yellow)); }
+  .now-label, .story-sender, .story-song, .story-body { position:relative; z-index:2; }
+
+  /* 귀여운 기믹: 돌아가는 레코드판 */
+  .disc {
+    position:absolute; top:2.6vh; right:2vw; z-index:1;
+    width:clamp(44px,8vh,96px); height:clamp(44px,8vh,96px); border-radius:50%;
+    background:repeating-radial-gradient(circle, #2c2c2c 0 3px, #161616 3px 6px);
+    border:0.4vh solid #3a3a3a; display:flex; align-items:center; justify-content:center;
+    font-size:clamp(18px,3vh,38px); box-shadow:0 6px 16px rgba(0,0,0,0.28);
+    animation:spin 4s linear infinite; opacity:0.95;
+  }
+  .disc::after { content:''; position:absolute; width:24%; height:24%; border-radius:50%; background:var(--yellow); border:2px solid #fff; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+
+  /* 귀여운 기믹: 떠오르는 음표 */
+  .notes { position:absolute; inset:0; z-index:0; pointer-events:none; overflow:hidden; }
+  .note { position:absolute; bottom:-8%; font-size:clamp(16px,2.6vh,28px); opacity:0; animation:floatup 5s linear infinite; }
+  .note:nth-child(1) { left:10%; animation-delay:0s; }
+  .note:nth-child(2) { left:32%; animation-delay:1.3s; }
+  .note:nth-child(3) { left:58%; animation-delay:2.5s; }
+  .note:nth-child(4) { left:80%; animation-delay:3.7s; }
+  @keyframes floatup { 0% { transform:translateY(0) rotate(0); opacity:0; } 15% { opacity:0.7; } 100% { transform:translateY(-46vh) rotate(22deg); opacity:0; } }
+
+  .now-label {
+    font-family:var(--round); font-size:clamp(14px,1.05vw,20px); color:var(--coral-dk);
+    margin-bottom:1.6vh; display:inline-flex; align-self:flex-start; align-items:center; gap:8px;
+    background:#FFEAD6; padding:0.6vh 1vw; border-radius:999px;
+  }
+  .story-sender { font-family:var(--round); font-size:clamp(34px,4.4vh,62px); color:var(--wood-deep); margin-bottom:1vh; line-height:1.12; }
+  .story-song { font-family:var(--round); font-size:clamp(18px,2.4vh,30px); color:var(--coral-dk); margin-bottom:2.2vh; }
+  .story-body { font-size:clamp(18px,2.5vh,30px); line-height:1.8; color:var(--text); flex:1; min-height:0; overflow-y:auto; padding-right:8px; }
+  .story-body::-webkit-scrollbar { width:8px; }
+  .story-body::-webkit-scrollbar-thumb { background:var(--line); border-radius:8px; }
+
+  /* 노래방식 읽기 하이라이트 */
+  .kw { border-radius:8px; padding:0 3px; transition:background .12s, color .12s, box-shadow .12s; }
+  .kw.read { color:var(--coral-dk); }
+  .kw.reading { color:#fff; background:var(--coral); font-weight:bold; box-shadow:0 0 0 3px rgba(255,122,89,0.45), 0 4px 10px rgba(242,97,63,0.35); }
+
+  /* TTS 상태 */
+  .tts-status {
+    display:flex; align-items:center; gap:12px; background:#E9F4E6; border:3px solid #C6E3BF;
+    border-radius:16px; padding:1.3vh 1.4vw; font-family:var(--round);
+    font-size:clamp(15px,1.15vw,20px); color:#4E8347; transition:all 0.3s; flex-shrink:0;
+  }
+  .tts-status.tts-idle { opacity:0.4; }
+  .wave { display:flex; gap:4px; align-items:flex-end; height:2.2vh; }
+  .wave-bar { width:5px; background:var(--mint); border-radius:3px; animation:wave 0.8s ease-in-out infinite; }
+  .wave-bar:nth-child(2) { animation-delay:0.1s; }
+  .wave-bar:nth-child(3) { animation-delay:0.2s; }
+  .wave-bar:nth-child(4) { animation-delay:0.15s; }
+  @keyframes wave { 0%,100% { height:0.5vh; } 50% { height:2.2vh; } }
+
+  /* 타이머 */
+  .timer-row { display:flex; align-items:center; gap:1.2vw; flex-shrink:0; }
+  .timer-label { font-family:var(--round); font-size:clamp(14px,1.05vw,19px); color:var(--wood); flex-shrink:0; }
+  .timer-bar-wrap { flex:1; height:1.5vh; min-height:12px; background:#EEDFC6; border-radius:999px; overflow:hidden; border:2px solid var(--line); }
+  .timer-bar-fill { height:100%; background:linear-gradient(90deg,var(--coral),var(--yellow)); border-radius:999px; transition:width 1s linear; width:100%; }
+  .timer-digits { font-family:var(--round); font-size:clamp(20px,1.7vw,30px); color:var(--coral-dk); flex-shrink:0; min-width:84px; text-align:right; }
+
+  /* ── 우측 패널 ── */
+  .side { border-left:0.4vh solid var(--line); background:rgba(255,253,248,0.5); display:flex; flex-direction:column; overflow:hidden; min-height:0; }
+  .yt-section { padding:1.8vh 1.2vw; border-bottom:0.4vh solid var(--line); flex-shrink:0; }
+  .yt-label { font-family:var(--round); font-size:clamp(13px,0.9vw,17px); color:var(--wood); margin-bottom:1.2vh; }
+  .yt-box { width:100%; height:22vh; border-radius:16px; overflow:hidden; background:#000; }
+  #ytFrame { width:100%; height:100%; border:none; }
+  .yt-controls { display:flex; gap:8px; margin-top:1.2vh; }
+  .yt-btn { flex:1; padding:1.1vh 0; background:#FFF3E4; border:none; border-radius:13px; color:var(--wood-dk); font-size:clamp(12px,0.85vw,16px); cursor:pointer; font-family:var(--round); transition:all 0.15s; box-shadow:0 4px 0 #E7CBA3; }
+  .yt-btn:hover { background:#FFEAD2; transform:translateY(-1px); box-shadow:0 5px 0 #E7CBA3; }
+  .yt-btn:active { box-shadow:0 1px 0 #E7CBA3; }
+
+  .queue-section { flex:1; overflow-y:auto; padding:1.4vh 1.2vw; min-height:0; }
+  .queue-section::-webkit-scrollbar { width:8px; }
+  .queue-section::-webkit-scrollbar-thumb { background:var(--line); border-radius:8px; }
+  .queue-label { font-family:var(--round); font-size:clamp(13px,0.9vw,17px); color:var(--wood); padding:4px 4px 1vh; }
+  .queue-item { background:var(--card); border:3px solid var(--line); border-radius:16px; padding:1.2vh 0.9vw; margin-bottom:1vh; transition:all 0.3s; position:relative; box-shadow:0 5px 0 rgba(184,138,92,0.10); }
+  .queue-item.active { border-color:var(--coral); background:#FFF3EC; box-shadow:0 6px 0 rgba(255,122,89,0.22); }
+  .queue-item.played { opacity:0.45; }
+  .queue-item-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; }
+  .queue-name { font-family:var(--round); font-size:clamp(15px,1.05vw,19px); color:var(--wood-dk); }
+  .queue-num { font-family:var(--round); font-size:clamp(12px,0.8vw,15px); color:var(--muted); }
+  .queue-song { font-size:clamp(12px,0.85vw,15px); color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .queue-badge { position:absolute; top:12px; right:12px; width:9px; height:9px; border-radius:50%; background:var(--coral); animation:blink 1s ease-in-out infinite; }
+
+  /* ── 컨트롤 ── */
+  .controls { background:linear-gradient(180deg,#F6E2C2,#EFD5AE); border-top:0.4vh solid #E2C699; padding:1.6vh 2vw; display:flex; align-items:center; gap:0.9vw; flex-shrink:0; }
+  .ctrl-btn { padding:1.4vh 1.7vw; border:none; border-radius:16px; font-family:var(--round); font-size:clamp(15px,1.15vw,20px); cursor:pointer; transition:all 0.15s; }
+  .ctrl-start { background:var(--coral); color:#fff; padding:1.4vh 2.4vw; box-shadow:0 6px 0 var(--coral-dk); }
+  .ctrl-start:hover { background:#FF8C6E; transform:translateY(-2px); box-shadow:0 8px 0 var(--coral-dk); }
+  .ctrl-start:active { transform:translateY(3px); box-shadow:0 2px 0 var(--coral-dk); }
+  .ctrl-skip { background:#FFF3E4; color:var(--wood-dk); box-shadow:0 6px 0 #E7CBA3; }
+  .ctrl-skip:hover { background:#FFEAD2; transform:translateY(-2px); box-shadow:0 8px 0 #E7CBA3; }
+  .ctrl-skip:active { transform:translateY(3px); box-shadow:0 2px 0 #E7CBA3; }
+  .ctrl-skip:disabled { opacity:0.5; cursor:not-allowed; box-shadow:0 3px 0 #E7CBA3; }
+  .ctrl-stop { background:transparent; color:var(--muted); border:3px solid #DCC8A4; margin-left:auto; }
+  .ctrl-stop:hover { color:var(--coral-dk); border-color:var(--coral); }
+
+  /* 설정 없을 때 */
+  .no-config-screen { position:absolute; inset:0; background:var(--cream); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2vh; z-index:10; }
+  .no-config-screen h2 { font-family:var(--round); font-size:clamp(22px,2vw,32px); color:var(--wood-dk); }
+  .no-config-screen p { color:var(--muted); font-size:clamp(15px,1.1vw,18px); line-height:1.9; text-align:center; }
+  .no-config-screen a { color:var(--coral-dk); text-decoration:none; font-family:var(--round); }
+
+  /* 종료 오버레이 */
+  .end-overlay { position:absolute; inset:0; background:rgba(251,239,216,0.97); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:20; display:none; text-align:center; padding:4vh; }
+  .end-icon { font-size:clamp(64px,8vh,100px); margin-bottom:2.4vh; animation:pop 0.6s cubic-bezier(0.34,1.56,0.64,1); }
+  @keyframes pop { from { transform:scale(0); opacity:0; } to { transform:scale(1); opacity:1; } }
+  .end-title { font-family:var(--round); font-size:clamp(34px,4vh,48px); color:var(--wood-deep); margin-bottom:1.6vh; }
+  .end-quote { font-family:var(--round); font-size:clamp(20px,2.6vh,30px); color:var(--coral-dk); line-height:1.7; max-width:70vw; margin:0 auto 3vh; }
+  .end-sub { font-size:clamp(15px,1.6vh,20px); color:var(--muted); }
+  .btn-reset { margin-top:3vh; padding:1.4vh 2vw; background:#FFF3E4; border:none; border-radius:16px; color:var(--wood-dk); font-family:var(--round); font-size:clamp(15px,1.3vh,19px); cursor:pointer; transition:all 0.15s; box-shadow:0 6px 0 #E7CBA3; }
+  .btn-reset:hover { background:#FFEAD2; transform:translateY(-2px); box-shadow:0 8px 0 #E7CBA3; }
+  .btn-reset:active { box-shadow:0 2px 0 #E7CBA3; }
+</style>
+</head>
+<body>
+
+<!-- 설정 없을 때 -->
+<div class="no-config-screen" id="noConfigScreen" style="display:none">
+  <div style="font-size:9vh">📻</div>
+  <h2>설정이 필요합니다</h2>
+  <p><a href="index.html">설정 페이지</a>에서 연결 정보를 입력한 후<br>이 페이지를 다시 열어주세요.</p>
+</div>
+
+<!-- 종료 오버레이 -->
+<div class="end-overlay" id="endOverlay">
+  <div class="end-icon">🌙</div>
+  <div class="end-title">방송이 끝났어요</div>
+  <div class="end-quote" id="endQuote"></div>
+  <div class="end-sub">오늘도 우리 반 라디오를 들어주셔서 고마워요 💛</div>
+  <button class="btn-reset" onclick="location.reload()">↩ 처음으로</button>
+</div>
+
+<!-- 전광판 (LED 사인보드) -->
+<div class="signboard">
+  <div class="bulbs"></div>
+  <div class="led-panel">
+    <div class="marquee-track" id="marqueeTrack">
+      <div class="marquee-text" id="marqueeText1">📻 우리 반 라디오에 오신 걸 환영해요 ✦ 지금부터 방송을 시작합니다 🎵 여러분의 사연을 들려드릴게요 ✦</div>
+      <div class="marquee-text" id="marqueeText2">📻 우리 반 라디오에 오신 걸 환영해요 ✦ 지금부터 방송을 시작합니다 🎵 여러분의 사연을 들려드릴게요 ✦</div>
+    </div>
+  </div>
+  <div class="bulbs b2"></div>
+</div>
+
+<!-- 헤더 -->
+<div class="header">
+  <div class="header-left">
+    <div class="station-name" id="headerTitle">📻 우리 반 라디오</div>
+    <div class="on-air-badge off" id="onAirBadge">
+      <div class="dot-live" style="background:var(--muted);animation:none"></div>
+      준비중
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="progress-info">
+      <div><span class="big" id="currentNum">0</span> / <span id="totalNum">0</span> 번째 사연</div>
+      <div id="timeLeft">방송을 기다리는 중</div>
+    </div>
+  </div>
+</div>
+
+<!-- 메인 -->
+<div class="main">
+  <div class="stage">
+    <div class="now-card">
+      <div class="notes" aria-hidden="true"><span class="note">🎵</span><span class="note">🎶</span><span class="note">♪</span><span class="note">✦</span></div>
+      <div class="disc" aria-hidden="true">🎵</div>
+      <div class="now-label">🎙️ 지금 읽는 사연</div>
+      <div class="story-sender" id="storySender">—</div>
+      <div class="story-song" id="storySong">방송 시작 버튼을 눌러주세요</div>
+      <div class="story-body" id="storyBody">사연이 여기에 표시됩니다.</div>
+    </div>
+
+    <div class="tts-status tts-idle" id="ttsStatus">
+      <div class="wave">
+        <div class="wave-bar"></div>
+        <div class="wave-bar"></div>
+        <div class="wave-bar"></div>
+        <div class="wave-bar"></div>
+      </div>
+      <span id="ttsLabel">읽기 대기중</span>
+    </div>
+
+    <div class="timer-row">
+      <div class="timer-label">🎵 노래 타이머</div>
+      <div class="timer-bar-wrap"><div class="timer-bar-fill" id="timerFill" style="width:0%"></div></div>
+      <div class="timer-digits" id="timerDigits">--:--</div>
+    </div>
+  </div>
+
+  <div class="side">
+    <div class="yt-section">
+      <div class="yt-label">🎬 유튜브 플레이어</div>
+      <div class="yt-box"><div id="ytFrame"></div></div>
+      <div class="yt-controls">
+        <button class="yt-btn" onclick="ytPlayer && ytPlayer.playVideo()">▶ 재생</button>
+        <button class="yt-btn" onclick="ytPlayer && ytPlayer.pauseVideo()">⏸ 멈춤</button>
+        <button class="yt-btn" onclick="ytPlayer && ytPlayer.setVolume(80)">🔊 음량</button>
+      </div>
+    </div>
+
+    <div class="queue-section">
+      <div class="queue-label">📋 사연 목록</div>
+      <div id="queueList"><div style="color:var(--muted);font-size:14px;padding:8px">사연을 불러오는 중...</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- 컨트롤 바 -->
+<div class="controls">
+  <button class="ctrl-btn ctrl-start" id="startBtn" onclick="startBroadcast()">▶ 방송 시작</button>
+  <button class="ctrl-btn ctrl-skip" onclick="skipCurrent()" disabled id="skipBtn">⏭ 다음 사연</button>
+  <button class="ctrl-btn ctrl-stop" onclick="confirmStop()">■ 방송 종료</button>
+</div>
+
+<!-- YouTube IFrame API -->
+<script src="https://www.youtube.com/iframe_api"></script>
+
+<!-- Firebase -->
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+  import {
+    getFirestore, initializeFirestore, collection, getDocs, doc, updateDoc, query, orderBy
+  } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+  // ── 종료 멘트 ──
+  const CLOSING_MESSAGES = [
+    "오늘 할 수 있는 일을 내일로 미루지 말자.", "꿈을 꾸는 자만이 꿈을 이룰 수 있다.",
+    "시작이 반이다.", "포기하지 않는 자가 결국 이긴다.", "작은 노력이 큰 결과를 만든다.",
+    "실패는 성공의 어머니다.", "오늘 최선을 다한 나에게 박수를.", "웃음은 최고의 약이다.",
+    "친절은 돈이 들지 않는 가장 아름다운 선물이다.", "지금 이 순간이 가장 소중하다.",
+    "함께하면 더 멀리 갈 수 있다.", "배움에는 끝이 없다.", "용기란 두렵지 않은 것이 아니라 두렵지만 행동하는 것이다.",
+    "오늘의 나는 어제보다 조금 더 성장했다.", "긍정적으로 생각하면 긍정적인 일이 생긴다.",
+    "작은 친절이 세상을 바꾼다.", "책 속에 길이 있다.", "지금 이 순간을 즐겨라.",
+    "노력은 절대 배신하지 않는다.", "가장 어두운 밤에도 별은 빛난다.",
+    "가는 말이 고와야 오는 말이 곱다.", "콩 심은 데 콩 나고 팥 심은 데 팥 난다.",
+    "세 살 버릇 여든까지 간다.", "백지장도 맞들면 낫다.", "천 리 길도 한 걸음부터.",
+    "호랑이도 제 말 하면 온다.", "금강산도 식후경.", "가랑비에 옷 젖는 줄 모른다.",
+    "낮말은 새가 듣고 밤말은 쥐가 듣는다.", "뜻이 있는 곳에 길이 있다.",
+    "티끌 모아 태산.", "돌다리도 두들겨 보고 건너라.", "웃는 얼굴에 침 못 뱉는다.",
+    "가재는 게 편이라.", "고생 끝에 낙이 온다.", "말 한마디에 천 냥 빚도 갚는다.",
+    "아는 길도 물어 가라.", "원숭이도 나무에서 떨어진다.", "지렁이도 밟으면 꿈틀한다.",
+    "피는 물보다 진하다.",
+    "안전벨트는 생명벨트입니다.", "조심조심, 안전제일!", "한 번의 부주의가 큰 사고를 만듭니다.",
+    "안전은 선택이 아닌 필수입니다.", "서두르지 말고 천천히, 안전하게.",
+    "자전거 탈 때 헬멧은 꼭 착용하세요.", "뛰지 말고 걸어가요.", "계단에서는 난간을 잡으세요.",
+    "길을 건널 땐 왼쪽 오른쪽 확인!", "긴급 상황엔 119, 경찰은 112.",
+    "화재 발생 시 엘리베이터 대신 계단을 이용하세요.", "모르는 사람을 따라가지 마세요.",
+    "교통신호를 꼭 지켜요.", "물가에서는 항상 어른과 함께.", "다치면 선생님께 먼저 알려요.",
+    "오늘도 수고했어, 정말 잘했어!", "너의 웃음이 우리 반을 밝혀요.",
+    "작은 것에 감사하는 하루가 되길.", "오늘 하루도 반짝반짝 빛났어요.",
+    "우리는 모두 각자의 방식으로 특별해요.", "힘든 날도 지나가요, 내일은 더 나아질 거야.",
+    "친구와 함께라면 무엇이든 즐거워.", "오늘도 최선을 다한 모두에게 박수.",
+    "우리 반이 세상에서 제일 좋아!", "꿈을 향해 한 걸음씩 나아가요.",
+    "매일 조금씩 성장하는 우리를 응원해요.", "오늘의 노력이 내일의 나를 만들어요.",
+    "서로 배려하는 우리 반이 자랑스러워요.", "할 수 있다! 우리 모두 함께라면.",
+    "오늘 배운 것들이 평생의 보물이 됩니다.",
+  ];
+  const EXTRA = [
+    "네가 있어 오늘도 행복해.", "내일 또 만나자, 사랑해 우리 반!",
+    "오늘 하루도 건강하게 지내줘서 고마워.", "실수해도 괜찮아, 그게 성장이야.",
+    "오늘 한 선택이 미래의 나를 만들어.", "웃음 하나로 누군가의 하루가 바뀔 수 있어.",
+    "지금 이 시간이 언젠가는 그리워질 거야.", "오늘의 나는 어제보다 분명 더 강해졌어.",
+    "친절한 말 한마디가 가장 큰 선물이야.", "우리 반 파이팅! 오늘도 멋졌어.",
+    "천천히 가도 괜찮아, 멈추지만 않으면 돼.", "오늘 흘린 땀은 내일의 미소가 된다.",
+    "넘어져도 다시 일어나면 그게 진짜 용기.", "작은 친절이 큰 행복으로 돌아와요.",
+    "꾸준함이 재능을 이긴다.", "비 온 뒤에 땅이 굳는 법이에요.",
+    "어려울수록 한 걸음만 더 내디뎌 봐요.", "오늘의 도전이 내일의 자신감이 됩니다.",
+    "서로 도우면 못 할 일이 없어요.", "마음을 나누면 두 배로 커져요.",
+    "정직한 마음이 가장 큰 힘이에요.", "감사하는 마음은 행복의 시작이에요.",
+    "오늘도 끝까지 들어줘서 고마워요.", "내일은 또 어떤 사연이 기다릴까요?",
+    "별처럼 빛나는 우리 반, 잘 자요.", "좋은 꿈 꾸고 내일 또 만나요.",
+    "오늘 하루도 정말 수고 많았어요.", "우리는 매일 조금씩 더 멋져지고 있어요.",
+    "포기하고 싶을 때가 바로 한 걸음 직전이에요.", "당신의 하루가 누군가에게 햇살이었어요.",
+    "느리게 피는 꽃도 결국 활짝 핀다.", "오늘의 작은 용기에 박수를 보내요.",
+    "함께 웃은 오늘이 가장 좋은 추억이에요.", "마음이 따뜻한 사람이 가장 멋진 사람이에요.",
+    "실패는 다음 성공을 위한 연습이에요.", "오늘도 친구에게 한 번 더 웃어줬나요?",
+    "노력하는 모습이 이미 멋져요.", "잘하지 않아도 돼요, 즐기면 돼요.",
+    "우리 반의 내일은 오늘보다 더 빛날 거예요.", "들어줘서 고마워요, 또 만나요!",
+  ];
+  const ALL_MESSAGES = [...CLOSING_MESSAGES, ...EXTRA];
+
+  // ── 상태 ──
+  let db;
+  let stories = [];
+  let currentIdx = -1;
+  let perStoryMs = 120000;
+  let timerInterval = null;
+  let timerRemain = 0;
+  let isBroadcasting = false;
+  let ttsInProgress = false;
+  let karaokeTokens = [];
+  let karaokeOffset = 0;
+
+  // ── YouTube Player ──
+  window.ytPlayer = null;
+  let ytReady = false;
+
+  window.onYouTubeIframeAPIReady = function() {
+    window.ytPlayer = new YT.Player('ytFrame', {
+      height: '100%',
+      width: '100%',
+      playerVars: { autoplay: 0, controls: 1, rel: 0, modestbranding: 1, playsinline: 1, origin: location.origin },
+      events: {
+        onReady: () => { ytReady = true; },
+        onError: (e) => { console.warn('YouTube 재생 오류 코드:', e.data); },
+        onStateChange: () => {}
+      }
+    });
+  };
+
+  function ytVideoId(url) {
+    try {
+      const u = new URL(url);
+      if (u.hostname.includes('youtu.be')) return u.pathname.slice(1);
+      return u.searchParams.get('v') || '';
+    } catch { return ''; }
+  }
+  function ytLoad(url) {
+    const vid = ytVideoId(url);
+    if (!vid || !ytReady) return;
+    ytPlayer.loadVideoById(vid);
+    ytPlayer.pauseVideo();
+  }
+  function ytPlay() {
+    if (!ytReady) return;
+    ytPlayer.unMute();
+    ytPlayer.setVolume(80);
+    ytPlayer.playVideo();
+  }
+  function ytPrime() {
+    if (!ytReady) return;
+    try { ytPlayer.mute(); ytPlayer.playVideo(); setTimeout(() => { try { ytPlayer.pauseVideo(); } catch (e) {} }, 200); } catch (e) {}
+  }
+  function ytFadeOut(callback) {
+    if (!ytReady) { callback && callback(); return; }
+    let vol = 80;
+    const step = setInterval(() => {
+      vol -= 8;
+      if (vol <= 0) { ytPlayer.pauseVideo(); ytPlayer.setVolume(80); clearInterval(step); callback && callback(); }
+      else { ytPlayer.setVolume(vol); }
+    }, 200);
+  }
+
+  // ── TTS ──
+  let koVoice = null;
+  let ttsKeepAlive = null;
+
+  function loadVoices() {
+    const voices = speechSynthesis.getVoices();
+    koVoice = voices.find(v => v.lang === 'ko-KR' && /google/i.test(v.name))
+           || voices.find(v => v.lang === 'ko-KR')
+           || voices.find(v => v.lang && v.lang.startsWith('ko'))
+           || null;
+  }
+  if (window.speechSynthesis) { loadVoices(); speechSynthesis.onvoiceschanged = loadVoices; }
+
+  function speak(text, onEnd, opts) {
+    opts = opts || {};
+    if (!window.speechSynthesis) { onEnd && onEnd(); return; }
+    speechSynthesis.cancel();
+    clearInterval(ttsKeepAlive);
+
+    const utt = new SpeechSynthesisUtterance(text);
+    utt.lang = 'ko-KR';
+    if (koVoice) utt.voice = koVoice;
+    utt.rate = 0.95;
+    utt.pitch = 1.05;
+
+    // 노래방식 하이라이트: 읽는 위치(charIndex)에 맞춰 어절 강조
+    if (opts.karaoke) {
+      utt.onboundary = (e) => {
+        const rel = e.charIndex - karaokeOffset;
+        if (rel >= 0) highlightKaraoke(rel);
+      };
+    }
+
+    const done = () => {
+      ttsInProgress = false;
+      clearInterval(ttsKeepAlive);
+      if (opts.karaoke) finishKaraoke();
+      onEnd && onEnd();
+    };
+    utt.onend = done;
+    utt.onerror = (e) => { if (e && e.error === 'interrupted') return; done(); };
+
+    ttsInProgress = true;
+    setTtsStatus(true, '읽는 중...');
+    speechSynthesis.speak(utt);
+
+    ttsKeepAlive = setInterval(() => {
+      if (!speechSynthesis.speaking) { clearInterval(ttsKeepAlive); return; }
+      speechSynthesis.pause();
+      speechSynthesis.resume();
+    }, 9000);
+  }
+
+  function setTtsStatus(active, label) {
+    const el = document.getElementById('ttsStatus');
+    el.classList.toggle('tts-idle', !active);
+    document.getElementById('ttsLabel').textContent = label;
+  }
+
+  // ── 노래방식 읽기 하이라이트 ──
+  function buildStoryKaraoke(story) {
+    const body = document.getElementById('storyBody');
+    body.innerHTML = '';
+    karaokeTokens = [];
+    let idx = 0;
+    const parts = story.split(/(\s+)/);
+    parts.forEach(part => {
+      if (part === '') return;
+      if (/^\s+$/.test(part)) {
+        body.appendChild(document.createTextNode(part));
+      } else {
+        const span = document.createElement('span');
+        span.className = 'kw';
+        span.textContent = part;
+        body.appendChild(span);
+        karaokeTokens.push({ el: span, start: idx, end: idx + part.length });
+      }
+      idx += part.length;
+    });
+  }
+
+  function highlightKaraoke(rel) {
+    if (!karaokeTokens.length) return;
+    let cur = null;
+    karaokeTokens.forEach(t => {
+      t.el.classList.remove('reading');
+      if (t.end <= rel) t.el.classList.add('read');
+      if (rel >= t.start && rel < t.end) cur = t;
+    });
+    if (!cur) {
+      const passed = karaokeTokens.filter(t => t.start <= rel);
+      cur = passed.length ? passed[passed.length - 1] : null;
+    }
+    if (cur) {
+      cur.el.classList.remove('read');
+      cur.el.classList.add('reading');
+      const body = document.getElementById('storyBody');
+      const top = cur.el.offsetTop - body.offsetTop;
+      if (top < body.scrollTop || top > body.scrollTop + body.clientHeight - 50) body.scrollTop = top - 20;
+    }
+  }
+
+  function finishKaraoke() {
+    karaokeTokens.forEach(t => { t.el.classList.remove('reading'); t.el.classList.add('read'); });
+  }
+
+  // ── 전광판 ──
+  function setMarquee(text) {
+    const t = '📻 ' + text + '  ✦  ' + text + '  ✦  ';
+    document.getElementById('marqueeText1').textContent = t;
+    document.getElementById('marqueeText2').textContent = t;
+  }
+
+  // ── 큐 렌더링 ──
+  function renderQueue() {
+    const list = document.getElementById('queueList');
+    if (!stories.length) {
+      list.innerHTML = '<div style="color:var(--muted);font-size:14px;padding:8px">사연이 없습니다</div>';
+      return;
+    }
+    list.innerHTML = stories.map((s, i) => {
+      const isCurrent = i === currentIdx;
+      const isPlayed = i < currentIdx;
+      return `<div class="queue-item ${isCurrent ? 'active' : ''} ${isPlayed ? 'played' : ''}">
+        ${isCurrent ? '<div class="queue-badge"></div>' : ''}
+        <div class="queue-item-header">
+          <div class="queue-name">${s.name}</div>
+          <div class="queue-num">#${s.order}</div>
+        </div>
+        <div class="queue-song">${s.artist} — ${s.songTitle}</div>
+      </div>`;
+    }).join('');
+  }
+
+  // ── 타이머 ──
+  function startTimer(ms, onEnd) {
+    clearInterval(timerInterval);
+    timerRemain = ms;
+    const total = ms;
+    updateTimerUI(timerRemain, total);
+    timerInterval = setInterval(() => {
+      timerRemain -= 1000;
+      updateTimerUI(timerRemain, total);
+      if (timerRemain <= 0) { clearInterval(timerInterval); onEnd && onEnd(); }
+    }, 1000);
+  }
+  function updateTimerUI(remain, total) {
+    const pct = Math.max(0, remain / total * 100);
+    document.getElementById('timerFill').style.width = pct + '%';
+    const sec = Math.max(0, Math.ceil(remain / 1000));
+    const m = String(Math.floor(sec / 60)).padStart(2, '0');
+    const s = String(sec % 60).padStart(2, '0');
+    document.getElementById('timerDigits').textContent = m + ':' + s;
+  }
+
+  // ── 사연 재생 ──
+  function playStory(idx) {
+    if (idx >= stories.length) { endBroadcast(); return; }
+    currentIdx = idx;
+    const s = stories[idx];
+
+    document.getElementById('storySender').textContent = s.name + '님의 사연';
+    document.getElementById('storySong').textContent = '🎵 ' + s.artist + ' — ' + s.songTitle;
+    buildStoryKaraoke(s.story);
+    document.getElementById('currentNum').textContent = idx + 1;
+    document.getElementById('timeLeft').textContent = `사연 ${idx + 1} / ${stories.length}`;
+
+    setMarquee(`${s.name}님의 사연 | ${s.artist} — ${s.songTitle}`);
+    renderQueue();
+    ytLoad(s.ytUrl);
+
+    const prefix = `${s.name}님의 신청곡은 ${s.artist}의 ${s.songTitle}입니다. 사연을 들어볼게요. `;
+    karaokeOffset = prefix.length;
+    const ttsText = prefix + s.story;
+    speak(ttsText, () => {
+      setTtsStatus(false, '읽기 완료');
+      ytPlay();
+      startTimer(perStoryMs, () => {
+        ytFadeOut(() => { playStory(idx + 1); });
+      });
+    }, { karaoke: true });
+  }
+
+  // ── 방송 시작 ──
+  window.startBroadcast = async function() {
+    if (!stories.length) { alert('사연이 없습니다. 학생들에게 사연을 먼저 받아주세요.'); return; }
+
+    isBroadcasting = true;
+    document.getElementById('startBtn').disabled = true;
+    document.getElementById('skipBtn').disabled = false;
+
+    const badge = document.getElementById('onAirBadge');
+    badge.classList.remove('off');
+    badge.innerHTML = '<div class="dot-live"></div> ON AIR';
+
+    const bcast = JSON.parse(localStorage.getItem('radioBroadcast') || '{}');
+    const totalMs = (bcast.totalMinutes || 10) * 60 * 1000;
+    perStoryMs = Math.floor(totalMs / stories.length);
+
+    document.getElementById('totalNum').textContent = stories.length;
+
+    ytLoad(stories[0].ytUrl);
+    ytPrime();
+
+    const sessionName = bcast.sessionName || '우리 반 라디오';
+    setMarquee(`${sessionName} 시작합니다! 총 ${stories.length}개의 사연을 들려드립니다.`);
+    speak(`안녕하세요, ${sessionName}입니다. 오늘 총 ${stories.length}개의 사연을 들려드릴게요. 지금 바로 시작합니다!`, () => {
+      playStory(0);
+    });
+  };
+
+  // ── 다음 사연 ──
+  window.skipCurrent = function() {
+    if (!isBroadcasting) return;
+    clearInterval(timerInterval);
+    speechSynthesis.cancel();
+    ytFadeOut(() => playStory(currentIdx + 1));
+  };
+
+  // ── 방송 종료 ──
+  function endBroadcast() {
+    isBroadcasting = false;
+    clearInterval(timerInterval);
+
+    const msg = ALL_MESSAGES[Math.floor(Math.random() * ALL_MESSAGES.length)];
+    const bcast = JSON.parse(localStorage.getItem('radioBroadcast') || '{}');
+    const sessionName = bcast.sessionName || '우리 반 라디오';
+
+    document.getElementById('endQuote').textContent = msg;
+    document.getElementById('endOverlay').style.display = 'flex';
+
+    speak(`${msg} 오늘 ${sessionName}을 들어주셔서 감사합니다. 다음에 또 만나요!`, null);
+    setMarquee('방송이 종료되었습니다. 감사합니다! 🎵');
+  }
+
+  window.confirmStop = function() {
+    if (confirm('방송을 종료할까요?')) endBroadcast();
+  };
+
+  function applySharedConfig() {
+    const m = location.hash.match(/[#&]s=([^&]+)/);
+    if (!m) return;
+    try {
+      const data = JSON.parse(decodeURIComponent(escape(atob(decodeURIComponent(m[1])))));
+      if (data.firebase) localStorage.setItem('radioFirebaseConfig', JSON.stringify(data.firebase));
+      if (data.broadcast) localStorage.setItem('radioBroadcast', JSON.stringify(data.broadcast));
+    } catch (e) { console.warn('설정 링크 해석 실패:', e); }
+  }
+
+  // ── Firebase 초기화 및 사연 로드 ──
+  async function init() {
+    applySharedConfig();
+    const cfg = JSON.parse(localStorage.getItem('radioFirebaseConfig') || '{}');
+    if (!cfg.apiKey) {
+      document.getElementById('noConfigScreen').style.display = 'flex';
+      return;
+    }
+    try {
+      const app = initializeApp(cfg);
+      // 학교망·방화벽·확장프로그램이 실시간 연결을 막아도 동작하도록 long-polling 자동감지
+      try { db = initializeFirestore(app, { experimentalAutoDetectLongPolling: true }); }
+      catch (e) { db = getFirestore(app); }
+
+      const bcast = JSON.parse(localStorage.getItem('radioBroadcast') || '{}');
+      if (bcast.sessionName) {
+        document.getElementById('headerTitle').textContent = '📻 ' + bcast.sessionName;
+        document.title = bcast.sessionName + ' 부스';
+      }
+
+      const q = query(collection(db, 'stories'), orderBy('order', 'asc'));
+      const snap = await getDocs(q);
+      stories = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+      document.getElementById('totalNum').textContent = stories.length;
+      renderQueue();
+
+      if (!stories.length) {
+        document.getElementById('storyBody').textContent = '아직 사연이 없어요. 학생들에게 사연 페이지 링크를 공유하세요.';
+      }
+    } catch(e) {
+      alert('Firebase 연결 실패: ' + e.message);
+    }
+  }
+
+  init();
+</script>
+</body>
+</html>
