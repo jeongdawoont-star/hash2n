@@ -102,9 +102,23 @@
 
   .hint { font-size: clamp(12px,1.4vh,15px); color:var(--muted); line-height:1.6; margin-bottom: clamp(8px,1.2vh,14px); }
 
+  .share-btns { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .qr-wrap { display:none; align-items:center; gap:16px; margin-top: clamp(10px,1.5vh,18px); padding-top: clamp(10px,1.5vh,18px); border-top:2.5px dashed var(--line); }
+  .qr-box { background:#fff; padding:10px; border-radius:14px; line-height:0; flex-shrink:0; box-shadow:0 5px 0 rgba(184,138,92,0.15); }
+  .qr-caption { font-family:var(--round); font-size: clamp(13px,1.5vh,16px); color:var(--wood-dk); line-height:1.5; }
+  .qr-caption .muted { color:var(--muted); font-size: clamp(11px,1.2vh,13px); font-family:var(--body); }
+
+  .links { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .link-card { background:var(--card); border:2.5px solid var(--line); border-radius:18px; padding: clamp(12px,1.8vh,20px) 14px; text-decoration:none; color:var(--text); transition:all .15s; text-align:center; box-shadow:0 6px 0 rgba(184,138,92,0.12); }
+  .link-card:hover { transform:translateY(-3px); border-color:var(--coral); box-shadow:0 9px 0 rgba(255,122,89,0.18); }
+  .link-card .icon { font-size: clamp(28px,3.6vh,40px); display:block; }
+  .link-card .name { font-family:var(--round); font-size: clamp(14px,1.7vh,18px); color:var(--wood-dk); margin-top:5px; }
+  .link-card .desc { font-size: clamp(11px,1.2vh,13px); color:var(--muted); margin-top:2px; }
+
   .toast { position:absolute; bottom:28px; left:50%; transform:translateX(-50%) translateY(90px); background:var(--mint); color:#fff; padding:13px 26px; border-radius:999px; font-family:var(--round); font-size:16px; box-shadow:0 8px 20px rgba(143,191,138,.5); transition:transform .35s cubic-bezier(.34,1.56,.64,1); z-index:99; }
   .toast.show { transform:translateX(-50%) translateY(0); }
 
+  /* 도움말 버튼 + 팝업 */
   .help-btn {
     font-family:var(--round); font-size:clamp(12px,1.5vh,15px); color:#fff;
     background:var(--mint); border:none; border-radius:999px; padding:6px 15px;
@@ -135,6 +149,7 @@
   .modal-close:hover { background:#FF8C6E; transform:translateY(-2px); box-shadow:0 7px 0 var(--coral-dk); }
   .modal-close:active { transform:translateY(3px); box-shadow:0 2px 0 var(--coral-dk); }
 
+  /* 아코디언 접기 스타일 */
   .accordion-content {
     max-height: 1200px;
     overflow: hidden;
@@ -157,6 +172,7 @@
     transform: rotate(-90deg);
   }
 
+  /* 사연 관리 테이블 추가 */
   table th, table td { border-bottom: 1px solid var(--line); }
   .btn-sm { padding: 4px 10px; font-size: 12px; border-radius: 8px; cursor: pointer; border: none; font-family: var(--round); transition: all 0.15s; }
   .btn-sm-danger { background: var(--coral); color: #fff; box-shadow: 0 3px 0 var(--coral-dk); }
@@ -172,6 +188,7 @@
   .status-badge.keep { background: var(--yellow); color: var(--text); }
   .status-badge.played { background: var(--muted); }
 
+  /* 기기 공유 단일 행 및 바로가기 스타일 */
   .share-shortcuts-row {
     display: flex;
     gap: 8px;
@@ -245,6 +262,7 @@
     box-shadow: 0 2px 0 #E7CBA3;
   }
 
+  /* 테이블 헤더 스티키 및 뷰포트 스크롤 */
   .story-table-wrap {
     flex: 1;
     min-height: 0;
@@ -263,6 +281,7 @@
     box-shadow: inset 0 -2px 0 var(--line);
   }
 
+  /* 반응형 모바일 모드 */
   @media (max-width: 768px) {
     body {
       height: auto;
@@ -289,7 +308,9 @@
 
 <div class="layout" id="mainLayout">
 
+  <!-- 왼쪽 컬럼: Firebase 설정 + 방송 설정 + 기기 공유 및 바로가기 -->
   <div class="col">
+    <!-- 1. 파이어베이스 연결 카드 -->
     <div class="card" id="configCard">
       <div class="card-title" style="justify-content:space-between; cursor: pointer; user-select: none;" onclick="toggleConfigAccordion()">
         <span style="display:flex;align-items:center;gap:10px">
@@ -329,6 +350,7 @@
       </div>
     </div>
 
+    <!-- 2. 방송 설정 카드 -->
     <div class="card" id="broadcastCard">
       <div class="card-title"><span class="chip">⏰</span>방송 설정</div>
       <div class="grid2">
@@ -338,26 +360,31 @@
       <button class="btn" style="margin-top:6px" onclick="saveBroadcast()">저장하기</button>
     </div>
 
+    <!-- 3. 기기 공유 및 바로가기 카드 -->
     <div class="card" id="shareCard" style="display: none;">
       <div class="card-title"><span class="chip">📲</span>기기 공유 및 바로가기</div>
       <p class="hint" style="margin-bottom: clamp(6px, 1vh, 12px);">학생용 사연 보내기 페이지와 방송 부스 페이지 링크/QR을 확인합니다.</p>
       
       <div class="share-shortcuts-row">
+        <!-- 사연 보내기 -->
         <div class="action-group">
           <a href="submission.html" id="linkGoSubmission" target="_blank" class="action-btn main-btn" title="사연 보내기 페이지 열기">✉️ 사연 보내기</a>
           <button onclick="copyShare('submission.html', this)" class="action-btn sub-btn" title="링크 복사">📋 복사</button>
         </div>
         
+        <!-- 방송 부스 -->
         <div class="action-group">
           <a href="booth.html" id="linkGoBooth" target="_blank" class="action-btn main-btn" title="방송 부스 페이지 열기">🎙️ 방송 부스</a>
           <button onclick="copyShare('booth.html', this)" class="action-btn sub-btn" title="링크 복사">📋 복사</button>
         </div>
         
+        <!-- QR 코드 보기 -->
         <button class="action-btn qr-btn" onclick="openQrModal()" title="QR 코드 보기">📱 사연 QR</button>
       </div>
     </div>
   </div>
 
+  <!-- 오른쪽 컬럼: 사연 실시간 관리 패널 -->
   <div class="card grow" id="storyManagerCard" style="display: none; flex-direction: column;">
     <div class="card-title" style="justify-content:space-between; flex-wrap: wrap; gap: 10px; margin-bottom: clamp(10px,1.5vh,18px);">
       <span style="display:flex;align-items:center;gap:10px"><span class="chip">📋</span>사연 실시간 관리</span>
@@ -394,24 +421,28 @@
 
 <div class="toast" id="toast">✅ 저장 완료!</div>
 
+<!-- 파이어베이스 사용법 팝업 -->
 <div class="modal-overlay" id="helpModal" onclick="if(event.target===this) closeHelp()">
   <div class="modal">
     <button class="modal-x" onclick="closeHelp()" aria-label="닫기">✕</button>
     <h2>📘 파이어베이스 사용법 간단리뷰</h2>
     <p class="lead">학생들의 사연을 모으려면 무료 데이터베이스인 <b>파이어베이스</b>를 딱 한 번만 연결하면 돼요. 아래 순서대로 따라 해보세요.</p>
     <div class="step"><div class="n">1</div><div class="tx"><b>firebase.google.com</b> 접속 → 구글 로그인 → <b>시작하기</b> 클릭</div></div>
-    <div class="step"><div class="n">2</div><div class="tx"><b>프로젝트 추가</b> → 이름 입력 → 애널리틱스 <b>사용 안 함</b> → 만들기</div></div>
-    <div class="step"><div class="n">3</div><div class="tx">프로젝트 화면 가운데 <b>&lt;/&gt; (웹)</b> 아이콘 클릭 → 앱 닉네임 입력 → <b>앱 등록</b></div></div>
-    <div class="step"><div class="n">4</div><div class="tx"><b>"Firebase SDK 추가"</b> 화면에서 <b>&lt;/&gt; 스크립트 사용</b> 탭을 클릭</div></div>
-    <div class="step"><div class="n">5</div><div class="tx"><b>const firebaseConfig = { ... }</b> 코드 전체를 복사 → 이 설정창의 <b>전체 설정 붙여넣기</b> 칸에 붙여넣기 → <b>자동 채우기</b> → <b>설정 저장하기</b></div></div>
-    <div class="step"><div class="n">6</div><div class="tx">왼쪽 메뉴 <b>Firestore Database</b> ➜ <b>[데이터베이스 만들기]</b> ➜ <b>테스트 모드</b> ➜ 위치(기본) ➜ <b>사용 설정</b></div></div>
+    <div class="step"><div class="n">2</div><div class="tx"><b>프로젝트 추가</b> → 이름 입력 (예: classroom-radio) → 애널리틱스는 <b>사용 안 함</b> → 만들기</div></div>
+    <div class="step"><div class="n">3</div><div class="tx">프로젝트 화면 가운데 <b>&lt;/&gt; (웹)</b> 아이콘 클릭 → 앱 닉네임 입력.<br><span style="color:#F2613F">⚠️ 아래 <b style="color:#F2613F">"이 앱의 Firebase 호스팅도 설정"</b> 체크박스는 <b style="color:#F2613F">체크하지 말고 비워두세요.</b></span> → <b>앱 등록</b> 클릭</div></div>
+    <div class="step"><div class="n">4</div><div class="tx">등록하면 <b>"Firebase SDK 추가"</b> 화면이 떠요. 위쪽에 <b>npm</b> / <b>&lt;/&gt; 스크립트 사용</b> 두 개의 탭(버튼)이 있는데, 꼭 <b>&lt;/&gt; 스크립트 사용</b> 쪽을 누르세요.<br><span style="color:#A98E6F">(npm 탭은 설치 명령어만 나와서 설정이 비어 보여요)</span></div></div>
+    <div class="step"><div class="n">5</div><div class="tx">그러면 <b>const firebaseConfig = { apiKey: "…", … }</b> 코드가 나타나요. 이 <b>{ } 부분 전체</b>를 드래그해 복사 → 이 설정창의 <b>전체 설정 붙여넣기</b> 칸에 붙여넣기 → <b>자동 채우기</b> → <b>설정 저장하기</b></div></div>
+    <div class="step"><div class="n">6</div><div class="tx">왼쪽 메뉴 <b>Firestore Database</b> ➜ <b>[데이터베이스 만들기] (필수!)</b> ➜ <b>테스트 모드</b> 선택 ➜ 위치 선택(한국에서 빠른 <b>asia-northeast3(서울)</b> 또는 기본값인 <b>nam5(미국 다중 리전)/us-central</b> 모두 평생 무료 적용) ➜ <b>사용 설정</b></div></div>
     <div class="tip" style="border-color: #FFB9A6; background: #FFE3DC; color: var(--coral-dk);">
-      ⚠️ <b>[중요] 데이터베이스를 개설하지 않으면 사연 전송 시 무한 대기(타임아웃)가 발생합니다.</b> 6단계를 꼭 완료해 주세요.
+      ⚠️ <b>[중요] 데이터베이스판을 실제로 개설하지 않으면 사연 전송 시 무한 대기(타임아웃)가 발생합니다.</b> 6단계의 '데이터베이스 만들기' 과정을 꼭 완료해 주세요.
     </div>
+    <div class="tip">💡 설정 화면을 이미 닫았다면? <b>⚙️ 프로젝트 설정 ➜ 일반 ➜ 내 앱 ➜ SDK 설정 및 구성</b>에서 <b>'구성(Config)'</b>을 고르면 firebaseConfig를 다시 볼 수 있어요.</div>
+    <div class="tip">💡 테스트 모드는 30일 후 만료돼요. 행사용으로 잠깐 쓰면 그대로 두어도 되고, 계속 쓰려면 나중에 보안 규칙만 설정하면 됩니다.</div>
     <button class="modal-close" onclick="closeHelp()">알겠어요! 닫기</button>
   </div>
 </div>
 
+<!-- 파이어베이스 규칙 만료 해결 가이드 팝업 -->
 <div class="modal-overlay" id="rulesHelpModal" onclick="if(event.target===this) closeRulesHelp()">
   <div class="modal" style="max-width: 600px;">
     <button class="modal-x" onclick="closeRulesHelp()" aria-label="닫기">✕</button>
@@ -420,11 +451,15 @@
     
     <div class="step">
       <div class="n">1</div>
-      <div class="tx">Firebase Console ➜ <b>Firestore Database</b> ➜ 상단 <b>[규칙 (Rules)]</b> 탭 클릭</div>
+      <div class="tx">구글 크롬에서 <b>Firebase Console</b>에 접속한 뒤, 내 프로젝트의 <b>Firestore Database</b> 메뉴로 들어갑니다.</div>
     </div>
     <div class="step">
       <div class="n">2</div>
-      <div class="tx">기존 코드를 모두 지우고, 아래의 <b>평생 무료 연장 코드</b>를 복사-붙여넣습니다.</div>
+      <div class="tx">상단의 <b>[규칙 (Rules)]</b> 탭을 클릭합니다.</div>
+    </div>
+    <div class="step">
+      <div class="n">3</div>
+      <div class="tx">기존 코드를 모두 지우고, 아래의 <b>평생 무료 연장 코드</b>를 그대로 복사해서 붙여넣습니다.</div>
     </div>
     
     <div style="position: relative; margin: 15px 0;">
@@ -440,19 +475,33 @@ service cloud.firestore {
     </div>
     
     <div class="step">
-      <div class="n">3</div>
-      <div class="tx">우측 상단의 <b>[게시 (Publish)]</b> 버튼을 누르면 끝! 🎉</div>
+      <div class="n">4</div>
+      <div class="tx">우측 상단의 <b>[게시 (Publish)]</b> 버튼을 누르면 끝! 이제 언제든지 만료 없이 사연 전송이 가능합니다. 🎉</div>
+    </div>
+    
+    <div class="tip" style="border-color: #FFB9A6; background: #FFE3DC; color: var(--coral-dk); margin-top: 15px;">
+      💡 <b>참고</b>: 학교 교실 등에서 행사용으로 안전하게 쓸 때는 위 코드처럼 <code>allow read, write: if true;</code>로 설정하면 누구나 사연을 보낼 수 있어 가장 간단하고 안전합니다.
     </div>
     <button class="modal-close" onclick="closeRulesHelp()">가이드 닫기</button>
   </div>
 </div>
 
+<!-- QR 코드 모달 -->
 <div class="modal-overlay" id="qrModal" onclick="if(event.target===this) closeQrModal()">
-  <div class="modal" style="text-align: center; max-width: 300px;">
+  <div class="modal" style="max-width: 420px; text-align: center;">
     <button class="modal-x" onclick="closeQrModal()" aria-label="닫기">✕</button>
-    <h2>📱 사연 QR 코드</h2>
-    <div id="qrcode" style="display: flex; justify-content: center; margin: 20px 0;"></div>
-    <button class="modal-close" onclick="closeQrModal()">닫기</button>
+    <h2>📱 학생용 사연 QR 코드</h2>
+    <p class="lead">학생들 기기(스마트폰/태블릿)로 QR 코드를 스캔하면<br>자동으로 연결 정보가 설정되어 편리하게 사연을 보낼 수 있습니다.</p>
+    
+    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 20px 0; gap: 12px;">
+      <div class="qr-box" id="qrClickTarget" title="클릭하면 고해상도 PNG 파일로 다운로드합니다" style="cursor: pointer; background: #fff; padding: 16px; border-radius: 20px; border: 2.5px solid var(--line); box-shadow: 0 8px 20px rgba(184,138,92,0.15); display: inline-block;" onclick="downloadQRCode()">
+        <div id="qrcode" style="display: flex; justify-content: center;"></div>
+      </div>
+      <div class="hint" style="margin-bottom: 0;">💡 QR 코드를 클릭하거나 아래 버튼을 누르면 고화질 PNG 이미지로 저장됩니다.</div>
+      <button class="btn btn-outline" style="width: auto; padding: 10px 24px;" onclick="downloadQRCode()">💾 QR 이미지 다운로드</button>
+    </div>
+    
+    <button class="modal-close" onclick="closeQrModal()">가이드 닫기</button>
   </div>
 </div>
 
@@ -477,15 +526,22 @@ service cloud.firestore {
       document.getElementById('appId').value = cfg.appId || '';
       document.getElementById('savedBadge').style.display = 'block';
       
+      // 설정이 저장되어 있으면 아코디언을 접은 상태로 시작
       document.getElementById('configAccordion').classList.add('collapsed');
       document.getElementById('accordionIcon').classList.add('rotated');
     }
     const bcast = JSON.parse(localStorage.getItem('radioBroadcast') || '{}');
     if (bcast.totalMinutes) document.getElementById('totalMinutes').value = bcast.totalMinutes;
     if (bcast.sessionName) document.getElementById('sessionName').value = bcast.sessionName;
+    renderShare();
     updateExpirationDisplay();
     initFirebaseManager();
   };
+
+  // 모듈의 경우 load 이벤트가 이미 실행되었을 수 있으므로 즉시 실행 대응
+  if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    setTimeout(window.onload, 1);
+  }
 
   window.toggleConfigAccordion = function() {
     const content = document.getElementById('configAccordion');
@@ -504,15 +560,26 @@ service cloud.firestore {
       if (m) { document.getElementById(k).value = m[1]; found++; }
     });
     if (found) showToast(found + '개 항목 자동 입력됨 — 저장을 눌러주세요');
-    else alert('설정을 찾지 못했어요.');
+    else alert('설정을 찾지 못했어요. firebaseConfig = { ... } 전체를 붙여넣었는지 확인하세요.');
   };
 
+  function buildShareUrl(page) {
+    const cfg = JSON.parse(localStorage.getItem('radioFirebaseConfig') || '{}');
+    const bcast = JSON.parse(localStorage.getItem('radioBroadcast') || '{}');
+    if (!cfg.apiKey) { alert('먼저 Firebase 설정을 저장해주세요.'); return null; }
+    const payload = btoa(unescape(encodeURIComponent(JSON.stringify({ firebase: cfg, broadcast: bcast }))));
+    const u = new URL(page, location.href);
+    u.hash = 's=' + payload;
+    return u.href;
+  }
+
   window.copyShare = async function(page, btn) {
-    const url = btn.parentElement.querySelector('a').href;
+    const url = buildShareUrl(page);
+    if (!url) return;
     try { await navigator.clipboard.writeText(url); }
     catch (e) { prompt('아래 링크를 복사하세요:', url); }
     const orig = btn.textContent;
-    btn.textContent = '✅ 완료!';
+    btn.textContent = '✅ 복사됨!';
     setTimeout(() => { btn.textContent = orig; }, 1800);
   };
 
@@ -522,20 +589,42 @@ service cloud.firestore {
     const bcast = JSON.parse(localStorage.getItem('radioBroadcast') || '{}');
     const payload = btoa(unescape(encodeURIComponent(JSON.stringify({ firebase: cfg, broadcast: bcast }))));
     
+    // 사연 보내기 링크 세팅
     const uSub = new URL('submission.html', location.href);
     uSub.hash = 's=' + payload;
     document.getElementById('linkGoSubmission').href = uSub.href;
     
+    // 방송 부스 링크 세팅
     const uBooth = new URL('booth.html', location.href);
     uBooth.hash = 's=' + payload;
     document.getElementById('linkGoBooth').href = uBooth.href;
 
+    // QR 코드 세팅
     const box = document.getElementById('qrcode');
     box.innerHTML = '';
     if (window.QRCode) {
       new QRCode(box, { text: uSub.href, width: 160, height: 160, correctLevel: QRCode.CorrectLevel.L });
     }
   }
+
+  window.downloadQRCode = function() {
+    const qrCanvas = document.querySelector('#qrcode canvas');
+    const qrImg = document.querySelector('#qrcode img');
+    
+    if (qrCanvas) {
+      const link = document.createElement('a');
+      link.href = qrCanvas.toDataURL('image/png');
+      link.download = '학급라디오_사연링크_QR.png';
+      link.click();
+    } else if (qrImg && qrImg.src) {
+      const link = document.createElement('a');
+      link.href = qrImg.src;
+      link.download = '학급라디오_사연링크_QR.png';
+      link.click();
+    } else {
+      alert('QR 코드가 아직 생성되지 않았습니다.');
+    }
+  };
 
   window.saveConfig = function() {
     const cfg = {
@@ -551,8 +640,11 @@ service cloud.firestore {
     localStorage.setItem('radioConfigSavedDate', new Date().toISOString());
     document.getElementById('savedBadge').style.display = 'block';
     showToast('Firebase 설정 저장 완료!');
+    renderShare();
     updateExpirationDisplay();
     initFirebaseManager();
+    
+    // 저장 후에는 아코디언을 자동으로 접음
     setTimeout(() => {
       document.getElementById('configAccordion').classList.add('collapsed');
       document.getElementById('accordionIcon').classList.add('rotated');
@@ -563,11 +655,18 @@ service cloud.firestore {
     const savedDateStr = localStorage.getItem('radioConfigSavedDate');
     const warningEl = document.getElementById('expirationWarning');
     const btnEl = document.getElementById('rulesHelpBtn');
-    if (!savedDateStr || !warningEl) return;
+    if (!savedDateStr || !warningEl) {
+      if (warningEl) warningEl.textContent = '';
+      if (btnEl) btnEl.style.display = 'none';
+      return;
+    }
     const savedDate = new Date(savedDateStr);
-    const expireDate = new Date(savedDate.getTime() + 30 * 24 * 60 * 60 * 1000); 
+    const expireDate = new Date(savedDate.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 days later
     const now = new Date();
-    const diffDays = Math.ceil((expireDate - now) / (1000 * 60 * 60 * 24));
+    
+    const diffTime = expireDate - now;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
     const formatDate = (d) => `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일`;
     
     if (diffDays > 0) {
@@ -604,6 +703,8 @@ service cloud.firestore {
 
   window.openRulesHelp = function() { document.getElementById('rulesHelpModal').classList.add('show'); };
   window.closeRulesHelp = function() { document.getElementById('rulesHelpModal').classList.remove('show'); };
+  window.openQrModal = function() { document.getElementById('qrModal').classList.add('show'); };
+  window.closeQrModal = function() { document.getElementById('qrModal').classList.remove('show'); };
   window.copyRulesCode = function(btn) {
     const area = document.getElementById('rulesCodeArea');
     area.select();
@@ -616,12 +717,21 @@ service cloud.firestore {
       alert('복사 실패, 텍스트 상자를 직접 복사해주세요.');
     }
   };
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') window.closeRulesHelp(); });
+  document.addEventListener('keydown', e => { 
+    if (e.key === 'Escape') {
+      window.closeHelp();
+      window.closeRulesHelp();
+      window.closeQrModal();
+    }
+  });
 
+  // ── Firebase 사연 실시간 관리 로직 ──
   async function initFirebaseManager() {
     const cfg = JSON.parse(localStorage.getItem('radioFirebaseConfig') || '{}');
     if (!cfg.apiKey) {
       document.getElementById('storyManagerCard').style.display = 'none';
+      document.getElementById('shareCard').style.display = 'none';
+      document.getElementById('mainLayout').classList.remove('connected');
       return;
     }
     
@@ -634,6 +744,8 @@ service cloud.firestore {
       }
       
       document.getElementById('storyManagerCard').style.display = 'flex';
+      document.getElementById('shareCard').style.display = 'block';
+      document.getElementById('mainLayout').classList.add('connected');
       subscribeStoriesList();
     } catch (e) {
       console.error('Firebase Manager 초기화 실패:', e);
@@ -682,7 +794,7 @@ service cloud.firestore {
           </td>
           <td style="padding: 10px 8px; text-align: center;">
             <input type="checkbox" ${!isHidden ? 'checked' : ''} ${isPlayed ? 'disabled' : ''} 
-              onchange="toggleStoryVisibility('${s.id}', this.checked)" style="width: 18px; height: 18px; cursor: pointer;">
+               onchange="toggleStoryVisibility('${s.id}', this.checked)" style="width: 18px; height: 18px; cursor: pointer;">
           </td>
           <td style="padding: 10px 8px; text-align: center;">${statusBadge}</td>
           <td style="padding: 10px 8px; text-align: center;">
