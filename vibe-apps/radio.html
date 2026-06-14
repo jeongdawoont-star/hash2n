@@ -22,7 +22,7 @@
       radial-gradient(45vw 40vh at 100% 110%, rgba(143,191,138,0.18), transparent 55%),
       var(--cream);
     color:var(--text); font-family:var(--body);
-    min-height:100vh; width:100vw; overflow-y:auto;
+    height:100vh; width:100vw; overflow:hidden;
     display:flex; flex-direction:column;
     padding: clamp(14px,2.2vh,28px) clamp(20px,3vw,56px);
   }
@@ -43,8 +43,17 @@
   .layout {
     flex:1; min-height:0;
     display:grid;
-    grid-template-columns: 1.22fr 1fr;
+    grid-template-columns: 1fr;
+    max-width: 500px;
+    margin: 0 auto;
+    width: 100%;
     gap: clamp(12px,1.4vw,26px);
+    transition: all 0.3s ease;
+  }
+  .layout.connected {
+    grid-template-columns: clamp(330px, 26vw, 430px) 1fr;
+    max-width: 100%;
+    margin: 0;
   }
   .col { display:flex; flex-direction:column; gap: clamp(10px,1.4vh,18px); min-height:0; }
 
@@ -93,23 +102,9 @@
 
   .hint { font-size: clamp(12px,1.4vh,15px); color:var(--muted); line-height:1.6; margin-bottom: clamp(8px,1.2vh,14px); }
 
-  .share-btns { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-  .qr-wrap { display:none; align-items:center; gap:16px; margin-top: clamp(10px,1.5vh,18px); padding-top: clamp(10px,1.5vh,18px); border-top:2.5px dashed var(--line); }
-  .qr-box { background:#fff; padding:10px; border-radius:14px; line-height:0; flex-shrink:0; box-shadow:0 5px 0 rgba(184,138,92,0.15); }
-  .qr-caption { font-family:var(--round); font-size: clamp(13px,1.5vh,16px); color:var(--wood-dk); line-height:1.5; }
-  .qr-caption .muted { color:var(--muted); font-size: clamp(11px,1.2vh,13px); font-family:var(--body); }
-
-  .links { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
-  .link-card { background:var(--card); border:2.5px solid var(--line); border-radius:18px; padding: clamp(12px,1.8vh,20px) 14px; text-decoration:none; color:var(--text); transition:all .15s; text-align:center; box-shadow:0 6px 0 rgba(184,138,92,0.12); }
-  .link-card:hover { transform:translateY(-3px); border-color:var(--coral); box-shadow:0 9px 0 rgba(255,122,89,0.18); }
-  .link-card .icon { font-size: clamp(28px,3.6vh,40px); display:block; }
-  .link-card .name { font-family:var(--round); font-size: clamp(14px,1.7vh,18px); color:var(--wood-dk); margin-top:5px; }
-  .link-card .desc { font-size: clamp(11px,1.2vh,13px); color:var(--muted); margin-top:2px; }
-
   .toast { position:absolute; bottom:28px; left:50%; transform:translateX(-50%) translateY(90px); background:var(--mint); color:#fff; padding:13px 26px; border-radius:999px; font-family:var(--round); font-size:16px; box-shadow:0 8px 20px rgba(143,191,138,.5); transition:transform .35s cubic-bezier(.34,1.56,.64,1); z-index:99; }
   .toast.show { transform:translateX(-50%) translateY(0); }
 
-  /* 도움말 버튼 + 팝업 */
   .help-btn {
     font-family:var(--round); font-size:clamp(12px,1.5vh,15px); color:#fff;
     background:var(--mint); border:none; border-radius:999px; padding:6px 15px;
@@ -140,7 +135,6 @@
   .modal-close:hover { background:#FF8C6E; transform:translateY(-2px); box-shadow:0 7px 0 var(--coral-dk); }
   .modal-close:active { transform:translateY(3px); box-shadow:0 2px 0 var(--coral-dk); }
 
-  /* 아코디언 접기 스타일 */
   .accordion-content {
     max-height: 1200px;
     overflow: hidden;
@@ -163,7 +157,6 @@
     transform: rotate(-90deg);
   }
 
-  /* 사연 관리 테이블 추가 */
   table th, table td { border-bottom: 1px solid var(--line); }
   .btn-sm { padding: 4px 10px; font-size: 12px; border-radius: 8px; cursor: pointer; border: none; font-family: var(--round); transition: all 0.15s; }
   .btn-sm-danger { background: var(--coral); color: #fff; box-shadow: 0 3px 0 var(--coral-dk); }
@@ -178,6 +171,112 @@
   .status-badge.waiting { background: var(--mint); }
   .status-badge.keep { background: var(--yellow); color: var(--text); }
   .status-badge.played { background: var(--muted); }
+
+  .share-shortcuts-row {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+    margin-top: 4px;
+  }
+  .action-group {
+    display: flex;
+    flex: 1.2;
+    border: 2.5px solid var(--line);
+    border-radius: 14px;
+    overflow: hidden;
+    background: var(--cream2);
+    transition: border-color 0.2s;
+  }
+  .action-group:hover {
+    border-color: var(--coral);
+  }
+  .action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--round);
+    font-size: clamp(12px, 1.4vh, 15px);
+    cursor: pointer;
+    border: none;
+    transition: background 0.15s, color 0.15s;
+    background: transparent;
+    color: var(--wood-dk);
+    text-decoration: none;
+  }
+  .action-group .main-btn {
+    flex: 1.8;
+    padding: 10px 8px;
+    color: var(--text);
+  }
+  .action-group .main-btn:hover {
+    background: #FFF3E4;
+    color: var(--coral-dk);
+  }
+  .action-group .sub-btn {
+    flex: 1;
+    padding: 10px 8px;
+    border-left: 2px solid var(--line);
+    font-size: clamp(11px, 1.3vh, 14px);
+    background: #FFFDFC;
+    color: var(--muted);
+  }
+  .action-group .sub-btn:hover {
+    background: #FFEAD2;
+    color: var(--wood-dk);
+  }
+  .qr-btn {
+    flex: 0.8;
+    padding: 10px 16px;
+    border: 2.5px solid var(--line);
+    border-radius: 14px;
+    background: #FFF3E4;
+    color: var(--wood-dk);
+    box-shadow: 0 4px 0 #E7CBA3;
+    transition: all 0.15s;
+  }
+  .qr-btn:hover {
+    background: #FFEAD2;
+    transform: translateY(-1px);
+    box-shadow: 0 5px 0 #E7CBA3;
+    border-color: var(--coral);
+  }
+  .qr-btn:active {
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 #E7CBA3;
+  }
+
+  .story-table-wrap {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: auto;
+    border-radius: 14px;
+    border: 1.5px solid var(--line);
+    background: var(--cream2);
+    margin-top: 10px;
+  }
+  .story-table-wrap th {
+    position: sticky;
+    top: 0;
+    background: var(--card);
+    z-index: 10;
+    box-shadow: inset 0 -2px 0 var(--line);
+  }
+
+  @media (max-width: 768px) {
+    body {
+      height: auto;
+      overflow-y: auto;
+    }
+    .layout {
+      grid-template-columns: 1fr !important;
+      height: auto;
+      max-width: 100%;
+    }
+    .story-table-wrap {
+      max-height: 400px;
+    }
+  }
 </style>
 </head>
 <body>
@@ -188,11 +287,10 @@
   <span class="tag">선생님 설정 페이지</span>
 </div>
 
-<div class="layout">
+<div class="layout" id="mainLayout">
 
-  <!-- 왼쪽: 파이어베이스 -->
   <div class="col">
-    <div class="card grow">
+    <div class="card" id="configCard">
       <div class="card-title" style="justify-content:space-between; cursor: pointer; user-select: none;" onclick="toggleConfigAccordion()">
         <span style="display:flex;align-items:center;gap:10px">
           <span class="chip">🔌</span>파이어베이스 연결
@@ -230,11 +328,8 @@
         <button class="help-btn" id="rulesHelpBtn" style="display:none; background:var(--coral); box-shadow:0 3px 0 var(--coral-dk); margin-top:6px; font-size:12px; padding:4px 12px;" onclick="openRulesHelp()">💡 30일 만료 해결방법 보기</button>
       </div>
     </div>
-  </div>
 
-  <!-- 오른쪽: 방송설정 + 공유 + 바로가기 -->
-  <div class="col">
-    <div class="card">
+    <div class="card" id="broadcastCard">
       <div class="card-title"><span class="chip">⏰</span>방송 설정</div>
       <div class="grid2">
         <div class="field"><label>총 방송 시간 (분)</label><input id="totalMinutes" type="number" value="10" min="1" max="60"></div>
@@ -243,35 +338,27 @@
       <button class="btn" style="margin-top:6px" onclick="saveBroadcast()">저장하기</button>
     </div>
 
-    <div class="card grow" id="shareCard">
-      <div class="card-title"><span class="chip">📲</span>기기에 공유하기</div>
-      <p class="hint">학생 기기·부스 PC는 설정이 따로 저장돼요. 아래 링크로 열면 설정이 저절로 적용됩니다.</p>
-      <div class="share-btns">
-        <button class="btn btn-outline" onclick="copyShare('submission.html', this)">📱 학생 사연 링크</button>
-        <button class="btn btn-outline" onclick="copyShare('booth.html', this)">🎙️ 부스 링크</button>
-      </div>
-      <div class="qr-wrap" id="qrWrap" style="flex-direction: column; align-items: center;">
-        <div style="display: flex; align-items: center; gap: 16px; width: 100%;">
-          <div class="qr-box" id="qrClickTarget" title="클릭하면 큰 파일로 다운로드합니다" style="cursor: pointer;" onclick="downloadQRCode()">
-            <div id="qrcode"></div>
-          </div>
-          <div class="qr-caption">
-            학생용 사연 링크 QR<br>
-            <span class="muted">휴대폰 카메라로 찰칵!</span><br>
-            <button class="btn-sm btn-sm-secondary" style="margin-top: 8px; font-size: 11px; padding: 4px 10px;" onclick="downloadQRCode()">💾 QR 이미지 다운로드</button>
-          </div>
+    <div class="card" id="shareCard" style="display: none;">
+      <div class="card-title"><span class="chip">📲</span>기기 공유 및 바로가기</div>
+      <p class="hint" style="margin-bottom: clamp(6px, 1vh, 12px);">학생용 사연 보내기 페이지와 방송 부스 페이지 링크/QR을 확인합니다.</p>
+      
+      <div class="share-shortcuts-row">
+        <div class="action-group">
+          <a href="submission.html" id="linkGoSubmission" target="_blank" class="action-btn main-btn" title="사연 보내기 페이지 열기">✉️ 사연 보내기</a>
+          <button onclick="copyShare('submission.html', this)" class="action-btn sub-btn" title="링크 복사">📋 복사</button>
         </div>
+        
+        <div class="action-group">
+          <a href="booth.html" id="linkGoBooth" target="_blank" class="action-btn main-btn" title="방송 부스 페이지 열기">🎙️ 방송 부스</a>
+          <button onclick="copyShare('booth.html', this)" class="action-btn sub-btn" title="링크 복사">📋 복사</button>
+        </div>
+        
+        <button class="action-btn qr-btn" onclick="openQrModal()" title="QR 코드 보기">📱 사연 QR</button>
       </div>
-    </div>
-
-    <div class="links">
-      <a href="submission.html" class="link-card"><span class="icon">✉️</span><div class="name">사연 보내기</div><div class="desc">학생들이 여기로</div></a>
-      <a href="booth.html" class="link-card"><span class="icon">🎙️</span><div class="name">방송 부스</div><div class="desc">PC에서 열기</div></a>
     </div>
   </div>
 
-  <!-- 사연 관리 패널 -->
-  <div class="card" id="storyManagerCard" style="margin-top: clamp(12px,1.4vw,26px); display: none; flex-direction: column;">
+  <div class="card grow" id="storyManagerCard" style="display: none; flex-direction: column;">
     <div class="card-title" style="justify-content:space-between; flex-wrap: wrap; gap: 10px; margin-bottom: clamp(10px,1.5vh,18px);">
       <span style="display:flex;align-items:center;gap:10px"><span class="chip">📋</span>사연 실시간 관리</span>
       <div style="display:flex; gap:8px; flex-wrap: wrap;">
@@ -281,40 +368,7 @@
       </div>
     </div>
     
-    <div style="overflow-x: auto;">
-      <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: clamp(13px, 1.5vh, 16px);">
-        <thead>
-          <tr style="border-bottom: 2px solid var(--line); color: var(--wood-dk);">
-            <th style="padding: 10px 8px; width: 60px;">순서</th>
-            <th style="padding: 10px 8px; width: 90px;">신청자</th>
-            <th style="padding: 10px 8px; width: 180px;">신청곡</th>
-            <th style="padding: 10px 8px;">사연 내용</th>
-            <th style="padding: 10px 8px; width: 100px; text-align: center;">방송 포함</th>
-            <th style="padding: 10px 8px; width: 100px; text-align: center;">상태</th>
-            <th style="padding: 10px 8px; width: 140px; text-align: center;">관리</th>
-          </tr>
-        </thead>
-        <tbody id="storyListBody">
-          <tr>
-            <td colspan="7" style="padding: 20px; text-align: center; color: var(--muted);">사연을 불러오는 중...</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- 사연 관리 패널 -->
-  <div class="card" id="storyManagerCard" style="margin-top: clamp(12px,1.4vw,26px); display: none; flex-direction: column;">
-    <div class="card-title" style="justify-content:space-between; flex-wrap: wrap; gap: 10px; margin-bottom: clamp(10px,1.5vh,18px);">
-      <span style="display:flex;align-items:center;gap:10px"><span class="chip">📋</span>사연 실시간 관리</span>
-      <div style="display:flex; gap:8px; flex-wrap: wrap;">
-        <button class="help-btn" style="background:var(--mint); box-shadow:0 4px 0 #6FA46A;" onclick="resetAllStoriesPlayed()">🔄 모든 사연 대기로 초기화</button>
-        <button class="help-btn" style="background:var(--muted); box-shadow:0 4px 0 #8C755A;" onclick="deleteAllPlayedStories()">🧹 방송 완료 사연만 삭제</button>
-        <button class="help-btn" style="background:var(--coral); box-shadow:0 4px 0 var(--coral-dk);" onclick="deleteAllStories()">⚠️ 모든 사연 삭제</button>
-      </div>
-    </div>
-    
-    <div style="overflow-x: auto;">
+    <div class="story-table-wrap">
       <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: clamp(13px, 1.5vh, 16px);">
         <thead>
           <tr style="border-bottom: 2px solid var(--line); color: var(--wood-dk);">
@@ -340,28 +394,24 @@
 
 <div class="toast" id="toast">✅ 저장 완료!</div>
 
-<!-- 파이어베이스 사용법 팝업 -->
 <div class="modal-overlay" id="helpModal" onclick="if(event.target===this) closeHelp()">
   <div class="modal">
     <button class="modal-x" onclick="closeHelp()" aria-label="닫기">✕</button>
     <h2>📘 파이어베이스 사용법 간단리뷰</h2>
     <p class="lead">학생들의 사연을 모으려면 무료 데이터베이스인 <b>파이어베이스</b>를 딱 한 번만 연결하면 돼요. 아래 순서대로 따라 해보세요.</p>
     <div class="step"><div class="n">1</div><div class="tx"><b>firebase.google.com</b> 접속 → 구글 로그인 → <b>시작하기</b> 클릭</div></div>
-    <div class="step"><div class="n">2</div><div class="tx"><b>프로젝트 추가</b> → 이름 입력 (예: classroom-radio) → 애널리틱스는 <b>사용 안 함</b> → 만들기</div></div>
-    <div class="step"><div class="n">3</div><div class="tx">프로젝트 화면 가운데 <b>&lt;/&gt; (웹)</b> 아이콘 클릭 → 앱 닉네임 입력.<br><span style="color:#F2613F">⚠️ 아래 <b style="color:#F2613F">"이 앱의 Firebase 호스팅도 설정"</b> 체크박스는 <b style="color:#F2613F">체크하지 말고 비워두세요.</b></span> → <b>앱 등록</b> 클릭</div></div>
-    <div class="step"><div class="n">4</div><div class="tx">등록하면 <b>"Firebase SDK 추가"</b> 화면이 떠요. 위쪽에 <b>npm</b> / <b>&lt;/&gt; 스크립트 사용</b> 두 개의 탭(버튼)이 있는데, 꼭 <b>&lt;/&gt; 스크립트 사용</b> 쪽을 누르세요.<br><span style="color:#A98E6F">(npm 탭은 설치 명령어만 나와서 설정이 비어 보여요)</span></div></div>
-    <div class="step"><div class="n">5</div><div class="tx">그러면 <b>const firebaseConfig = { apiKey: "…", … }</b> 코드가 나타나요. 이 <b>{ } 부분 전체</b>를 드래그해 복사 → 이 설정창의 <b>전체 설정 붙여넣기</b> 칸에 붙여넣기 → <b>자동 채우기</b> → <b>설정 저장하기</b></div></div>
-    <div class="step"><div class="n">6</div><div class="tx">왼쪽 메뉴 <b>Firestore Database</b> ➜ <b>[데이터베이스 만들기] (필수!)</b> ➜ <b>테스트 모드</b> 선택 ➜ 위치 선택(한국에서 빠른 <b>asia-northeast3(서울)</b> 또는 기본값인 <b>nam5(미국 다중 리전)/us-central</b> 모두 평생 무료 적용) ➜ <b>사용 설정</b></div></div>
+    <div class="step"><div class="n">2</div><div class="tx"><b>프로젝트 추가</b> → 이름 입력 → 애널리틱스 <b>사용 안 함</b> → 만들기</div></div>
+    <div class="step"><div class="n">3</div><div class="tx">프로젝트 화면 가운데 <b>&lt;/&gt; (웹)</b> 아이콘 클릭 → 앱 닉네임 입력 → <b>앱 등록</b></div></div>
+    <div class="step"><div class="n">4</div><div class="tx"><b>"Firebase SDK 추가"</b> 화면에서 <b>&lt;/&gt; 스크립트 사용</b> 탭을 클릭</div></div>
+    <div class="step"><div class="n">5</div><div class="tx"><b>const firebaseConfig = { ... }</b> 코드 전체를 복사 → 이 설정창의 <b>전체 설정 붙여넣기</b> 칸에 붙여넣기 → <b>자동 채우기</b> → <b>설정 저장하기</b></div></div>
+    <div class="step"><div class="n">6</div><div class="tx">왼쪽 메뉴 <b>Firestore Database</b> ➜ <b>[데이터베이스 만들기]</b> ➜ <b>테스트 모드</b> ➜ 위치(기본) ➜ <b>사용 설정</b></div></div>
     <div class="tip" style="border-color: #FFB9A6; background: #FFE3DC; color: var(--coral-dk);">
-      ⚠️ <b>[중요] 데이터베이스판을 실제로 개설하지 않으면 사연 전송 시 무한 대기(타임아웃)가 발생합니다.</b> 6단계의 '데이터베이스 만들기' 과정을 꼭 완료해 주세요.
+      ⚠️ <b>[중요] 데이터베이스를 개설하지 않으면 사연 전송 시 무한 대기(타임아웃)가 발생합니다.</b> 6단계를 꼭 완료해 주세요.
     </div>
-    <div class="tip">💡 설정 화면을 이미 닫았다면? <b>⚙️ 프로젝트 설정 ➜ 일반 ➜ 내 앱 ➜ SDK 설정 및 구성</b>에서 <b>'구성(Config)'</b>을 고르면 firebaseConfig를 다시 볼 수 있어요.</div>
-    <div class="tip">💡 테스트 모드는 30일 후 만료돼요. 행사용으로 잠깐 쓰면 그대로 두어도 되고, 계속 쓰려면 나중에 보안 규칙만 설정하면 됩니다.</div>
     <button class="modal-close" onclick="closeHelp()">알겠어요! 닫기</button>
   </div>
 </div>
 
-<!-- 파이어베이스 규칙 만료 해결 가이드 팝업 -->
 <div class="modal-overlay" id="rulesHelpModal" onclick="if(event.target===this) closeRulesHelp()">
   <div class="modal" style="max-width: 600px;">
     <button class="modal-x" onclick="closeRulesHelp()" aria-label="닫기">✕</button>
@@ -370,15 +420,11 @@
     
     <div class="step">
       <div class="n">1</div>
-      <div class="tx">구글 크롬에서 <b>Firebase Console</b>에 접속한 뒤, 내 프로젝트의 <b>Firestore Database</b> 메뉴로 들어갑니다.</div>
+      <div class="tx">Firebase Console ➜ <b>Firestore Database</b> ➜ 상단 <b>[규칙 (Rules)]</b> 탭 클릭</div>
     </div>
     <div class="step">
       <div class="n">2</div>
-      <div class="tx">상단의 <b>[규칙 (Rules)]</b> 탭을 클릭합니다.</div>
-    </div>
-    <div class="step">
-      <div class="n">3</div>
-      <div class="tx">기존 코드를 모두 지우고, 아래의 <b>평생 무료 연장 코드</b>를 그대로 복사해서 붙여넣습니다.</div>
+      <div class="tx">기존 코드를 모두 지우고, 아래의 <b>평생 무료 연장 코드</b>를 복사-붙여넣습니다.</div>
     </div>
     
     <div style="position: relative; margin: 15px 0;">
@@ -394,14 +440,19 @@ service cloud.firestore {
     </div>
     
     <div class="step">
-      <div class="n">4</div>
-      <div class="tx">우측 상단의 <b>[게시 (Publish)]</b> 버튼을 누르면 끝! 이제 언제든지 만료 없이 사연 전송이 가능합니다. 🎉</div>
-    </div>
-    
-    <div class="tip" style="border-color: #FFB9A6; background: #FFE3DC; color: var(--coral-dk); margin-top: 15px;">
-      💡 <b>참고</b>: 학교 교실 등에서 행사용으로 안전하게 쓸 때는 위 코드처럼 <code>allow read, write: if true;</code>로 설정하면 누구나 사연을 보낼 수 있어 가장 간단하고 안전합니다.
+      <div class="n">3</div>
+      <div class="tx">우측 상단의 <b>[게시 (Publish)]</b> 버튼을 누르면 끝! 🎉</div>
     </div>
     <button class="modal-close" onclick="closeRulesHelp()">가이드 닫기</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="qrModal" onclick="if(event.target===this) closeQrModal()">
+  <div class="modal" style="text-align: center; max-width: 300px;">
+    <button class="modal-x" onclick="closeQrModal()" aria-label="닫기">✕</button>
+    <h2>📱 사연 QR 코드</h2>
+    <div id="qrcode" style="display: flex; justify-content: center; margin: 20px 0;"></div>
+    <button class="modal-close" onclick="closeQrModal()">닫기</button>
   </div>
 </div>
 
@@ -432,14 +483,9 @@ service cloud.firestore {
     const bcast = JSON.parse(localStorage.getItem('radioBroadcast') || '{}');
     if (bcast.totalMinutes) document.getElementById('totalMinutes').value = bcast.totalMinutes;
     if (bcast.sessionName) document.getElementById('sessionName').value = bcast.sessionName;
-    renderShare();
     updateExpirationDisplay();
     initFirebaseManager();
   };
-
-  if (document.readyState === 'complete' || document.readyState === 'interactive') {
-    setTimeout(window.onload, 1);
-  }
 
   window.toggleConfigAccordion = function() {
     const content = document.getElementById('configAccordion');
@@ -458,63 +504,38 @@ service cloud.firestore {
       if (m) { document.getElementById(k).value = m[1]; found++; }
     });
     if (found) showToast(found + '개 항목 자동 입력됨 — 저장을 눌러주세요');
-    else alert('설정을 찾지 못했어요. firebaseConfig = { ... } 전체를 붙여넣었는지 확인하세요.');
+    else alert('설정을 찾지 못했어요.');
   };
 
-  function buildShareUrl(page) {
-    const cfg = JSON.parse(localStorage.getItem('radioFirebaseConfig') || '{}');
-    const bcast = JSON.parse(localStorage.getItem('radioBroadcast') || '{}');
-    if (!cfg.apiKey) { alert('먼저 Firebase 설정을 저장해주세요.'); return null; }
-    const payload = btoa(unescape(encodeURIComponent(JSON.stringify({ firebase: cfg, broadcast: bcast }))));
-    const u = new URL(page, location.href);
-    u.hash = 's=' + payload;
-    return u.href;
-  }
-
   window.copyShare = async function(page, btn) {
-    const url = buildShareUrl(page);
-    if (!url) return;
+    const url = btn.parentElement.querySelector('a').href;
     try { await navigator.clipboard.writeText(url); }
     catch (e) { prompt('아래 링크를 복사하세요:', url); }
     const orig = btn.textContent;
-    btn.textContent = '✅ 복사됨!';
+    btn.textContent = '✅ 완료!';
     setTimeout(() => { btn.textContent = orig; }, 1800);
   };
 
   function renderShare() {
     const cfg = JSON.parse(localStorage.getItem('radioFirebaseConfig') || '{}');
-    const wrap = document.getElementById('qrWrap');
-    if (!cfg.apiKey) { wrap.style.display = 'none'; return; }
+    if (!cfg.apiKey) return;
     const bcast = JSON.parse(localStorage.getItem('radioBroadcast') || '{}');
     const payload = btoa(unescape(encodeURIComponent(JSON.stringify({ firebase: cfg, broadcast: bcast }))));
-    const u = new URL('submission.html', location.href);
-    u.hash = 's=' + payload;
+    
+    const uSub = new URL('submission.html', location.href);
+    uSub.hash = 's=' + payload;
+    document.getElementById('linkGoSubmission').href = uSub.href;
+    
+    const uBooth = new URL('booth.html', location.href);
+    uBooth.hash = 's=' + payload;
+    document.getElementById('linkGoBooth').href = uBooth.href;
+
     const box = document.getElementById('qrcode');
     box.innerHTML = '';
     if (window.QRCode) {
-      new QRCode(box, { text: u.href, width: 120, height: 120, correctLevel: QRCode.CorrectLevel.L });
+      new QRCode(box, { text: uSub.href, width: 160, height: 160, correctLevel: QRCode.CorrectLevel.L });
     }
-    wrap.style.display = 'flex';
   }
-
-  window.downloadQRCode = function() {
-    const qrCanvas = document.querySelector('#qrcode canvas');
-    const qrImg = document.querySelector('#qrcode img');
-    
-    if (qrCanvas) {
-      const link = document.createElement('a');
-      link.href = qrCanvas.toDataURL('image/png');
-      link.download = '학급라디오_사연링크_QR.png';
-      link.click();
-    } else if (qrImg && qrImg.src) {
-      const link = document.createElement('a');
-      link.href = qrImg.src;
-      link.download = '학급라디오_사연링크_QR.png';
-      link.click();
-    } else {
-      alert('QR 코드가 아직 생성되지 않았습니다.');
-    }
-  };
 
   window.saveConfig = function() {
     const cfg = {
@@ -530,10 +551,8 @@ service cloud.firestore {
     localStorage.setItem('radioConfigSavedDate', new Date().toISOString());
     document.getElementById('savedBadge').style.display = 'block';
     showToast('Firebase 설정 저장 완료!');
-    renderShare();
     updateExpirationDisplay();
     initFirebaseManager();
-    
     setTimeout(() => {
       document.getElementById('configAccordion').classList.add('collapsed');
       document.getElementById('accordionIcon').classList.add('rotated');
@@ -544,18 +563,11 @@ service cloud.firestore {
     const savedDateStr = localStorage.getItem('radioConfigSavedDate');
     const warningEl = document.getElementById('expirationWarning');
     const btnEl = document.getElementById('rulesHelpBtn');
-    if (!savedDateStr || !warningEl) {
-      if (warningEl) warningEl.textContent = '';
-      if (btnEl) btnEl.style.display = 'none';
-      return;
-    }
+    if (!savedDateStr || !warningEl) return;
     const savedDate = new Date(savedDateStr);
     const expireDate = new Date(savedDate.getTime() + 30 * 24 * 60 * 60 * 1000); 
     const now = new Date();
-    
-    const diffTime = expireDate - now;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
+    const diffDays = Math.ceil((expireDate - now) / (1000 * 60 * 60 * 24));
     const formatDate = (d) => `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일`;
     
     if (diffDays > 0) {
