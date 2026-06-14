@@ -2577,6 +2577,82 @@ const ENDING_QUESTIONS: Record<string, string> = {
   E33: "발사믹 식초와 올리브유에 찍어 먹어볼까요?",
 }
 
+const ENDING_RECIPES: Record<string, string> = {
+  E01: "재료: 감자·소금·식용유\n감자 채 썰어 물기 빼기 → 팬에 기름 두르고 납작하게 눌러 앞뒤 바삭하게 굽기 → 소금으로 간! 케첩과 함께 즐기세요.",
+  E02: "재료: 돼지등뼈·감자·깻잎·고춧가루\n뼈 핏물 빼고 푹 삶기 → 고추장·된장 양념과 감자 넣어 끓이기 → 들깨가루·깻잎으로 마무리! 얼큰하고 구수한 한 냄비.",
+  E03: "재료: 감자·식용유·소금\n감자 최대한 얇게 슬라이스 → 기름에 바삭하게 튀기기 → 소금 솔솔! 좋아하는 파우더를 뿌려 나만의 맛을 만들어 보세요.",
+  E04: "재료: 감자·밀가루·소금\n감자 갈아 면포로 물기 짜기 → 동그랗게 빚어 끓는 물에 삶기 → 육수에 넣어 완성! 투명하게 익은 쫄깃함이 일품이에요.",
+  E05: "재료: 감자·간장·설탕·참기름\n감자 한입 크기로 썰기 → 간장·설탕·물로 자작하게 조리기 → 참기름·통깨로 마무리! 밥 위에 올려 먹으면 든든해요.",
+  E06: "재료: 감자·당근·소금·참기름\n감자·당근 채 썰기 → 팬에 기름 두르고 볶기 → 소금으로 간, 참기름 한 방울! 도시락 반찬으로 완벽해요.",
+  E07: "재료: 소시지·감자·튀김가루·기름\n소시지에 튀김반죽 입히기 → 다진 감자를 굴려 붙이기 → 기름에 황금빛 되도록 튀기기! 설탕에 살짝 찍어 드세요.",
+  E08: "재료: 감자·달걀·오이·마요네즈\n감자 삶아 으깨기 → 달걀·오이 썰어 섞기 → 마요네즈·소금으로 버무리기! 차게 식혀 먹으면 더 맛있어요.",
+  E09: "재료: 감자·달걀·파·간장\n감자 깍뚝썰어 볶기 → 물 붓고 끓이기 → 달걀 풀어 넣고 파 송송 올리기! 후추 한 꼬집으로 향을 살려요.",
+  E10: "재료: 감자·슬라이스 치즈·소금·기름\n감자 두툼한 쐐기형으로 썰기 → 기름에 바삭하게 튀기기 → 뜨거울 때 치즈 올리면 살살 녹아요!",
+  E11: "재료: 감자·우유·버터·소금\n감자 삶아 믹서에 갈기 → 우유·버터 넣고 약불에 저으며 끓이기 → 소금·후추로 간! 크루통 올리면 완성이에요.",
+  E12: "재료: 감자·생크림·치즈·소금\n감자 얇게 슬라이스 → 생크림·소금에 버무리기 → 치즈 듬뿍 얹어 200°C 오븐에 30분! 노릇한 윗면이 완성 신호예요.",
+  E13: "재료: 감자·꼬치·기름·치즈파우더\n감자를 꼬치에 꿰어 나선형으로 썰기 → 기름에 바삭하게 튀기기 → 치즈파우더 듬뿍! 유원지 필수 아이템.",
+  E14: "재료: 알감자·간장·올리고당·참기름\n알감자 삶아 껍질 벗기기 → 간장·올리고당으로 윤기 나게 졸이기 → 참기름·통깨로 마무리! 한입에 쏙 넣어요.",
+  E15: "재료: 알감자·버터·소금\n알감자 삶아 반으로 가르기 → 팬에 버터 녹여 노릇하게 굽기 → 소금이나 설탕으로 기호에 맞게 간! 달콤 고소해요.",
+  E16: "재료: 쌀·감자·소금\n쌀 씻어 불리기 → 깍뚝썬 감자 얹어 밥솥 취사 → 간장·참기름·깨로 양념장 만들어 쓱쓱 비비기! 다른 반찬이 필요 없어요.",
+  E17: "재료: 감자·밀가루·달걀·소금\n감자 삶아 으깨기 → 밀가루·달걀·소금 넣어 반죽 → 작게 잘라 끓는 물에 익히기 → 크림소스나 토마토소스로!",
+  E18: "재료: 감자·햄·치즈·빵가루·기름\n감자 삶아 으깨 햄·치즈 섞기 → 모양 빚어 빵가루 입히기 → 황금빛 될 때까지 튀기기! 겉바속촉 완성.",
+  E19: "재료: 감자·식용유·소금\n감자 길쭉하게 썰기 → 160°C 저온 1차 튀김, 190°C 고온 2차 튀김! 2번 튀겨야 바삭해요. 소금 뿌리고 케첩 찍어 드세요.",
+  E20: "재료: 감자\n감자 갈아 물에 충분히 담가두기 → 녹말이 가라앉으면 윗물 따라 버리기 → 건조시켜 고운 체에 거르기! 무궁무진한 요리에 활용하세요.",
+  E21: "재료: 감자·버터·우유·소금\n감자 삶아 뜨거울 때 으깨기 → 버터·따뜻한 우유 넣어 부드럽게 섞기 → 소금으로 간! 스테이크 곁들임으로 완벽해요.",
+  E22: "실험 프로토콜: 무게 및 부피 측정 → 전분 함량 분석 (아이오딘 반응) → 수분·단백질·비타민 성분 채취 → 데이터 기록. 오늘도 과학을 위해 수고한 감자에게 박수!",
+  E23: "실험 순서: 감자 절단면 준비 → 아이오딘 용액 한 방울 → 녹말이 많으면 진한 보라색! → 결과 기록 후 보고서 작성. 오늘의 주인공은 전분이에요.",
+  E24: "재료: 감자·장작 (또는 에어프라이어)\n껍질째 잘 씻기 → 불 속 재에 묻어 30분, 또는 에어프라이어 200°C 40분 → 재 털고 껍질 벗겨 호호 불며 드세요!",
+  E25: "재료: 감자·물·찜기\n감자 껍질째 씻기 → 찜기에 올려 센 불로 25~30분 → 젓가락이 쑥 들어가면 완성! 소금·설탕 취향껏 찍어 드세요.",
+  E26: "재료: 감자·부추·소금·식용유\n감자 갈아 물기 짜기 → 부추·소금 넣어 반죽 → 달군 팬에 기름 두르고 지글지글! 바삭한 가장자리가 제일 맛있어요.",
+  E27: "관리법: 눈 2~3개 남겨 4등분 → 자른 면 하루 건조 → 20~30cm 깊이로 심기 → 물 주며 2~3개월 기다리기! 한 알이 여러 알로 다시 태어나요.",
+  E28: "주의사항: 지름 1.2cm, 무게 2.3g. 족집게로 다루고 바람 부는 날은 주의! 먹으려면 돋보기가 필요할 수도. 기네스북 등재 완료, 전 세계가 주목하고 있어요.",
+  E29: "주의사항: 무게 4.9kg 이상, 자동차만한 크기. 크레인으로 수확하고 트럭으로 운반! 온 동네 사람이 나눠 먹어도 남아요. 기네스북 등재 완료!",
+  E30: "배합표: 감자 40% · 옥수수 30% · 대두박 20% · 미네랄 10%. 돼지들의 입맛을 사로잡는 최적 배합! 건강한 돼지가 맛있는 삼겹살이 된다는 사실.",
+  E31: "재료: 감자전분·팥소·설탕\n전분에 뜨거운 물로 반죽하기 → 팥소 넣어 동그랗게 빚기 → 찜기에 15분! 반투명하게 빛나는 쫄깃한 감자떡 완성.",
+  E32: "특이사항: 능력치 0의 초월적 감자. 레시피 없음. 하늘을 올려다보며 감자 모양 구름을 찾아보세요. 발견하면 그게 바로 당신만의 감자 구름이에요.",
+  E33: "재료: 감자·밀가루·올리브오일·로즈마리\n감자 삶아 으깨 밀가루 반죽에 섞기 → 올리브오일 바르고 발효시키기 → 로즈마리·소금 얹어 200°C 오븐에 굽기! 발사믹식초에 찍어 드세요.",
+}
+
+const ENDING_RECIPES_EN: Record<string, string> = {
+  E01: "Ingredients: potato · salt · oil\nShred potato, squeeze out moisture → Press flat in oiled pan, cook both sides until crispy → Season with salt! Serve with ketchup.",
+  E02: "Ingredients: pork spine · potato · perilla · chili paste\nSimmer bones, skim fat → Add seasoning paste and potato, boil → Finish with perilla powder! Spicy and hearty.",
+  E03: "Ingredients: potato · oil · salt\nSlice potato paper-thin → Fry until golden and crispy → Sprinkle salt! Add your favorite powder for a personal twist.",
+  E04: "Ingredients: potato · flour · salt\nGrate potato, squeeze out water → Shape into balls, boil until floating → Serve in broth! Chewy and translucent.",
+  E05: "Ingredients: potato · soy sauce · sugar · sesame oil\nCut potato into chunks → Simmer in soy sauce, sugar & water → Finish with sesame oil & sesame seeds! Perfect with rice.",
+  E06: "Ingredients: potato · carrot · salt · sesame oil\nJulienne potato & carrot → Stir-fry in oil → Season with salt, drizzle sesame oil! Great as a lunchbox side.",
+  E07: "Ingredients: sausage · potato · batter · oil\nCoat sausage in batter → Roll in diced potato → Deep-fry until golden! Dip in sugar for the full experience.",
+  E08: "Ingredients: potato · egg · cucumber · mayo\nBoil & mash potato → Mix in sliced egg & cucumber → Toss with mayo & salt! Chill before serving.",
+  E09: "Ingredients: potato · egg · green onion · soy sauce\nSauté diced potato → Add water and boil → Stir in egg, top with green onion! A pinch of pepper adds depth.",
+  E10: "Ingredients: potato · cheese · salt · oil\nCut potato into thick wedges → Fry until crispy → Top with cheese while hot — it melts beautifully!",
+  E11: "Ingredients: potato · milk · butter · salt\nBoil potato, blend smooth → Stir in warm milk & butter over low heat → Season with salt & pepper! Add croutons to finish.",
+  E12: "Ingredients: potato · cream · cheese · salt\nSlice potato thinly → Toss in cream and salt → Top with lots of cheese, bake at 200°C for 30 min! Golden top = done.",
+  E13: "Ingredients: potato · skewer · oil · cheese powder\nSkewer potato and cut in a spiral → Deep-fry until crispy → Dust with cheese powder! A must-have at the fair.",
+  E14: "Ingredients: baby potatoes · soy sauce · syrup · sesame oil\nBoil baby potatoes, peel → Glaze in soy sauce & syrup until shiny → Finish with sesame oil & seeds! Pop the whole thing in your mouth.",
+  E15: "Ingredients: baby potatoes · butter · salt\nBoil baby potatoes, halve them → Sauté in butter until golden → Season with salt or sugar! Sweet and savory.",
+  E16: "Ingredients: rice · potato · salt\nSoak rice, add diced potato → Cook in rice cooker → Mix with soy sauce, sesame oil & sesame seeds! No other side dish needed.",
+  E17: "Ingredients: potato · flour · egg · salt\nBoil & mash potato → Knead with flour, egg & salt → Cut into pieces, boil until they float → Serve with cream or tomato sauce!",
+  E18: "Ingredients: potato · ham · cheese · breadcrumbs · oil\nMash potato, mix in ham & cheese → Shape, coat in breadcrumbs → Fry until golden! Crispy outside, soft inside.",
+  E19: "Ingredients: potato · oil · salt\nCut into sticks → Fry twice: 160°C then 190°C for max crispiness → Salt & serve with ketchup! The double-fry is the secret.",
+  E20: "Ingredients: potato\nGrate potato, soak in water → Let starch settle to the bottom, drain → Dry and sift! Versatile for thickening soups, making noodles and more.",
+  E21: "Ingredients: potato · butter · milk · salt\nBoil potato, mash while hot → Stir in butter & warm milk until smooth → Season with salt! The perfect steak companion.",
+  E22: "Protocol: Measure weight & volume → Starch test (iodine reaction) → Extract moisture, protein & vitamin samples → Record data. Science salutes this noble potato!",
+  E23: "Procedure: Prepare a cross-section → Drop one drop of iodine solution → Purple = lots of starch! → Record result, write lab report. Today's star: starch.",
+  E24: "Ingredients: potato · campfire (or air fryer)\nWash whole potato → Bury in hot embers 30 min, or air fryer at 200°C 40 min → Brush off ash, peel & blow cool!",
+  E25: "Ingredients: potato · water · steamer\nWash whole potato → Steam on high heat 25–30 min → Poke with chopstick to check! Dip in salt or sugar to taste.",
+  E26: "Ingredients: potato · chives · salt · oil\nGrate potato, squeeze out water → Mix with chives & salt → Fry in oiled pan until crispy! The edges are the best part.",
+  E27: "Care guide: Leave 2–3 eyes, cut into 4 pieces → Air-dry cut sides one day → Plant 20–30 cm deep → Water & wait 2–3 months! One potato becomes many.",
+  E28: "Fun facts: Diameter 1.2 cm, weight 2.3 g. Handle with tweezers; beware the wind! You might need a magnifying glass to eat it. Guinness World Record holder!",
+  E29: "Fun facts: Weighs 4.9 kg+, the size of a car. Requires a crane to harvest and a truck to transport! Feeds the whole neighborhood. Guinness World Record holder!",
+  E30: "Formula: Potato 40% · Corn 30% · Soybean meal 20% · Minerals 10%. The perfect blend to satisfy every pig! Healthy pigs make the tastiest pork — the circle of life.",
+  E31: "Ingredients: potato starch · red bean paste · sugar\nMix starch with hot water into dough → Fill with bean paste, shape into balls → Steam 15 min! Chewy and translucent.",
+  E32: "Special note: A potato with zero stats — transcending all recipes. Look up at the sky and find a potato-shaped cloud. That one is yours, watching over you forever.",
+  E33: "Ingredients: potato · flour · olive oil · rosemary\nMash potato into bread dough → Drizzle olive oil, let rise → Top with rosemary & salt, bake at 200°C! Dip in balsamic vinegar.",
+}
+
+function getEndingRecipe(endingId: string, lang: 'ko' | 'en'): string {
+  return (lang === 'ko' ? ENDING_RECIPES : ENDING_RECIPES_EN)[endingId] ?? ''
+}
+
 function getEndingQuizDecor(endingId: string): { icon: string; accents: string[] } {
   if (['E02', 'E09', 'E11', 'E24'].includes(endingId)) {
     return { icon: '🍲', accents: ['♨️', '🥄', '♨️'] }
@@ -4822,66 +4898,77 @@ function EndingOverlay({ ending, seenCount, onRestart, onCollection, lang }: End
             </button>
           </div>
 
-          {/* Title & Tagline Banner */}
-          <div className="scrapbook-title-banner">
-            <div className="yellow-tape-center" />
-            <div className="scrapbook-title-badge">
-              <span className={`star-decoration star-icon ${seenCount >= 5 ? 'green-star' : 'yellow-star'}`}>★</span>
-              <h2 className="detail-title">{t(ending.title)}</h2>
-              <span className={`star-decoration star-icon ${seenCount >= 5 ? 'green-star' : 'yellow-star'}`}>★</span>
-            </div>
-            <div className="scrapbook-tagline-wrapper">
-              <div className="scrapbook-tagline">
-                {t(ENDING_TAGLINES[ending.endingId] || "평범한 재료로 만든 특별한 한 판")}
-              </div>
-            </div>
-          </div>
-
-          {/* Center Character Sticker */}
-          <figure
-            className={`ending-center-character-wrapper ${ending.endingId === 'E29' ? 'is-giant-ending' : ''}`}
-            aria-label={characterAlt}
-          >
-            {ending.isNew ? <span className="detail-id new-ending-badge">NEW</span> : null}
-            <img
-              src={getEndingIconPath(ending)}
-              alt={characterAlt}
-              className={`center-character-sticker ${ending.endingId === 'E29' ? 'is-giant-ending' : ''}`}
-            />
-          </figure>
-
-          {/* Notebook Memo & Post-it Section */}
-          <div className="scrapbook-body-container">
-            <section className={`notebook-memo ${ending.endingId === 'E29' ? 'is-giant-ending' : ''}`}>
-              <div className="green-tape-left" />
-              <div className="binder-rings">
-                <span className="ring" />
-                <span className="ring" />
-                <span className="ring" />
-                <span className="ring" />
-                <span className="ring" />
-                <span className="ring" />
-              </div>
-              <div className="note-heading">✏️ {t('요리 메모')} ♡</div>
-              <div className="note-content">
-                <p>{formatStoryText(t(getCleanStory(ending.story)))}</p>
-              </div>
-            </section>
-
-            <section className="postit-quiz">
-              <div className="yellow-tape-right" />
-              <div className="quiz-content">
-                <span className="quiz-umbrella-icon">{selectedQuizDecor?.icon || '📌'}</span>
-                <p className="quiz-question">
-                  {t(ENDING_QUESTIONS[ending.endingId] || "비 오는 날에 더 맛있는 이유는 뭘까요?")}
-                </p>
-                <div className="raindrops-decor">
-                  {(selectedQuizDecor?.accents || ['✦', '✦', '✦']).map((accent, idx) => (
-                    <span key={`ending-accent-${idx}`} className="drop">{accent}</span>
-                  ))}
+          {/* Two-column content split */}
+          <div className="ending-content-split">
+            {/* Left column: title + story */}
+            <div className="ending-left-col">
+              {/* Title & Tagline Banner */}
+              <div className="scrapbook-title-banner">
+                <div className="yellow-tape-center" />
+                <div className="scrapbook-title-badge">
+                  <span className={`star-decoration star-icon ${seenCount >= 5 ? 'green-star' : 'yellow-star'}`}>★</span>
+                  <h2 className="detail-title">{t(ending.title)}</h2>
+                  <span className={`star-decoration star-icon ${seenCount >= 5 ? 'green-star' : 'yellow-star'}`}>★</span>
+                </div>
+                <div className="scrapbook-tagline-wrapper">
+                  <div className="scrapbook-tagline">
+                    {t(ENDING_TAGLINES[ending.endingId] || "평범한 재료로 만든 특별한 한 판")}
+                  </div>
                 </div>
               </div>
-            </section>
+              {/* Story Notebook Memo */}
+              <section className="notebook-memo ending-notebook-memo">
+                <div className="green-tape-left" />
+                <div className="binder-rings">
+                  <span className="ring" />
+                  <span className="ring" />
+                  <span className="ring" />
+                  <span className="ring" />
+                  <span className="ring" />
+                  <span className="ring" />
+                </div>
+                <div className="note-heading">✏️ {t('요리 메모')} ♡</div>
+                <div className="note-content">
+                  <p>{formatStoryText(t(getCleanStory(ending.story)))}</p>
+                </div>
+                {getEndingRecipe(ending.endingId, lang) && (
+                  <div className="note-recipe">
+                    <div className="note-recipe-divider" />
+                    <div className="note-recipe-heading">🍳 {lang === 'ko' ? '간단 레시피' : 'Quick Recipe'}</div>
+                    <p className="note-recipe-text">{getEndingRecipe(ending.endingId, lang)}</p>
+                  </div>
+                )}
+              </section>
+            </div>
+
+            {/* Right column: large illustration + speech bubble */}
+            <div className="ending-right-col">
+              <figure
+                className={`ending-center-character-wrapper ending-char-right ${ending.endingId === 'E29' ? 'is-giant-ending' : ''}`}
+                aria-label={characterAlt}
+              >
+                {ending.isNew ? <span className="detail-id new-ending-badge">NEW</span> : null}
+                <img
+                  src={getEndingIconPath(ending)}
+                  alt={characterAlt}
+                  className={`center-character-sticker ending-char-large ${ending.endingId === 'E29' ? 'is-giant-ending' : ''}`}
+                />
+              </figure>
+              <section className="postit-quiz ending-postit-below">
+                <div className="yellow-tape-right" />
+                <div className="quiz-content">
+                  <span className="quiz-umbrella-icon">{selectedQuizDecor?.icon || '📌'}</span>
+                  <p className="quiz-question">
+                    {t(ENDING_QUESTIONS[ending.endingId] || "비 오는 날에 더 맛있는 이유는 뭘까요?")}
+                  </p>
+                  <div className="raindrops-decor">
+                    {(selectedQuizDecor?.accents || ['✦', '✦', '✦']).map((accent, idx) => (
+                      <span key={`ending-accent-${idx}`} className="drop">{accent}</span>
+                    ))}
+                  </div>
+                </div>
+              </section>
+            </div>
           </div>
 
           {/* Bottom Actions */}

@@ -126,7 +126,32 @@ function eventState(lang) {
   };
 }
 
-// Screen 5 – Ending collection (테이블/도감)
+// Screen 5a – Ending screen  (E01=해시브라운, imageIndex 1 matches the image file)
+function endingState(lang) {
+  return {
+    ...ingameState(lang),
+    screen: 'ending',
+    collectionReturnScreen: 'ending',
+    runCount: 4,
+    currentEnding: {
+      endingId: 'E01',
+      imageIndex: 1,
+      title: lang === 'ko' ? '해시브라운' : 'Hash Brown',
+      hint:  lang === 'ko' ? '바삭하고 고소한 아침의 단짝' : 'Crispy and Savory Morning Sidekick',
+      tier: 3,
+      statKeys: ['large', 'shape', 'nutri', 'regist'],
+      score: 2180,
+      isNew: true,
+      story: lang === 'ko'
+        ? '당신이 정성껏 키운 감자는\n잘 자라서 해시브라운이 되었습니다.\n바삭하고 고소한 해시브라운!\n케첩파인가요, 머스터드파인가요?'
+        : 'The potato you grew with love\nbecame a crispy Hash Brown!\nCrunchy on the outside, soft inside.\nTeam ketchup or team mustard?',
+    },
+    unlockedEndingIds: ['E01', 'E02', 'E05'],
+    endingSeenCount: { E01: 3, E02: 1, E05: 1 },
+  };
+}
+
+// Screen 5b – Ending collection (테이블/도감)
 function collectionState(lang) {
   return {
     ...ingameState(lang),
@@ -325,9 +350,10 @@ async function main() {
         await shot('2', 'slots',   slotState(lang),     null,    'intro');
         await shot('3', 'ingame',  ingameState(lang),   null,    'game');
         await shot('4', 'event',   eventState(lang),    null,    'game');
-        await shot('5', 'table',   collectionState(lang), null,  'collection');
+        await shot('5', 'ending',  endingState(lang),   null,    'ending');
+        await shot('6', 'table',   collectionState(lang), null,  'collection');
 
-        await shot('6', 'hall_of_fame',
+        await shot('7', 'hall_of_fame',
           makeBase({ screen:'title', bonus:6, runCount:6,
             unlockedEndingIds:['E01','E02','E05','E07','E09','E12'],
             endingSeenCount:{ E01:3,E02:2,E05:2,E07:1,E09:2,E12:1 } }),
@@ -339,7 +365,7 @@ async function main() {
           }
         );
 
-        await shot('7', 'achievements',
+        await shot('8', 'achievements',
           richTitleState(lang), records, 'title',
           async () => {
             await page.click('button.btn-achievements');
@@ -356,7 +382,7 @@ async function main() {
     server.close();
   }
 
-  const total = LANGUAGES.length * DEVICES.length * 7;
+  const total = LANGUAGES.length * DEVICES.length * 8;
   const ok = total - errorCount;
   console.log(`\n${'─'.repeat(40)}`);
   console.log(`Done: ${ok}/${total} screenshots generated${errorCount ? ` (${errorCount} errors)` : ' ✅'}`);
