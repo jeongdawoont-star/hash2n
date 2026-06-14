@@ -228,8 +228,11 @@
     <div class="step"><div class="n">3</div><div class="tx">프로젝트 화면 가운데 <b>&lt;/&gt; (웹)</b> 아이콘 클릭 → 앱 닉네임 입력.<br><span style="color:#F2613F">⚠️ 아래 <b style="color:#F2613F">"이 앱의 Firebase 호스팅도 설정"</b> 체크박스는 <b style="color:#F2613F">체크하지 말고 비워두세요.</b></span> → <b>앱 등록</b> 클릭</div></div>
     <div class="step"><div class="n">4</div><div class="tx">등록하면 <b>"Firebase SDK 추가"</b> 화면이 떠요. 위쪽에 <b>npm</b> / <b>&lt;/&gt; 스크립트 사용</b> 두 개의 탭(버튼)이 있는데, 꼭 <b>&lt;/&gt; 스크립트 사용</b> 쪽을 누르세요.<br><span style="color:#A98E6F">(npm 탭은 설치 명령어만 나와서 설정이 비어 보여요)</span></div></div>
     <div class="step"><div class="n">5</div><div class="tx">그러면 <b>const firebaseConfig = { apiKey: "…", … }</b> 코드가 나타나요. 이 <b>{ } 부분 전체</b>를 드래그해 복사 → 이 설정창의 <b>전체 설정 붙여넣기</b> 칸에 붙여넣기 → <b>자동 채우기</b> → <b>설정 저장하기</b></div></div>
-    <div class="step"><div class="n">6</div><div class="tx">왼쪽 메뉴 <b>Firestore Database</b> → <b>데이터베이스 만들기</b> → <b>테스트 모드</b> → 위치 <b>asia-northeast3(서울)</b> → 사용 설정</div></div>
-    <div class="tip">💡 설정 화면을 이미 닫았다면? <b>⚙️ 프로젝트 설정 → 일반 → 내 앱 → SDK 설정 및 구성</b>에서 <b>'구성(Config)'</b>을 고르면 firebaseConfig를 다시 볼 수 있어요.</div>
+    <div class="step"><div class="n">6</div><div class="tx">왼쪽 메뉴 <b>Firestore Database</b> ➜ <b>[데이터베이스 만들기] (필수!)</b> ➜ <b>테스트 모드</b> 선택 ➜ 위치 선택(한국에서 빠른 <b>asia-northeast3(서울)</b> 또는 기본값인 <b>nam5(미국 다중 리전)/us-central</b> 모두 평생 무료 적용) ➜ <b>사용 설정</b></div></div>
+    <div class="tip" style="border-color: #FFB9A6; background: #FFE3DC; color: var(--coral-dk);">
+      ⚠️ <b>[중요] 데이터베이스판을 실제로 개설하지 않으면 사연 전송 시 무한 대기(타임아웃)가 발생합니다.</b> 6단계의 '데이터베이스 만들기' 과정을 꼭 완료해 주세요.
+    </div>
+    <div class="tip">💡 설정 화면을 이미 닫았다면? <b>⚙️ 프로젝트 설정 ➜ 일반 ➜ 내 앱 ➜ SDK 설정 및 구성</b>에서 <b>'구성(Config)'</b>을 고르면 firebaseConfig를 다시 볼 수 있어요.</div>
     <div class="tip">💡 테스트 모드는 30일 후 만료돼요. 행사용으로 잠깐 쓰면 그대로 두어도 되고, 계속 쓰려면 나중에 보안 규칙만 설정하면 됩니다.</div>
     <button class="modal-close" onclick="closeHelp()">알겠어요! 닫기</button>
   </div>
