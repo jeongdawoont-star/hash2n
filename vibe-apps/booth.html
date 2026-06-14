@@ -169,6 +169,7 @@
   .queue-section::-webkit-scrollbar-thumb { background:var(--line); border-radius:8px; }
   .queue-label { font-family:var(--round); font-size:clamp(13px,0.9vw,17px); color:var(--wood); padding:4px 4px 1vh; }
   .queue-item { background:var(--card); border:3px solid var(--line); border-radius:16px; padding:1.2vh 0.9vw; margin-bottom:1vh; transition:all 0.3s; position:relative; box-shadow:0 5px 0 rgba(184,138,92,0.10); }
+  .queue-item:hover { background: #FFF9F2; transform: translateY(-1px); border-color: var(--coral); }
   .queue-item.active { border-color:var(--coral); background:#FFF3EC; box-shadow:0 6px 0 rgba(255,122,89,0.22); }
   .queue-item.played { opacity:0.45; }
   .queue-item-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; }
@@ -573,7 +574,7 @@
     list.innerHTML = stories.map((s, i) => {
       const isCurrent = i === currentIdx;
       const isPlayed = i < currentIdx;
-      return `<div class="queue-item ${isCurrent ? 'active' : ''} ${isPlayed ? 'played' : ''}">
+      return `<div class="queue-item ${isCurrent ? 'active' : ''} ${isPlayed ? 'played' : ''}" onclick="selectStoryForTesting(${i})" style="cursor:pointer; transition: background 0.2s;">
         ${isCurrent ? '<div class="queue-badge"></div>' : ''}
         <div class="queue-item-header">
           <div class="queue-name">${s.name}</div>
@@ -583,6 +584,41 @@
       </div>`;
     }).join('');
   }
+
+  // 사연/목소리 재생 없이 유튜브 영상만 단독 테스트하기 위한 함수
+  window.selectStoryForTesting = function(idx) {
+    if (idx < 0 || idx >= stories.length) return;
+    
+    // 타이머 및 진행 중인 TTS 목소리 즉시 중단
+    clearInterval(timerInterval);
+    if (window.speechSynthesis) {
+      speechSynthesis.cancel();
+    }
+    setTtsStatus(false, '테스트 모드');
+    
+    currentIdx = idx;
+    const s = stories[idx];
+    
+    // UI 사연 카드 정보 업데이트
+    document.getElementById('storySender').textContent = s.name + '님의 사연 (테스트)';
+    document.getElementById('storySong').textContent = '🎵 ' + s.artist + ' — ' + s.songTitle;
+    buildStoryKaraoke(s.story);
+    document.getElementById('currentNum').textContent = idx + 1;
+    document.getElementById('timeLeft').textContent = `단독 테스트 중`;
+    
+    setMarquee(`[유튜브 테스트] ${s.name}님의 신청곡 | ${s.artist} — ${s.songTitle}`);
+    renderQueue();
+    
+    // 유튜브 영상 로드 및 즉시 재생
+    ytLoad(s.ytUrl);
+    setTimeout(() => {
+      if (ytReady && ytPlayer && ytPlayer.playVideo) {
+        ytPlayer.unMute();
+        ytPlayer.setVolume(80);
+        ytPlayer.playVideo();
+      }
+    }, 500); // 플레이어 상태 반영을 위해 아주 잠깐의 지연 제공
+  };
 
   // ── 타이머 ──
   function startTimer(ms, onEnd) {
