@@ -207,6 +207,76 @@
   .btn-reset { margin-top:3vh; padding:1.4vh 2vw; background:#FFF3E4; border:none; border-radius:16px; color:var(--wood-dk); font-family:var(--round); font-size:clamp(15px,1.3vh,19px); cursor:pointer; transition:all 0.15s; box-shadow:0 6px 0 #E7CBA3; }
   .btn-reset:hover { background:#FFEAD2; transform:translateY(-2px); box-shadow:0 8px 0 #E7CBA3; }
   .btn-reset:active { box-shadow:0 2px 0 #E7CBA3; }
+
+  /* 프리미엄 종료 오버레이 고도화 */
+  .end-overlay {
+    position:absolute; inset:0;
+    background: linear-gradient(135deg, #181109, #312113, #110904);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    z-index:20; display:none; text-align:center; padding:4vh;
+    color: #FFF3EC;
+    overflow: hidden;
+  }
+  
+  /* 밤하늘 별 효과 */
+  .end-overlay::after {
+    content: '';
+    position: absolute; inset: 0; z-index: 0; opacity: 0.35;
+    background-image: 
+      radial-gradient(1px 1px at 20px 30px, #fff, transparent),
+      radial-gradient(1px 1px at 75px 120px, #fff, transparent),
+      radial-gradient(2px 2px at 150px 50px, #FFECA6, transparent),
+      radial-gradient(1px 1px at 220px 280px, #fff, transparent),
+      radial-gradient(2px 2px at 310px 170px, #FFC8A6, transparent),
+      radial-gradient(1px 1px at 390px 80px, #fff, transparent);
+    background-size: 450px 450px;
+    animation: stars-twinkle 6s linear infinite;
+  }
+  @keyframes stars-twinkle {
+    0%, 100% { opacity: 0.35; }
+    50% { opacity: 0.65; }
+  }
+
+  .end-content-box {
+    position: relative; z-index: 2;
+    background: rgba(49, 33, 19, 0.45);
+    border: 3px solid rgba(230, 200, 160, 0.25);
+    backdrop-filter: blur(8px);
+    border-radius: 28px;
+    padding: 4vh 4vw;
+    max-width: 580px; width: 100%;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55), inset 0 0 24px rgba(230, 200, 160, 0.05);
+    animation: slide-up-premium 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes slide-up-premium {
+    from { transform: translateY(40px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  .end-card {
+    background: rgba(251, 239, 216, 0.08);
+    border: 2px solid rgba(230, 200, 160, 0.15);
+    border-radius: 18px;
+    padding: 14px 20px;
+    margin: 16px 0 20px;
+    text-align: center;
+  }
+  .end-card-title {
+    font-family: var(--round); font-size: 13px; color: var(--yellow); letter-spacing: 1px; margin-bottom: 6px;
+  }
+  .end-card-stat {
+    font-family: var(--round); font-size: 22px; color: #FFF; line-height: 1.3;
+  }
+  
+  .end-icon-premium {
+    font-size: 78px; margin-bottom: 12px;
+    filter: drop-shadow(0 0 12px rgba(255, 200, 80, 0.5));
+    animation: float-emoji 3s ease-in-out infinite;
+  }
+  @keyframes float-emoji {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
 </style>
 </head>
 <body>
@@ -220,11 +290,21 @@
 
 <!-- 종료 오버레이 -->
 <div class="end-overlay" id="endOverlay">
-  <div class="end-icon">🌙</div>
-  <div class="end-title">방송이 끝났어요</div>
-  <div class="end-quote" id="endQuote"></div>
-  <div class="end-sub">오늘도 우리 반 라디오를 들어주셔서 고마워요 💛</div>
-  <button class="btn-reset" onclick="location.reload()">↩ 처음으로</button>
+  <div class="end-content-box">
+    <div class="end-icon-premium">🌙</div>
+    <div class="end-title" style="color:#FFE7C5; font-size: clamp(26px, 3vh, 38px);">오늘 방송을 종료합니다</div>
+    
+    <!-- 통계 카드 -->
+    <div class="end-card">
+      <div class="end-card-title">🎙️ 오늘의 마음 전달 기록</div>
+      <div class="end-card-stat" id="endStats">총 0개의 사연을 전달했습니다 💛</div>
+    </div>
+
+    <div class="end-quote" id="endQuote" style="color:var(--yellow); font-size: clamp(16px, 2.1vh, 22px); min-height: 54px; margin-bottom: 20px;"></div>
+    <div class="end-sub" style="color:#D2BEA6; font-size: clamp(13px, 1.4vh, 17px);">따뜻한 사연을 보내준 친구들 고마워요. 내일 또 만나요!</div>
+    
+    <button class="btn-reset" onclick="location.reload()" style="background:var(--coral); color:#fff; box-shadow:0 6px 0 var(--coral-dk); border-radius:14px; margin-top:20px; font-size: 16px; padding: 12px 28px;">↩ 처음으로 돌아가기</button>
+  </div>
 </div>
 
 <!-- 전광판 (LED 사인보드) -->
@@ -279,8 +359,8 @@
     </div>
 
     <div class="timer-row">
-      <div class="timer-label">🎵 노래 타이머</div>
-      <div class="timer-bar-wrap"><div class="timer-bar-fill" id="timerFill" style="width:0%"></div></div>
+      <div class="timer-label">📻 방송 타이머</div>
+      <div class="timer-bar-wrap"><div class="timer-bar-fill" id="timerFill" style="width:100%"></div></div>
       <div class="timer-digits" id="timerDigits">--:--</div>
     </div>
   </div>
@@ -289,10 +369,17 @@
     <div class="yt-section">
       <div class="yt-label">🎬 유튜브 플레이어</div>
       <div class="yt-box"><div id="ytFrame"></div></div>
-      <div class="yt-controls">
-        <button class="yt-btn" onclick="ytPlayer && ytPlayer.playVideo()">▶ 재생</button>
-        <button class="yt-btn" onclick="ytPlayer && ytPlayer.pauseVideo()">⏸ 멈춤</button>
-        <button class="yt-btn" onclick="ytPlayer && ytPlayer.setVolume(80)">🔊 음량</button>
+      <div class="yt-controls" style="flex-direction: column; gap: 8px;">
+        <div style="display: flex; gap: 8px; width: 100%;">
+          <button class="yt-btn" onclick="ytPlayer && ytPlayer.playVideo()">▶ 재생</button>
+          <button class="yt-btn" onclick="ytPlayer && ytPlayer.pauseVideo()">⏸ 멈춤</button>
+        </div>
+        <!-- 볼륨 슬라이더 영역 -->
+        <div style="display: flex; align-items: center; gap: 10px; width: 100%; background: #FFF3E4; padding: 6px 12px; border-radius: 12px; border: 2.5px solid var(--line);">
+          <span style="font-size: 13px; font-family: var(--round); color: var(--wood-dk); flex-shrink: 0; display: flex; align-items: center; gap: 4px;">🔊 볼륨</span>
+          <input type="range" id="volumeSlider" min="0" max="100" value="80" oninput="changeVolume(this.value)" style="flex: 1; accent-color: var(--coral); cursor: pointer; height: 6px; border-radius: 999px;">
+          <span id="volumeValue" style="font-family: var(--round); font-size: 12px; color: var(--wood-dk); width: 28px; text-align: right;">80</span>
+        </div>
       </div>
     </div>
 
@@ -316,7 +403,7 @@
 <script type="module">
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
   import {
-    getFirestore, initializeFirestore, collection, getDocs, doc, updateDoc, query, orderBy
+    getFirestore, initializeFirestore, collection, getDocs, doc, updateDoc, query, orderBy, onSnapshot
   } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
   // ── 종료 멘트 ──
@@ -376,19 +463,19 @@
   ];
   const ALL_MESSAGES = [...CLOSING_MESSAGES, ...EXTRA];
 
-  // ── 상태 ──
   let db;
   let stories = [];
   let currentIdx = -1;
   let perStoryMs = 120000;
-  let timerInterval = null;
-  let timerRemain = 0;
+  let globalTimerInterval = null;
+  let globalTimerRemain = 0;
+  let storyTimeout = null;
   let isBroadcasting = false;
   let ttsInProgress = false;
   let karaokeTokens = [];
   let karaokeOffset = 0;
+  let unsubscribeStories = null;
 
-  // ── YouTube Player ──
   window.ytPlayer = null;
   let ytReady = false;
 
@@ -402,14 +489,17 @@
       width: '100%',
       playerVars: playerVars,
       events: {
-        onReady: () => { ytReady = true; },
+        onReady: () => { 
+          ytReady = true; 
+          const vol = parseInt(document.getElementById('volumeSlider').value) || 80;
+          ytPlayer.setVolume(vol);
+        },
         onError: (e) => { console.warn('YouTube 재생 오류 코드:', e.data); },
         onStateChange: () => {}
       }
     });
   };
 
-  // Load YouTube API script dynamically *after* window.onYouTubeIframeAPIReady is defined to avoid race conditions in ES modules
   const tag = document.createElement('script');
   tag.src = "https://www.youtube.com/iframe_api";
   const firstScriptTag = document.getElementsByTagName('script')[0];
@@ -434,7 +524,8 @@
   function ytPlay() {
     if (!ytReady) return;
     ytPlayer.unMute();
-    ytPlayer.setVolume(80);
+    const vol = parseInt(document.getElementById('volumeSlider').value) || 80;
+    ytPlayer.setVolume(vol);
     ytPlayer.playVideo();
   }
   function ytPrime() {
@@ -443,15 +534,30 @@
   }
   function ytFadeOut(callback) {
     if (!ytReady) { callback && callback(); return; }
-    let vol = 80;
+    let vol = parseInt(document.getElementById('volumeSlider').value) || 80;
     const step = setInterval(() => {
       vol -= 8;
-      if (vol <= 0) { ytPlayer.pauseVideo(); ytPlayer.setVolume(80); clearInterval(step); callback && callback(); }
+      if (vol <= 0) { 
+        ytPlayer.pauseVideo(); 
+        const origVol = parseInt(document.getElementById('volumeSlider').value) || 80;
+        ytPlayer.setVolume(origVol); 
+        clearInterval(step); 
+        callback && callback(); 
+      }
       else { ytPlayer.setVolume(vol); }
     }, 200);
   }
 
-  // ── TTS ──
+  window.changeVolume = function(val) {
+    document.getElementById('volumeValue').textContent = val;
+    if (ytReady && ytPlayer && ytPlayer.setVolume) {
+      ytPlayer.setVolume(val);
+      if (val > 0 && ytPlayer.isMuted()) {
+        ytPlayer.unMute();
+      }
+    }
+  };
+
   let koVoice = null;
   let ttsKeepAlive = null;
 
@@ -466,6 +572,12 @@
 
   function speak(text, onEnd, opts) {
     opts = opts || {};
+    if (!opts.ignoreCheck && !isBroadcasting) {
+      if (!window.selectStoryForTestingInProgress) {
+        onEnd && onEnd();
+        return;
+      }
+    }
     if (!window.speechSynthesis) { onEnd && onEnd(); return; }
     speechSynthesis.cancel();
     clearInterval(ttsKeepAlive);
@@ -476,7 +588,6 @@
     utt.rate = 0.95;
     utt.pitch = 1.05;
 
-    // 노래방식 하이라이트: 읽는 위치(charIndex)에 맞춰 어절 강조
     if (opts.karaoke) {
       utt.onboundary = (e) => {
         const rel = e.charIndex - karaokeOffset;
@@ -510,7 +621,6 @@
     document.getElementById('ttsLabel').textContent = label;
   }
 
-  // ── 노래방식 읽기 하이라이트 ──
   function buildStoryKaraoke(story) {
     const body = document.getElementById('storyBody');
     body.innerHTML = '';
@@ -557,14 +667,12 @@
     karaokeTokens.forEach(t => { t.el.classList.remove('reading'); t.el.classList.add('read'); });
   }
 
-  // ── 전광판 ──
   function setMarquee(text) {
     const t = '📻 ' + text + '  ✦  ' + text + '  ✦  ';
     document.getElementById('marqueeText1').textContent = t;
     document.getElementById('marqueeText2').textContent = t;
   }
 
-  // ── 큐 렌더링 ──
   function renderQueue() {
     const list = document.getElementById('queueList');
     if (!stories.length) {
@@ -585,12 +693,10 @@
     }).join('');
   }
 
-  // 사연/목소리 재생 없이 유튜브 영상만 단독 테스트하기 위한 함수
   window.selectStoryForTesting = function(idx) {
     if (idx < 0 || idx >= stories.length) return;
     
-    // 타이머 및 진행 중인 TTS 목소리 즉시 중단
-    clearInterval(timerInterval);
+    clearTimeout(storyTimeout);
     if (window.speechSynthesis) {
       speechSynthesis.cancel();
     }
@@ -599,7 +705,6 @@
     currentIdx = idx;
     const s = stories[idx];
     
-    // UI 사연 카드 정보 업데이트
     document.getElementById('storySender').textContent = s.name + '님의 사연 (테스트)';
     document.getElementById('storySong').textContent = '🎵 ' + s.artist + ' — ' + s.songTitle;
     buildStoryKaraoke(s.story);
@@ -609,39 +714,46 @@
     setMarquee(`[유튜브 테스트] ${s.name}님의 신청곡 | ${s.artist} — ${s.songTitle}`);
     renderQueue();
     
-    // 유튜브 영상 로드 및 즉시 재생
+    window.selectStoryForTestingInProgress = true;
     ytLoad(s.ytUrl);
     setTimeout(() => {
       if (ytReady && ytPlayer && ytPlayer.playVideo) {
         ytPlayer.unMute();
-        ytPlayer.setVolume(80);
+        const vol = parseInt(document.getElementById('volumeSlider').value) || 80;
+        ytPlayer.setVolume(vol);
         ytPlayer.playVideo();
       }
-    }, 500); // 플레이어 상태 반영을 위해 아주 잠깐의 지연 제공
+      window.selectStoryForTestingInProgress = false;
+    }, 500);
   };
 
-  // ── 타이머 ──
-  function startTimer(ms, onEnd) {
-    clearInterval(timerInterval);
-    timerRemain = ms;
+  function startGlobalTimer(ms) {
+    clearInterval(globalTimerInterval);
+    globalTimerRemain = ms;
     const total = ms;
-    updateTimerUI(timerRemain, total);
-    timerInterval = setInterval(() => {
-      timerRemain -= 1000;
-      updateTimerUI(timerRemain, total);
-      if (timerRemain <= 0) { clearInterval(timerInterval); onEnd && onEnd(); }
+    updateGlobalTimerUI(globalTimerRemain, total);
+    
+    globalTimerInterval = setInterval(() => {
+      globalTimerRemain -= 1000;
+      updateGlobalTimerUI(globalTimerRemain, total);
+      
+      if (globalTimerRemain <= 0) {
+        clearInterval(globalTimerInterval);
+        endBroadcast();
+      }
     }, 1000);
   }
-  function updateTimerUI(remain, total) {
-    const pct = Math.max(0, remain / total * 100);
+
+  function updateGlobalTimerUI(remain, total) {
+    const pct = Math.max(0, (remain / total) * 100);
     document.getElementById('timerFill').style.width = pct + '%';
     const sec = Math.max(0, Math.ceil(remain / 1000));
     const m = String(Math.floor(sec / 60)).padStart(2, '0');
     const s = String(sec % 60).padStart(2, '0');
     document.getElementById('timerDigits').textContent = m + ':' + s;
+    document.getElementById('timeLeft').textContent = `남은 시간 ${m}:${s}`;
   }
 
-  // ── 사연 재생 ──
   function playStory(idx) {
     if (idx >= stories.length) { endBroadcast(); return; }
     currentIdx = idx;
@@ -651,7 +763,6 @@
     document.getElementById('storySong').textContent = '🎵 ' + s.artist + ' — ' + s.songTitle;
     buildStoryKaraoke(s.story);
     document.getElementById('currentNum').textContent = idx + 1;
-    document.getElementById('timeLeft').textContent = `사연 ${idx + 1} / ${stories.length}`;
 
     setMarquee(`${s.name}님의 사연 | ${s.artist} — ${s.songTitle}`);
     renderQueue();
@@ -663,18 +774,19 @@
     speak(ttsText, () => {
       setTtsStatus(false, '읽기 완료');
       ytPlay();
-      startTimer(perStoryMs, () => {
+      
+      clearTimeout(storyTimeout);
+      storyTimeout = setTimeout(() => {
         markStoryAsPlayed(s.id);
         ytFadeOut(() => { playStory(idx + 1); });
-      });
+      }, perStoryMs);
     }, { karaoke: true });
   }
 
-  // ── 방송 시작 ──
   window.startBroadcast = async function() {
     if (!stories.length) { alert('사연이 없습니다. 학생들에게 사연을 먼저 받아주세요.'); return; }
 
-    stopSubscribingStories(); // 방송 시작과 함께 사연 목록 구독 해제하여 큐 고정
+    stopSubscribingStories();
 
     isBroadcasting = true;
     document.getElementById('startBtn').disabled = true;
@@ -693,17 +805,19 @@
     ytLoad(stories[0].ytUrl);
     ytPrime();
 
+    startGlobalTimer(totalMs);
+
     const sessionName = bcast.sessionName || '우리 반 라디오';
     setMarquee(`${sessionName} 시작합니다! 총 ${stories.length}개의 사연을 들려드립니다.`);
     speak(`안녕하세요, ${sessionName}입니다. 오늘 총 ${stories.length}개의 사연을 들려드릴게요. 지금 바로 시작합니다!`, () => {
       playStory(0);
-    });
+    }, { ignoreCheck: true });
   };
 
   // ── 다음 사연 ──
   window.skipCurrent = function() {
     if (!isBroadcasting) return;
-    clearInterval(timerInterval);
+    clearTimeout(storyTimeout);
     speechSynthesis.cancel();
     
     // 현재 스킵하는 사연 완료 처리
@@ -717,7 +831,8 @@
   // ── 방송 종료 ──
   function endBroadcast() {
     isBroadcasting = false;
-    clearInterval(timerInterval);
+    clearTimeout(storyTimeout);
+    clearInterval(globalTimerInterval);
 
     // 현재 진행 중이던 사연 완료 처리
     if (currentIdx >= 0 && stories[currentIdx]) {
@@ -728,10 +843,15 @@
     const bcast = JSON.parse(localStorage.getItem('radioBroadcast') || '{}');
     const sessionName = bcast.sessionName || '우리 반 라디오';
 
+    // 통계 입력: 실제 방송 완료된 사연 계산
+    let playedCount = currentIdx >= 0 ? (currentIdx + 1) : 0;
+    if (stories.length === 0) playedCount = 0;
+    
+    document.getElementById('endStats').textContent = `오늘 총 ${playedCount}개의 소중한 사연을 전달했습니다 💛`;
     document.getElementById('endQuote').textContent = msg;
     document.getElementById('endOverlay').style.display = 'flex';
 
-    speak(`${msg} 오늘 ${sessionName}을 들어주셔서 감사합니다. 다음에 또 만나요!`, null);
+    speak(`${msg} 오늘 ${sessionName}을 들어주셔서 감사합니다. 다음에 또 만나요!`, null, { ignoreCheck: true });
     setMarquee('방송이 종료되었습니다. 감사합니다! 🎵');
   }
 
