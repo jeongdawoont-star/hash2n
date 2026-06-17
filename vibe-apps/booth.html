@@ -534,10 +534,28 @@
           ytPlayer.setVolume(vol);
         },
         onError: (e) => { console.warn('YouTube 재생 오류 코드:', e.data); },
-        onStateChange: () => {}
+        onStateChange: (e) => {
+          if (e.data === 0) { // YT.PlayerState.ENDED
+            handleSongEnded();
+          }
+        }
       }
     });
   };
+
+  function handleSongEnded() {
+    if (!isBroadcasting || hasEnded) return;
+    clearTimeout(storyTimeout);
+    
+    // 현재 진행 중이던 사연 완료 처리
+    if (currentIdx >= 0 && stories[currentIdx]) {
+      markStoryAsPlayed(stories[currentIdx].id);
+    }
+    
+    ytFadeOut(() => {
+      if (!hasEnded) playStory(currentIdx + 1);
+    });
+  }
 
   const tag = document.createElement('script');
   tag.src = "https://www.youtube.com/iframe_api";
