@@ -308,7 +308,7 @@
 <!-- Firebase -->
 <script type="module">
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-  import { getFirestore, initializeFirestore, collection, addDoc, serverTimestamp, query, orderBy, getDocs }
+  import { getFirestore, initializeFirestore, collection, addDoc, serverTimestamp, query, orderBy, getDocs, doc, getDoc }
     from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
   let db;
@@ -531,10 +531,21 @@
     ]);
 
     try {
+      // 방송중(재생중)인지 확인
+      let isPlaying = false;
+      try {
+        const docSnap = await withTimeout(getDoc(doc(db, 'status', 'broadcast')), 5000);
+        if (docSnap.exists()) {
+          isPlaying = docSnap.data().isPlaying === true;
+        }
+      } catch (err) {
+        console.warn('방송 상태 확인 실패:', err);
+      }
+
       const order = await withTimeout(getNextOrder(), 15000);
       await withTimeout(addDoc(collection(db, 'stories'), {
         name, story, songTitle, artist, ytUrl,
-        order, played: false, createdAt: serverTimestamp()
+        order, played: isPlaying, createdAt: serverTimestamp()
       }), 15000);
 
       document.getElementById('mainForm').style.display = 'none';

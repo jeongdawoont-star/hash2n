@@ -387,8 +387,12 @@
   <!-- 오른쪽 컬럼: 사연 실시간 관리 패널 -->
   <div class="card grow" id="storyManagerCard" style="display: none; flex-direction: column;">
     <div class="card-title" style="justify-content:space-between; flex-wrap: wrap; gap: 10px; margin-bottom: clamp(10px,1.5vh,18px);">
-      <span style="display:flex;align-items:center;gap:10px"><span class="chip">📋</span>사연 실시간 관리</span>
+      <span style="display:flex;align-items:center;gap:10px">
+        <span class="chip">📋</span>사연 실시간 관리
+        <span id="selectedCountBadge" style="font-size: 13px; font-family: var(--body); color: var(--muted); background: var(--cream2); padding: 4px 10px; border-radius: 10px; border: 1.5px solid var(--line); font-weight: normal; margin-left: 4px;">선택: 0개 / 전체: 0개</span>
+      </span>
       <div style="display:flex; gap:8px; flex-wrap: wrap;">
+        <button class="help-btn" style="background:var(--sky, #7FB5C9); box-shadow:0 4px 0 #5A9AB5;" onclick="openHistoryModal()">📜 과거 사연 보기</button>
         <button class="help-btn" style="background:var(--mint); box-shadow:0 4px 0 #6FA46A;" onclick="resetAllStoriesPlayed()">🔄 모든 사연 대기로 초기화</button>
         <button class="help-btn" style="background:var(--muted); box-shadow:0 4px 0 #8C755A;" onclick="deleteAllPlayedStories()">🧹 방송 완료 사연만 삭제</button>
         <button class="help-btn" style="background:var(--coral); box-shadow:0 4px 0 var(--coral-dk);" onclick="deleteAllStories()">⚠️ 모든 사연 삭제</button>
@@ -403,7 +407,12 @@
             <th style="padding: 10px 8px; width: 90px;">신청자</th>
             <th style="padding: 10px 8px; width: 180px;">신청곡</th>
             <th style="padding: 10px 8px;">사연 내용</th>
-            <th style="padding: 10px 8px; width: 100px; text-align: center;">방송 포함</th>
+            <th style="padding: 10px 8px; width: 110px; text-align: center;">
+              <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-family:var(--round);font-size:inherit;color:var(--wood-dk);margin:0;" title="미방송 사연 전체 선택/해제">
+                <input type="checkbox" id="selectAllCheckbox" onchange="toggleAllVisibility(this.checked)" style="width:16px;height:16px;cursor:pointer;accent-color:var(--coral);">
+                방송 포함
+              </label>
+            </th>
             <th style="padding: 10px 8px; width: 100px; text-align: center;">상태</th>
             <th style="padding: 10px 8px; width: 140px; text-align: center;">관리</th>
           </tr>
@@ -486,6 +495,19 @@ service cloud.firestore {
   </div>
 </div>
 
+<!-- 과거(방송 완료) 사연 조회 팝업 모달 -->
+<div class="modal-overlay" id="historyModal" onclick="if(event.target===this) closeHistoryModal()">
+  <div class="modal" style="max-width: 640px;">
+    <button class="modal-x" onclick="closeHistoryModal()" aria-label="닫기">✕</button>
+    <h2>📜 방송 완료 사연 기록</h2>
+    <p class="lead">이번 세션에서 방송이 완료된 사연 목록입니다. <b id="historyCount">0개</b>의 사연이 방송되었습니다.</p>
+    <div id="historyListWrap" style="max-height: 55vh; overflow-y: auto; margin: 12px 0;">
+      <div style="text-align:center; color:var(--muted); padding:20px;">불러오는 중...</div>
+    </div>
+    <button class="modal-close" onclick="closeHistoryModal()">닫기</button>
+  </div>
+</div>
+
 <!-- QR 코드 모달 -->
 <div class="modal-overlay" id="qrModal" onclick="if(event.target===this) closeQrModal()">
   <div class="modal" style="max-width: 420px; text-align: center;">
@@ -514,6 +536,7 @@ service cloud.firestore {
 
   let db;
   let unsubscribeStories = null;
+  let currentAllStories = []; // 현재 로드된 사연 전체 (toggleAllVisibility에서 사용)
 
   window.onload = function() {
     const cfg = JSON.parse(localStorage.getItem('radioFirebaseConfig') || '{}');
@@ -699,7 +722,6 @@ service cloud.firestore {
 
   window.openHelp = function() { document.getElementById('helpModal').classList.add('show'); };
   window.closeHelp = function() { document.getElementById('helpModal').classList.remove('show'); };
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') window.closeHelp(); });
 
   window.openRulesHelp = function() { document.getElementById('rulesHelpModal').classList.add('show'); };
   window.closeRulesHelp = function() { document.getElementById('rulesHelpModal').classList.remove('show'); };
@@ -722,6 +744,7 @@ service cloud.firestore {
       window.closeHelp();
       window.closeRulesHelp();
       window.closeQrModal();
+      if (window.closeHistoryModal) window.closeHistoryModal();
     }
   });
 
@@ -766,14 +789,57 @@ service cloud.firestore {
 
   function renderStoriesTable(stories) {
     const tbody = document.getElementById('storyListBody');
+    currentAllStories = stories; // 트래킹 저장
+    
+    // 대기 중(방송 포함 예정)인 사연만 카운트 — played:false, hidden:false
+    const totalCount = stories.length;
+    const activeStories = stories.filter(s => s.played !== true && s.hidden !== true);
+    const playedStories = stories.filter(s => s.played === true);
+    const hiddenStories = stories.filter(s => s.hidden === true && s.played !== true);
+    const pendingCount = stories.filter(s => s.played !== true).length; // 미방송 전체
+    const selectedCount = activeStories.length;
+    const badge = document.getElementById('selectedCountBadge');
+    if (badge) {
+      badge.textContent = `방송 예정: ${selectedCount}개 / 보류: ${hiddenStories.length}개 / 완료: ${playedStories.length}개`;
+    }
+
+    // 헤더 체크박스 상태 동기화
+    const headerCb = document.getElementById('selectAllCheckbox');
+    if (headerCb && pendingCount > 0) {
+      headerCb.indeterminate = false;
+      if (selectedCount === 0) {
+        headerCb.checked = false;
+      } else if (selectedCount === pendingCount) {
+        headerCb.checked = true;
+      } else {
+        headerCb.indeterminate = true; // 일부만 체크된 상태
+      }
+    } else if (headerCb) {
+      headerCb.checked = false;
+      headerCb.indeterminate = false;
+    }
+
     if (!stories.length) {
       tbody.innerHTML = `<tr><td colspan="7" style="padding: 20px; text-align: center; color: var(--muted);">접수된 사연이 없습니다.</td></tr>`;
       return;
     }
     
+    // 남아있는 대기 사연(방송 포함, 미방송)에 대해 1번부터 오름차순 번호 부여
+    let activeBroadcastNum = 0;
     tbody.innerHTML = stories.map((s) => {
       const isPlayed = s.played === true;
       const isHidden = s.hidden === true;
+      
+      // 번호 계산: 방송 포함(active) 사연만 1~N, 나머지는 특수 표시
+      let displayNum;
+      if (isPlayed) {
+        displayNum = '<span style="color:var(--muted);font-size:11px;">완료</span>';
+      } else if (isHidden) {
+        displayNum = '<span style="color:var(--yellow);font-size:12px;">보류</span>';
+      } else {
+        activeBroadcastNum++;
+        displayNum = `<b>${activeBroadcastNum}</b>`;
+      }
       
       let statusBadge = '<span class="status-badge waiting">대기 중</span>';
       if (isPlayed) {
@@ -784,7 +850,7 @@ service cloud.firestore {
       
       return `
         <tr style="${isPlayed ? 'opacity: 0.55; background: rgba(0,0,0,0.02);' : ''}">
-          <td style="padding: 10px 8px; font-family: var(--round); color: var(--wood-dk);">#${s.order}</td>
+          <td style="padding: 10px 8px; font-family: var(--round); color: var(--wood-dk); text-align:center;">${displayNum}</td>
           <td style="padding: 10px 8px; font-family: var(--round);">${s.name}</td>
           <td style="padding: 10px 8px; font-size: 13px; color: var(--wood-dk); line-height: 1.3;">
             <b>${s.songTitle}</b><br><span style="color: var(--muted);">${s.artist}</span>
@@ -812,6 +878,21 @@ service cloud.firestore {
     if (!str) return '';
     return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
   }
+
+  window.toggleAllVisibility = async function(checked) {
+    // played가 아닌 사연만 대상
+    const pendingStories = currentAllStories ? currentAllStories.filter(s => s.played !== true) : [];
+    if (!pendingStories.length) return;
+    try {
+      const promises = pendingStories.map(s =>
+        updateDoc(doc(db, 'stories', s.id), { hidden: !checked })
+      );
+      await Promise.all(promises);
+      showToast(checked ? '모든 사연 방송 포함' : '모든 사연 보류(킵)으로 변경');
+    } catch (e) {
+      alert('일괄 변경 실패: ' + e.message);
+    }
+  };
 
   window.toggleStoryVisibility = async function(id, isChecked) {
     try {
@@ -878,6 +959,46 @@ service cloud.firestore {
       alert('삭제 실패: ' + e.message);
     }
   };
+
+  // ── 과거(방송 완료) 사연 조회 모달 ──
+  window.openHistoryModal = async function() {
+    document.getElementById('historyModal').classList.add('show');
+    const wrap = document.getElementById('historyListWrap');
+    wrap.innerHTML = '<div style="text-align:center;color:var(--muted);padding:20px;">불러오는 중...</div>';
+    document.getElementById('historyCount').textContent = '...';
+    try {
+      const q = query(collection(db, 'stories'), orderBy('order', 'asc'));
+      const snap = await getDocs(q);
+      const played = snap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .filter(s => s.played === true);
+      document.getElementById('historyCount').textContent = played.length + '개';
+      if (!played.length) {
+        wrap.innerHTML = '<div style="text-align:center;color:var(--muted);padding:20px;">방송 완료된 사연이 없습니다.</div>';
+        return;
+      }
+      let num = 0;
+      wrap.innerHTML = played.map(s => {
+        num++;
+        return `
+          <div style="display:flex;gap:12px;align-items:flex-start;padding:12px 10px;border-bottom:1.5px dashed var(--line);">
+            <div style="font-family:var(--round);font-size:18px;color:var(--coral-dk);min-width:32px;text-align:center;padding-top:2px;">${num}</div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-family:var(--round);font-size:15px;color:var(--wood-dk);margin-bottom:3px;">${escapeHtml(s.name)} <span style="font-size:12px;color:var(--muted);font-family:var(--body);">— ${escapeHtml(s.artist)} · ${escapeHtml(s.songTitle)}</span></div>
+              <div style="font-size:13px;color:var(--text);line-height:1.6;white-space:pre-wrap;">${escapeHtml(s.story)}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    } catch (e) {
+      wrap.innerHTML = `<div style="text-align:center;color:var(--coral-dk);padding:20px;">불러오기 실패: ${e.message}</div>`;
+    }
+  };
+
+  window.closeHistoryModal = function() {
+    document.getElementById('historyModal').classList.remove('show');
+  };
+
 </script>
 </body>
 </html>
