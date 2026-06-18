@@ -327,6 +327,7 @@
     <button class="topbar-btn" id="yt-btn" onclick="toggleYoutubeMini()" style="display:none">🎬 영상</button>
     <button class="topbar-btn" id="gp-btn" onclick="toggleGpPanel()" style="display:none">🎼 GP</button>
     <button class="topbar-btn" id="scroll-btn" onclick="toggleScroll()" style="display:none">▶ 스크롤</button>
+    <button class="topbar-btn active" id="sync-scroll-btn" onclick="toggleSyncScroll()" style="display:none">🎯 자동 추적</button>
     <button class="topbar-btn" onclick="openEditModal()" id="edit-btn" style="display:none">✏️ 편집</button>
   </header>
   <div id="score-wrap">
@@ -831,12 +832,12 @@ async function deleteGpFromIDB(songId) {
 //  DATA LAYER
 // ══════════════════════════════════════
 const STORAGE_KEY = 'bandsongbook_v3';
-const SPEED_KEY   = 'bandsongbook_speed';
+const SPEED_KEY   = 'bandsongbook_speed_v4';
 const MY_SONGS_GROUP = '내 곡';
 
 let db = loadDB();
 let currentSongId = null;
-let scrollSpeed = parseFloat(localStorage.getItem(SPEED_KEY) || '1.0');
+let scrollSpeed = parseFloat(localStorage.getItem(SPEED_KEY) || '5.0');
 let scrollTimer = null;
 let isScrolling = false;
 let chordMode = 'acoustic'; // 'acoustic' | 'power'
@@ -844,6 +845,12 @@ let ytPlayer = null;
 let ytReady = false;
 let ytSyncTimer = null;
 let activeSyncIndex = -1;
+
+// 자동 스크롤 추적 상태 변수
+let isSyncScrollEnabled = true;
+let isProgrammaticScroll = false;
+let userScrollTimeout = null;
+let isUserScrollSuspended = false;
 let loadedYtVideoId = '';
 let gpApi = null;
 let pendingGpBuffer = null;
@@ -1283,6 +1290,19 @@ function loadSong(groupName,songId){
   document.getElementById('edit-btn').style.display='';
   document.getElementById('yt-btn').style.display=song.ytUrl?'':'none';
   document.getElementById('gp-btn').style.display='';
+  
+  const hasSync = song.ytUrl && getSongSyncEntries(song).length > 0;
+  const syncScrollBtn = document.getElementById('sync-scroll-btn');
+  if (syncScrollBtn) {
+    syncScrollBtn.style.display = hasSync ? '' : 'none';
+    isSyncScrollEnabled = true;
+    syncScrollBtn.textContent = '🎯 자동 추적';
+    syncScrollBtn.classList.add('active');
+  }
+  isUserScrollSuspended = false;
+  isProgrammaticScroll = false;
+  if (userScrollTimeout) clearTimeout(userScrollTimeout);
+  
   const hasGpData = !!(song.gpData || sessionGpBuffers[song.id]);
   document.getElementById('gp-btn').textContent = (hasGpData || song.gpName) ? '🎼 GP' : '＋ GP';
   renderScore(song.content);
@@ -1315,24 +1335,50 @@ function updateSpeedDisplay(){
 updateSpeedDisplay();
 
 function changeSpeed(direction){
-  let step = 0.5;
-  if (direction < 0) {
-    if (scrollSpeed <= 1.0) {
-      step = 0.1;
-    } else {
-      step = 0.5;
-    }
-    scrollSpeed = Math.max(0.1, parseFloat((scrollSpeed - step).toFixed(1)));
-  } else {
-    if (scrollSpeed < 1.0) {
-      step = 0.1;
-    } else {
-      step = 0.5;
-    }
-    scrollSpeed = Math.min(10.0, parseFloat((scrollSpeed + step).toFixed(1)));
-  }
+  const delta = direction * 0.5;
+  scrollSpeed = Math.max(1.0, Math.min(10.0, parseFloat((scrollSpeed + delta).toFixed(1))));
   updateSpeedDisplay();
   if(isScrolling){stopScroll();startScroll();}
+}
+
+function getScrollPPS(song) {
+  let bpm = 110;
+  if (song && song.meta) {
+    const match = song.meta.match(/BPM\s*(\d+)/i);
+    if (match) bpm = parseInt(match[1], 10);
+  }
+  const basePPS = 32 * (bpm / 110);
+  const factor = scrollSpeed / 5;
+  return basePPS * factor;
+}
+
+function toggleSyncScroll() {
+  isSyncScrollEnabled = !isSyncScrollEnabled;
+  const btn = document.getElementById('sync-scroll-btn');
+  if (btn) {
+    if (isSyncScrollEnabled) {
+      btn.textContent = '🎯 자동 추적';
+      btn.classList.add('active');
+    } else {
+      btn.textContent = '👤 수동 추적';
+      btn.classList.remove('active');
+    }
+  }
+  
+  if (isSyncScrollEnabled && isScrolling) {
+    const song = currentSongId && findSong(currentSongId);
+    const entries = getSongSyncEntries(song);
+    if (entries.length > 0 && lastYtTime > 0) {
+      isUserScrollSuspended = false;
+      const targetScrollTop = getInterpolatedScrollTop(lastYtTime, entries);
+      const scroller = document.getElementById('score-scroll');
+      if (scroller) {
+        isProgrammaticScroll = true;
+        scroller.scrollTop = targetScrollTop;
+        isProgrammaticScroll = false;
+      }
+    }
+  }
 }
 
 function startScroll(){
@@ -1345,12 +1391,14 @@ function startScroll(){
   
   const song = currentSongId && findSong(currentSongId);
   const entries = getSongSyncEntries(song);
-  if (song && song.ytUrl && entries.length > 0) {
+  
+  if (song && song.ytUrl && entries.length > 0 && isSyncScrollEnabled) {
     return;
   }
   
   const scroller=document.getElementById('score-scroll');
-  const PPS=scrollSpeed*40; let last=null;
+  const PPS = getScrollPPS(song);
+  let last=null;
   function tick(ts){
     if(!isScrolling)return;
     if(last!==null){
@@ -1383,7 +1431,17 @@ function updateProgress(){
   const max=s.scrollHeight-s.clientHeight;
   document.getElementById('progress-bar').style.width=(max>0?s.scrollTop/max*100:0)+'%';
 }
-document.getElementById('score-scroll').addEventListener('scroll',updateProgress);
+document.getElementById('score-scroll').addEventListener('scroll', () => {
+  updateProgress();
+  
+  if (!isProgrammaticScroll) {
+    isUserScrollSuspended = true;
+    if (userScrollTimeout) clearTimeout(userScrollTimeout);
+    userScrollTimeout = setTimeout(() => {
+      isUserScrollSuspended = false;
+    }, 3500);
+  }
+});
 
 // ══════════════════════════════════════
 //  MODALS
@@ -2197,38 +2255,129 @@ function getSongSyncEntries(song) {
   }).filter(Boolean).sort((a,b)=>a.time-b.time);
 }
 
+let lastYtTime = 0;
+let lastYtUpdateTime = 0;
+let lyricSyncAnimationTimer = null;
+
+function getInterpolatedScrollTop(time, entries) {
+  const scroller = document.getElementById('score-scroll');
+  if (!scroller || entries.length === 0) return 0;
+  
+  const scrollerHeight = scroller.clientHeight;
+  
+  function getScrollForLyric(lyricNo) {
+    const el = document.querySelector(`.lyric-row[data-lyric-no="${lyricNo}"]`);
+    if (!el) return null;
+    return el.offsetTop - (scrollerHeight / 2) + (el.offsetHeight / 2);
+  }
+  
+  if (time < entries[0].time) {
+    const yFirst = getScrollForLyric(entries[0].lyricNo);
+    if (yFirst === null) return 0;
+    const startScrollTime = Math.max(0, entries[0].time - 5);
+    if (time < startScrollTime) return 0;
+    const ratio = (time - startScrollTime) / (entries[0].time - startScrollTime);
+    return Math.max(0, yFirst * ratio);
+  }
+  
+  let idx = -1;
+  for (let i = 0; i < entries.length - 1; i++) {
+    if (time >= entries[i].time && time < entries[i+1].time) {
+      idx = i;
+      break;
+    }
+  }
+  
+  if (idx === -1) {
+    const yLast = getScrollForLyric(entries[entries.length - 1].lyricNo);
+    return yLast !== null ? yLast : 0;
+  }
+  
+  const entryA = entries[idx];
+  const entryB = entries[idx+1];
+  
+  const yA = getScrollForLyric(entryA.lyricNo);
+  const yB = getScrollForLyric(entryB.lyricNo);
+  
+  if (yA === null || yB === null) return yA || yB || 0;
+  
+  const ratio = (time - entryA.time) / (entryB.time - entryA.time);
+  return yA + (yB - yA) * ratio;
+}
+
 function startLyricSync() {
   stopLyricSync();
   const song = currentSongId && findSong(currentSongId);
   const entries = getSongSyncEntries(song);
   if (!entries.length || !ytReady || !ytPlayer?.getCurrentTime) return;
-  ytSyncTimer = setInterval(() => {
+  
+  lastYtTime = 0;
+  lastYtUpdateTime = performance.now();
+  
+  function updateSync() {
+    if (!ytReady || !ytPlayer?.getCurrentTime) return;
+    
+    let state = -1;
+    try { state = ytPlayer.getPlayerState(); } catch(e) { return; }
+    
+    if (state === -1 || state === 5) return;
+    
     let time = 0;
-    try { time = ytPlayer.getCurrentTime(); } catch { return; }
-    let idx = -1;
+    try { time = ytPlayer.getCurrentTime(); } catch(e) { return; }
+    
+    if (time !== lastYtTime) {
+      lastYtTime = time;
+      lastYtUpdateTime = performance.now();
+    }
+    
+    let estimatedTime = lastYtTime;
+    if (state === 1) {
+      const elapsed = (performance.now() - lastYtUpdateTime) / 1000;
+      estimatedTime = lastYtTime + Math.min(elapsed, 1.0);
+    }
+    
+    let activeIdx = -1;
     for (let i = entries.length - 1; i >= 0; i--) {
-      if (time + 0.15 >= entries[i].time) { idx = i; break; }
+      if (estimatedTime + 0.1 >= entries[i].time) {
+        activeIdx = i;
+        break;
+      }
     }
-    if (idx >= 0 && idx !== activeSyncIndex) {
-      activeSyncIndex = idx;
-      focusLyric(entries[idx].lyricNo);
+    if (activeIdx >= 0 && activeIdx !== activeSyncIndex) {
+      activeSyncIndex = activeIdx;
+      highlightLyricOnly(entries[activeIdx].lyricNo);
     }
-  }, 300);
+    
+    if (isSyncScrollEnabled && !isUserScrollSuspended && state === 1) {
+      const scroller = document.getElementById('score-scroll');
+      if (scroller) {
+        const targetScrollTop = getInterpolatedScrollTop(estimatedTime, entries);
+        isProgrammaticScroll = true;
+        scroller.scrollTop = targetScrollTop;
+        isProgrammaticScroll = false;
+      }
+    }
+    
+    if (isScrolling || state === 1 || state === 3) {
+      lyricSyncAnimationTimer = requestAnimationFrame(updateSync);
+    }
+  }
+  
+  lyricSyncAnimationTimer = requestAnimationFrame(updateSync);
 }
 
 function stopLyricSync() {
-  if (ytSyncTimer) {
-    clearInterval(ytSyncTimer);
-    ytSyncTimer = null;
+  if (lyricSyncAnimationTimer) {
+    cancelAnimationFrame(lyricSyncAnimationTimer);
+    lyricSyncAnimationTimer = null;
   }
 }
 
-function focusLyric(lyricNo) {
+function highlightLyricOnly(lyricNo) {
   document.querySelectorAll('.lyric-row.sync-active').forEach(el => el.classList.remove('sync-active'));
   const target = document.querySelector(`.lyric-row[data-lyric-no="${lyricNo}"]`);
   if (!target) return;
   target.classList.add('sync-active');
-  target.scrollIntoView({ block:'center', behavior:'smooth' });
 }
 
 // ══════════════════════════════════════
