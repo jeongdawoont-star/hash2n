@@ -357,6 +357,17 @@
   // Load instances on startup
   loadInvidiousInstances();
 
+  function ytVideoId(url) {
+    try {
+      const u = new URL(url);
+      if (u.hostname.includes('youtu.be')) return u.pathname.slice(1);
+      if (u.pathname.includes('/shorts/') || u.pathname.includes('/embed/')) {
+        return u.pathname.split('/').filter(Boolean).pop();
+      }
+      return u.searchParams.get('v') || '';
+    } catch { return ''; }
+  }
+
   window.searchYoutube = async function() {
     const query = document.getElementById('ytSearchQuery').value.trim();
     const suggestions = document.getElementById('searchSuggestions');
@@ -368,6 +379,36 @@
     suggestions.style.display = 'block';
     suggestions.innerHTML = '<div class="suggestion-loading"><span class="spinner"></span>검색 중...</div>';
 
+    // 1. YouTube Data API v3 시도 (Firebase API Key 사용)
+    const cfg = JSON.parse(localStorage.getItem('radioFirebaseConfig') || '{}');
+    if (cfg.apiKey) {
+      try {
+        const controller = new AbortController();
+        const id = setTimeout(() => controller.abort(), 4000); // 4 seconds timeout
+        const ytUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&videoEmbeddable=true&q=${encodeURIComponent(query)}&key=${cfg.apiKey}&maxResults=5`;
+        const res = await fetch(ytUrl, { signal: controller.signal });
+        clearTimeout(id);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.items && data.items.length > 0) {
+            const formattedVideos = data.items.map(item => ({
+              videoId: item.id.videoId,
+              title: item.snippet.title,
+              author: item.snippet.channelTitle
+            }));
+            renderSuggestions(formattedVideos);
+            return;
+          }
+        } else {
+          const errData = await res.json().catch(() => ({}));
+          console.warn('YouTube API 호출 실패, Invidious로 대체합니다.', errData);
+        }
+      } catch (e) {
+        console.warn('YouTube API 에러, Invidious로 대체합니다.', e);
+      }
+    }
+
+    // 2. Fallback: Invidious API 호출
     for (let i = 0; i < activeInvidiousInstances.length; i++) {
       const base = activeInvidiousInstances[i];
       try {
@@ -520,6 +561,37 @@
 
     const btn = document.getElementById('submitBtn');
     btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>보내는 중...';
+
+    // 1. YouTube Data API v3를 활용한 퍼가기 가능 여부 사전 검증
+    const cfg = JSON.parse(localStorage.getItem('radioFirebaseConfig') || '{}');
+    const vid = ytVideoId(ytUrl);
+    if (cfg.apiKey && vid) {
+      btn.innerHTML = '<span class="spinner"></span>영상 검증 중...';
+      try {
+        const controller = new AbortController();
+        const checkTimeoutId = setTimeout(() => controller.abort(), 5000); // 5 seconds timeout
+        const checkRes = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=status&id=${vid}&key=${cfg.apiKey}`, {
+          signal: controller.signal
+        });
+        clearTimeout(checkTimeoutId);
+        if (checkRes.ok) {
+          const checkData = await checkRes.json();
+          if (checkData && checkData.items && checkData.items.length > 0) {
+            const status = checkData.items[0].status;
+            if (status && status.embeddable === false) {
+              showError('이 영상은 업로더가 외부 퍼가기(재생)를 제한한 영상입니다. 다른 영상을 선택해 주세요.');
+              btn.disabled = false;
+              btn.textContent = '📮 사연 보내기';
+              return;
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('퍼가기 검증 실패(우회 처리함):', e);
+      }
+    }
+
     btn.innerHTML = '<span class="spinner"></span>보내는 중...';
 
     // 무한로딩 방지: 15초 안에 응답이 없으면 안내 메시지 표시
