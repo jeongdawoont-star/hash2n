@@ -128,6 +128,37 @@
     transition:background .2s,color .2s,box-shadow .2s;
   }
   .lyric-row.sync-active { background:rgba(232,176,74,.16); color:#fff5cf; box-shadow:0 0 0 1px rgba(232,176,74,.32); }
+  .lyric-row-segmented {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    padding: 6px 2px;
+  }
+  .lyric-segment {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-end;
+  }
+  .lyric-segment-chord {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    width: 100%;
+    margin-bottom: 4px;
+    user-select: none;
+  }
+  .lyric-segment-chord-empty {
+    width: 100%;
+    margin-bottom: 4px;
+  }
+  .lyric-segment-text {
+    font-size: clamp(15px,2.2vw,20px);
+    line-height: 1.4;
+    color: var(--text);
+    white-space: pre;
+  }
 
   /* 섹션 라벨 */
   .section-label {
@@ -274,9 +305,9 @@
     <div class="settings-row">
       <span class="settings-label">🐌 스크롤 속도</span>
       <div class="speed-control">
-        <button class="speed-btn" onclick="changeSpeed(-0.5)">−</button>
+        <button class="speed-btn" onclick="changeSpeed(-1)">−</button>
         <span id="speed-display">1.0</span>
-        <button class="speed-btn" onclick="changeSpeed(0.5)">＋</button>
+        <button class="speed-btn" onclick="changeSpeed(1)">＋</button>
       </div>
     </div>
     <button class="topbar-btn" style="width:100%;justify-content:center;margin-bottom:10px" onclick="triggerLoadJsFile()">📂 로컬 데이터 JS 불러오기</button>
@@ -958,12 +989,24 @@ function syncDefaultSongs() {
   } else {
     Object.entries(defaultGroups).forEach(([groupName, group]) => {
       (group.songs || []).forEach(song => {
-        if (!hasSongTitle(song.title)) {
+        let existingSong = null;
+        for (const g of Object.values(db.groups)) {
+          existingSong = (g.songs || []).find(s => s.title === song.title);
+          if (existingSong) break;
+        }
+
+        if (!existingSong) {
           if (!db.groups[groupName]) {
             db.groups[groupName] = { songs: [] };
           }
           db.groups[groupName].songs.push({ ...song });
           changed = true;
+        } else {
+          if ((song.ytUrl && !existingSong.ytUrl) || (song.syncMap && !existingSong.syncMap)) {
+            if (song.ytUrl) existingSong.ytUrl = song.ytUrl;
+            if (song.syncMap) existingSong.syncMap = song.syncMap;
+            changed = true;
+          }
         }
       });
     });
@@ -1077,7 +1120,7 @@ function toggleChordMode() {
   const btn = document.getElementById('mode-btn');
   btn.textContent = chordMode === 'acoustic' ? '🎸 어쿠스틱' : '⚡ 파워코드';
   btn.classList.toggle('active', chordMode === 'power');
-  if (currentSongId) { const s = findSong(currentSongId); if (s) renderScore(s.content); }
+  if (currentSongId) { const s = findSong(currentSongId); if (s) renderScore(s.content, true); }
 }
 
 function renderChordRow(chordLine) {
@@ -1097,13 +1140,21 @@ function renderChordRow(chordLine) {
   return html;
 }
 
-function renderScore(content) {
+function renderScore(content, preserveScroll = false) {
   const container = document.getElementById('score-content');
   if (!content) { container.innerHTML=''; return; }
+  
+  const scroller = document.getElementById('score-scroll');
+  const prevScrollTop = scroller.scrollTop;
+  
   const lines = content.split('\n');
   let html = '';
   let i = 0;
   let lyricNo = 0;
+  
+  const { w, h } = getDiagramSize();
+  const chordBoxHeight = h + 24;
+  
   while (i < lines.length) {
     const line = lines[i];
     const t = line.trim();
@@ -1124,28 +1175,51 @@ function renderScore(content) {
       i++; continue;
     }
     if (isChordLine(line)) {
-      // 다음 줄이 가사인지 확인
       const nextLine = lines[i+1];
       const hasLyric = nextLine !== undefined && nextLine.trim() && !isChordLine(nextLine) && !SECTION_RE.test(nextLine.trim()) && !COMMENT_RE.test(nextLine.trim()) && !TAB_RE.test(nextLine.trim());
-      html += '<div class="score-block">';
-      html += renderChordRow(line);
+      
       if (hasLyric) {
         lyricNo++;
-        html += `<div class="lyric-row" data-lyric-no="${lyricNo}">${escapeHtml(nextLine)}</div>`;
+        html += `<div class="lyric-row lyric-row-segmented" data-lyric-no="${lyricNo}">`;
+        const segments = segmentLyricAndChords(line, nextLine);
+        segments.forEach(seg => {
+          html += `<div class="lyric-segment">`;
+          if (seg.chord) {
+            const svg = chordMode === 'power'
+              ? buildPowerTabSVG(seg.chord, w, h)
+              : buildChordSVG(seg.chord, w, h);
+            html += `<div class="lyric-segment-chord" style="height: ${chordBoxHeight}px">
+              <div class="chord-diagram">${svg}</div>
+              <div class="chord-name">${seg.chord}</div>
+            </div>`;
+          } else {
+            html += `<div class="lyric-segment-chord-empty" style="height: ${chordBoxHeight}px"></div>`;
+          }
+          html += `<div class="lyric-segment-text">${escapeHtml(seg.text)}</div>`;
+          html += `</div>`;
+        });
+        html += '</div>';
         i += 2;
       } else {
+        html += '<div class="score-block">';
+        html += renderChordRow(line);
+        html += '</div>';
         i++;
       }
-      html += '</div>';
     } else {
-      // 일반 가사 (코드 없는)
       lyricNo++;
       html += `<div class="lyric-row" data-lyric-no="${lyricNo}">${escapeHtml(line)}</div>`;
       i++;
     }
   }
   container.innerHTML = html;
-  document.getElementById('score-scroll').scrollTop = 0;
+  
+  if (preserveScroll) {
+    scroller.scrollTop = prevScrollTop;
+  } else {
+    scroller.scrollTop = 0;
+  }
+  
   activeSyncIndex = -1;
   updateProgress();
 }
@@ -1240,8 +1314,23 @@ function updateSpeedDisplay(){
 }
 updateSpeedDisplay();
 
-function changeSpeed(d){
-  scrollSpeed=Math.max(.5,Math.min(10,scrollSpeed+d));
+function changeSpeed(direction){
+  let step = 0.5;
+  if (direction < 0) {
+    if (scrollSpeed <= 1.0) {
+      step = 0.1;
+    } else {
+      step = 0.5;
+    }
+    scrollSpeed = Math.max(0.1, parseFloat((scrollSpeed - step).toFixed(1)));
+  } else {
+    if (scrollSpeed < 1.0) {
+      step = 0.1;
+    } else {
+      step = 0.5;
+    }
+    scrollSpeed = Math.min(10.0, parseFloat((scrollSpeed + step).toFixed(1)));
+  }
   updateSpeedDisplay();
   if(isScrolling){stopScroll();startScroll();}
 }
@@ -1253,6 +1342,13 @@ function startScroll(){
   document.getElementById('scroll-indicator').style.display='flex';
   playSongVideo();
   startLyricSync();
+  
+  const song = currentSongId && findSong(currentSongId);
+  const entries = getSongSyncEntries(song);
+  if (song && song.ytUrl && entries.length > 0) {
+    return;
+  }
+  
   const scroller=document.getElementById('score-scroll');
   const PPS=scrollSpeed*40; let last=null;
   function tick(ts){
@@ -1260,7 +1356,13 @@ function startScroll(){
     if(last!==null){
       scroller.scrollTop+=PPS*(ts-last)/1000;
       updateProgress();
-      if(scroller.scrollTop>=scroller.scrollHeight-scroller.clientHeight-2){stopScroll();return;}
+      if(scroller.scrollTop>=scroller.scrollHeight-scroller.clientHeight-2){
+        isScrolling = false;
+        document.getElementById('scroll-btn').classList.remove('active');
+        document.getElementById('scroll-btn').textContent='▶ 스크롤';
+        document.getElementById('scroll-indicator').style.display='none';
+        return;
+      }
     }
     last=ts; scrollTimer=requestAnimationFrame(tick);
   }
@@ -2347,18 +2449,73 @@ function renderGpTracks(score) {
   if (gpApi && score.tracks.length > 0) gpApi.renderTracks([score.tracks[0]]);
 }
 
+function parseChordsFromLine(chordLine) {
+  const chords = [];
+  const regex = /\S+/g;
+  let match;
+  while ((match = regex.exec(chordLine)) !== null) {
+    chords.push({
+      name: match[0],
+      visualOffset: match.index
+    });
+  }
+  return chords;
+}
+
+function getCharIndexByVisualOffset(line, visualOffset) {
+  let currentVisual = 0;
+  for (let i = 0; i < line.length; i++) {
+    if (currentVisual >= visualOffset) return i;
+    const code = line.charCodeAt(i);
+    const isDoubleWidth = (code >= 0x3000 && code <= 0x9FFF) || (code >= 0xAC00 && code <= 0xD7AF);
+    currentVisual += isDoubleWidth ? 2 : 1;
+  }
+  return line.length;
+}
+
+function segmentLyricAndChords(chordLine, lyricLine) {
+  const chords = parseChordsFromLine(chordLine);
+  if (chords.length === 0) {
+    return [{ chord: null, text: lyricLine }];
+  }
+  
+  const segments = [];
+  const indices = chords.map(c => ({
+    chord: c.name,
+    charIdx: getCharIndexByVisualOffset(lyricLine, c.visualOffset)
+  }));
+  
+  if (indices[0].charIdx > 0) {
+    segments.push({
+      chord: null,
+      text: lyricLine.slice(0, indices[0].charIdx)
+    });
+  }
+  
+  for (let i = 0; i < indices.length; i++) {
+    const start = indices[i].charIdx;
+    const end = (i + 1 < indices.length) ? indices[i+1].charIdx : lyricLine.length;
+    segments.push({
+      chord: indices[i].chord,
+      text: lyricLine.slice(start, end)
+    });
+  }
+  
+  return segments;
+}
+
 // 키보드
 document.addEventListener('keydown',e=>{
   if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'||e.target.tagName==='SELECT')return;
   if(document.getElementById('gp-panel').classList.contains('open'))return;
   if(e.code==='Space'){e.preventDefault();toggleScroll();}
-  if(e.code==='ArrowUp')changeSpeed(.5);
-  if(e.code==='ArrowDown')changeSpeed(-.5);
+  if(e.code==='ArrowUp')changeSpeed(1);
+  if(e.code==='ArrowDown')changeSpeed(-1);
   if(e.code==='KeyR'){document.getElementById('score-scroll').scrollTop=0;}
 });
 
 window.addEventListener('resize',()=>{
-  if(currentSongId){const s=findSong(currentSongId);if(s)renderScore(s.content);}
+  if(currentSongId){const s=findSong(currentSongId);if(s)renderScore(s.content, true);}
 });
 </script>
 </body>
