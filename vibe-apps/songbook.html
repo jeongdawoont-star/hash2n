@@ -289,6 +289,14 @@
   @media (min-width:601px) {
     #sidebar-backdrop { display:none !important; }
   }
+  .chord-trigger-char {
+    color: var(--accent);
+    font-weight: 800;
+    background: rgba(232, 176, 74, 0.12);
+    border-radius: 4px;
+    padding: 0 2px;
+    box-shadow: 0 0 0 1px rgba(232, 176, 74, 0.2);
+  }
 </style>
 </head>
 <body>
@@ -1013,9 +1021,20 @@ function syncDefaultSongs() {
           db.groups[groupName].songs.push({ ...song });
           changed = true;
         } else {
-          if ((song.ytUrl && !existingSong.ytUrl) || (song.syncMap && !existingSong.syncMap)) {
-            if (song.ytUrl) existingSong.ytUrl = song.ytUrl;
-            if (song.syncMap) existingSong.syncMap = song.syncMap;
+          let songChanged = false;
+          if (song.content && existingSong.content !== song.content) {
+            existingSong.content = song.content;
+            songChanged = true;
+          }
+          if (song.ytUrl && existingSong.ytUrl !== song.ytUrl) {
+            existingSong.ytUrl = song.ytUrl;
+            songChanged = true;
+          }
+          if (song.syncMap && existingSong.syncMap !== song.syncMap) {
+            existingSong.syncMap = song.syncMap;
+            songChanged = true;
+          }
+          if (songChanged) {
             changed = true;
           }
         }
@@ -1030,6 +1049,12 @@ syncDefaultSongs();
 function genId() { return 'id_'+Date.now()+'_'+Math.random().toString(36).slice(2,7); }
 function escapeHtml(str='') {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+}
+function highlightFirstChar(text) {
+  if (!text) return '';
+  const match = text.match(/^(\s*)(\S)([\s\S]*)$/);
+  if (!match) return escapeHtml(text);
+  return escapeHtml(match[1]) + `<span class="chord-trigger-char">${escapeHtml(match[2])}</span>` + escapeHtml(match[3]);
 }
 function titleFromFileName(name='') {
   const base = name.replace(/\.[^.]+$/, '').trim();
@@ -1203,10 +1228,11 @@ function renderScore(content, preserveScroll = false) {
               <div class="chord-diagram">${svg}</div>
               <div class="chord-name">${seg.chord}</div>
             </div>`;
+            html += `<div class="lyric-segment-text">${highlightFirstChar(seg.text)}</div>`;
           } else {
             html += `<div class="lyric-segment-chord-empty" style="height: ${chordBoxHeight}px"></div>`;
+            html += `<div class="lyric-segment-text">${escapeHtml(seg.text)}</div>`;
           }
-          html += `<div class="lyric-segment-text">${escapeHtml(seg.text)}</div>`;
           html += `</div>`;
         });
         html += '</div>';
