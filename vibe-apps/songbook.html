@@ -861,6 +861,10 @@ let sessionGpBuffers = {};
 let isBypassMode = false;
 let currentBypassServerIndex = 0;
 
+let lastYtTime = 0;
+let lastYtUpdateTime = 0;
+let lyricSyncAnimationTimer = null;
+
 const ALPHATAB_CDN = 'https://cdn.jsdelivr.net/npm/@coderline/alphatab@1.8.3/dist/';
 
 function loadDB() {
@@ -2254,10 +2258,6 @@ function getSongSyncEntries(song) {
     return { time, lyricNo };
   }).filter(Boolean).sort((a,b)=>a.time-b.time);
 }
-
-let lastYtTime = 0;
-let lastYtUpdateTime = 0;
-let lyricSyncAnimationTimer = null;
 
 function getInterpolatedScrollTop(time, entries) {
   const scroller = document.getElementById('score-scroll');
