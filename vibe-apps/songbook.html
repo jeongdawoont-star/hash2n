@@ -139,6 +139,7 @@
     flex-direction: column;
     align-items: flex-start;
     justify-content: flex-end;
+    margin-right: 16px;
   }
   .lyric-segment-chord {
     display: flex;
@@ -317,6 +318,10 @@
         <span id="speed-display">1.0</span>
         <button class="speed-btn" onclick="changeSpeed(1)">＋</button>
       </div>
+    </div>
+    <div class="settings-row">
+      <span class="settings-label">🔄 지판 상하 반전</span>
+      <button class="topbar-btn" id="flip-chord-btn" onclick="toggleChordFlip()" style="padding:4px 8px;font-size:11px">연주자 시점</button>
     </div>
     <button class="topbar-btn" style="width:100%;justify-content:center;margin-bottom:10px" onclick="triggerLoadJsFile()">📂 로컬 데이터 JS 불러오기</button>
     <input type="file" id="local-js-file-picker" accept=".js" style="display:none" onchange="loadJsFile(this.files[0])">
@@ -645,25 +650,25 @@ const CHORD_DB = {
 //  E줄 루트(0,1,2): E5~B5 / A줄 루트(1,2,3): A5~D#5
 // ══════════════════════════════════════
 const POWER_CHORD_DB = {
-  // ── 저음 E줄 루트 (6+5+4번줄)
-  'E5':   { strings:[0,1,2], frets:[0,2,2] },
-  'F5':   { strings:[0,1,2], frets:[1,3,3] },
-  'F#5':  { strings:[0,1,2], frets:[2,4,4] },
-  'Gb5':  { strings:[0,1,2], frets:[2,4,4] },
-  'G5':   { strings:[0,1,2], frets:[3,5,5] },
-  'G#5':  { strings:[0,1,2], frets:[4,6,6] },
-  'Ab5':  { strings:[0,1,2], frets:[4,6,6] },
-  'A5':   { strings:[0,1,2], frets:[5,7,7] },
-  'A#5':  { strings:[0,1,2], frets:[6,8,8] },
-  'Bb5':  { strings:[0,1,2], frets:[6,8,8] },
-  'B5':   { strings:[0,1,2], frets:[7,9,9] },
-  // ── A줄 루트 (5+4+3번줄) — 개방포지션 포함
-  'C5':   { strings:[1,2,3], frets:[3,5,5] },
-  'C#5':  { strings:[1,2,3], frets:[4,6,6] },
-  'Db5':  { strings:[1,2,3], frets:[4,6,6] },
-  'D5':   { strings:[1,2,3], frets:[5,7,7] },
-  'D#5':  { strings:[1,2,3], frets:[6,8,8] },
-  'Eb5':  { strings:[1,2,3], frets:[6,8,8] },
+  // ── 저음 E줄 루트 (6+5번줄: 인덱스 0, 1)
+  'E5':   { strings:[0,1], frets:[0,2] },
+  'F5':   { strings:[0,1], frets:[1,3] },
+  'F#5':  { strings:[0,1], frets:[2,4] },
+  'Gb5':  { strings:[0,1], frets:[2,4] },
+  'G5':   { strings:[0,1], frets:[3,5] },
+  'G#5':  { strings:[0,1], frets:[4,6] },
+  'Ab5':  { strings:[0,1], frets:[4,6] },
+  // ── A줄 루트 (5+4번줄: 인덱스 1, 2)
+  'A5':   { strings:[1,2], frets:[0,2] },
+  'A#5':  { strings:[1,2], frets:[1,3] },
+  'Bb5':  { strings:[1,2], frets:[1,3] },
+  'B5':   { strings:[1,2], frets:[2,4] },
+  'C5':   { strings:[1,2], frets:[3,5] },
+  'C#5':  { strings:[1,2], frets:[4,6] },
+  'Db5':  { strings:[1,2], frets:[4,6] },
+  'D5':   { strings:[1,2], frets:[5,7] },
+  'D#5':  { strings:[1,2], frets:[6,8] },
+  'Eb5':  { strings:[1,2], frets:[6,8] },
 };
 
 // 루트 노트 → 파워코드 자동 매핑
@@ -757,19 +762,22 @@ function buildChordSVG(chordName, W, H) {
     svg += `<text x="${x}" y="${labelY}" font-size="${labelSize}" fill="#6a6760" text-anchor="middle" font-family="monospace">${startFret + f - 1}</text>`;
   }
 
+  const isFlipped = localStorage.getItem('bandsongbook_flip_chord') !== 'false';
+
   // 바레: 너트 위치에 굵은 색선 (>= 2줄이면 그림)
   if (barre !== undefined) {
     const barreIdxs = frets.map((f, i) => f === barre ? i : -1).filter(i => i >= 0);
     if (barreIdxs.length >= 2) {
-      const y1 = padT + barreIdxs[0] * strGap;
-      const y2 = padT + barreIdxs[barreIdxs.length - 1] * strGap;
+      const y1 = padT + (isFlipped ? (STRINGS - 1 - barreIdxs[0]) : barreIdxs[0]) * strGap;
+      const y2 = padT + (isFlipped ? (STRINGS - 1 - barreIdxs[barreIdxs.length - 1]) : barreIdxs[barreIdxs.length - 1]) * strGap;
       svg += `<line x1="${nutX}" y1="${y1}" x2="${nutX}" y2="${y2}" stroke="#4caf7d" stroke-width="${Math.max(4, dotR * 2.4)}" stroke-linecap="round"/>`;
     }
   }
 
   // 뮤트/도트 (0플랫의 오픈 스트링 동그라미 제거)
   frets.forEach((fret, si) => {
-    const y = padT + si * strGap;
+    const visualSi = isFlipped ? (STRINGS - 1 - si) : si;
+    const y = padT + visualSi * strGap;
     if (fret === -1) {
       const d = dotR * 0.8;
       svg += `<line x1="${markerX-d}" y1="${y-d}" x2="${markerX+d}" y2="${y+d}" stroke="#e05252" stroke-width="1.5" stroke-linecap="round"/>`;
@@ -1091,8 +1099,10 @@ function drawFretboard() {
     const x=padL+f*fretGap; ctx.lineWidth=f===0?3:1;
     ctx.beginPath(); ctx.moveTo(x,padT); ctx.lineTo(x,padB); ctx.stroke();
   }
+  const isFlipped = localStorage.getItem('bandsongbook_flip_chord') !== 'false';
   for(let s=0;s<6;s++){
-    const y=padT+s*strGap; ctx.lineWidth=0.8+s*0.2;
+    const visualIndex = isFlipped ? s : (5 - s);
+    const y=padT+s*strGap; ctx.lineWidth=0.8+visualIndex*0.2;
     ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(padR,y); ctx.stroke();
   }
   ctx.fillStyle='#7a6a40';
@@ -1138,17 +1148,80 @@ function getDiagramSize() {
 }
 
 // ── 파워코드 타브 SVG (미등록 코드는 루트 추출 후 자동변환) - 6현 다이어그램 스타일로 일원화
+// ── 파워코드 타브 SVG (미등록 코드는 루트 추출 후 자동변환) - 미니 타브 및 숫자 표기 스타일
 function buildPowerTabSVG(chordName, W, H) {
   const key = normalizeChordName(chordName);
-  let powerKey = key;
-  if (!POWER_CHORD_DB[key]) {
+  let powerData = POWER_CHORD_DB[key] || POWER_CHORD_DB[key.replace(/\s/g,'')];
+
+  if (!powerData) {
     const root = key.match(/^([A-G][#b]?)/)?.[1];
     const mapped = root && POWER_AUTO_MAP[root];
-    if (mapped) {
-      powerKey = mapped;
-    }
+    powerData = mapped ? POWER_CHORD_DB[mapped] : null;
   }
-  return buildChordSVG(powerKey, W, H);
+
+  let svg = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
+
+  if (!powerData) {
+    svg += `<text x="${W/2}" y="${H*0.58}" font-size="${H*0.24}" fill="var(--accent)" text-anchor="middle" font-weight="bold" font-family="Georgia,serif">${chordName}</text>`;
+    svg += '</svg>';
+    return svg;
+  }
+
+  const STRINGS = 6;
+  const isFlipped = localStorage.getItem('bandsongbook_flip_chord') !== 'false';
+
+  const padT = H * 0.08;
+  const padB = H * 0.92;
+  const strGap = (padB - padT) / (STRINGS - 1);
+  const leftX = W * 0.1;
+  const rightX = W * 0.9;
+
+  // 6줄 타브선 그리기
+  for (let s = 0; s < STRINGS; s++) {
+    const y = padT + s * strGap;
+    svg += `<line x1="${leftX}" y1="${y}" x2="${rightX}" y2="${y}" stroke="#3a3d4a" stroke-width="1.2"/>`;
+  }
+
+  // 좌우 세로 마디선
+  svg += `<line x1="${leftX}" y1="${padT}" x2="${leftX}" y2="${padB}" stroke="#2a2d3a" stroke-width="1.5"/>`;
+  svg += `<line x1="${rightX}" y1="${padT}" x2="${rightX}" y2="${padB}" stroke="#2a2d3a" stroke-width="1.5"/>`;
+
+  // 파워코드 운지 숫자 렌더링
+  powerData.strings.forEach((si, idx) => {
+    const fret = powerData.frets[idx];
+    const visualSi = isFlipped ? (STRINGS - 1 - si) : si;
+    const y = padT + visualSi * strGap;
+    const x = W / 2;
+
+    const fontSize = Math.max(9, Math.round(strGap * 0.85));
+    const rectW = fontSize * 1.0;
+    const rectH = fontSize * 0.8;
+
+    svg += `<rect x="${x - rectW/2}" y="${y - rectH/2}" width="${rectW}" height="${rectH}" fill="var(--bg, #0e0f14)"/>`;
+    svg += `<text x="${x}" y="${y}" font-size="${fontSize}" fill="var(--accent, #e8b04a)" font-weight="bold" font-family="monospace" text-anchor="middle" dominant-baseline="central">${fret}</text>`;
+  });
+
+  svg += '</svg>';
+  return svg;
+}
+
+function updateFlipButton() {
+  const isFlipped = localStorage.getItem('bandsongbook_flip_chord') !== 'false';
+  const btn = document.getElementById('flip-chord-btn');
+  if (btn) {
+    btn.textContent = isFlipped ? '연주자 시점 (반전)' : '정면 시점 (기본)';
+  }
+}
+
+function toggleChordFlip() {
+  const isFlipped = localStorage.getItem('bandsongbook_flip_chord') !== 'false';
+  localStorage.setItem('bandsongbook_flip_chord', isFlipped ? 'false' : 'true');
+  updateFlipButton();
+  drawFretboard();
+  if (currentSongId) {
+    const s = findSong(currentSongId);
+    if (s) renderScore(s.content, true);
+  }
 }
 
 function toggleChordMode() {
@@ -1345,6 +1418,10 @@ function loadSong(groupName,songId){
     closeGpPanel();
   }
   renderTree();
+  if (ytReady && ytPlayer && ytPlayer.setPlaybackRate) {
+    try { ytPlayer.setPlaybackRate(1.0); } catch(e) {}
+  }
+  updateSpeedDisplay();
   if(window.innerWidth<=600){
     document.getElementById('sidebar').classList.remove('open');
     document.getElementById('sidebar-backdrop').classList.remove('open');
@@ -1352,23 +1429,67 @@ function loadSong(groupName,songId){
 }
 
 // 첫 번째 곡 자동 로드
+updateFlipButton();
 const fg=Object.keys(db.groups)[0];
 if(fg){const fs=db.groups[fg].songs?.[0];if(fs)loadSong(fg,fs.id);}
 
 // ══════════════════════════════════════
 //  AUTO SCROLL
 // ══════════════════════════════════════
-function updateSpeedDisplay(){
-  document.getElementById('speed-display').textContent=scrollSpeed.toFixed(1);
-  localStorage.setItem(SPEED_KEY,scrollSpeed);
+function updateSpeedDisplay(rate){
+  const display = document.getElementById('speed-display');
+  if (isSyncScrollEnabled) {
+    let currentRate = rate;
+    if (currentRate === undefined) {
+      try {
+        currentRate = (ytReady && ytPlayer && ytPlayer.getPlaybackRate) ? (ytPlayer.getPlaybackRate() || 1.0) : 1.0;
+      } catch(e) {
+        currentRate = 1.0;
+      }
+    }
+    display.textContent = currentRate.toFixed(2) + 'x';
+  } else {
+    display.textContent = scrollSpeed.toFixed(1);
+    localStorage.setItem(SPEED_KEY, scrollSpeed);
+  }
 }
 updateSpeedDisplay();
 
 function changeSpeed(direction){
-  const delta = direction * 0.5;
-  scrollSpeed = Math.max(1.0, Math.min(10.0, parseFloat((scrollSpeed + delta).toFixed(1))));
-  updateSpeedDisplay();
-  if(isScrolling){stopScroll();startScroll();}
+  if (isSyncScrollEnabled && ytReady && ytPlayer && ytPlayer.setPlaybackRate) {
+    const rates = [0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0];
+    let currentRate = 1.0;
+    try { currentRate = ytPlayer.getPlaybackRate() || 1.0; } catch(e) {}
+    
+    // Find closest rate
+    let idx = rates.indexOf(currentRate);
+    if (idx === -1) {
+      let minDiff = Infinity;
+      idx = 3; // default 1.0
+      for (let i = 0; i < rates.length; i++) {
+        const diff = Math.abs(rates[i] - currentRate);
+        if (diff < minDiff) {
+          minDiff = diff;
+          idx = i;
+        }
+      }
+    }
+    
+    let newIdx = idx + direction;
+    if (newIdx >= 0 && newIdx < rates.length) {
+      const newRate = rates[newIdx];
+      try {
+        ytPlayer.setPlaybackRate(newRate);
+        updateSpeedDisplay(newRate);
+      } catch(e) {
+        console.warn('Failed to set YouTube playback rate:', e);
+      }
+    }
+  } else {
+    const delta = direction * 0.5;
+    scrollSpeed = Math.max(0.5, Math.min(10.0, parseFloat((scrollSpeed + delta).toFixed(1))));
+    updateSpeedDisplay();
+  }
 }
 
 function getScrollPPS(song) {
@@ -1392,7 +1513,10 @@ function toggleSyncScroll() {
     } else {
       btn.textContent = '👤 수동 추적';
       btn.classList.remove('active');
+      document.querySelectorAll('.lyric-row.sync-active').forEach(el => el.classList.remove('sync-active'));
+      activeSyncIndex = -1;
     }
+    updateSpeedDisplay();
   }
   
   if (isSyncScrollEnabled && isScrolling) {
@@ -1427,12 +1551,12 @@ function startScroll(){
   }
   
   const scroller=document.getElementById('score-scroll');
-  const PPS = getScrollPPS(song);
   let last=null;
   function tick(ts){
     if(!isScrolling)return;
     if(last!==null){
-      scroller.scrollTop+=PPS*(ts-last)/1000;
+      const currentPPS = getScrollPPS(song);
+      scroller.scrollTop+=currentPPS*(ts-last)/1000;
       updateProgress();
       if(scroller.scrollTop>=scroller.scrollHeight-scroller.clientHeight-2){
         isScrolling = false;
@@ -1961,7 +2085,14 @@ window.onYouTubeIframeAPIReady = function() {
         if (e.data === 1 || e.data === 3 || e.data === 5) {
           if (ytPlayTimeout) { clearTimeout(ytPlayTimeout); ytPlayTimeout = null; }
         }
-        if (e.data === 1) startLyricSync();
+        if (e.data === 1) {
+          if (isSyncScrollEnabled && ytPlayer && ytPlayer.getPlaybackRate) {
+            let rate = 1.0;
+            try { rate = ytPlayer.getPlaybackRate() || 1.0; } catch(_) {}
+            updateSpeedDisplay(rate);
+          }
+          startLyricSync();
+        }
         if (e.data === 2 || e.data === 0) stopLyricSync();
       },
       onError:(e)=>{ console.warn('YouTube 재생 오류:', e.data); showYtError(e.data); }
@@ -2369,9 +2500,14 @@ function startLyricSync() {
         break;
       }
     }
-    if (activeIdx >= 0 && activeIdx !== activeSyncIndex) {
-      activeSyncIndex = activeIdx;
-      highlightLyricOnly(entries[activeIdx].lyricNo);
+    if (isSyncScrollEnabled) {
+      if (activeIdx >= 0 && activeIdx !== activeSyncIndex) {
+        activeSyncIndex = activeIdx;
+        highlightLyricOnly(entries[activeIdx].lyricNo);
+      }
+    } else {
+      document.querySelectorAll('.lyric-row.sync-active').forEach(el => el.classList.remove('sync-active'));
+      activeSyncIndex = -1;
     }
     
     if (isSyncScrollEnabled && !isUserScrollSuspended && state === 1) {
@@ -2663,7 +2799,7 @@ function segmentLyricAndChords(chordLine, lyricLine) {
   if (indices[0].charIdx > 0) {
     segments.push({
       chord: null,
-      text: lyricLine.slice(0, indices[0].charIdx)
+      text: lyricLine.slice(0, indices[0].charIdx).replace(/\s+$/, '')
     });
   }
   
@@ -2672,7 +2808,7 @@ function segmentLyricAndChords(chordLine, lyricLine) {
     const end = (i + 1 < indices.length) ? indices[i+1].charIdx : lyricLine.length;
     segments.push({
       chord: indices[i].chord,
-      text: lyricLine.slice(start, end)
+      text: lyricLine.slice(start, end).replace(/\s+$/, '')
     });
   }
   
