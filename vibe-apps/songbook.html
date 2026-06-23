@@ -628,7 +628,6 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@coderline/alphatab@1.8.3/dist/alphaTab.min.js"></script>
-<script src="band-songbook-data.js"></script>
 <script>
 // ══════════════════════════════════════
 //  OFFLINE DATA AUTO LOAD
@@ -1020,6 +1019,19 @@ let currentBypassServerIndex = 0;
 let lastYtTime = 0;
 let lastYtUpdateTime = 0;
 let lyricSyncAnimationTimer = null;
+
+// AI Riff / Audio
+let generatedRiffNotes = null;
+let transcribedRiffNotes = null;
+let audioCtx = null;
+let riffPlayTimeout = null;
+let isRiffPlaying = false;
+let activeOscillators = [];
+let micStream = null;
+let micAnalyser = null;
+let micSource = null;
+let micAnimationId = null;
+let isMicOn = false;
 
 const ALPHATAB_CDN = 'https://cdn.jsdelivr.net/npm/@coderline/alphatab@1.8.3/dist/';
 
@@ -2530,6 +2542,7 @@ function cueYoutubeForSong(song) {
   const vid = ytVideoId(song.ytUrl);
   if (ytReady && ytPlayer && vid) {
     try {
+      ytPlayer.stopVideo();
       ytPlayer.cueVideoById(vid);
       loadedYtVideoId = vid;
     } catch (e) { console.warn('YouTube cue 실패:', e); }
@@ -3057,20 +3070,6 @@ function segmentLyricAndChords(chordLine, lyricLine) {
 // ══════════════════════════════════════
 //  AI GUITAR RIFF CENTER LOGIC
 // ══════════════════════════════════════
-let generatedRiffNotes = null;
-let transcribedRiffNotes = null;
-let audioCtx = null;
-let riffPlayTimeout = null;
-let isRiffPlaying = false;
-let activeOscillators = []; // Active oscillators tracked for overlap prevention
-
-// Microphone variables
-let micStream = null;
-let micAnalyser = null;
-let micSource = null;
-let micAnimationId = null;
-let isMicOn = false;
-
 function toggleRiffCenter(force) {
   const rc = document.getElementById('riff-center');
   const shouldOpen = typeof force === 'boolean' ? force : (rc.style.display === 'none');
