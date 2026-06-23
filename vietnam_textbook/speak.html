@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<meta name="theme-color" content="#ffd1e6">
+<title>🔊 발음 듣기 · Nghe phát âm</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{min-height:100vh;}
+body{
+  font-family:'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif;
+  background:linear-gradient(160deg,#ffd1e6,#cfe3ff 55%,#cdf3e2);
+  display:flex;flex-direction:column;align-items:center;
+  padding:24px 16px 48px;
+  min-height:100vh;
+  color:#4a4458;
+}
+
+/* ── 탭 유도 오버레이 (iOS 자동재생 차단 대응) ── */
+#overlay{
+  position:fixed;inset:0;z-index:100;
+  background:linear-gradient(160deg,rgba(255,209,230,.97),rgba(207,227,255,.97));
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:32px;
+}
+#overlay .ov-icon{font-size:80px;margin-bottom:20px;animation:bounce 1.4s ease-in-out infinite;}
+@keyframes bounce{0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);}}
+#overlay h2{font-size:26px;font-weight:800;color:#d6589a;margin-bottom:8px;}
+#overlay .ov-vi{font-size:15px;color:#5b9bd5;margin-bottom:28px;font-weight:700;}
+#overlay .ov-btn{
+  background:linear-gradient(135deg,#f7a8cd,#d6589a);
+  color:#fff;border:none;border-radius:60px;
+  padding:20px 56px;font-size:22px;font-weight:800;
+  cursor:pointer;font-family:inherit;
+  box-shadow:0 6px 24px rgba(214,88,154,.4);
+  transition:transform .1s;
+  letter-spacing:.5px;
+}
+#overlay .ov-btn:active{transform:scale(.95);}
+#overlay.hide{display:none;}
+
+/* ── 헤더 ── */
+.hdr{text-align:center;margin-bottom:22px;}
+.hdr .mascot{
+  width:64px;height:64px;
+  background:#ffe08a;border:3px solid #f7c948;border-radius:50%;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:32px;margin-bottom:10px;
+  box-shadow:0 4px 14px rgba(247,201,72,.3);
+}
+.hdr h1{font-size:17px;font-weight:800;color:#d6589a;}
+.hdr p{font-size:12px;color:#9a8aaa;margin-top:4px;}
+
+/* ── 카드 ── */
+.card{
+  background:rgba(255,255,255,.93);
+  border-radius:24px;
+  padding:20px 16px 18px;
+  width:100%;max-width:440px;
+  box-shadow:0 8px 32px rgba(180,120,160,.2);
+}
+
+.sec-lbl{
+  font-size:11px;font-weight:800;color:#d6589a;
+  letter-spacing:.5px;margin-bottom:14px;
+  display:flex;align-items:center;gap:8px;
+}
+.sec-lbl::after{content:'';flex:1;height:1.5px;background:#ffe0ec;border-radius:2px;}
+
+/* ── 낱말 카드 ── */
+.word-list{display:flex;flex-direction:column;gap:9px;margin-bottom:18px;}
+.wcard{
+  border:2.5px solid #ffe0ec;border-radius:16px;
+  padding:13px 16px 12px;background:#fffafc;
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:space-between;
+  gap:10px;
+  transition:border-color .15s,background .15s,transform .1s,box-shadow .15s;
+  user-select:none;
+  -webkit-user-select:none;
+}
+.wcard:active{transform:scale(.97);}
+.wcard.playing{
+  border-color:#d6589a;background:#fff0f7;
+  box-shadow:0 4px 16px rgba(214,88,154,.2);
+}
+.wcard .ko{font-size:28px;font-weight:800;color:#c14d86;line-height:1.2;}
+.wcard .spk{
+  font-size:22px;opacity:.25;transition:opacity .15s;flex-shrink:0;
+}
+.wcard.playing .spk{opacity:1;}
+.wcard:hover .spk{opacity:.6;}
+
+/* ── 컨트롤 버튼 ── */
+.controls{display:flex;gap:8px;}
+.btn{
+  border:none;border-radius:50px;
+  font-size:15px;font-weight:800;
+  cursor:pointer;font-family:inherit;
+  padding:14px 0;
+  transition:transform .1s,box-shadow .12s;
+}
+.btn:active{transform:scale(.95);}
+.btn-all{
+  flex:1;
+  background:linear-gradient(135deg,#f7a8cd,#d6589a);
+  color:#fff;
+  box-shadow:0 4px 14px rgba(214,88,154,.3);
+}
+.btn-slow{
+  background:#eef3ff;color:#5b6bb5;
+  width:58px;font-size:12px;font-weight:800;
+}
+.btn-slow.on{background:#fffaf0;color:#cf8a1a;}
+
+.hint{
+  margin-top:12px;font-size:11.5px;
+  color:#b08aa2;text-align:center;line-height:1.7;
+}
+
+/* ── 에러 ── */
+.err{
+  text-align:center;padding:28px 16px;
+  color:#d6589a;font-size:15px;font-weight:700;line-height:1.8;
+}
+
+footer{
+  margin-top:22px;font-size:10.5px;color:#b08aa2;text-align:center;line-height:1.7;
+}
+</style>
+</head>
+<body>
+
+<!-- 탭 유도 오버레이 -->
+<div id="overlay">
+  <div class="ov-icon">🎙️</div>
+  <h2>발음을 들어요!</h2>
+  <div class="ov-vi">Nhấn nút bên dưới để nghe phát âm tiếng Hàn</div>
+  <button class="ov-btn" onclick="startPlay()">▶ 시작 · Bắt đầu</button>
+</div>
+
+<div class="hdr">
+  <div class="mascot">⭐</div>
+  <h1>발음 듣기 · Nghe phát âm</h1>
+  <p>KIS 우리 학교 첫걸음</p>
+</div>
+
+<div class="card">
+  <div class="sec-lbl">🇰🇷 한국어 · Tiếng Hàn</div>
+  <div class="word-list" id="wordList"></div>
+  <div class="controls">
+    <button class="btn btn-all" id="btnAll" onclick="playAll()">🔊 전체 다시 듣기 · Nghe lại</button>
+    <button class="btn btn-slow" id="btnSlow" onclick="toggleSlow()" title="천천히 / 보통">🐢</button>
+  </div>
+  <div class="hint" id="hint">카드를 탭하면 개별 재생 · Nhấn từng thẻ để nghe riêng</div>
+</div>
+
+<footer>
+  KIS 호치민시한국국제학교<br>
+  Korea International School · Ho Chi Minh City
+</footer>
+
+<script>
+/* ── 파라미터 파싱 ── */
+const P      = new URLSearchParams(location.search);
+const rawT   = P.get('t') || '';
+const lang   = P.get('l') || 'ko-KR';
+
+// ' / ' 구분자로 낱말 분리 (buildQRCodes 에서 이 형식으로 인코딩)
+const words  = rawT ? rawT.split(' / ').map(s=>s.trim()).filter(Boolean) : [];
+
+let slowMode = false;
+let seqIdx   = 0;
+
+const getRate = ()=> slowMode ? 0.60 : 0.82;
+const hasTTS  = ()=> 'speechSynthesis' in window;
+
+/* ── HTML 이스케이프 ── */
+function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+/* ── 낱말 목록 렌더링 ── */
+function render(){
+  const list = document.getElementById('wordList');
+  if(!words.length){
+    list.innerHTML='<div class="err">⚠️ 표시할 텍스트가 없어요.<br>QR 코드를 다시 스캔해 주세요.</div>';
+    document.getElementById('btnAll').style.display='none';
+    return;
+  }
+  list.innerHTML='';
+  words.forEach((w,i)=>{
+    const d = document.createElement('div');
+    d.className = 'wcard';
+    d.id = 'wc'+i;
+    d.innerHTML = `<span class="ko">${esc(w)}</span><span class="spk">🔊</span>`;
+    d.addEventListener('click', ()=> speakOne(w, i));
+    list.appendChild(d);
+  });
+}
+
+/* ── 활성 카드 강조 ── */
+function setActive(idx){
+  document.querySelectorAll('.wcard').forEach((c,i)=>
+    c.classList.toggle('playing', i===idx));
+}
+
+/* ── SpeechSynthesisUtterance 생성 ── */
+function mkU(text){
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang  = lang;
+  u.rate  = getRate();
+  u.pitch = 1.05;
+  return u;
+}
+
+/* ── 개별 재생 ── */
+function speakOne(text, idx){
+  if(!hasTTS()) return;
+  speechSynthesis.cancel();
+  setActive(idx);
+  const u = mkU(text);
+  u.onend  = ()=> setActive(-1);
+  u.onerror= ()=> setActive(-1);
+  speechSynthesis.speak(u);
+}
+
+/* ── 전체 순서 재생 ── */
+function playNext(){
+  if(seqIdx >= words.length){ setActive(-1); return; }
+  setActive(seqIdx);
+  const u = mkU(words[seqIdx]);
+  u.onend  = ()=>{ seqIdx++; setTimeout(playNext, 700); };
+  u.onerror= ()=>{ seqIdx++; setTimeout(playNext, 700); };
+  speechSynthesis.speak(u);
+}
+function playAll(){
+  if(!hasTTS() || !words.length) return;
+  speechSynthesis.cancel();
+  seqIdx = 0;
+  setTimeout(playNext, 80);
+}
+
+/* ── 느린 재생 토글 ── */
+function toggleSlow(){
+  slowMode = !slowMode;
+  const btn = document.getElementById('btnSlow');
+  btn.classList.toggle('on', slowMode);
+  btn.textContent = slowMode ? '🐢 느림' : '🐢';
+}
+
+/* ── 오버레이 닫고 재생 시작 ── */
+function startPlay(){
+  document.getElementById('overlay').classList.add('hide');
+  playAll();
+}
+
+/* ── 초기화 ── */
+render();
+
+if(!hasTTS()){
+  // TTS 미지원
+  document.getElementById('overlay').classList.add('hide');
+  document.getElementById('hint').textContent =
+    '⚠️ 이 브라우저는 음성을 지원하지 않아요. Chrome 또는 Safari로 열어 주세요.';
+  document.getElementById('btnAll').style.display = 'none';
+} else {
+  // 모바일: 오버레이 유지 → 사용자 탭 후 재생 (iOS 정책 대응)
+  // 데스크톱: 자동재생 시도
+  const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  if(!isMobile){
+    document.getElementById('overlay').classList.add('hide');
+    setTimeout(playAll, 700);
+  }
+  // 모바일은 overlay가 보인 채로 → startPlay() 호출까지 대기
+}
+</script>
+</body>
+</html>
