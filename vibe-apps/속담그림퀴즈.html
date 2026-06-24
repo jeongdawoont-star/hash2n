@@ -1,0 +1,1803 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>속담 그림 퀴즈</title>
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Jua&family=Do+Hyeon&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FFF5FA;--paper:#FFFFFF;
+  --pink:#FF8FAB;--pink-light:#FFD6E8;--pink-xlight:#FFF0F7;--pink-dark:#CC6080;
+  --blue:#85BEFF;--blue-light:#D8EDFF;
+  --yellow:#FFD25C;--yellow-light:#FFF8D0;
+  --green:#72D4A0;--green-light:#C8F5E2;
+  --red:#FF7A8A;--red-light:#FFD8DC;
+  --lavender:#C0AEFF;--lavender-light:#EDE8FF;
+  --text:#3C2048;--text-muted:#9B7AAA;--border:#F0C0D8;
+  --r-sm:14px;--r-md:20px;--r-lg:28px;--r-pill:100px;
+  --ink:#3C2048;--accent:#FF8FAB;--accent2:#85BEFF;
+  --shadow:0 4px 20px rgba(240,192,216,.22);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Gaegu,cursive;background:var(--bg);background-image:radial-gradient(circle at 15% 20%,rgba(255,143,171,.12) 0,transparent 45%),radial-gradient(circle at 85% 80%,rgba(192,174,255,.1) 0,transparent 45%);color:var(--text);min-height:100vh;padding:12px;overflow-x:hidden}
+body.play-active{height:100dvh;overflow:hidden}
+.wrap{max-width:1120px;margin:0 auto;width:100%}
+body.play-active .wrap{height:calc(100dvh - 24px);display:flex;flex-direction:column;gap:8px;min-height:0}
+header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;position:relative}
+body.play-active header{margin-bottom:0;flex-shrink:0}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+h1{font-family:Jua,sans-serif;font-size:clamp(20px,3vw,30px);color:var(--text);display:inline-block;background:var(--pink-light);padding:6px 22px;border:2px solid var(--pink);border-radius:var(--r-pill);box-shadow:0 4px 16px rgba(255,143,171,.3);white-space:nowrap}
+.subtitle{font-size:15px;color:var(--text-muted);font-family:'Do Hyeon',sans-serif;white-space:nowrap}
+.header-actions{display:flex;gap:8px;align-items:center;flex-shrink:0}
+.icon-btn{font-family:'Do Hyeon',sans-serif;font-size:13px;padding:7px 16px;background:var(--paper);border:2px solid var(--border);border-radius:var(--r-pill);cursor:pointer;box-shadow:0 2px 8px rgba(240,192,216,.3);color:var(--text);white-space:nowrap;transition:all .15s}
+.icon-btn:hover{background:var(--pink-light);border-color:var(--pink);transform:translateY(-1px)}
+.icon-btn:active{transform:translateY(1px)}
+.top-panel{display:grid;grid-template-columns:minmax(220px,1fr) auto;gap:10px;align-items:center;margin-bottom:12px}
+body.play-active .top-panel{margin-bottom:0;flex-shrink:0}
+.modes{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.mode-btn{font-family:'Do Hyeon',sans-serif;font-size:14px;padding:8px 18px;background:var(--paper);border:2px solid var(--border);border-radius:var(--r-pill);cursor:pointer;transition:all .15s;box-shadow:0 2px 8px rgba(240,192,216,.25);color:var(--text)}
+.mode-btn:hover{transform:translateY(-2px);box-shadow:0 4px 14px rgba(255,143,171,.35);border-color:var(--pink);background:var(--pink-xlight)}
+.mode-btn:active{transform:translateY(0)}
+.mode-btn.active{background:var(--pink);color:white;border-color:var(--pink-dark);box-shadow:0 4px 16px rgba(255,143,171,.45)}
+.stats{display:flex;justify-content:space-around;background:var(--paper);border:2px solid var(--border);border-radius:var(--r-md);padding:8px 14px;box-shadow:0 2px 10px rgba(240,192,216,.2);font-family:'Do Hyeon',sans-serif;gap:8px}
+.stat-item{text-align:center;padding:2px 10px}
+.stat-num{font-size:24px;color:var(--pink);display:block;line-height:1;font-family:Jua,sans-serif}
+.stat-label{font-size:11px;color:var(--text-muted);white-space:nowrap}
+.card{background:var(--paper);border:2px solid var(--border);border-radius:var(--r-lg);padding:20px;box-shadow:0 4px 20px rgba(240,192,216,.22);margin-bottom:14px}
+body.play-active #playMode{flex:1;min-height:0;display:flex;flex-direction:column}
+body.play-active #playCard{flex:1;min-height:0;margin-bottom:0;padding:clamp(7px,1.4vmin,14px);overflow:hidden}
+body.play-active #playMode>.action-row{flex-shrink:0;margin-top:8px}
+.play-layout{height:100%;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(190px,260px);gap:clamp(7px,1.4vmin,14px);align-items:stretch}
+.canvas-panel,.side-panel{min-height:0;display:flex;flex-direction:column}
+.canvas-panel{align-items:center;justify-content:center;gap:clamp(6px,1.1vmin,10px)}
+.side-panel{gap:clamp(7px,1.2vmin,12px);justify-content:center;overflow:hidden}
+.proverb-strip{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;min-height:0}
+.proverb-text{font-family:Jua,sans-serif;font-size:clamp(17px,2.8vmin,26px);text-align:center;padding:5px 12px;line-height:1.3;color:var(--text);background:var(--yellow-light);border:2px solid var(--yellow);border-radius:var(--r-sm);overflow-wrap:anywhere}
+.proverb-number{display:inline-flex;align-items:center;justify-content:center;background:var(--blue);color:white;border-radius:50%;width:32px;height:32px;font-size:14px;font-family:'Do Hyeon',sans-serif;flex-shrink:0;box-shadow:0 2px 8px rgba(133,190,255,.4)}
+.draw-guide{margin:0;padding:10px 14px;background:var(--lavender-light);border:2px solid var(--lavender);border-radius:var(--r-md);font-family:'Do Hyeon',sans-serif;font-size:clamp(12px,1.85vmin,14px);line-height:1.4;overflow:hidden}
+.draw-guide div+div{margin-top:6px}
+body.play-active .draw-guide div{display:-webkit-box;-webkit-line-clamp:3;line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.draw-guide .info-label{display:inline-block;margin-right:6px;padding:2px 8px;background:var(--lavender);color:white;border-radius:var(--r-pill);font-size:12px;line-height:1.3}
+.canvas-area{position:relative;background:#fff;border:2px solid var(--border);border-radius:var(--r-md);overflow:hidden;aspect-ratio:1;width:var(--canvas-fit-size,min(100%,500px));height:var(--canvas-fit-size,min(100%,500px));flex:0 0 auto;margin:0 auto;touch-action:none;box-shadow:0 4px 20px rgba(240,192,216,.3)}
+canvas{display:block;width:100%;height:100%;cursor:crosshair;background:linear-gradient(rgba(200,150,200,.04) 1px,transparent 1px) 0 0/20px 20px,linear-gradient(90deg,rgba(200,150,200,.04) 1px,transparent 1px) 0 0/20px 20px,#fff}
+.tools{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-items:center}
+.color-dot{width:34px;height:34px;border-radius:50%;border:3px solid white;cursor:pointer;transition:transform .15s;box-shadow:0 2px 8px rgba(0,0,0,.12)}
+.color-dot:hover{transform:scale(1.12)}
+.color-dot.active{transform:scale(1.2);box-shadow:0 0 0 3px var(--pink),0 4px 12px rgba(255,143,171,.4)}
+.size-slider{-webkit-appearance:none;appearance:none;width:85px;height:8px;border-radius:4px;background:var(--pink-light);outline:0}
+.size-slider::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--pink);border:3px solid white;cursor:pointer;box-shadow:0 2px 8px rgba(255,143,171,.5)}
+.tool-btn{font-family:'Do Hyeon',sans-serif;font-size:clamp(11px,1.8vmin,13px);padding:6px 14px;background:var(--paper);border:2px solid var(--border);border-radius:var(--r-pill);cursor:pointer;box-shadow:0 2px 6px rgba(240,192,216,.3);color:var(--text);transition:all .15s}
+.tool-btn:hover{background:var(--pink-light);border-color:var(--pink);transform:translateY(-1px)}
+.tool-btn:active{transform:translateY(1px)}
+.tool-btn.danger{background:var(--red-light);border-color:var(--red);color:var(--pink-dark)}
+.tool-btn.danger:hover{background:var(--red);color:white}
+.options{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:0}
+.option-btn{font-family:Jua,sans-serif;font-size:clamp(12px,2vmin,15px);padding:10px 8px;background:var(--paper);border:2px solid var(--border);border-radius:var(--r-md);cursor:pointer;box-shadow:0 2px 8px rgba(240,192,216,.25);text-align:center;line-height:1.3;transition:all .15s;min-height:42px;overflow-wrap:anywhere;color:var(--text)}
+.option-btn:hover{background:var(--pink-xlight);border-color:var(--pink);transform:translateY(-2px);box-shadow:0 4px 14px rgba(255,143,171,.3)}
+.option-btn:active{transform:translateY(0)}
+.option-btn.correct{background:var(--green-light);border-color:var(--green);animation:pop .4s}
+.option-btn.wrong{background:var(--red-light);border-color:var(--red);color:var(--pink-dark);animation:shake .4s}
+.option-btn:disabled{cursor:not-allowed}
+@keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.06)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.hint-area{background:var(--yellow-light);border:2px solid var(--yellow);border-radius:var(--r-md);padding:8px 12px;font-family:'Do Hyeon',sans-serif;font-size:clamp(12px,1.9vmin,15px);min-height:40px;text-align:center;line-height:1.4;overflow:hidden}
+.hint-area.empty{opacity:.55;font-style:italic}
+.action-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.big-btn{font-family:Jua,sans-serif;font-size:clamp(14px,2.2vmin,17px);padding:11px 22px;background:var(--pink);color:white;border:2px solid var(--pink-dark);border-radius:var(--r-pill);cursor:pointer;box-shadow:0 4px 16px rgba(255,143,171,.4);transition:all .15s}
+.big-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(255,143,171,.5)}
+.big-btn:active{transform:translateY(1px);box-shadow:0 2px 8px rgba(255,143,171,.3)}
+.big-btn.secondary{background:var(--blue);color:white;border-color:#5090C8;box-shadow:0 4px 16px rgba(133,190,255,.4)}
+.big-btn.secondary:hover{background:#5090C8}
+.big-btn.success{background:var(--green);color:white;border-color:#45A875;box-shadow:0 4px 16px rgba(114,212,160,.4)}
+.big-btn.success:hover{background:#45A875}
+.empty-state{text-align:center;padding:40px 20px;font-family:'Do Hyeon',sans-serif;font-size:17px;color:var(--text-muted)}
+body.play-active #playCard>.empty-state{height:100%;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px}
+.empty-state .emoji{font-size:64px;display:block;margin-bottom:12px}
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;max-height:400px;overflow-y:auto;padding:6px}
+.gallery-item{background:#fff;border:2px solid var(--border);border-radius:var(--r-md);aspect-ratio:1;position:relative;overflow:hidden;cursor:pointer;box-shadow:0 2px 8px rgba(240,192,216,.2);transition:all .15s}
+.gallery-item:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(255,143,171,.3);border-color:var(--pink)}
+.gallery-item img{width:100%;height:100%;object-fit:contain}
+.gallery-item .label{position:absolute;bottom:0;left:0;right:0;background:rgba(60,32,72,.82);color:#fff;font-family:'Do Hyeon',sans-serif;font-size:11px;padding:4px;text-align:center;line-height:1.2}
+.result-banner{text-align:center;padding:12px;border-radius:var(--r-md);font-family:Jua,sans-serif;font-size:clamp(14px,2.2vmin,18px);border:2px solid transparent;box-shadow:0 4px 20px rgba(240,192,216,.3);animation:pop .4s;line-height:1.4;overflow:hidden}
+.result-banner.win{background:var(--green-light);border-color:var(--green)}
+.result-banner.lose{background:var(--red-light);border-color:var(--red)}
+#resultBox{min-height:0;overflow:hidden}
+.hidden{display:none!important}
+.deco{position:fixed;pointer-events:none;opacity:.1;font-size:80px}
+.deco-1{top:5%;left:-10px;transform:rotate(-15deg)}
+.deco-2{bottom:10%;right:-10px;transform:rotate(20deg)}
+.backup-status{width:100%;text-align:center;font-family:'Do Hyeon',sans-serif;font-size:13px;color:var(--text-muted);padding:4px 8px}
+@media(min-width:760px){
+  .side-panel .tools{justify-content:flex-start;align-content:flex-start}
+  .side-panel .color-dot{width:36px;height:36px}
+  .side-panel .size-slider{width:100%;max-width:210px;margin:2px 0}
+  .side-panel .action-row{justify-content:stretch}
+  .side-panel .big-btn,.side-panel .tool-btn{flex:1 1 auto}
+}
+@media(max-width:840px){
+  .brand{gap:6px}.subtitle{display:none}
+  .top-panel{grid-template-columns:1fr;gap:7px}
+  .stats{padding:6px 8px}
+  .mode-btn{font-size:13px;padding:7px 12px}
+}
+@media(max-width:740px),(orientation:portrait){
+  body.play-active{padding:7px}
+  body.play-active .wrap{height:calc(100dvh - 14px);gap:6px}
+  .side-panel{overflow-y:auto}
+  header{gap:6px}
+  h1{font-size:clamp(17px,5.2vw,24px);padding:5px 14px}
+  .icon-btn{font-size:12px;padding:6px 9px}
+  .top-panel{gap:6px}
+  .stat-num{font-size:18px}
+  .stat-label{font-size:11px}
+  .modes{gap:6px}
+  .mode-btn{flex:1 1 0;min-width:0;padding:6px 5px;font-size:12px}
+  .play-layout{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) auto;gap:6px}
+  .canvas-panel{gap:5px}
+  .side-panel{justify-content:flex-end;gap:6px}
+  .proverb-strip{gap:5px}
+  .proverb-number{width:28px;height:28px;font-size:12px}
+  .proverb-text{font-size:clamp(14px,4.3vw,20px);padding:3px 8px;line-height:1.2}
+  .draw-guide{font-size:clamp(11px,3vw,13px);padding:7px 9px;line-height:1.25}
+  body.play-active .draw-guide div{-webkit-line-clamp:2;line-clamp:2}
+  .tools{gap:6px}
+  .color-dot{width:28px;height:28px;border-width:2px}
+  .size-slider{width:70px}
+  .tool-btn{padding:5px 9px}
+  .big-btn{padding:8px 14px}
+  .options{gap:6px}
+  .option-btn{padding:7px 5px;min-height:38px;font-size:clamp(11px,3.5vw,13px)}
+  .hint-area{padding:6px 8px;min-height:34px}
+  .result-banner{padding:8px}
+}
+@media(max-width:480px){
+  body:not(.play-active) .options{grid-template-columns:1fr}
+  .stat-num{font-size:20px}
+  .deco{display:none}
+}
+
+/* ===== play-active 모드 공통 스타일 축소 ===== */
+body.play-active header {
+  margin-bottom: 4px;
+  gap: 6px;
+}
+body.play-active h1 {
+  font-size: clamp(16px, 2.5vw, 22px);
+  padding: 4px 14px;
+  border-width: 1.5px;
+  box-shadow: none;
+}
+body.play-active .subtitle {
+  display: none;
+}
+body.play-active .icon-btn {
+  padding: 5px 12px;
+  font-size: 12px;
+}
+
+/* 도구 픽커 그룹화 스타일 */
+.color-picker {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.size-picker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+}
+.btn-group {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  align-items: center;
+}
+.btn-text {
+  display: inline;
+}
+
+/* 화면이 좁거나 가로 모드일 때 버튼 안의 텍스트 감춤 */
+@media (max-width: 600px) {
+  .btn-text {
+    display: none;
+  }
+}
+@media (orientation: landscape) {
+  body.play-active .btn-text {
+    display: none;
+  }
+}
+
+/* 세로/가로 화면 높이가 낮을 때(<=760px) 전체적인 요소 크기 및 간격 축소 */
+@media (max-height: 760px) {
+  body.play-active {
+    padding: 4px !important;
+  }
+  body.play-active .wrap {
+    height: calc(100dvh - 8px) !important;
+    gap: 4px !important;
+  }
+  body.play-active header {
+    margin-bottom: 2px !important;
+  }
+  body.play-active .top-panel {
+    margin-bottom: 2px !important;
+    gap: 4px !important;
+  }
+  body.play-active #playCard {
+    padding: 6px 8px !important;
+  }
+  body.play-active .draw-guide {
+    padding: 4px 6px !important;
+    font-size: 11px !important;
+  }
+  body.play-active #playCard .draw-guide div+div {
+    display: none !important;
+  }
+  body.play-active .tools {
+    gap: 4px !important;
+  }
+  body.play-active .color-dot {
+    width: 24px !important;
+    height: 24px !important;
+  }
+  body.play-active .color-dot.active {
+    transform: scale(1.15) !important;
+  }
+  body.play-active .tool-btn {
+    padding: 4px 8px !important;
+    font-size: 11px !important;
+  }
+  body.play-active .btn-text {
+    display: none !important;
+  }
+  body.play-active .big-btn {
+    padding: 6px 14px !important;
+    font-size: 12px !important;
+  }
+  body.play-active .action-row {
+    gap: 4px !important;
+  }
+}
+
+@media(min-width:760px){
+  .side-panel .tools {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    gap: 8px;
+  }
+  .side-panel .color-picker {
+    justify-content: flex-start;
+  }
+  .side-panel .size-picker {
+    justify-content: flex-start;
+    width: 100%;
+  }
+  .side-panel .size-slider {
+    width: 100%;
+    max-width: 210px;
+  }
+  .side-panel .btn-group {
+    justify-content: flex-start;
+  }
+}
+
+/* ===== 가로 모드 2단 레이아웃 ===== */
+.ls-left{display:none}
+.ls-right{display:contents}
+@media(orientation:landscape){
+  body.play-active{padding:0!important;overflow:hidden}
+  body.play-active .deco{display:none}
+  body.play-active .wrap{
+    height:100dvh!important;display:grid!important;
+    grid-template-columns:53% 47%;
+    padding:0!important;max-width:none;margin:0;gap:0;overflow:hidden;
+  }
+  body.play-active .ls-left{
+    display:flex;flex-direction:column;
+    align-items:center;justify-content:center;
+    padding:8px;background:var(--bg);
+    border-right:2px solid var(--border);
+    overflow:hidden;min-height:0;
+    gap:6px;
+  }
+  body.play-active .ls-right{
+    display:flex!important;flex-direction:column;
+    overflow-y:auto;padding:8px 10px;
+    gap:6px;min-height:0;
+  }
+  body.play-active header{margin-bottom:4px;flex-shrink:0;gap:6px}
+  body.play-active header h1{font-size:18px;padding:3px 12px}
+  body.play-active header .subtitle{display:none}
+  
+  /* 가로 모드 통계/모드 기본: 단일 행 배치 */
+  body.play-active .top-panel{
+    display:flex!important;
+    flex-direction:row!important;
+    justify-content:space-between!important;
+    align-items:center!important;
+    margin-bottom:4px;
+    flex-shrink:0;
+    gap:8px!important;
+  }
+  body.play-active .stats{
+    flex:1;
+    padding:4px 8px;
+    gap:4px;
+    border-radius:var(--r-sm);
+  }
+  body.play-active .stat-item{
+    padding:0 2px;
+  }
+  body.play-active .stat-num{
+    font-size:18px;
+  }
+  body.play-active .stat-label{
+    font-size:9px;
+  }
+  body.play-active .modes{
+    flex:1.2;
+    gap:4px;
+    flex-wrap:nowrap;
+  }
+  body.play-active .mode-btn{
+    flex:1;
+    font-size:11px;
+    padding:5px 2px;
+    min-width:0;
+    white-space:nowrap;
+    border-radius:var(--r-sm);
+  }
+
+  /* 좁은 가로 화면(<=700px)에서 통계/모드 세로 배치 및 추가 축소 */
+  @media (max-width: 700px) {
+    body.play-active .top-panel {
+      flex-direction: column !important;
+      align-items: stretch !important;
+      gap: 4px !important;
+    }
+    body.play-active .stats {
+      padding: 3px 6px;
+      gap: 2px;
+    }
+    body.play-active .stat-num {
+      font-size: 16px;
+    }
+    body.play-active .stat-label {
+      font-size: 8px;
+    }
+    body.play-active .modes {
+      flex-wrap: nowrap !important;
+    }
+    body.play-active .mode-btn {
+      padding: 4px 2px;
+      font-size: 10px;
+    }
+  }
+
+  body.play-active #playMode{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;gap:6px}
+  body.play-active #playCard{
+    flex:1;min-height:0;margin-bottom:0;
+    padding:8px 10px;
+    overflow-y:auto;display:flex;flex-direction:column;gap:6px;
+  }
+  body.play-active #playMode>.action-row{flex-shrink:0}
+  body.play-active .ls-left .canvas-area{flex-shrink:0}
+  
+  /* 가로 모드 드로잉 툴바 가로배치 */
+  .landscape-tools {
+    width: 100%;
+    max-width: var(--canvas-fit-size, 500px);
+    margin: 0 auto;
+    flex-shrink: 0;
+  }
+  .landscape-tools .tools {
+    display: flex!important;
+    flex-direction: row!important;
+    flex-wrap: nowrap!important;
+    justify-content: space-between!important;
+    align-items: center!important;
+    background: var(--paper);
+    padding: 4px 8px!important;
+    border: 2px solid var(--border);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow);
+    gap: 6px!important;
+    width: 100%;
+  }
+  .landscape-tools .color-picker {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    flex-shrink: 0;
+  }
+  .landscape-tools .color-dot {
+    width: 24px;
+    height: 24px;
+    border-width: 2px;
+  }
+  .landscape-tools .color-dot.active {
+    transform: scale(1.15);
+    box-shadow: 0 0 0 2px var(--pink);
+  }
+  .landscape-tools .size-picker {
+    display: flex;
+    align-items: center;
+    flex-grow: 1;
+    justify-content: center;
+    padding: 0 4px;
+    min-width: 60px;
+    max-width: 100px;
+  }
+  .landscape-tools .size-slider {
+    width: 100%;
+    height: 6px;
+  }
+  .landscape-tools .size-slider::-webkit-slider-thumb {
+    width: 16px;
+    height: 16px;
+  }
+  .landscape-tools .btn-group {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+  .landscape-tools .tool-btn {
+    padding: 5px 8px;
+    font-size: 11px;
+    border-radius: var(--r-sm);
+  }
+
+  /* 좁은 가로 화면(<=700px)에서 드로잉 툴바 2행 배치하여 잘림 방지 */
+  @media (max-width: 700px) {
+    .landscape-tools .tools {
+      flex-wrap: wrap !important;
+      justify-content: center !important;
+      padding: 4px !important;
+      gap: 4px !important;
+    }
+    .landscape-tools .color-picker {
+      width: 100% !important;
+      justify-content: center !important;
+      margin-bottom: 2px;
+    }
+    .landscape-tools .size-picker {
+      flex: 1 !important;
+      max-width: 120px !important;
+      padding: 0 !important;
+    }
+    .landscape-tools .btn-group {
+      gap: 3px !important;
+    }
+    .landscape-tools .tool-btn {
+      padding: 4px 6px !important;
+      font-size: 10px !important;
+    }
+  }
+  
+  /* 카드 내부 구성요소 가로모드 세부 튜닝 */
+  body.play-active #playCard .proverb-strip {
+    gap: 4px;
+  }
+  body.play-active #playCard .proverb-text {
+    font-size: 15px;
+    padding: 3px 8px;
+  }
+  body.play-active #playCard .proverb-number {
+    width: 24px;
+    height: 24px;
+    font-size: 11px;
+  }
+  body.play-active #playCard .draw-guide {
+    padding: 5px 8px;
+    font-size: 11px;
+  }
+  
+  /* 가로모드 세로공간 절약을 위해 유래설명('왜?') 영역 숨김 */
+  body.play-active #playCard .draw-guide div+div {
+    display: none;
+  }
+  
+  body.play-active #playCard .big-btn {
+    padding: 6px 14px;
+    font-size: 12px;
+    border-radius: var(--r-sm);
+  }
+  body.play-active #playCard .action-row {
+    gap: 4px;
+  }
+  body.play-active #playCard>.empty-state {
+    font-size: 14px;
+    padding: 10px;
+  }
+  body.play-active #playCard>.empty-state .emoji {
+    font-size: 36px;
+    margin-bottom: 4px;
+  }
+  
+  /* 퀴즈 정답 선택시 레이아웃 축소 */
+  body.play-active #playCard .options {
+    gap: 4px;
+  }
+  body.play-active #playCard .option-btn {
+    min-height: 32px;
+    padding: 4px 6px;
+    font-size: 12px;
+  }
+  body.play-active #playCard .hint-area {
+    min-height: 28px;
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+  body.play-active #playCard .result-banner {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+  body.play-active #playCard .result-banner small {
+    font-size: 11px !important;
+  }
+}
+</style>
+</head>
+<body>
+<div class="deco deco-1">📚</div>
+<div class="deco deco-2">✏️</div>
+<div class="wrap">
+  <div class="ls-left" id="lsLeft"></div>
+  <div class="ls-right">
+  <header>
+    <div class="brand">
+      <h1>🎨 속담 그림 퀴즈</h1>
+      <div class="subtitle">초등학생 필수 속담</div>
+    </div>
+    <div class="header-actions">
+      <button class="icon-btn" id="fullscreenBtn" type="button">⛶ 전체화면</button>
+    </div>
+  </header>
+  <div class="top-panel">
+    <div class="stats">
+      <div class="stat-item"><span class="stat-num" id="drawnCount">0</span><span class="stat-label">그린 속담</span></div>
+      <div class="stat-item"><span class="stat-num" id="totalCount">100</span><span class="stat-label">전체 속담</span></div>
+      <div class="stat-item"><span class="stat-num" id="score">0</span><span class="stat-label">맞힌 개수</span></div>
+    </div>
+    <div class="modes">
+      <button class="mode-btn active" data-mode="play">🎲 랜덤 시작</button>
+      <button class="mode-btn" data-mode="gallery">🖼️ 내 그림첩</button>
+      <button class="mode-btn" data-mode="list">📋 속담 목록</button>
+    </div>
+  </div>
+  <div id="playMode">
+    <div class="card" id="playCard">
+      <div class="empty-state"><span class="emoji">🎲</span><div>아래 버튼을 눌러 시작해요!</div></div>
+    </div>
+    <div class="action-row" id="startBtnRow">
+      <button class="big-btn" id="startBtn">🎲 랜덤 속담 뽑기</button>
+    </div>
+  </div>
+  <div id="galleryMode" class="hidden">
+    <div class="card">
+      <div class="gallery" id="galleryGrid">
+        <div class="empty-state" style="grid-column:1/-1"><span class="emoji">🖼️</span><div>아직 그린 그림이 없어요</div></div>
+      </div>
+    </div>
+    <input type="file" id="importFile" accept=".json" style="display:none">
+    <div class="action-row">
+      <button class="big-btn secondary" id="exportBtn">🖼️ 이미지 내보내기</button>
+      <button class="big-btn" style="background:var(--text);color:#fff;border-color:#1a0025;" id="backupBtn">🔗 JSON 저장</button>
+      <button class="big-btn" style="background:var(--yellow);color:var(--text);border-color:#C8A020;box-shadow:0 4px 16px rgba(255,210,92,.35);" id="restoreBtn">📥 불러오기</button>
+      <button class="big-btn secondary" id="sampleBtn">🌐 샘플 불러오기</button>
+      <button class="big-btn" style="background:var(--red);border-color:#B04050;box-shadow:0 4px 16px rgba(255,122,138,.35);" id="resetBtn">🗑️ 전체 삭제</button>
+      <div class="backup-status" id="backupStatus">JSON 자동저장은 지원 브라우저에서 파일을 한 번 지정하면 켜져요.</div>
+    </div>
+  </div>
+  <div id="listMode" class="hidden">
+    <div class="card">
+      <div id="proverbList" style="max-height:500px;overflow-y:auto"></div>
+    </div>
+  </div>
+  </div><!-- /.ls-right -->
+</div>
+<script>
+// ============ 100개 속담 데이터 ============
+const PROVERBS = [
+  {t:"가는 말이 고와야 오는 말이 곱다", m:"내가 좋게 말해야 상대도 좋게 답해요"},
+  {t:"가는 날이 장날", m:"우연히 갔는데 좋은 일이 생겨요"},
+  {t:"가재는 게 편", m:"비슷한 처지끼리 서로 편을 들어요"},
+  {t:"갈수록 태산", m:"갈수록 더 어려워져요"},
+  {t:"개구리 올챙이 적 생각 못한다", m:"잘된 후에 못살던 때를 잊어요"},
+  {t:"개똥도 약에 쓰려면 없다", m:"흔한 것도 막상 필요할 땐 없어요"},
+  {t:"고래 싸움에 새우 등 터진다", m:"강한 사람들 다툼에 약자가 피해봐요"},
+  {t:"고생 끝에 낙이 온다", m:"힘든 일 뒤에는 좋은 일이 와요"},
+  {t:"공든 탑이 무너지랴", m:"정성껏 한 일은 헛되지 않아요"},
+  {t:"구슬이 서 말이라도 꿰어야 보배", m:"좋은 것도 다듬어야 가치 있어요"},
+  {t:"굼벵이도 구르는 재주가 있다", m:"누구나 한 가지 재주는 있어요"},
+  {t:"귀에 걸면 귀걸이 코에 걸면 코걸이", m:"같은 일도 보기에 따라 달라요"},
+  {t:"그림의 떡", m:"보기만 하고 가질 수 없어요"},
+  {t:"금강산도 식후경", m:"아무리 좋아도 배가 불러야 즐거워요"},
+  {t:"길고 짧은 것은 대어 보아야 안다", m:"실제로 해봐야 결과를 알아요"},
+  {t:"까마귀 날자 배 떨어진다", m:"우연히 두 일이 겹쳐 의심받아요"},
+  {t:"꼬리가 길면 밟힌다", m:"나쁜 일을 계속하면 들켜요"},
+  {t:"꿩 대신 닭", m:"꼭 맞는 게 없으면 비슷한 걸로 대신해요"},
+  {t:"꿩 먹고 알 먹기", m:"한 번에 두 가지 이득을 봐요"},
+  {t:"낮말은 새가 듣고 밤말은 쥐가 듣는다", m:"어디서든 말조심해야 해요"},
+  {t:"낫 놓고 기역 자도 모른다", m:"아주 쉬운 것도 몰라요"},
+  {t:"누워서 떡 먹기", m:"아주 쉬운 일이에요"},
+  {t:"누워서 침 뱉기", m:"남을 해치려다 자기가 다쳐요"},
+  {t:"눈에서 멀어지면 마음에서도 멀어진다", m:"자주 못 보면 정도 식어요"},
+  {t:"다 된 죽에 코 풀기", m:"거의 끝난 일을 망쳐요"},
+  {t:"달걀로 바위 치기", m:"되지도 않을 일을 무모하게 해요"},
+  {t:"닭 잡아먹고 오리발 내놓기", m:"잘못해놓고 시치미를 떼요"},
+  {t:"닭 쫓던 개 지붕 쳐다본다", m:"애쓰던 일이 헛수고가 됐어요"},
+  {t:"도토리 키 재기", m:"비슷비슷한 것끼리 다투어요"},
+  {t:"돌다리도 두들겨 보고 건너라", m:"잘 아는 일도 꼼꼼히 살펴봐요"},
+  {t:"되로 주고 말로 받는다", m:"조금 주고 더 많이 돌려받아요"},
+  {t:"등잔 밑이 어둡다", m:"가까이 있는 것을 더 몰라요"},
+  {t:"땅 짚고 헤엄치기", m:"아주 쉽고 확실한 일이에요"},
+  {t:"떡 본 김에 제사 지낸다", m:"좋은 기회에 일을 해버려요"},
+  {t:"똥 묻은 개가 겨 묻은 개 나무란다", m:"자기 잘못은 모르고 남을 흉봐요"},
+  {t:"마른 하늘에 날벼락", m:"갑자기 뜻밖의 안 좋은 일이 생겨요"},
+  {t:"말 한마디로 천 냥 빚을 갚는다", m:"말을 잘하면 큰 일도 해결돼요"},
+  {t:"맞은 놈은 펴고 자고 때린 놈은 오그리고 잔다", m:"잘못한 사람이 더 불안해해요"},
+  {t:"메뚜기도 유월이 한철", m:"누구에게나 잘나갈 때가 있어요"},
+  {t:"모로 가도 서울만 가면 된다", m:"방법은 달라도 목적만 이루면 돼요"},
+  {t:"목마른 놈이 우물 판다", m:"급한 사람이 먼저 일을 시작해요"},
+  {t:"못된 송아지 엉덩이에 뿔 난다", m:"버릇없는 사람이 더 나쁜 짓을 해요"},
+  {t:"믿는 도끼에 발등 찍힌다", m:"믿었던 사람에게 배신당해요"},
+  {t:"바늘 도둑이 소도둑 된다", m:"작은 나쁜 짓이 큰 죄로 자라요"},
+  {t:"바늘 가는 데 실 간다", m:"서로 항상 붙어 다녀요"},
+  {t:"발 없는 말이 천 리 간다", m:"소문은 빨리 멀리 퍼져요"},
+  {t:"백지장도 맞들면 낫다", m:"쉬운 일도 같이 하면 더 쉬워요"},
+  {t:"백 번 듣는 것이 한 번 보는 것만 못하다", m:"직접 보는 게 가장 확실해요"},
+  {t:"범에게 날개", m:"강한 자가 더 강해져요"},
+  {t:"벼는 익을수록 고개를 숙인다", m:"훌륭할수록 겸손해져요"},
+  {t:"병 주고 약 준다", m:"해를 끼치고 도와주는 척해요"},
+  {t:"보기 좋은 떡이 먹기도 좋다", m:"겉모습도 좋아야 내용도 좋아요"},
+  {t:"빈 수레가 요란하다", m:"속이 빈 사람일수록 떠들어요"},
+  {t:"빛 좋은 개살구", m:"겉만 좋고 속은 별로예요"},
+  {t:"사공이 많으면 배가 산으로 간다", m:"지시하는 사람이 많으면 일을 망쳐요"},
+  {t:"산 넘어 산", m:"어려움이 계속 이어져요"},
+  {t:"새 발의 피", m:"아주 적은 양이에요"},
+  {t:"서당 개 삼 년이면 풍월을 읊는다", m:"오래 보고 들으면 자연히 알게 돼요"},
+  {t:"설마가 사람 잡는다", m:"방심하다가 큰일을 당해요"},
+  {t:"세 살 버릇 여든까지 간다", m:"어릴 때 습관이 평생 가요"},
+  {t:"소 잃고 외양간 고친다", m:"일이 터진 뒤에 뒤늦게 손써요"},
+  {t:"소문난 잔치에 먹을 것 없다", m:"소문에 비해 실제는 별로예요"},
+  {t:"손바닥으로 하늘 가리기", m:"잘못을 숨기려 해도 안 숨겨져요"},
+  {t:"쇠귀에 경 읽기", m:"아무리 가르쳐도 알아듣지 못해요"},
+  {t:"수박 겉 핥기", m:"속은 모르고 겉만 대충 알아요"},
+  {t:"식은 죽 먹기", m:"아주 쉬운 일이에요"},
+  {t:"십 년이면 강산도 변한다", m:"오랜 시간이 지나면 다 변해요"},
+  {t:"싼 게 비지떡", m:"값싼 것은 품질도 떨어져요"},
+  {t:"아니 땐 굴뚝에 연기 날까", m:"원인 없는 결과는 없어요"},
+  {t:"아 다르고 어 다르다", m:"같은 말도 어떻게 하느냐에 따라 달라요"},
+  {t:"앓던 이가 빠진 것 같다", m:"걱정거리가 없어져 시원해요"},
+  {t:"열 길 물속은 알아도 한 길 사람 속은 모른다", m:"사람 마음은 알기 어려워요"},
+  {t:"열 번 찍어 안 넘어가는 나무 없다", m:"꾸준히 노력하면 안 되는 일이 없어요"},
+  {t:"오르지 못할 나무는 쳐다보지도 마라", m:"안 될 일은 처음부터 욕심내지 마요"},
+  {t:"옥에도 티가 있다", m:"아무리 좋은 것에도 흠은 있어요"},
+  {t:"외손뼉이 못 울고 한 다리로 가지 못한다", m:"혼자서는 일이 안 돼요"},
+  {t:"우물 안 개구리", m:"세상 넓은 줄 모르는 사람이에요"},
+  {t:"우물에 가 숭늉 찾는다", m:"성격이 매우 급해요"},
+  {t:"울며 겨자 먹기", m:"싫지만 어쩔 수 없이 해요"},
+  {t:"원숭이도 나무에서 떨어진다", m:"잘하는 사람도 실수할 때가 있어요"},
+  {t:"윗물이 맑아야 아랫물이 맑다", m:"윗사람이 잘해야 아랫사람도 잘해요"},
+  {t:"입에 쓴 약이 몸에 좋다", m:"듣기 싫은 충고가 도움이 돼요"},
+  {t:"자라 보고 놀란 가슴 솥뚜껑 보고 놀란다", m:"한 번 놀라면 비슷한 것도 무서워해요"},
+  {t:"작은 고추가 더 맵다", m:"작아 보여도 매서운 사람이 있어요"},
+  {t:"잘되면 제 탓 못되면 조상 탓", m:"잘된 건 자기 덕, 못된 건 남 탓이에요"},
+  {t:"제 꾀에 제가 넘어간다", m:"꾀를 부리다 자기가 당해요"},
+  {t:"제 버릇 개 못 준다", m:"나쁜 버릇은 고치기 어려워요"},
+  {t:"종로에서 뺨 맞고 한강에서 눈 흘긴다", m:"엉뚱한 데서 화풀이를 해요"},
+  {t:"좋은 약은 입에 쓰다", m:"좋은 충고는 듣기 싫어요"},
+  {t:"쥐구멍에도 볕 들 날 있다", m:"고생하던 사람도 좋은 날이 와요"},
+  {t:"지렁이도 밟으면 꿈틀한다", m:"약한 사람도 자꾸 괴롭히면 화내요"},
+  {t:"천 리 길도 한 걸음부터", m:"큰 일도 작은 시작에서 비롯돼요"},
+  {t:"콩 심은 데 콩 나고 팥 심은 데 팥 난다", m:"한 만큼 결과가 나와요"},
+  {t:"콩으로 메주를 쑨대도 곧이듣지 않는다", m:"못 믿는 사람은 사실도 의심해요"},
+  {t:"티끌 모아 태산", m:"작은 것도 모이면 커져요"},
+  {t:"팔이 안으로 굽는다", m:"자기와 가까운 쪽 편을 들어요"},
+  {t:"핑계 없는 무덤 없다", m:"무슨 일이든 핑계는 있어요"},
+  {t:"하나를 보면 열을 안다", m:"한 부분만 봐도 전체를 알아요"},
+  {t:"하늘이 무너져도 솟아날 구멍이 있다", m:"아무리 어려워도 길은 있어요"},
+  {t:"하룻강아지 범 무서운 줄 모른다", m:"잘 모르면서 함부로 덤벼요"},
+  {t:"호랑이도 제 말 하면 온다", m:"누군가 이야기하면 그 사람이 나타나요"},
+  {t:"호박이 넝쿨째로 굴러떨어졌다", m:"뜻밖의 좋은 일이 생겨요"}
+];
+
+const PROVERB_EXPLANATIONS = {
+  "가는 말이 고와야 오는 말이 곱다": "말은 서로 주고받는 것이어서, 내가 부드럽게 말하면 상대도 부드럽게 답하기 쉽다는 뜻이에요.",
+  "가는 날이 장날": "평소와 달리 시장이 열리는 장날에 딱 맞춰 간 것처럼, 우연히 기회가 맞을 때 쓰는 말이에요.",
+  "가재는 게 편": "가재와 게가 생김새와 사는 곳이 비슷해서, 닮은 사람끼리 서로 편드는 모습을 빗댄 말이에요.",
+  "갈수록 태산": "앞에 큰 산이 나타나듯 일이 진행될수록 어려움이 더 커질 때 쓰는 말이에요.",
+  "개구리 올챙이 적 생각 못한다": "개구리도 처음엔 올챙이였는데 잊어버린 것처럼, 예전의 힘들었던 때를 잊고 뽐낼 때 쓰는 말이에요.",
+  "개똥도 약에 쓰려면 없다": "흔히 보이던 것도 꼭 필요할 때 찾으면 안 보인다는 경험에서 나온 말이에요.",
+  "고래 싸움에 새우 등 터진다": "큰 고래들이 싸우면 작은 새우가 다치듯, 힘센 사람들의 다툼 때문에 약한 사람이 피해를 볼 때 써요.",
+  "고생 끝에 낙이 온다": "힘든 길을 지나면 쉬는 곳이 나오는 것처럼, 참고 노력하면 좋은 결과가 온다는 뜻이에요.",
+  "공든 탑이 무너지랴": "정성껏 쌓은 탑은 쉽게 무너지지 않듯, 꾸준히 노력한 일은 헛되지 않는다는 말이에요.",
+  "구슬이 서 말이라도 꿰어야 보배": "구슬이 많아도 꿰어 목걸이를 만들어야 쓸모 있듯, 좋은 재료도 잘 정리해야 가치가 생겨요.",
+  "굼벵이도 구르는 재주가 있다": "느려 보이는 굼벵이도 할 수 있는 일이 있듯, 누구에게나 잘하는 점이 있다는 말이에요.",
+  "귀에 걸면 귀걸이 코에 걸면 코걸이": "같은 물건도 어디에 거느냐에 따라 이름이 달라지듯, 같은 일을 자기 편한 대로 해석할 때 써요.",
+  "그림의 떡": "그림 속 떡은 맛있어 보여도 먹을 수 없듯, 갖고 싶지만 실제로 얻을 수 없을 때 쓰는 말이에요.",
+  "금강산도 식후경": "아름다운 금강산 구경도 배가 고프면 즐기기 어렵듯, 먼저 먹고 힘을 내야 한다는 뜻이에요.",
+  "길고 짧은 것은 대어 보아야 안다": "두 막대를 나란히 대봐야 길이를 알듯, 결과는 직접 비교하거나 해봐야 안다는 말이에요.",
+  "까마귀 날자 배 떨어진다": "까마귀가 날아오르는 순간 배가 떨어지면 괜히 의심받듯, 우연히 겹친 일 때문에 오해받을 때 써요.",
+  "꼬리가 길면 밟힌다": "긴 꼬리는 숨기기 어려워 밟히듯, 나쁜 일을 오래 하면 결국 들킨다는 뜻이에요.",
+  "꿩 대신 닭": "꿩을 구하지 못하면 비슷한 닭으로 대신하듯, 가장 좋은 것이 없을 때 비슷한 것을 쓰는 말이에요.",
+  "꿩 먹고 알 먹기": "꿩도 먹고 알도 얻으면 이득이 두 가지라서, 한 일로 두 가지 좋은 결과를 얻을 때 써요.",
+  "낮말은 새가 듣고 밤말은 쥐가 듣는다": "아무도 없다고 생각해도 말이 새어 나갈 수 있으니, 언제나 말조심하라는 뜻이에요.",
+  "낫 놓고 기역 자도 모른다": "낫 모양이 ㄱ처럼 생겼는데도 모른다는 말로, 아주 쉬운 것도 모르는 사람을 빗대요.",
+  "누워서 떡 먹기": "누워서 떡을 먹는 것처럼 힘을 거의 들이지 않아도 되는 아주 쉬운 일을 말해요.",
+  "누워서 침 뱉기": "누워서 위로 침을 뱉으면 자기 얼굴에 떨어지듯, 남을 해치려다 자기에게 해가 될 때 써요.",
+  "눈에서 멀어지면 마음에서도 멀어진다": "자주 보지 못하면 자연스럽게 생각도 줄어들 수 있다는 뜻이에요.",
+  "다 된 죽에 코 풀기": "거의 다 만든 죽에 더러운 것을 넣어 망치는 것처럼, 끝난 일을 마지막에 망칠 때 써요.",
+  "달걀로 바위 치기": "깨지기 쉬운 달걀로 단단한 바위를 치는 것처럼, 힘 차이가 너무 커서 성공하기 어려울 때 써요.",
+  "닭 잡아먹고 오리발 내놓기": "닭을 먹고도 오리발을 내밀며 아니라고 하는 것처럼, 잘못하고도 모른 척할 때 써요.",
+  "닭 쫓던 개 지붕 쳐다본다": "닭을 쫓다가 놓치면 지붕만 바라보듯, 애쓴 일이 허사가 되어 어쩔 줄 모를 때 써요.",
+  "도토리 키 재기": "도토리들은 키가 비슷해서 재도 차이가 작듯, 비슷한 사람끼리 우열을 따질 때 써요.",
+  "돌다리도 두들겨 보고 건너라": "튼튼해 보이는 돌다리도 확인하고 건너듯, 익숙한 일도 조심하라는 뜻이에요.",
+  "되로 주고 말로 받는다": "작은 되로 조금 주고 큰 말로 많이 받는 것처럼, 작은 일이 크게 돌아올 때 써요.",
+  "등잔 밑이 어둡다": "등잔은 주변을 밝히지만 바로 밑은 어둡듯, 가까운 곳의 일을 오히려 모를 때 써요.",
+  "땅 짚고 헤엄치기": "물에서 헤엄치는데 땅까지 짚을 수 있다면 아주 쉽듯, 성공이 거의 확실한 일을 말해요.",
+  "떡 본 김에 제사 지낸다": "마침 떡이 있으니 제사까지 지내듯, 기회가 생긴 김에 하려던 일을 해버릴 때 써요.",
+  "똥 묻은 개가 겨 묻은 개 나무란다": "자기에게 더 큰 잘못이 있는데 작은 잘못을 한 남을 탓할 때 쓰는 말이에요.",
+  "마른 하늘에 날벼락": "맑은 하늘에서 갑자기 번개가 치듯, 예상 못 한 나쁜 일이 갑자기 생길 때 써요.",
+  "말 한마디로 천 냥 빚을 갚는다": "부드럽고 알맞은 말 한마디가 큰 문제를 해결할 수 있다는 뜻이에요.",
+  "맞은 놈은 펴고 자고 때린 놈은 오그리고 잔다": "피해를 받은 사람보다 잘못한 사람이 마음에 걸려 더 불안해한다는 뜻이에요.",
+  "메뚜기도 유월이 한철": "메뚜기가 한때 활발하듯, 사람이나 일에도 잘되는 때가 있다는 말이에요.",
+  "모로 가도 서울만 가면 된다": "길이 조금 돌아가도 목적지에 도착하면 되듯, 방법보다 목표 달성이 중요할 때 써요.",
+  "목마른 놈이 우물 판다": "물이 급한 사람이 먼저 우물을 파듯, 필요한 사람이 먼저 움직인다는 뜻이에요.",
+  "못된 송아지 엉덩이에 뿔 난다": "얌전하지 못한 송아지가 엉뚱한 데 뿔까지 난 듯, 버릇없는 사람이 더 문제를 일으킬 때 써요.",
+  "믿는 도끼에 발등 찍힌다": "믿고 쓰던 도끼에 다치듯, 믿었던 사람이나 일 때문에 피해를 볼 때 써요.",
+  "바늘 도둑이 소도둑 된다": "작은 도둑질을 가볍게 여기면 나중에 큰 잘못으로 커질 수 있다는 뜻이에요.",
+  "바늘 가는 데 실 간다": "바늘과 실은 늘 함께 쓰이듯, 아주 가까운 사이가 늘 같이 다닐 때 써요.",
+  "발 없는 말이 천 리 간다": "말에는 발이 없는데도 소문은 아주 멀리 퍼진다는 뜻이에요.",
+  "백지장도 맞들면 낫다": "가벼운 종이 한 장도 함께 들면 더 쉽듯, 작은 일도 힘을 합치면 낫다는 말이에요.",
+  "백 번 듣는 것이 한 번 보는 것만 못하다": "여러 번 설명을 듣는 것보다 직접 보는 것이 더 정확하다는 뜻이에요.",
+  "범에게 날개": "이미 힘센 범에게 날개까지 달린 것처럼, 강한 사람이 더 강해질 때 써요.",
+  "벼는 익을수록 고개를 숙인다": "벼 이삭은 익으면 아래로 숙여지듯, 훌륭한 사람일수록 겸손해야 한다는 말이에요.",
+  "병 주고 약 준다": "먼저 병을 주고 나중에 약을 주는 것처럼, 해를 끼친 뒤 도와주는 척할 때 써요.",
+  "보기 좋은 떡이 먹기도 좋다": "먹음직스럽게 만든 떡이 더 기분 좋게 먹히듯, 겉모습도 정성껏하면 좋다는 말이에요.",
+  "빈 수레가 요란하다": "빈 수레는 덜컹 소리가 크듯, 실속이 없는 사람이 더 시끄럽게 떠들 때 써요.",
+  "빛 좋은 개살구": "겉은 좋아 보이지만 먹어 보면 별로인 개살구처럼, 겉모습만 그럴듯할 때 써요.",
+  "사공이 많으면 배가 산으로 간다": "배를 모는 사람이 너무 많으면 방향이 엉망이 되듯, 의견이 너무 많아 일을 망칠 때 써요.",
+  "산 넘어 산": "산 하나를 넘었더니 또 산이 있는 것처럼, 어려움이 계속 이어질 때 써요.",
+  "새 발의 피": "작은 새의 발에서 나는 피처럼 양이 아주 적다는 뜻이에요.",
+  "서당 개 삼 년이면 풍월을 읊는다": "서당 곁에 오래 있던 개도 글 읽는 소리를 익힌다는 말로, 오래 보고 들으면 배우게 된다는 뜻이에요.",
+  "설마가 사람 잡는다": "설마 괜찮겠지 하고 방심하다가 큰일을 당할 수 있다는 경고예요.",
+  "세 살 버릇 여든까지 간다": "어릴 때 생긴 습관이 나이가 들어서도 이어질 수 있으니 처음부터 좋은 습관을 들이라는 말이에요.",
+  "소 잃고 외양간 고친다": "소를 잃은 뒤에야 외양간을 고치는 것처럼, 일이 터진 뒤 늦게 대비할 때 써요.",
+  "소문난 잔치에 먹을 것 없다": "소문은 크게 났지만 실제 잔치 음식은 별로 없는 것처럼, 기대보다 실속이 없을 때 써요.",
+  "손바닥으로 하늘 가리기": "손바닥으로 넓은 하늘을 다 가릴 수 없듯, 큰 잘못은 숨기기 어렵다는 뜻이에요.",
+  "쇠귀에 경 읽기": "소에게 어려운 글을 읽어줘도 알아듣지 못하듯, 아무리 말해도 듣지 않을 때 써요.",
+  "수박 겉 핥기": "수박의 겉만 핥으면 속맛을 모르듯, 내용을 깊이 알지 못하고 겉만 볼 때 써요.",
+  "식은 죽 먹기": "식은 죽은 먹기 쉽듯, 아주 쉬운 일을 말할 때 써요.",
+  "십 년이면 강산도 변한다": "오랜 시간이 지나면 산과 강의 모습도 달라질 만큼 모든 것이 변한다는 뜻이에요.",
+  "싼 게 비지떡": "너무 싼 물건은 품질이 낮을 수 있으니 값만 보고 고르지 말라는 뜻이에요.",
+  "아니 땐 굴뚝에 연기 날까": "불을 때지 않은 굴뚝에서 연기가 날 수 없듯, 어떤 결과에는 원인이 있다는 말이에요.",
+  "아 다르고 어 다르다": "비슷한 말도 한 글자나 말투가 달라지면 느낌이 달라지니 조심해서 말하라는 뜻이에요.",
+  "앓던 이가 빠진 것 같다": "아프던 이가 빠지면 시원하듯, 오래 걱정하던 일이 해결됐을 때 써요.",
+  "열 길 물속은 알아도 한 길 사람 속은 모른다": "깊은 물은 재어 볼 수 있지만 사람 마음은 쉽게 알 수 없다는 뜻이에요.",
+  "열 번 찍어 안 넘어가는 나무 없다": "나무를 계속 찍으면 결국 넘어가듯, 꾸준히 노력하면 이루어진다는 말이에요.",
+  "오르지 못할 나무는 쳐다보지도 마라": "아무리 봐도 오를 수 없는 나무라면 욕심내지 말라는 뜻으로, 안 될 일을 무리하지 말라는 말이에요.",
+  "옥에도 티가 있다": "아주 귀한 옥에도 작은 티가 있을 수 있듯, 완벽해 보이는 것에도 흠은 있다는 뜻이에요.",
+  "외손뼉이 못 울고 한 다리로 가지 못한다": "손뼉은 두 손이 만나야 소리가 나고, 걷는 것도 두 다리가 필요하듯 혼자서는 어려운 일이 있다는 말이에요.",
+  "우물 안 개구리": "우물 안에서만 사는 개구리처럼, 세상이 얼마나 넓은지 모르는 사람을 말해요.",
+  "우물에 가 숭늉 찾는다": "우물은 물을 떠오는 곳인데 익힌 숭늉을 찾는 것처럼, 일을 너무 서두르는 사람을 빗대요.",
+  "울며 겨자 먹기": "매운 겨자를 먹기 싫어도 어쩔 수 없이 먹는 것처럼, 싫은 일을 해야 할 때 써요.",
+  "원숭이도 나무에서 떨어진다": "나무를 잘 타는 원숭이도 떨어질 때가 있듯, 잘하는 사람도 실수할 수 있다는 말이에요.",
+  "윗물이 맑아야 아랫물이 맑다": "위에서 흐르는 물이 맑아야 아래 물도 맑듯, 윗사람이 바르게 해야 아래 사람도 바르게 한다는 뜻이에요.",
+  "입에 쓴 약이 몸에 좋다": "쓴 약이 몸을 낫게 하듯, 듣기 싫은 충고도 나에게 도움이 될 수 있다는 말이에요.",
+  "자라 보고 놀란 가슴 솥뚜껑 보고 놀란다": "자라를 보고 크게 놀란 뒤 비슷하게 생긴 솥뚜껑에도 놀라듯, 한 번 겁난 뒤 비슷한 것을 무서워할 때 써요.",
+  "작은 고추가 더 맵다": "작은 고추가 더 매울 때가 있듯, 작아 보여도 힘이나 실력이 대단할 수 있다는 말이에요.",
+  "잘되면 제 탓 못되면 조상 탓": "좋은 일은 자기 덕이라 하고 나쁜 일은 남 탓으로 돌리는 태도를 꼬집는 말이에요.",
+  "제 꾀에 제가 넘어간다": "남을 속이려던 꾀가 오히려 자신에게 돌아와 당할 때 쓰는 말이에요.",
+  "제 버릇 개 못 준다": "오래된 버릇은 남에게 줄 수도 없고 쉽게 버리기도 어렵다는 뜻이에요.",
+  "종로에서 뺨 맞고 한강에서 눈 흘긴다": "혼난 곳과 상관없는 곳에서 화풀이하는 것처럼, 엉뚱한 사람에게 화를 낼 때 써요.",
+  "좋은 약은 입에 쓰다": "몸에 좋은 약이 쓸 때가 있듯, 도움이 되는 말은 듣기 싫을 때도 있다는 뜻이에요.",
+  "쥐구멍에도 볕 들 날 있다": "작고 어두운 쥐구멍에도 햇볕이 드는 날이 있듯, 힘든 사람에게도 좋은 날이 온다는 말이에요.",
+  "지렁이도 밟으면 꿈틀한다": "약한 지렁이도 밟히면 움직이듯, 약한 사람도 너무 괴롭히면 맞선다는 뜻이에요.",
+  "천 리 길도 한 걸음부터": "아주 먼 길도 첫걸음으로 시작하듯, 큰일도 작은 시작이 중요하다는 말이에요.",
+  "콩 심은 데 콩 나고 팥 심은 데 팥 난다": "콩을 심으면 콩이 나듯, 원인과 행동에 맞는 결과가 나온다는 뜻이에요.",
+  "콩으로 메주를 쑨대도 곧이듣지 않는다": "정말 콩으로 메주를 만든다고 해도 믿지 않을 만큼, 믿음이 없을 때 쓰는 말이에요.",
+  "티끌 모아 태산": "먼지처럼 작은 것도 많이 모이면 큰 산처럼 커질 수 있다는 뜻이에요.",
+  "팔이 안으로 굽는다": "팔이 자연스럽게 몸쪽으로 굽듯, 사람은 가까운 사람 편을 들기 쉽다는 말이에요.",
+  "핑계 없는 무덤 없다": "무덤마다 사연이 있듯, 어떤 일에도 핑계는 붙일 수 있다는 뜻이에요.",
+  "하나를 보면 열을 안다": "작은 한 가지 모습을 보면 나머지도 짐작할 수 있다는 뜻이에요.",
+  "하늘이 무너져도 솟아날 구멍이 있다": "하늘이 무너지는 듯한 큰 어려움에도 빠져나갈 길은 있다는 말이에요.",
+  "하룻강아지 범 무서운 줄 모른다": "어린 강아지가 범이 무서운 줄 모르고 덤비듯, 경험이 없어서 겁 없이 행동할 때 써요.",
+  "호랑이도 제 말 하면 온다": "호랑이 이야기를 하면 호랑이가 나타난다는 말처럼, 어떤 사람 이야기를 할 때 그 사람이 나타나면 써요.",
+  "호박이 넝쿨째로 굴러떨어졌다": "호박 하나만이 아니라 넝쿨까지 함께 굴러온 것처럼, 생각보다 큰 행운이 생겼을 때 써요."
+};
+
+function getProverbExplanation(proverb){
+  return PROVERB_EXPLANATIONS[proverb.t] || `${proverb.m} 예전 사람들은 눈에 보이는 장면으로 이런 뜻을 쉽게 기억하려고 이 말을 썼어요.`;
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[ch]);
+}
+
+// ============ Storage helpers ============
+const STORAGE_PREFIX = "proverb_drawing:";
+const SCORE_KEY = "proverb_score";
+const DB_NAME = "proverb-picture-quiz";
+const DB_STORE = "items";
+const SAMPLE_BACKUP_URL = "./속담그림퀴즈_백업데이터.json";
+
+function createAppStorage(){
+  let dbPromise = null;
+  function getLocalStorage(){ try { return window.localStorage; } catch(e) { return null; } }
+  function openDb(){
+    if (!("indexedDB" in window)) return Promise.reject(new Error("IndexedDB를 사용할 수 없습니다."));
+    if (!dbPromise) {
+      dbPromise = new Promise((resolve, reject) => {
+        const req = indexedDB.open(DB_NAME, 1);
+        req.onupgradeneeded = () => { const db = req.result; if (!db.objectStoreNames.contains(DB_STORE)) db.createObjectStore(DB_STORE); };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error || new Error("IndexedDB 열기에 실패했습니다."));
+        req.onblocked = () => reject(new Error("IndexedDB가 다른 탭에서 사용 중입니다."));
+      }).catch(err => { dbPromise = null; throw err; });
+    }
+    return dbPromise;
+  }
+  async function idbRequest(mode, action){
+    const db = await openDb();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(DB_STORE, mode);
+      const store = tx.objectStore(DB_STORE);
+      let req;
+      tx.oncomplete = () => resolve(req ? req.result : undefined);
+      tx.onerror = () => reject(tx.error || (req && req.error) || new Error("IndexedDB 작업에 실패했습니다."));
+      tx.onabort = () => reject(tx.error || new Error("IndexedDB 작업이 중단되었습니다."));
+      req = action(store);
+    });
+  }
+  async function idbList(prefix){
+    const db = await openDb();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(DB_STORE, "readonly");
+      const store = tx.objectStore(DB_STORE);
+      const keys = [];
+      const req = store.openKeyCursor();
+      req.onsuccess = () => { const cursor = req.result; if (!cursor) return; const key = String(cursor.key); if (key.startsWith(prefix)) keys.push(key); cursor.continue(); };
+      tx.oncomplete = () => resolve(keys);
+      tx.onerror = () => reject(tx.error || req.error || new Error("IndexedDB 목록 읽기에 실패했습니다."));
+      tx.onabort = () => reject(tx.error || new Error("IndexedDB 목록 읽기가 중단되었습니다."));
+    });
+  }
+  function localGet(key){ const storage = getLocalStorage(); if (!storage) return null; const value = storage.getItem(key); return value === null ? null : { value }; }
+  function localList(prefix){ const storage = getLocalStorage(); const keys = []; if (!storage) return keys; for (let i = 0; i < storage.length; i++) { const key = storage.key(i); if (key && key.startsWith(prefix)) keys.push(key); } return keys; }
+  return {
+    async set(key, value) {
+      try { await idbRequest("readwrite", store => store.put(value, key)); const storage = getLocalStorage(); if (storage) storage.removeItem(key); return true; }
+      catch(idbError) { const storage = getLocalStorage(); if (!storage) throw idbError; storage.setItem(key, value); return true; }
+    },
+    async get(key) {
+      try { const value = await idbRequest("readonly", store => store.get(key)); if (value !== undefined) return { value }; } catch(e) {}
+      return localGet(key);
+    },
+    async list(prefix) {
+      const keys = new Set();
+      try { (await idbList(prefix)).forEach(key => keys.add(key)); } catch(e) {}
+      localList(prefix).forEach(key => keys.add(key));
+      return { keys: [...keys] };
+    },
+    async delete(key) {
+      try { await idbRequest("readwrite", store => store.delete(key)); } catch(e) {}
+      const storage = getLocalStorage(); if (storage) storage.removeItem(key);
+      return true;
+    }
+  };
+}
+
+const appStorage = createAppStorage();
+
+function encodeCanvasForStorage(sourceCanvas){
+  const webp = sourceCanvas.toDataURL("image/webp", 0.82);
+  if (webp.startsWith("data:image/webp")) return webp;
+  const jpeg = sourceCanvas.toDataURL("image/jpeg", 0.88);
+  if (jpeg.startsWith("data:image/jpeg")) return jpeg;
+  return sourceCanvas.toDataURL("image/png");
+}
+
+function canvasToStorageDataUrl(){
+  const maxSide = 720;
+  const scale = Math.min(1, maxSide / Math.max(canvas.width, canvas.height));
+  const out = document.createElement("canvas");
+  out.width = Math.max(1, Math.round(canvas.width * scale));
+  out.height = Math.max(1, Math.round(canvas.height * scale));
+  const outCtx = out.getContext("2d");
+  outCtx.fillStyle = "#ffffff";
+  outCtx.fillRect(0, 0, out.width, out.height);
+  outCtx.drawImage(canvas, 0, 0, out.width, out.height);
+  return encodeCanvasForStorage(out);
+}
+
+function compactImageDataUrl(dataUrl){
+  return new Promise(resolve => {
+    if (typeof dataUrl !== "string" || !dataUrl.startsWith("data:image/")) { resolve(dataUrl); return; }
+    if (dataUrl.length < 250000) { resolve(dataUrl); return; }
+    const img = new Image();
+    img.onload = () => {
+      const maxSide = 720;
+      const scale = Math.min(1, maxSide / Math.max(img.naturalWidth, img.naturalHeight));
+      const out = document.createElement("canvas");
+      out.width = Math.max(1, Math.round(img.naturalWidth * scale));
+      out.height = Math.max(1, Math.round(img.naturalHeight * scale));
+      const outCtx = out.getContext("2d");
+      outCtx.fillStyle = "#ffffff";
+      outCtx.fillRect(0, 0, out.width, out.height);
+      outCtx.drawImage(img, 0, 0, out.width, out.height);
+      resolve(encodeCanvasForStorage(out));
+    };
+    img.onerror = () => resolve(dataUrl);
+    img.src = dataUrl;
+  });
+}
+
+async function saveDrawing(idx, dataUrl){
+  try { const compactDataUrl = await compactImageDataUrl(dataUrl); await appStorage.set(STORAGE_PREFIX + idx, compactDataUrl); scheduleLinkedBackup(); return true; }
+  catch(e) { console.error("save fail", e); return false; }
+}
+
+async function getDrawing(idx){
+  try { const r = await appStorage.get(STORAGE_PREFIX + idx); return r ? r.value : null; } catch(e){ return null; }
+}
+
+async function getAllDrawingIndices(){
+  try { const r = await appStorage.list(STORAGE_PREFIX); if (!r || !r.keys) return []; return r.keys.map(k => parseInt(k.replace(STORAGE_PREFIX, ""))).filter(n => !isNaN(n)); }
+  catch(e){ return []; }
+}
+
+async function deleteDrawing(idx){
+  try { await appStorage.delete(STORAGE_PREFIX + idx); scheduleLinkedBackup(); return true; } catch(e){ return false; }
+}
+
+async function getScore(){
+  try { const r = await appStorage.get(SCORE_KEY); return r ? parseInt(r.value) || 0 : 0; } catch(e){ return 0; }
+}
+
+async function setScore(n){
+  try { await appStorage.set(SCORE_KEY, String(n)); scheduleLinkedBackup(); } catch(e){}
+}
+
+// ============ State ============
+let state = {
+  mode: "play", currentIdx: -1, currentMode: null,
+  hintLevel: 0, hintTimer: null, answered: false,
+  drawing: false, brushColor: "#001858", brushSize: 4, lastX: 0, lastY: 0,
+  undoStack: [], redoStack: [],
+  backupFileHandle: null, backupFileName: "",
+  autoBackupTimer: null, autoBackupWriting: false, autoBackupPending: false, suspendAutoBackup: false
+};
+
+// ============ Canvas ============
+let canvas, ctx;
+const DRAW_CANVAS_SIZE = 720;
+
+function fitPlayView(){
+  const canvasArea = document.querySelector(".canvas-area");
+  if (!canvasArea) return;
+  
+  const playLayout = document.querySelector(".play-layout");
+  const lsLeft = document.getElementById("lsLeft");
+  let size = 300;
+  
+  if (isLandscape()) {
+    if (lsLeft) {
+      const rect = lsLeft.getBoundingClientRect();
+      const tools = lsLeft.querySelector(".landscape-tools");
+      const toolsH = tools ? tools.getBoundingClientRect().height : 0;
+      
+      const padTop = parseFloat(getComputedStyle(lsLeft).paddingTop) || 0;
+      const padBottom = parseFloat(getComputedStyle(lsLeft).paddingBottom) || 0;
+      const padLeft = parseFloat(getComputedStyle(lsLeft).paddingLeft) || 0;
+      const padRight = parseFloat(getComputedStyle(lsLeft).paddingRight) || 0;
+      
+      const gap = 6;
+      
+      const availableH = rect.height - padTop - padBottom - toolsH - (toolsH ? gap : 0);
+      const availableW = rect.width - padLeft - padRight;
+      size = Math.max(120, Math.floor(Math.min(availableW, availableH)));
+    }
+  } else {
+    if (playLayout) {
+      const layoutRect = playLayout.getBoundingClientRect();
+      const sidePanel = playLayout.querySelector(".side-panel");
+      const canvasPanel = playLayout.querySelector(".canvas-panel");
+      
+      const sidePanelH = sidePanel ? sidePanel.getBoundingClientRect().height : 0;
+      const playLayoutStyle = getComputedStyle(playLayout);
+      const layoutGap = parseFloat(playLayoutStyle.rowGap || playLayoutStyle.gap) || 0;
+      
+      const canvasPanelMaxH = layoutRect.height - sidePanelH - layoutGap;
+      
+      const strip = canvasPanel ? canvasPanel.querySelector(".proverb-strip") : null;
+      const stripH = strip ? strip.getBoundingClientRect().height : 0;
+      
+      const canvasPanelStyle = canvasPanel ? getComputedStyle(canvasPanel) : null;
+      const panelGap = canvasPanelStyle ? (parseFloat(canvasPanelStyle.rowGap || canvasPanelStyle.gap) || 0) : 0;
+      
+      const availableH = canvasPanelMaxH - stripH - panelGap;
+      const availableW = layoutRect.width;
+      size = Math.max(120, Math.floor(Math.min(availableW, availableH)));
+    }
+  }
+  canvasArea.style.setProperty("--canvas-fit-size", `${size}px`);
+}
+
+function saveCanvasState(){
+  if (!canvas) return;
+  state.undoStack.push(canvas.toDataURL());
+  state.redoStack = [];
+  updateUndoRedoButtons();
+}
+
+function undo(){
+  if (state.undoStack.length === 0) return;
+  state.redoStack.push(canvas.toDataURL());
+  const prevState = state.undoStack.pop();
+  const img = new Image();
+  img.onload = () => { ctx.clearRect(0,0,canvas.width,canvas.height); ctx.drawImage(img,0,0); updateUndoRedoButtons(); };
+  img.src = prevState;
+}
+
+function redo(){
+  if (state.redoStack.length === 0) return;
+  state.undoStack.push(canvas.toDataURL());
+  const nextState = state.redoStack.pop();
+  const img = new Image();
+  img.onload = () => { ctx.clearRect(0,0,canvas.width,canvas.height); ctx.drawImage(img,0,0); updateUndoRedoButtons(); };
+  img.src = nextState;
+}
+
+function updateUndoRedoButtons(){
+  const undoBtn = document.getElementById("undoBtn");
+  const redoBtn = document.getElementById("redoBtn");
+  if (undoBtn) undoBtn.disabled = state.undoStack.length === 0;
+  if (redoBtn) redoBtn.disabled = state.redoStack.length === 0;
+}
+
+function initCanvas(){
+  canvas = document.getElementById("drawCanvas");
+  if (!canvas) return;
+  ctx = canvas.getContext("2d");
+  canvas.width = DRAW_CANVAS_SIZE;
+  canvas.height = DRAW_CANVAS_SIZE;
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  state.undoStack = [];
+  state.redoStack = [];
+
+  const getPos = (e) => {
+    const r = canvas.getBoundingClientRect();
+    const pointer = e.touches ? e.touches[0] : e;
+    const scaleX = canvas.width / r.width;
+    const scaleY = canvas.height / r.height;
+    return {x:(pointer.clientX-r.left)*scaleX, y:(pointer.clientY-r.top)*scaleY, scale:(scaleX+scaleY)/2};
+  };
+  const start = (e) => {
+    e.preventDefault();
+    saveCanvasState();
+    state.drawing = true;
+    const p = getPos(e);
+    state.lastX = p.x; state.lastY = p.y;
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,(state.brushSize*p.scale)/2,0,Math.PI*2);
+    ctx.fillStyle = state.brushColor;
+    ctx.fill();
+  };
+  const move = (e) => {
+    if (!state.drawing) return;
+    e.preventDefault();
+    const p = getPos(e);
+    ctx.strokeStyle = state.brushColor;
+    ctx.lineWidth = state.brushSize * p.scale;
+    ctx.beginPath();
+    ctx.moveTo(state.lastX, state.lastY);
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+    state.lastX = p.x; state.lastY = p.y;
+  };
+  const end = () => { state.drawing = false; };
+
+  canvas.addEventListener("mousedown", start);
+  canvas.addEventListener("mousemove", move);
+  canvas.addEventListener("mouseup", end);
+  canvas.addEventListener("mouseleave", end);
+  canvas.addEventListener("touchstart", start);
+  canvas.addEventListener("touchmove", move);
+  canvas.addEventListener("touchend", end);
+}
+
+function clearCanvas(){
+  if (!ctx) return;
+  saveCanvasState();
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+}
+
+// ============ 방향 감지 ============
+function isLandscape(){ return window.innerWidth > window.innerHeight; }
+
+let _prevLandscape = isLandscape();
+let _orientTimer = null;
+function handleOrientationChange(){
+  clearTimeout(_orientTimer);
+  _orientTimer = setTimeout(() => {
+    const nowLandscape = isLandscape();
+    fitPlayView();
+    if (nowLandscape === _prevLandscape) return;
+    _prevLandscape = nowLandscape;
+    if (state.currentMode === "draw" && canvas) {
+      const saved = canvas.toDataURL();
+      const savedBrushColor = state.brushColor;
+      const savedBrushSize = state.brushSize;
+      renderDraw(state.currentIdx, saved, savedBrushColor, savedBrushSize);
+    } else if (state.currentMode === "quiz" && state.currentIdx >= 0) {
+      renderQuiz(state.currentIdx);
+    }
+  }, 300);
+}
+
+// ============ Mode switching ============
+document.querySelectorAll(".mode-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".mode-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    state.mode = btn.dataset.mode;
+    showMode(state.mode);
+  });
+});
+
+function showMode(m){
+  if (m !== "play") document.getElementById("lsLeft").innerHTML = "";
+  document.body.classList.toggle("play-active", m === "play");
+  document.getElementById("playMode").classList.toggle("hidden", m !== "play");
+  document.getElementById("galleryMode").classList.toggle("hidden", m !== "gallery");
+  document.getElementById("listMode").classList.toggle("hidden", m !== "list");
+  
+  const startBtnRow = document.getElementById("startBtnRow");
+  if (startBtnRow) {
+    startBtnRow.classList.toggle("hidden", m !== "play" || state.currentIdx >= 0);
+  }
+  
+  fitPlayView();
+  if (m === "gallery") renderGallery();
+  if (m === "list") renderList();
+}
+
+window.addEventListener("resize", handleOrientationChange);
+window.addEventListener("orientationchange", handleOrientationChange);
+
+// ============ Pick random proverb ============
+async function pickRandom(){
+  clearHintTimer();
+  state.hintLevel = 0;
+  state.answered = false;
+  const drawn = await getAllDrawingIndices();
+  const undrawnIndices = [];
+  for (let i = 0; i < PROVERBS.length; i++) if (!drawn.includes(i)) undrawnIndices.push(i);
+
+  let mode, idx;
+  if (drawn.length === 0){ mode = "draw"; idx = Math.floor(Math.random()*PROVERBS.length); }
+  else if (undrawnIndices.length === 0){ mode = "quiz"; idx = drawn[Math.floor(Math.random()*drawn.length)]; }
+  else {
+    if (Math.random() < 0.5){ mode = "draw"; idx = undrawnIndices[Math.floor(Math.random()*undrawnIndices.length)]; }
+    else { mode = "quiz"; idx = drawn[Math.floor(Math.random()*drawn.length)]; }
+  }
+  state.currentIdx = idx;
+  state.currentMode = mode;
+  
+  const startBtnRow = document.getElementById("startBtnRow");
+  if (startBtnRow) startBtnRow.classList.add("hidden");
+  
+  if (mode === "draw") renderDraw(idx);
+  else renderQuiz(idx);
+}
+
+// ============ Draw mode ============
+function renderDraw(idx, restoredDataUrl, restoredColor, restoredSize){
+  const p = PROVERBS[idx];
+  const explanation = getProverbExplanation(p);
+  const card = document.getElementById("playCard");
+  const lsLeft = document.getElementById("lsLeft");
+  const activeColor = restoredColor || "#001858";
+  const activeSize = restoredSize || 4;
+
+  const colorDotsHtml = [
+    ["#001858","",""], ["#e63946","",""], ["#f9bc60","",""], ["#a3d9a5","",""],
+    ["#8bd3dd","",""], ["#f582ae","",""], ["#ffffff","border-style:dashed;","지우개"],
+  ].map(([c, xStyle, title]) =>
+    `<div class="color-dot${c===activeColor?" active":""}" style="background:${c};${xStyle}" data-c="${c}"${title?' title="'+title+'"':''}></div>`
+  ).join("");
+
+  const drawingToolsHtml = `
+    <div class="tools">
+      <div class="color-picker">
+        ${colorDotsHtml}
+      </div>
+      <div class="size-picker">
+        <input type="range" class="size-slider" min="1" max="20" value="${activeSize}" id="sizeSlider">
+      </div>
+      <div class="btn-group">
+        <button class="tool-btn" id="undoBtn" title="실행취소">↶ <span class="btn-text">실행취소</span></button>
+        <button class="tool-btn" id="redoBtn" title="다시실행">↷ <span class="btn-text">다시실행</span></button>
+        <button class="tool-btn danger" id="clearBtn" title="전체 지우기">🗑️ <span class="btn-text">지우기</span></button>
+      </div>
+    </div>`;
+
+  const actionButtonsHtml = `
+    <div class="action-row">
+      <button class="big-btn success" id="saveBtn">💾 저장하고 다음</button>
+      <button class="big-btn secondary" id="skipBtn">⏭️ 건너뛰기</button>
+    </div>`;
+
+  const proverbStripHtml = `
+    <div class="proverb-strip">
+      <span class="proverb-number">${idx+1}</span>
+      <div class="proverb-text">"${escapeHtml(p.t)}"</div>
+    </div>`;
+
+  const guideHtml = `
+    <div class="draw-guide">
+      <div><span class="info-label">뜻</span>${escapeHtml(p.m)}</div>
+      <div><span class="info-label">왜?</span>${escapeHtml(explanation)}</div>
+    </div>`;
+
+  if (isLandscape()) {
+    lsLeft.innerHTML = `
+      <div class="canvas-area"><canvas id="drawCanvas"></canvas></div>
+      <div class="landscape-tools">${drawingToolsHtml}</div>
+    `;
+    card.innerHTML = `
+      <div class="landscape-play-content">
+        ${proverbStripHtml}
+        ${guideHtml}
+        ${actionButtonsHtml}
+      </div>
+    `;
+  } else {
+    lsLeft.innerHTML = "";
+    card.innerHTML = `
+      <div class="play-layout draw-layout">
+        <section class="canvas-panel">
+          ${proverbStripHtml}
+          <div class="canvas-area"><canvas id="drawCanvas"></canvas></div>
+        </section>
+        <aside class="side-panel">
+          ${guideHtml}
+          ${drawingToolsHtml}
+          ${actionButtonsHtml}
+        </aside>
+      </div>`;
+  }
+
+  fitPlayView();
+  initCanvas();
+  state.brushColor = activeColor;
+  state.brushSize = activeSize;
+
+  if (restoredDataUrl) {
+    const img = new Image();
+    img.onload = () => {
+      if (ctx){ ctx.clearRect(0,0,canvas.width,canvas.height); ctx.drawImage(img,0,0); }
+    };
+    img.src = restoredDataUrl;
+  }
+
+  document.querySelectorAll(".color-dot").forEach(d => {
+    d.addEventListener("click", () => {
+      document.querySelectorAll(".color-dot").forEach(x => x.classList.remove("active"));
+      d.classList.add("active");
+      state.brushColor = d.dataset.c;
+    });
+  });
+  document.getElementById("sizeSlider").addEventListener("input", (e) => { state.brushSize = parseInt(e.target.value); });
+  document.getElementById("undoBtn").addEventListener("click", undo);
+  document.getElementById("redoBtn").addEventListener("click", redo);
+  document.getElementById("clearBtn").addEventListener("click", clearCanvas);
+  document.getElementById("saveBtn").addEventListener("click", saveAndNext);
+  document.getElementById("skipBtn").addEventListener("click", pickRandom);
+  updateUndoRedoButtons();
+}
+
+async function saveAndNext(){
+  let dataUrl;
+  try { dataUrl = canvasToStorageDataUrl(); }
+  catch(e) { console.error("canvas export fail", e); showToast("❌ 그림 변환 실패"); return; }
+  const ok = await saveDrawing(state.currentIdx, dataUrl);
+  if (ok){ await updateStats(); showToast("✅ 저장 완료!"); setTimeout(pickRandom, 600); }
+  else { showToast("❌ 저장 실패: 저장 공간을 확인해주세요"); }
+}
+
+// ============ Quiz mode ============
+async function renderQuiz(idx){
+  const correct = PROVERBS[idx];
+  const dataUrl = await getDrawing(idx);
+  const wrongs = [];
+  const used = new Set([idx]);
+  while (wrongs.length < 3){ const r = Math.floor(Math.random()*PROVERBS.length); if (!used.has(r)){ used.add(r); wrongs.push(PROVERBS[r]); } }
+  const options = [...wrongs, correct].sort(() => Math.random() - 0.5);
+
+  const card = document.getElementById("playCard");
+  const lsLeft = document.getElementById("lsLeft");
+
+  const optionsHtml = `
+    <div class="hint-area empty" id="hintArea">💡 힌트는 잠시 후 또는 힌트 버튼을 누르면 나와요</div>
+    <div class="action-row">
+      <button class="tool-btn" id="hintBtn">💡 힌트 보기</button>
+    </div>
+    <div class="options" id="optionsBox">
+      ${options.map(o => `<button class="option-btn" data-correct="${o.t===correct.t?'1':'0'}" data-text="${escapeAttr(o.t)}">${escapeHtml(o.t)}</button>`).join("")}
+    </div>
+    <div id="resultBox"></div>`;
+
+  const quizImgHtml = `<img src="${dataUrl}" style="width:100%;height:100%;object-fit:contain;" alt="속담 그림">`;
+
+  if (isLandscape()) {
+    lsLeft.innerHTML = `<div class="canvas-area" style="background:#fff;">${quizImgHtml}</div>`;
+    card.innerHTML = `
+      <div class="proverb-strip">
+        <span class="proverb-number">?</span>
+        <div class="proverb-text">이 그림은 어떤 속담일까요?</div>
+      </div>
+      ${optionsHtml}`;
+  } else {
+    lsLeft.innerHTML = "";
+    card.innerHTML = `
+      <div class="play-layout quiz-layout">
+        <section class="canvas-panel">
+          <div class="proverb-strip">
+            <span class="proverb-number">?</span>
+            <div class="proverb-text">이 그림은 어떤 속담일까요?</div>
+          </div>
+          <div class="canvas-area" style="background:#fff;">${quizImgHtml}</div>
+        </section>
+        <aside class="side-panel">
+          ${optionsHtml}
+        </aside>
+      </div>`;
+  }
+
+  fitPlayView();
+  document.querySelectorAll(".option-btn").forEach(b => b.addEventListener("click", () => handleAnswer(b, correct)));
+  document.getElementById("hintBtn").addEventListener("click", () => showHint(correct));
+  state.hintLevel = 0;
+  scheduleAutoHint(correct);
+}
+
+function escapeAttr(s){ return s.replace(/"/g, "&quot;"); }
+
+function scheduleAutoHint(correct){
+  clearHintTimer();
+  state.hintTimer = setTimeout(() => { if (state.answered) return; showHint(correct); scheduleAutoHint(correct); }, 10000);
+}
+
+function clearHintTimer(){
+  if (state.hintTimer){ clearTimeout(state.hintTimer); state.hintTimer = null; }
+}
+
+function showHint(correct){
+  if (state.answered) return;
+  state.hintLevel++;
+  const hintArea = document.getElementById("hintArea");
+  hintArea.classList.remove("empty");
+  const t = correct.t;
+  const len = t.replace(/\s/g,"").length;
+  const explanation = getProverbExplanation(correct);
+  if (state.hintLevel === 1){ hintArea.innerHTML = `💡 <b>힌트 1</b> · 뜻: "${escapeHtml(correct.m)}"`; }
+  else if (state.hintLevel === 2){ hintArea.innerHTML = `💡 <b>힌트 2</b> · 왜 이런 말? "${escapeHtml(explanation)}"`; }
+  else if (state.hintLevel === 3){ hintArea.innerHTML = `💡 <b>힌트 3</b> · 첫 글자는 <b style="color:var(--red);font-size:22px;">"${escapeHtml(t.charAt(0))}"</b>로 시작해요`; }
+  else {
+    const masked = t.split("").map(ch => ch===" " ? " " : Math.random()<0.4 ? ch : "○").join("");
+    hintArea.innerHTML = `💡 <b>힌트 4</b> · 글자 수: <b>${len}자</b> · <span style="font-family:'Jua';font-size:20px;letter-spacing:2px;">${escapeHtml(masked)}</span>`;
+    document.getElementById("hintBtn").disabled = true;
+    document.getElementById("hintBtn").style.opacity = 0.5;
+  }
+}
+
+async function handleAnswer(btn, correct){
+  if (state.answered) return;
+  state.answered = true;
+  clearHintTimer();
+  
+  const hintArea = document.getElementById("hintArea");
+  const hintBtn = document.getElementById("hintBtn");
+  if (hintArea) hintArea.classList.add("hidden");
+  if (hintBtn) {
+    const hintBtnRow = hintBtn.parentElement;
+    if (hintBtnRow) hintBtnRow.classList.add("hidden");
+  }
+  
+  const isRight = btn.dataset.correct === "1";
+  const explanation = getProverbExplanation(correct);
+  document.querySelectorAll(".option-btn").forEach(b => {
+    b.disabled = true;
+    if (b.dataset.correct === "1") b.classList.add("correct");
+    else if (b === btn) b.classList.add("wrong");
+  });
+  const result = document.getElementById("resultBox");
+  if (isRight){
+    const points = Math.max(10, 50 - state.hintLevel * 10);
+    let s = await getScore(); s += points; await setScore(s); await updateStats();
+    result.innerHTML = `
+      <div class="result-banner win">
+        🎉 정답이에요! +${points}점<br>
+        <small style="font-size:15px;">뜻: ${escapeHtml(correct.m)}</small><br>
+        <small style="font-size:15px;">${escapeHtml(explanation)}</small>
+      </div>
+      <div class="action-row"><button class="big-btn" id="nextBtn">➡️ 다음 문제</button></div>
+    `;
+  } else {
+    result.innerHTML = `
+      <div class="result-banner lose">
+        😢 아쉬워요! 정답은:<br>
+        <b style="color:var(--red);">"${escapeHtml(correct.t)}"</b><br>
+        <small style="font-size:15px;">뜻: ${escapeHtml(correct.m)}</small><br>
+        <small style="font-size:15px;">${escapeHtml(explanation)}</small>
+      </div>
+      <div class="action-row"><button class="big-btn" id="nextBtn">➡️ 다음 문제</button></div>
+    `;
+  }
+  document.getElementById("nextBtn").addEventListener("click", pickRandom);
+}
+
+// ============ Stats ============
+async function updateStats(){
+  const drawn = await getAllDrawingIndices();
+  document.getElementById("drawnCount").textContent = drawn.length;
+  const score = await getScore();
+  document.getElementById("score").textContent = score;
+}
+
+// ============ Gallery ============
+async function renderGallery(){
+  const grid = document.getElementById("galleryGrid");
+  const drawn = await getAllDrawingIndices();
+  if (drawn.length === 0){ grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><span class="emoji">🖼️</span><div>아직 그린 그림이 없어요</div></div>`; return; }
+  drawn.sort((a,b) => a-b);
+  const items = await Promise.all(drawn.map(async idx => { const url = await getDrawing(idx); return {idx, url}; }));
+  grid.innerHTML = items.map(it => `
+    <div class="gallery-item" data-idx="${it.idx}">
+      <img src="${it.url}" alt="">
+      <div class="label">${PROVERBS[it.idx].t.length>14?PROVERBS[it.idx].t.substring(0,13)+"…":PROVERBS[it.idx].t}</div>
+    </div>
+  `).join("");
+  grid.querySelectorAll(".gallery-item").forEach(el => {
+    el.addEventListener("click", () => {
+      const idx = parseInt(el.dataset.idx);
+      if (confirm(`"${PROVERBS[idx].t}"\n\n이 그림을 다시 그릴까요?`)){
+        deleteDrawing(idx).then(() => {
+          state.currentIdx = idx; state.currentMode = "draw";
+          document.querySelectorAll(".mode-btn").forEach(b => b.classList.remove("active"));
+          document.querySelector('[data-mode="play"]').classList.add("active");
+          state.mode = "play";
+          showMode("play");
+          renderDraw(idx);
+          updateStats();
+        });
+      }
+    });
+  });
+}
+
+document.getElementById("resetBtn").addEventListener("click", async () => {
+  if (!confirm("⚠️ 정말로 모든 그림과 점수를 삭제할까요? 되돌릴 수 없어요!")) return;
+  const drawn = await getAllDrawingIndices();
+  for (const idx of drawn) await deleteDrawing(idx);
+  await setScore(0);
+  state.currentIdx = -1;
+  state.currentMode = null;
+  await updateStats();
+  renderGallery();
+  showToast("🗑️ 전체 삭제 완료");
+});
+
+document.getElementById("exportBtn").addEventListener("click", async () => {
+  const drawn = await getAllDrawingIndices();
+  if (drawn.length === 0){ showToast("그림이 없어요!"); return; }
+  const cols = Math.min(4, drawn.length);
+  const rows = Math.ceil(drawn.length / cols);
+  const cell = 200; const labelH = 24;
+  const c = document.createElement("canvas");
+  c.width = cols * cell; c.height = rows * (cell + labelH);
+  const cx = c.getContext("2d");
+  cx.fillStyle = "#FFF5FA"; cx.fillRect(0,0,c.width,c.height);
+  for (let i = 0; i < drawn.length; i++){
+    const idx = drawn[i];
+    const url = await getDrawing(idx);
+    await new Promise(res => {
+      const img = new Image();
+      img.onload = () => {
+        const col = i%cols; const row = Math.floor(i/cols);
+        const x = col*cell; const y = row*(cell+labelH);
+        cx.fillStyle = "#fff"; cx.fillRect(x+2,y+2,cell-4,cell-4);
+        cx.drawImage(img,x+2,y+2,cell-4,cell-4);
+        cx.fillStyle = "#3C2048"; cx.font = "bold 12px sans-serif"; cx.textAlign = "center";
+        const txt = PROVERBS[idx].t.length>18?PROVERBS[idx].t.substring(0,17)+"…":PROVERBS[idx].t;
+        cx.fillText(txt, x+cell/2, y+cell+16);
+        res();
+      };
+      img.src = url;
+    });
+  }
+  const a = document.createElement("a"); a.href = c.toDataURL("image/png"); a.download = "내_속담_그림첩.png"; a.click();
+  showToast("💾 내보내기 완료!");
+});
+
+// ============ List ============
+async function renderList(){
+  const drawn = new Set(await getAllDrawingIndices());
+  const list = document.getElementById("proverbList");
+  list.innerHTML = PROVERBS.map((p, i) => `
+    <div style="padding:10px 12px;border-bottom:1px dashed var(--border);display:flex;align-items:center;gap:10px;">
+      <span style="background:${drawn.has(i)?'var(--green)':'var(--paper)'};border:2px solid var(--border);border-radius:50%;width:30px;height:30px;line-height:26px;text-align:center;font-family:'Do Hyeon';font-size:13px;flex-shrink:0;color:${drawn.has(i)?'white':'var(--text-muted)'};">${drawn.has(i)?'✓':i+1}</span>
+      <div style="flex:1;">
+        <div style="font-family:'Jua';font-size:17px;color:var(--text);">${escapeHtml(p.t)}</div>
+        <div style="font-size:14px;color:var(--text-muted);">${escapeHtml(p.m)}</div>
+        <div style="font-size:13px;color:var(--text-muted);opacity:0.8;margin-top:3px;">${escapeHtml(getProverbExplanation(p))}</div>
+      </div>
+    </div>
+  `).join("");
+}
+
+// ============ Toast ============
+function showToast(msg){
+  const t = document.createElement("div");
+  t.textContent = msg;
+  t.style.cssText = `position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:var(--text);color:#fff;padding:10px 24px;border-radius:var(--r-pill);font-family:'Do Hyeon';font-size:16px;z-index:1000;box-shadow:0 4px 20px rgba(60,32,72,.3);border:2px solid var(--pink-light);`;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 1800);
+}
+
+// ============ Fullscreen ============
+async function toggleFullscreen(){
+  const root = document.documentElement;
+  try {
+    const activeFullscreen = document.fullscreenElement || document.webkitFullscreenElement;
+    if (!activeFullscreen) {
+      const request = root.requestFullscreen || root.webkitRequestFullscreen;
+      if (!request){ showToast("이 브라우저는 전체화면을 지원하지 않아요"); return; }
+      await request.call(root);
+    } else {
+      const exit = document.exitFullscreen || document.webkitExitFullscreen;
+      if (exit) await exit.call(document);
+    }
+  } catch(e) { console.error(e); showToast("전체화면 전환에 실패했어요"); }
+}
+
+function updateFullscreenButton(){
+  const btn = document.getElementById("fullscreenBtn");
+  if (!btn) return;
+  const activeFullscreen = document.fullscreenElement || document.webkitFullscreenElement;
+  btn.textContent = activeFullscreen ? "⛶ 나오기" : "⛶ 전체화면";
+  fitPlayView();
+}
+
+// ============ Init ============
+document.getElementById("fullscreenBtn").addEventListener("click", toggleFullscreen);
+document.addEventListener("fullscreenchange", updateFullscreenButton);
+document.addEventListener("webkitfullscreenchange", updateFullscreenButton);
+document.getElementById("startBtn").addEventListener("click", pickRandom);
+document.getElementById("totalCount").textContent = PROVERBS.length;
+showMode(state.mode);
+updateStats();
+
+// ============ 백업 & 불러오기 ============
+function supportsFileBackupLink(){ return "showSaveFilePicker" in window; }
+
+async function createBackupData(){
+  const drawn = await getAllDrawingIndices();
+  const backupData = { app:"proverb-picture-quiz", version:2, updatedAt:new Date().toISOString(), score:await getScore(), drawings:{} };
+  for (const idx of drawn) backupData.drawings[idx] = await getDrawing(idx);
+  return backupData;
+}
+
+function downloadBackupData(backupData){
+  const dataStr = JSON.stringify(backupData);
+  const blob = new Blob([dataStr], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a"); a.href = url; a.download = "속담그림퀴즈_백업데이터.json"; a.click();
+  URL.revokeObjectURL(url);
+}
+
+async function writeBackupToHandle(handle){
+  const backupData = await createBackupData();
+  const dataStr = JSON.stringify(backupData);
+  const writable = await handle.createWritable();
+  await writable.write(new Blob([dataStr], {type:"application/json"}));
+  await writable.close();
+}
+
+function updateBackupStatus(text){ const el = document.getElementById("backupStatus"); if (el) el.textContent = text; }
+
+function scheduleLinkedBackup(){
+  if (typeof state === "undefined" || state.suspendAutoBackup || !state.backupFileHandle) return;
+  clearTimeout(state.autoBackupTimer);
+  state.autoBackupTimer = setTimeout(writeLinkedBackupNow, 700);
+  updateBackupStatus(`자동저장 대기 중: ${state.backupFileName}`);
+}
+
+async function writeLinkedBackupNow(){
+  if (state.suspendAutoBackup){ state.autoBackupPending = true; return; }
+  if (!state.backupFileHandle) return;
+  if (state.autoBackupWriting){ state.autoBackupPending = true; return; }
+  state.autoBackupWriting = true;
+  try {
+    await writeBackupToHandle(state.backupFileHandle);
+    updateBackupStatus(`자동저장 연결됨: ${state.backupFileName}`);
+  } catch(e) {
+    console.error(e);
+    updateBackupStatus("자동저장 실패: 브라우저 권한을 다시 확인해주세요.");
+    showToast("❌ JSON 자동저장 실패");
+  } finally {
+    state.autoBackupWriting = false;
+    if (state.autoBackupPending){ state.autoBackupPending = false; scheduleLinkedBackup(); }
+  }
+}
+
+document.getElementById("backupBtn").addEventListener("click", async () => {
+  if (!supportsFileBackupLink()){ downloadBackupData(await createBackupData()); updateBackupStatus("이 브라우저는 파일 자동연결을 지원하지 않아 다운로드로 저장했어요."); showToast("📦 백업 파일이 다운로드되었습니다!"); return; }
+  try {
+    const handle = await window.showSaveFilePicker({ suggestedName:"속담그림퀴즈_백업데이터.json", types:[{description:"속담 그림 퀴즈 JSON", accept:{"application/json":[".json"]}}] });
+    state.backupFileHandle = handle;
+    state.backupFileName = handle.name || "속담그림퀴즈_백업데이터.json";
+    await writeLinkedBackupNow();
+    showToast("🔗 JSON 자동저장이 연결됐어요!");
+  } catch(e) {
+    if (e && e.name === "AbortError") return;
+    console.error(e);
+    downloadBackupData(await createBackupData());
+    updateBackupStatus("파일 연결에 실패해서 다운로드로 저장했어요.");
+    showToast("📦 백업 파일이 다운로드되었습니다!");
+  }
+});
+
+async function requestBackupWritePermission(handle){
+  if (!handle || !handle.queryPermission || !handle.requestPermission) return true;
+  const options = {mode:"readwrite"};
+  if (await handle.queryPermission(options) === "granted") return true;
+  return await handle.requestPermission(options) === "granted";
+}
+
+async function openLinkedBackupFile(){
+  if (!("showOpenFilePicker" in window)){ document.getElementById("importFile").click(); return; }
+  try {
+    const [handle] = await window.showOpenFilePicker({ multiple:false, types:[{description:"속담 그림 퀴즈 JSON", accept:{"application/json":[".json"]}}] });
+    const file = await handle.getFile();
+    const parsedData = JSON.parse(await file.text());
+    const canWrite = await requestBackupWritePermission(handle);
+    let linkedHandleInfo = null;
+    if (canWrite && handle.createWritable) linkedHandleInfo = {handle, name:handle.name||file.name||"속담그림퀴즈_백업데이터.json"};
+    else updateBackupStatus("파일은 불러왔지만 쓰기 권한이 없어 자동저장은 꺼져 있어요.");
+    await handleLoadedBackupData(parsedData, linkedHandleInfo?"✅ 백업 파일을 불러오고 자동저장을 연결했어요!":"✅ 백업 파일을 불러왔어요!", linkedHandleInfo);
+  } catch(e) {
+    if (e && e.name === "AbortError") return;
+    console.error(e);
+    document.getElementById("importFile").click();
+  }
+}
+
+document.getElementById("restoreBtn").addEventListener("click", openLinkedBackupFile);
+document.getElementById("importFile").addEventListener("click", () => { updateBackupStatus("일반 파일 선택으로 불러오면 파일 자동저장은 연결되지 않아요."); });
+document.getElementById("importFile").addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async (event) => {
+    try { const parsedData = JSON.parse(event.target.result); await handleLoadedBackupData(parsedData, "✅ 백업 데이터를 불러왔어요!"); }
+    catch (err) { console.error(err); showToast("❌ 파일 읽기에 실패했습니다. 올바른 백업 파일인지 확인해주세요."); }
+    e.target.value = "";
+  };
+  reader.readAsText(file);
+});
+
+function activateBackupHandle(linkedHandleInfo){
+  if (!linkedHandleInfo) return;
+  state.backupFileHandle = linkedHandleInfo.handle;
+  state.backupFileName = linkedHandleInfo.name;
+  updateBackupStatus(`자동저장 연결됨: ${state.backupFileName}`);
+  scheduleLinkedBackup();
+}
+
+function syncBackupAfterRestore(linkedHandleInfo){
+  if (linkedHandleInfo) activateBackupHandle(linkedHandleInfo);
+  else scheduleLinkedBackup();
+}
+
+async function handleLoadedBackupData(parsedData, successMessage, linkedHandleInfo = null){
+  const existingDrawings = await getAllDrawingIndices();
+  const hasExisting = existingDrawings.length > 0;
+  if (hasExisting) showRestoreChoiceModal(parsedData, linkedHandleInfo);
+  else { const result = await applyBackupData(parsedData); syncBackupAfterRestore(linkedHandleInfo); showRestoreResult(result, successMessage); }
+}
+
+document.getElementById("sampleBtn").addEventListener("click", async () => {
+  try {
+    showToast("🌐 샘플 JSON을 불러오는 중...");
+    const response = await fetch(SAMPLE_BACKUP_URL, {cache:"no-store"});
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const parsedData = await response.json();
+    await handleLoadedBackupData(parsedData, "✅ 샘플 그림을 불러왔어요!");
+  } catch(e) { console.error(e); showToast("❌ 샘플은 GitHub Pages 주소에서 불러올 수 있어요"); }
+});
+
+function showRestoreChoiceModal(backupData, linkedHandleInfo = null){
+  const modalHTML = `
+    <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(60,32,72,0.45);display:flex;align-items:center;justify-content:center;z-index:2000;">
+      <div style="background:var(--paper);border:2px solid var(--border);border-radius:var(--r-lg);padding:28px;max-width:380px;box-shadow:0 8px 40px rgba(200,100,150,.3);animation:pop 0.3s;">
+        <div style="text-align:center;margin-bottom:20px;">
+          <div style="font-size:40px;margin-bottom:10px;">📥</div>
+          <div style="font-family:'Jua';font-size:20px;color:var(--text);">기존 그림이 있습니다!</div>
+          <div style="font-size:14px;color:var(--text-muted);margin-top:8px;">어떻게 불러올까요?</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <button id="overwriteBtn" class="big-btn" style="width:100%;margin:0;">🔄 덮어씌우기</button>
+          <button id="mergeBtn" class="big-btn secondary" style="width:100%;margin:0;">➕ 추가하기</button>
+          <button id="cancelRestoreBtn" class="big-btn" style="width:100%;margin:0;background:var(--border);color:var(--text);border-color:var(--border);box-shadow:none;">취소</button>
+        </div>
+      </div>
+    </div>
+  `;
+  const modal = document.createElement("div");
+  modal.innerHTML = modalHTML;
+  document.body.appendChild(modal);
+
+  document.getElementById("overwriteBtn").addEventListener("click", async () => {
+    modal.remove();
+    const drawn = await getAllDrawingIndices();
+    const wasSuspended = state.suspendAutoBackup;
+    state.suspendAutoBackup = true;
+    try { for (const idx of drawn) await deleteDrawing(idx); await setScore(0); }
+    finally { state.suspendAutoBackup = wasSuspended; }
+    const result = await applyBackupData(backupData);
+    syncBackupAfterRestore(linkedHandleInfo);
+    showRestoreResult(result, "✅ 덮어씌워서 불러왔어요!");
+  });
+  document.getElementById("mergeBtn").addEventListener("click", async () => {
+    modal.remove();
+    const result = await applyBackupData(backupData, true);
+    syncBackupAfterRestore(linkedHandleInfo);
+    showRestoreResult(result, "✅ 추가해서 불러왔어요!");
+  });
+  document.getElementById("cancelRestoreBtn").addEventListener("click", () => { modal.remove(); });
+}
+
+function showRestoreResult(result, successMessage){
+  if (result.failed > 0){ showToast(`⚠️ ${result.failed}개 그림 저장 실패`); return; }
+  showToast(successMessage);
+}
+
+async function applyBackupData(backupData, isMerge = false){
+  const wasSuspended = state.suspendAutoBackup;
+  state.suspendAutoBackup = true;
+  let saved = 0, failed = 0;
+  try {
+    if (backupData.score !== undefined){
+      if (isMerge){ const currentScore = await getScore(); await setScore(currentScore + backupData.score); }
+      else { await setScore(backupData.score); }
+    }
+    if (backupData.drawings){
+      for (const [idx, dataUrl] of Object.entries(backupData.drawings)){
+        if (await saveDrawing(idx, dataUrl)) saved++;
+        else failed++;
+      }
+    }
+  } finally { state.suspendAutoBackup = wasSuspended; }
+  await updateStats();
+  renderGallery();
+  return { saved, failed };
+}
+</script>
+</body>
+</html>

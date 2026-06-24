@@ -64,13 +64,15 @@ function waitForImagesToLoad(container) {
 }
 
 function nl2br(text) {
-  return (text || '')
+  let escaped = (text || '')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/\n/g, '<br>');
+    .replace(/>/g, '&gt;');
+  
+  escaped = escaped.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-primary underline decoration-primary/40 hover:decoration-primary font-semibold">$1</a>');
+  
+  return escaped.replace(/\n/g, '<br>');
 }
-
 
 // ────────────────────────────────────────────────────
 // 렌더링
