@@ -1,5 +1,8 @@
 {
-  "version": "1.3.1-hotfix-0",
+  "version": "1.3.2-hotfix-1",
   "translations": {},
+  "featureFlags": {
+    "mockAdFallback": true
+  },
   "patchCode": "console.log('Potato harvest hotfix system online.');"
 }
