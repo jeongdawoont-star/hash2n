@@ -34,7 +34,7 @@ export const RECORDS = [
     title: "보드게임 메이커",
     desc: "언플러그드 상황에서도 AI와 함께\n실물 보드게임을 만들 수 있도록 제작하였다.\n도블, 빙고, 사다리와 뱀 등 수업용 게임판과 카드를\n바로 출력해 사용할 수 있게 하는 도구다.\n\n현재 기능 보수중.",
     tags: "codex, boardgame, unplugged",
-    link: "./boardgame_maker/",
+    link: "./boardgame_maker/boardgame-maker.html",
     image: "img-re/21.avif",
   },
 
