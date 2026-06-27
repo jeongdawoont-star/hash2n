@@ -406,6 +406,22 @@ input:focus,textarea:focus,select:focus{box-shadow:0 0 0 3px rgba(37,99,235,.14)
 .preset-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}
 .preset-row select{min-height:42px}
 .preset-field{background:#f8fbff;border:1px solid #dbeafe;border-radius:8px;padding:12px;margin-bottom:14px}
+.range-field .range-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.range-field label{font-size:14px;font-weight:900;margin-bottom:0}
+.range-field .range-value{font-size:12.5px;font-weight:900;color:#1d4ed8;white-space:nowrap}
+.range-field input[type=range]{width:100%;accent-color:var(--brand);margin:4px 0 0}
+.check-field{
+  display:flex;
+  align-items:flex-start;
+  gap:9px;
+  border:1px solid #dbeafe;
+  background:#f8fbff;
+  border-radius:8px;
+  padding:10px 11px;
+}
+.check-field input[type=checkbox]{width:18px;height:18px;margin:2px 0 0;accent-color:var(--brand);flex:0 0 auto}
+.check-field .check-label{font-size:14px;font-weight:900;line-height:1.25}
+.check-field .hint{margin-top:2px}
 .asset-palette{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin-top:8px}
 .asset-chip{border:1px solid #d4dee8;background:#fff;border-radius:8px;padding:8px 9px;font-size:12.5px;font-weight:850;text-align:left}
 .asset-chip:hover{background:#f8fbff;border-color:#a9cdf8}
@@ -522,6 +538,37 @@ input:focus,textarea:focus,select:focus{box-shadow:0 0 0 3px rgba(37,99,235,.14)
 .ladder-result-text{font-size:14px;font-weight:800;fill:var(--t-ink)}
 .dobble-card{border:none;box-shadow:none}
 .dobble-card .dtxt{font-weight:900;color:#111827;overflow-wrap:anywhere}
+.dobble-card .s .dobble-img-wrap{
+  width:100%;
+  height:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  background:var(--dobble-frame-color,#2563eb);
+}
+.dobble-card .s .dobble-img-wrap.dobble-outline-on{
+  filter:
+    drop-shadow(1px 0 0 var(--dobble-outline-color,#111827))
+    drop-shadow(-1px 0 0 var(--dobble-outline-color,#111827))
+    drop-shadow(0 1px 0 var(--dobble-outline-color,#111827))
+    drop-shadow(0 -1px 0 var(--dobble-outline-color,#111827));
+}
+.dobble-card .s .dobble-img-wrap .media{
+  width:var(--dobble-img-scale,88%);
+  height:var(--dobble-img-scale,88%);
+  max-width:none;
+  max-height:none;
+  object-fit:cover;
+  flex:0 0 auto;
+  transform:rotate(var(--dobble-img-rot,0deg));
+}
+.dobble-shape-circle,.dobble-shape-none{border-radius:50%}
+.dobble-shape-squircle{border-radius:22%}
+.dobble-shape-triangle{clip-path:polygon(50% 3%,97% 92%,3% 92%)}
+.dobble-shape-star{clip-path:polygon(50% 1%,61% 36%,98% 36%,68% 57%,79% 93%,50% 71%,21% 93%,32% 57%,2% 36%,39% 36%)}
+.dobble-shape-heart{clip-path:polygon(50% 92%,15% 60%,7% 43%,10% 25%,23% 12%,38% 14%,50% 27%,62% 14%,77% 12%,90% 25%,93% 43%,85% 60%)}
+.dobble-shape-none{background:transparent}
 .halli-card,.mem-card,.money,.miss,.flash{border-radius:8px;box-shadow:none}
 .halli-card{gap:3%;padding:7%}
 .halli-card .f{font-size:30px;flex:0 0 30%;aspect-ratio:1/1}
@@ -874,7 +921,7 @@ function rngFor(label){
 /* 기본 맞춤법/공백 정리 (브라우저 내장, 인터넷 불필요) */
 function cleanText(raw){
   let s = String(raw);
-  s = s.replace(/ /g,' ');                 // nbsp
+  s = s.replace(/\u00a0/g,' ');            // nbsp
   s = s.replace(/[ \t]+/g,' ');                 // 다중 공백
   s = s.replace(/\s+/g,' ');                     // 모든 공백 1칸
   s = s.replace(/\s*([?!.,])/g,'$1');            // 부호 앞 공백 제거
@@ -1077,6 +1124,9 @@ function decalType(d){
 }
 function shuffle(a){
   const rng=rngFor('shuffle');
+  return shuffleWithRng(a,rng);
+}
+function shuffleWithRng(a,rng){
   a=a.slice();
   for(let i=a.length-1;i>0;i--){
     const j=Math.floor(rng()*(i+1));
@@ -1094,6 +1144,22 @@ function toggleChip(id,label,cur){
   return `<div class="field"><label>${label}</label><div class="chips" data-opt="${id}">`+
     `<div class="chip ${cur?'sel':''}" data-v="1">켜기</div>`+
     `<div class="chip ${!cur?'sel':''}" data-v="0">끄기</div></div></div>`;
+}
+function rangeSlider(id,label,min,max,step,cur,unit,hint){
+  const val=cur==null?min:cur;
+  return `<div class="field range-field">
+    <div class="range-head"><label>${label}</label><span class="range-value" data-range-value data-unit="${esc(unit||'')}">${esc(val)}${esc(unit||'')}</span></div>
+    <input type="range" data-opt="${id}" min="${min}" max="${max}" step="${step||1}" value="${esc(val)}">
+    ${hint?`<div class="hint">${hint}</div>`:''}
+  </div>`;
+}
+function checkOpt(id,label,cur,hint){
+  return `<div class="field">
+    <label class="check-field">
+      <input type="checkbox" data-opt="${id}" value="1" ${cur?'checked':''}>
+      <span><span class="check-label">${label}</span>${hint?`<div class="hint">${hint}</div>`:''}</span>
+    </label>
+  </div>`;
 }
 
 function preset(label,title,items,opts){
@@ -1260,19 +1326,29 @@ function withMock(items,n){ // 부족하면 목업으로 채움
 function cardPages(cards,o){
   // o:{cols, aspect(w/h), title, subtitle, foot, gap(mm)}
   const p=PAPER[state.paper], padmm=12, headmm=20, gap=o.gap!=null?o.gap:3;
+  const scale=clamp(o.scale==null?1:+o.scale,.55,1.6);
   const usableW=p.w-padmm*2;
-  const cellW=(usableW-(o.cols-1)*gap)/o.cols;
-  const cellH=cellW/o.aspect;
+  const desiredCols=Math.max(1,+o.cols||1);
+  const baseCellW=(usableW-(desiredCols-1)*gap)/desiredCols;
+  const scaledMode=o.scale!=null;
+  const cardW=scaledMode?Math.min(usableW,baseCellW*scale):baseCellW;
+  const cols=scaledMode
+    ? Math.max(1,Math.min(desiredCols,Math.floor((usableW+gap)/(cardW+gap))||1))
+    : desiredCols;
+  const cellH=cardW/o.aspect;
   const usableH=p.h-padmm*2-headmm;
   const rows=Math.max(1,Math.floor((usableH+gap)/(cellH+gap)));
-  const perPage=rows*o.cols, totalPages=Math.max(1,Math.ceil(cards.length/perPage));
+  const perPage=rows*cols, totalPages=Math.max(1,Math.ceil(cards.length/perPage));
+  const gridStyle=scaledMode
+    ? `display:grid;grid-template-columns:repeat(${cols},${cardW.toFixed(2)}mm);gap:${gap}mm;align-content:start;justify-content:center`
+    : `display:grid;grid-template-columns:repeat(${cols},1fr);gap:${gap}mm;align-content:start`;
   let html='';
   for(let pg=0;pg<totalPages;pg++){
     const slice=cards.slice(pg*perPage,(pg+1)*perPage);
     html+=pageOpen()+`<div class="page-pad">
       <h2 class="gtitle">${esc(o.title)}</h2>
       <div class="gsub">${o.subtitle||''}${totalPages>1?` · ${pg+1}/${totalPages}쪽`:''}</div>
-      <div style="display:grid;grid-template-columns:repeat(${o.cols},1fr);gap:${gap}mm;align-content:start">${slice.join('')}</div>
+      <div style="${gridStyle}">${slice.join('')}</div>
     </div>${foot(o.foot)}</div>`;
   }
   return html;
@@ -1705,11 +1781,29 @@ function dobbleDeck(nPrime){
   }
   return cards; // each n+1 symbols, total n^2+n+1
 }
+const DOBBLE_FRAME_SHAPES=['circle','star','heart','triangle','squircle'];
+function dobbleFrameFor(it,i,opts){
+  const mode=opts.frameMode||'random';
+  const key=`${i}:${it&&it.text?it.text:''}:${it&&it.img?String(it.img).length:0}`;
+  const h=hashString(key);
+  const shape=mode==='random'?DOBBLE_FRAME_SHAPES[h%DOBBLE_FRAME_SHAPES.length]:(mode||'circle');
+  if(shape==='none') return {shape:'none',color:'transparent'};
+  const safeShape=DOBBLE_FRAME_SHAPES.includes(shape)?shape:'circle';
+  return {shape:safeShape,color:`hsl(${h%360},82%,58%)`};
+}
+function dobbleImageHtml(it,i,opts){
+  opts=opts||{};
+  const f=dobbleFrameFor(it,i,opts);
+  const imgScale=clamp(+(opts.imageScale||88),60,130);
+  const imgRot=opts.imgRot==null?0:+opts.imgRot||0;
+  const outlineOn=String(opts.frameOutline??'1')!=='0';
+  return `<span class="dobble-img-wrap dobble-shape-${f.shape}${outlineOn?' dobble-outline-on':''}" style="--dobble-frame-color:${f.color};--dobble-outline-color:${f.color};--dobble-img-scale:${imgScale}%;--dobble-img-rot:${imgRot}deg"><img class="media" src="${esc(it.img)}" alt=""></span>`;
+}
 reg({
   id:'dobble', emoji:'🎯', name:'도블 (스팟잇)', cat:'카드',
   desc:'두 카드 사이에 같은 그림이 하나씩 있어요. 관찰 게임을 만들어요.',
   images:true,
-  defOpts:{order:'auto',view:'cards'},
+  defOpts:{order:'auto',view:'cards',frameMode:'random',frameOutline:'1',imageScale:'88',cardCols:'3',cardScale:'100'},
   opts:o=>{
     const n=dobbleN({opts:o,items:state.items});
     const sym=n*n+n+1;
@@ -1718,14 +1812,19 @@ reg({
     const canAutoFill=imgCount>=3&&total<sym;
     const autoFillHtml=canAutoFill
       ?`<div class="field"><button class="btn primary full" id="dobbleAutoFillBtn" type="button">✨ 나머지 ${sym-total}개 자동 채우기</button>
-          <div class="hint">현재 이미지를 프레임·색상 변형으로 복제합니다. (${total}/${sym}개)</div></div>`
+          <div class="hint">현재 이미지를 색조·회전·선분 변형으로 복제해 심볼 수를 보완합니다. (${total}/${sym}개)</div></div>`
       :(total>=sym?`<div class="field"><div class="hint" style="color:var(--ok)">✅ 심볼 충분 (${total}/${sym}개)</div></div>`:'');
     return rangeChips('order','난이도',[{v:'3',t:'쉬움(13장·4그림)'},{v:'5',t:'보통(31장·6그림)'},{v:'7',t:'어려움(57장·8그림)'},{v:'auto',t:'자동'}],o.order)
       +rangeChips('view','보기 모드',[{v:'cards',t:'🎯 카드 도안'},{v:'template',t:'✏️ 그림칸 도안'}],o.view||'cards')
+      +rangeChips('frameMode','사진 프레임',[{v:'random',t:'랜덤'},{v:'none',t:'없음(원형)'},{v:'circle',t:'원'},{v:'star',t:'별'},{v:'heart',t:'하트'},{v:'triangle',t:'삼각'},{v:'squircle',t:'둥근사각'}],o.frameMode||'random')
+      +checkOpt('frameOutline','프레임 외곽선 보이기',String(o.frameOutline??'1')!=='0','외곽선 색은 프레임 색과 같이 들어가서 심볼 구분을 도와줍니다.')
+      +rangeSlider('imageScale','프레임 안 사진 크기',60,130,5,o.imageScale||'88','%','프레임 없음은 원형 테두리 없이 보이고, 사진 크기만 바로 조절됩니다.')
+      +rangeChips('cardCols','도블 카드 크기',[{v:'2',t:'큼(2열)'},{v:'3',t:'기본(3열)'},{v:'4',t:'작게(4열)'},{v:'5',t:'많이(5열)'}],o.cardCols||'3')
+      +rangeSlider('cardScale','카드 크기 미세 조절',70,150,5,o.cardScale||'100','%','크게 할수록 한 페이지의 열·행 수가 자동으로 줄고 카드가 더 커집니다.')
       +`<div class="field"><label>이미지 여러 장 넣기</label>
-          <button class="btn ghost full" id="dobbleMultiImgBtn" type="button">🖼️ 이미지 여러 장 선택 (자동 프레임)</button>
+          <button class="btn ghost full" id="dobbleMultiImgBtn" type="button">🖼️ 이미지 여러 장 선택</button>
           <input type="file" id="dobbleMultiImgInput" accept="image/*" multiple style="display:none">
-          <div class="hint">여러 사진을 한번에 선택하면 원·별·하트·별 등 모양 프레임을 랜덤 적용해서 추가해요.</div>
+          <div class="hint">위 프레임 옵션이 사진에 적용됩니다. 랜덤을 끄거나 모양을 바꿔도 미리보기가 바로 바뀝니다.</div>
         </div>`
       +autoFillHtml
       +`<div class="field"><label>스캔으로 내 그림 넣기</label>
@@ -1740,8 +1839,8 @@ reg({
     if(c.opts.view==='template') return dobbleTemplate(c,n,sym);
     const deck=dobbleDeck(n);
     // 심볼: 사용자가 넣은 그림/글자 우선, 나머지는 이모지 목업
-    const symHtml=i=>{ const it=c.items[i];
-      if(it&&it.img) return `<img class="media" src="${it.img}">`;
+    const symHtml=(i,imgRot)=>{ const it=c.items[i];
+      if(it&&it.img) return dobbleImageHtml(it,i,Object.assign({},c.opts,{imgRot}));
       if(it&&it.text){
         const t=it.text.trim();
         const cp=t.codePointAt(0)||0;
@@ -1752,20 +1851,26 @@ reg({
       }
       return `<span class="demoji">${EMOJI_POOL[i%EMOJI_POOL.length]}</span>`; };
     const rotRng=rngFor('dobble-rotation');
-    const cards=deck.map(card=>{
+    const cardRng=rngFor('dobble-card-order');
+    const placeRng=rngFor('dobble-placement');
+    const cards=shuffleWithRng(deck,cardRng).map(card=>{
+      card=shuffleWithRng(card,placeRng);
       const lay=dobbleLayout(card.length);
       let inner='';
       card.forEach((symId,k)=>{
         const Lp=lay[k];
         const it=c.items[symId];
         const hasImg=it&&it.img;
-        const rot=Math.floor(rotRng()*(hasImg?16:38)-(hasImg?8:19));
-        inner+=`<div class="s" style="left:${Lp.x}%;top:${Lp.y}%;width:${Lp.s}%;height:${Lp.s}%;transform:translate(-50%,-50%) rotate(${rot}deg);font-size:${(Lp.s*0.82).toFixed(1)}cqmin">${symHtml(symId)}</div>`;
+        const rot=hasImg?0:Math.floor(rotRng()*38-19);
+        const imgRot=hasImg?Math.floor(rotRng()*360):0;
+        inner+=`<div class="s" style="left:${Lp.x}%;top:${Lp.y}%;width:${Lp.s}%;height:${Lp.s}%;transform:translate(-50%,-50%) rotate(${rot}deg);font-size:${(Lp.s*0.82).toFixed(1)}cqmin">${symHtml(symId,imgRot)}</div>`;
       });
       return `<div class="dobble-card cut">${inner}</div>`;
     });
-    return cardPages(cards,{cols:3,aspect:1,title:c.opts.title||'도블 (스팟잇)',
-      subtitle:`총 ${deck.length}장 · 카드마다 ${n+1}개 그림 · 한 장에 3열 · 이모지는 목업이에요(그림·글자·스캔으로 바꿔보세요) · ✂ 절취선`});
+    const cols=clamp(parseInt(c.opts.cardCols||3,10)||3,2,5);
+    const cardScale=clamp((+c.opts.cardScale||100)/100,.7,1.5);
+    return cardPages(cards,{cols,aspect:1,scale:cardScale,title:c.opts.title||'도블 (스팟잇)',
+      subtitle:`총 ${deck.length}장 · 카드마다 ${n+1}개 그림 · 기준 ${cols}열 · 크게 키우면 페이지당 카드 수가 줄어요 · ✂ 절취선`});
   }
 });
 function dobbleN(c){ const o=c.opts||{}; if(o.order&&o.order!=='auto') return +o.order||3; const len=(c.items||[]).length; return len>=57?7:(len>=31?5:3); }
@@ -2020,7 +2125,16 @@ function dobbleVariant(src){
   });
 }
 
-/* 여러 이미지를 도블 심볼로 추가 (자동 프레임 적용) */
+function dobbleImageData(img){
+  const max=900, sc=Math.min(1,max/Math.max(img.width,img.height));
+  const cv=document.createElement('canvas');
+  cv.width=Math.max(1,Math.round(img.width*sc));
+  cv.height=Math.max(1,Math.round(img.height*sc));
+  cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
+  return cv.toDataURL('image/jpeg',0.86);
+}
+
+/* 여러 이미지를 도블 심볼로 추가 (프레임은 미리보기에서 실시간 적용) */
 function addDobbleImages(files){
   function doAdd(replace){
     if(replace) state.items=[];
@@ -2030,8 +2144,7 @@ function addDobbleImages(files){
       r.onload=function(e){
         const img=new Image();
         img.onload=function(){
-          const framed=applyDobbleFrame(img);
-          state.items.push({text:null,img:framed});
+          state.items.push({text:null,img:dobbleImageData(img)});
           loaded++;
           if(loaded===files.length){buildItems();buildOpts();renderStage();}
         };
@@ -2381,7 +2494,12 @@ function buildOpts(){
   box.innerHTML=html;
   // wire inputs
   box.querySelectorAll('input[data-opt]').forEach(inp=>{
-    inp.oninput=()=>{state.opts[inp.dataset.opt]=inp.value;renderStage();};
+    inp.oninput=()=>{
+      state.opts[inp.dataset.opt]=inp.type==='checkbox'?(inp.checked?'1':'0'):inp.value;
+      const out=inp.closest('.range-field')?.querySelector('[data-range-value]');
+      if(out) out.textContent=inp.value+(out.dataset.unit||'');
+      renderStage();
+    };
   });
   box.querySelectorAll('.chips[data-opt]').forEach(ch=>{
     ch.querySelectorAll('.chip').forEach(chip=>{
@@ -2512,6 +2630,67 @@ function detectGridBounds(img,padMm){
   };
 }
 
+function dobbleScanCellImage(img,sx,sy,sw,sh,cPx){
+  sx=clamp(sx,0,img.width-1);
+  sy=clamp(sy,0,img.height-1);
+  sw=clamp(sw,1,img.width-sx);
+  sh=clamp(sh,1,img.height-sy);
+  const analysisMax=560;
+  const analysisScale=Math.min(1,analysisMax/Math.max(sw,sh));
+  const tmp=document.createElement('canvas');
+  tmp.width=Math.max(1,Math.round(sw*analysisScale));
+  tmp.height=Math.max(1,Math.round(sh*analysisScale));
+  const tx=tmp.getContext('2d',{willReadFrequently:true});
+  tx.fillStyle='#fff';
+  tx.fillRect(0,0,tmp.width,tmp.height);
+  tx.drawImage(img,sx,sy,sw,sh,0,0,tmp.width,tmp.height);
+
+  const data=tx.getImageData(0,0,tmp.width,tmp.height).data;
+  const cTmp=Math.max(.5,cPx*analysisScale);
+  const labelW=Math.min(tmp.width*.34,Math.max(18,Math.round(36*cTmp)));
+  const labelH=Math.min(tmp.height*.24,Math.max(16,Math.round(26*cTmp)));
+  const edgeGuard=Math.max(2,Math.round(3*cTmp));
+  let minX=tmp.width,minY=tmp.height,maxX=-1,maxY=-1,count=0;
+  for(let y=0;y<tmp.height;y++){
+    for(let x=0;x<tmp.width;x++){
+      if(x<labelW&&y<labelH) continue; // 템플릿 번호 영역은 그림으로 보지 않는다.
+      if(x<edgeGuard||y<edgeGuard||x>=tmp.width-edgeGuard||y>=tmp.height-edgeGuard) continue;
+      const i=(y*tmp.width+x)*4;
+      const a=data[i+3];
+      if(a<25) continue;
+      const r=data[i],g=data[i+1],b=data[i+2];
+      const sum=r+g+b, hi=Math.max(r,g,b), lo=Math.min(r,g,b);
+      const isInk=sum<700 || (hi-lo>35 && sum<745);
+      if(!isInk) continue;
+      minX=Math.min(minX,x); minY=Math.min(minY,y);
+      maxX=Math.max(maxX,x); maxY=Math.max(maxY,y);
+      count++;
+    }
+  }
+
+  let bx=0,by=0,bw=tmp.width,bh=tmp.height,padOut=10;
+  if(count>12&&maxX>=minX&&maxY>=minY){
+    const margin=Math.max(7,Math.round(5.5*cTmp));
+    bx=Math.max(0,minX-margin);
+    by=Math.max(0,minY-margin);
+    bw=Math.min(tmp.width,maxX+margin+1)-bx;
+    bh=Math.min(tmp.height,maxY+margin+1)-by;
+    padOut=18;
+  }
+
+  const outSize=420;
+  const cv=document.createElement('canvas');
+  cv.width=cv.height=outSize;
+  const cx=cv.getContext('2d');
+  cx.fillStyle='#fff';
+  cx.fillRect(0,0,outSize,outSize);
+  const sc=Math.min((outSize-padOut*2)/bw,(outSize-padOut*2)/bh);
+  const dw=bw*sc, dh=bh*sc;
+  const dx=(outSize-dw)/2, dy=(outSize-dh)/2;
+  cx.drawImage(tmp,bx,by,bw,bh,dx,dy,dw,dh);
+  return cv.toDataURL('image/jpeg',0.9);
+}
+
 /* 도블 그림칸 스캔 -> 각 칸 그림 잘라서 카드에 넣기 */
 function importDobbleScan(file){
   function runScan(n,replace){
@@ -2533,26 +2712,16 @@ function importDobbleScan(file){
         const cellH=(gH-(g.rows-1)*gapPx)/g.rows;
         // CSS px → mm × pxPerMm (1 CSS px = 25.4/96 mm)
         const cPx=25.4/96*pxPerMm;
-        // 셀 border:2px + 번호 left:5px + 번호 width~16px(볼드2자) + 여유:5px
-        const iL=(2+5+16+5)*cPx;   // 28px CSS
-        // 셀 border:2px + 번호 top:2px + 번호 height~12px + 여유:5px
-        const iT=(2+2+12+5)*cPx;   // 21px CSS
-        const iR=(2+4)*cPx;        // 6px CSS
-        const iB=(2+4)*cPx;        // 6px CSS
+        const inset=(2+5)*cPx;     // 셀 테두리와 스캔 흔들림 선분을 조금 더 제외한다.
         const newItems=[];
         for(let idx=0;idx<sym;idx++){
           const row=~~(idx/g.cols),col=idx%g.cols;
           // CSS grid 정확한 셀 위치
           const cellX=bd.left+col*(cellW+gapPx);
           const cellY=bd.top+row*(cellH+gapPx);
-          const sx=cellX+iL, sy=cellY+iT;
-          const sw=cellW-iL-iR, sh=cellH-iT-iB;
-          const side=Math.min(sw,sh);
-          const ox=sx+(sw-side)/2, oy=sy+(sh-side)/2;
-          const cv=document.createElement('canvas');cv.width=cv.height=300;
-          const cx=cv.getContext('2d');cx.fillStyle='#fff';cx.fillRect(0,0,300,300);
-          cx.drawImage(img,ox,oy,side,side,0,0,300,300);
-          newItems.push({text:null,img:cv.toDataURL('image/jpeg',0.85)});
+          const sx=cellX+inset, sy=cellY+inset;
+          const sw=cellW-inset*2, sh=cellH-inset*2;
+          newItems.push({text:null,img:dobbleScanCellImage(img,sx,sy,sw,sh,cPx)});
         }
         if(replace)state.items=newItems;
         else state.items=state.items.concat(newItems);
