@@ -31,6 +31,14 @@ export const RECORDS = [
   // ▼ 여기에 새 기록을 붙여넣으세요 (최신 항목을 맨 위에) ▼
 
   {
+    title: "보드게임 메이커",
+    desc: "언플러그드 상황에서도 AI와 함께\n실물 보드게임을 만들 수 있도록 제작하였다.\n도블, 빙고, 사다리와 뱀 등 수업용 게임판과 카드를\n바로 출력해 사용할 수 있게 하는 도구다.\n\n현재 기능 보수중.",
+    tags: "codex, boardgame, unplugged",
+    link: "./boardgame_maker/",
+    image: "img-re/21.avif",
+  },
+
+  {
     title: "속담 그림 퀴즈",
     desc: "저학년 속담을 익혀야 하는 아이를 위해 만들었다.\n그림으로 직접 그리면서 속담의 상황을 느끼고\n의미를 더 잘 이해하는 것 같다.\n\n[샘플 그림 데이터 다운로드](./vibe-apps/속담그림퀴즈_백업데이터.json)",
     tags: "gemini",
