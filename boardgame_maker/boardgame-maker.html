@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
+﻿﻿﻿﻿﻿<!DOCTYPE html>
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
@@ -2431,21 +2431,84 @@ function detectGridBounds(img,padMm){
     for(let y=0;y<AH;y++){const i=(y*AW+~~x)*4;if(px[i]+px[i+1]+px[i+2]<450)n++;}
     return n/AH;
   }
-  const THR=0.55;
-  let top=~~(AH*0.10),bottom=~~(AH*0.90),left=~~(AW*0.02),right=~~(AW*0.98);
-  for(let y=~~(AH*0.05);y<~~(AH*0.80);y++){if(rowDark(y)>THR){top=y;break;}}
-  for(let y=AH-2;y>~~(AH*0.30);y--){if(rowDark(y)>THR){bottom=y;break;}}
-  for(let x=~~(AW*0.01);x<~~(AW*0.45);x++){if(colDark(x)>THR){left=x;break;}}
-  for(let x=AW-2;x>~~(AW*0.55);x--){if(colDark(x)>THR){right=x;break;}}
-  top+=3;bottom-=3;left+=3;right-=3;
-  const s=1/sc;
-  // 프레임 내부 여백(mm)을 스캔 픽셀로 변환해 제거 (A4 기준: W/210 px/mm)
-  const padPx=Math.round(padMm*W/210);
+
+  // Exact relative percentages of the A4 template layout (fallback values)
+  const top_default = ~~(AH * 0.084);
+  const bottom_default = ~~(AH * 0.963);
+  const left_default = ~~(AW * 0.033);
+  const right_default = ~~(AW * 0.967);
+
+  // 1. Detect Left (scan left-to-right)
+  let left = left_default;
+  let inDesk = colDark(~~(AW * 0.01)) > 0.35;
+  for (let x = ~~(AW * 0.01); x < ~~(AW * 0.45); x++) {
+    const val = colDark(x);
+    if (val > 0.52) {
+      if (!inDesk) {
+        left = x;
+        break;
+      }
+    } else if (val < 0.20) {
+      inDesk = false; // Entered white paper margin
+    }
+  }
+
+  // 2. Detect Right (scan right-to-left)
+  let right = right_default;
+  inDesk = colDark(AW - 2) > 0.35;
+  for (let x = AW - 2; x > ~~(AW * 0.55); x--) {
+    const val = colDark(x);
+    if (val > 0.52) {
+      if (!inDesk) {
+        right = x;
+        break;
+      }
+    } else if (val < 0.20) {
+      inDesk = false;
+    }
+  }
+
+  // 3. Detect Top (scan top-to-bottom)
+  let top = top_default;
+  inDesk = rowDark(~~(AH * 0.05)) > 0.35;
+  for (let y = ~~(AH * 0.05); y < ~~(AH * 0.80); y++) {
+    const val = rowDark(y);
+    if (val > 0.52) {
+      if (!inDesk) {
+        top = y;
+        break;
+      }
+    } else if (val < 0.20) {
+      inDesk = false;
+    }
+  }
+
+  // 4. Detect Bottom (scan bottom-to-top)
+  let bottom = bottom_default;
+  inDesk = rowDark(AH - 2) > 0.35;
+  for (let y = AH - 2; y > ~~(AH * 0.30); y--) {
+    const val = rowDark(y);
+    if (val > 0.52) {
+      if (!inDesk) {
+        bottom = y;
+        break;
+      }
+    } else if (val < 0.20) {
+      inDesk = false;
+    }
+  }
+
+  // Calculate pxPerMm using the actual detected width
+  const pxPerMm = (right - left) / (sc * 196);
+  top += 3; bottom -= 3; left += 3; right -= 3;
+  const s = 1 / sc;
+  const padPx = Math.round(padMm * pxPerMm);
   return {
-    top:~~(top*s)+padPx,
-    bottom:~~(bottom*s)-padPx,
-    left:~~(left*s)+padPx,
-    right:~~(right*s)-padPx
+    top: ~~(top * s) + padPx,
+    bottom: ~~(bottom * s) - padPx,
+    left: ~~(left * s) + padPx,
+    right: ~~(right * s) - padPx,
+    pxPerMm: pxPerMm
   };
 }
 
@@ -2459,23 +2522,23 @@ function importDobbleScan(file){
     r.onload=function(e){
       const img=new Image();
       img.onload=function(){
-        const W=img.width;
-        // CSS px -> 스캔 px 변환: A4=793.7 CSS px, W 스캔 px => 1 CSS px = W/793.7 scan px
-        const c2p=W/793.7;
         const bd=detectGridBounds(img,padMm);
         const gW=bd.right-bd.left, gH=bd.bottom-bd.top;
-        // CSS gap을 스캔 px로: gapMm * W/210
-        const gapPx=gapMm*W/210;
+        // 실제 프레임 폭 기반 px/mm (핸드폰 여백 있는 사진도 정확)
+        const pxPerMm=bd.pxPerMm||img.width/210;
+        // mm → scan px 변환
+        const gapPx=gapMm*pxPerMm;
         // 정확한 셀 크기 (gap 고려)
         const cellW=(gW-(g.cols-1)*gapPx)/g.cols;
         const cellH=(gH-(g.rows-1)*gapPx)/g.rows;
-        // 인셋 계산 (CSS 값 기반 정밀 계산):
-        // 셀 border: 2px, 번호 left:5px, 번호 width~12px CSS, 여유:5px
-        const iL=(2+5+12+5)*c2p;   // 24px CSS
-        // 셀 border: 2px, 번호 top:2px, 번호 height~12px CSS, 여유:5px
-        const iT=(2+2+12+5)*c2p;   // 21px CSS
-        const iR=(2+4)*c2p;        // 6px CSS (border + 여유)
-        const iB=(2+4)*c2p;        // 6px CSS
+        // CSS px → mm × pxPerMm (1 CSS px = 25.4/96 mm)
+        const cPx=25.4/96*pxPerMm;
+        // 셀 border:2px + 번호 left:5px + 번호 width~16px(볼드2자) + 여유:5px
+        const iL=(2+5+16+5)*cPx;   // 28px CSS
+        // 셀 border:2px + 번호 top:2px + 번호 height~12px + 여유:5px
+        const iT=(2+2+12+5)*cPx;   // 21px CSS
+        const iR=(2+4)*cPx;        // 6px CSS
+        const iB=(2+4)*cPx;        // 6px CSS
         const newItems=[];
         for(let idx=0;idx<sym;idx++){
           const row=~~(idx/g.cols),col=idx%g.cols;
