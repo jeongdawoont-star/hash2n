@@ -1,959 +1,2764 @@
-<!DOCTYPE html>
+﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>우당탕탕 도블 메이커</title>
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-    <script src="https://unpkg.com/@babel/standalone@7.28.5/babel.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Jua&display=swap');
-        
-        /* 브라우저 새로고침(Pull-to-refresh) 방지 및 기본 세팅 */
-        html, body {
-            font-family: 'Jua', sans-serif;
-            background-color: #fef08a;
-            overscroll-behavior-y: none;
-            overscroll-behavior: none;
-            user-select: none;
-            -webkit-user-select: none;
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-        }
-        
-        /* 투명 배경 체크무늬 (보관함용) */
-        .transparent-bg {
-            background-image: linear-gradient(45deg, #e5e7eb 25%, transparent 25%), 
-                              linear-gradient(-45deg, #e5e7eb 25%, transparent 25%), 
-                              linear-gradient(45deg, transparent 75%, #e5e7eb 75%), 
-                              linear-gradient(-45deg, transparent 75%, #e5e7eb 75%);
-            background-size: 20px 20px;
-            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
-            background-color: white;
-        }
-        ::-webkit-scrollbar { width: 10px; height: 10px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 5px; border: 2px solid white; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>커스텀 보드게임 제작기 모음집</title>
+<style>
+:root{
+  --bg:#f4f6fb; --panel:#ffffff; --ink:#1f2430; --muted:#6b7280;
+  --line:#e3e7ef; --brand:#5b6cff; --brand2:#8a5bff; --accent:#ff7a59;
+  --ok:#16a34a; --shadow:0 6px 24px rgba(40,50,90,.08);
+  /* theme (게임 색) */
+  --t1:#5b6cff; --t2:#8a5bff; --t3:#fef3c7; --t-ink:#1f2430; --t-soft:#eef1ff;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic',system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:15px;line-height:1.5}
+button{font-family:inherit;cursor:pointer}
+input,textarea,select{font-family:inherit;font-size:14px}
+
+/* ---------- App chrome ---------- */
+.topbar{position:sticky;top:0;z-index:50;background:linear-gradient(100deg,var(--brand),var(--brand2));color:#fff;padding:12px 20px;display:flex;align-items:center;gap:14px;box-shadow:var(--shadow)}
+.topbar h1{font-size:18px;margin:0;font-weight:800;letter-spacing:0}
+.topbar .sub{font-size:12px;opacity:.85;font-weight:500}
+.topbar .spacer{flex:1}
+.topbar button{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:9px;padding:8px 13px;font-weight:600;font-size:13px}
+.topbar button:hover{background:rgba(255,255,255,.28)}
+
+.wrap{max-width:1280px;margin:0 auto;padding:18px}
+
+/* ---------- Home grid ---------- */
+.home-intro{text-align:center;margin:18px 0 26px}
+.home-intro h2{font-size:24px;margin:0 0 6px}
+.home-intro p{color:var(--muted);margin:0;font-size:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+.card-game{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px;cursor:pointer;transition:.15s;position:relative;overflow:hidden}
+.card-game:hover{transform:translateY(-3px);box-shadow:var(--shadow);border-color:var(--brand)}
+.card-game .emoji{font-size:34px;display:block;margin-bottom:8px}
+.card-game h3{margin:0 0 4px;font-size:16px}
+.card-game p{margin:0;font-size:12.5px;color:var(--muted);line-height:1.45}
+.card-game .tag{position:absolute;top:12px;right:12px;font-size:10px;background:var(--t-soft);color:var(--brand);padding:3px 8px;border-radius:20px;font-weight:700}
+
+/* ---------- Editor layout ---------- */
+.editor{display:none;grid-template-columns:380px 1fr;gap:18px;align-items:start}
+.editor.active{display:grid}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:var(--shadow)}
+.panel-stack{display:flex;flex-direction:column;gap:14px;position:sticky;top:74px;max-height:calc(100vh - 90px);overflow:auto}
+.sec-title{font-size:12px;font-weight:800;color:var(--brand);text-transform:uppercase;letter-spacing:.5px;margin:0 0 10px;display:flex;align-items:center;gap:6px}
+.field{margin-bottom:12px}
+.field>label{display:block;font-size:13px;font-weight:600;margin-bottom:5px}
+.field .hint{font-size:11.5px;color:var(--muted);margin-top:3px;line-height:1.4}
+textarea,input[type=text],input[type=number],select{width:100%;border:1px solid var(--line);border-radius:9px;padding:9px 10px;background:#fbfcfe}
+textarea{min-height:120px;resize:vertical;line-height:1.55}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--brand);background:#fff}
+
+.btn{border:none;border-radius:10px;padding:10px 14px;font-weight:700;font-size:14px}
+.btn.primary{background:var(--brand);color:#fff}
+.btn.primary:hover{filter:brightness(1.05)}
+.btn.ghost{background:#eef1f8;color:var(--ink)}
+.btn.ghost:hover{background:#e3e7f3}
+.btn.full{width:100%}
+.btn-row{display:flex;gap:8px}
+
+/* theme swatches */
+.themes{display:flex;flex-wrap:wrap;gap:8px}
+.swatch{width:38px;height:38px;border-radius:10px;border:3px solid transparent;cursor:pointer;position:relative}
+.swatch.sel{border-color:var(--ink);box-shadow:0 0 0 2px #fff inset}
+
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:#fbfcfe;border-radius:20px;padding:6px 12px;font-size:13px;font-weight:600}
+.chip.sel{background:var(--brand);color:#fff;border-color:var(--brand)}
+
+/* item list */
+.items{display:flex;flex-direction:column;gap:7px;margin-top:8px;max-height:300px;overflow:auto;padding-right:2px}
+.item{display:flex;gap:6px;align-items:center;background:#fbfcfe;border:1px solid var(--line);border-radius:9px;padding:5px 6px}
+.item .num{font-size:11px;color:var(--muted);min-width:18px;text-align:center;font-weight:700}
+.item input{border:none;background:transparent;flex:1;padding:4px}
+.item input:focus{background:#fff;border-radius:6px}
+.item .thumb{width:30px;height:30px;border-radius:6px;object-fit:cover;border:1px solid var(--line);flex-shrink:0;background:#eef}
+.item .iconbtn{border:none;background:#eef1f8;border-radius:6px;width:26px;height:26px;font-size:13px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.item .iconbtn:hover{background:#dde3f3}
+.item .iconbtn.del:hover{background:#ffe1e1;color:#c00}
+
+/* ---------- Preview / Stage ---------- */
+.stage-wrap{background:#e8ebf3;border-radius:16px;padding:22px;overflow:auto;min-height:60vh}
+.stage-bar{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.stage-bar .title{font-weight:800;font-size:15px}
+.stage-bar .spacer{flex:1}
+#stage{display:flex;flex-direction:column;align-items:center;gap:20px}
+
+.page{background:#fff;box-shadow:0 4px 18px rgba(0,0,0,.18);position:relative;overflow:hidden}
+.page-pad{padding:12mm}
+.page-title{text-align:center;font-weight:800;font-size:20px;margin:0 0 8px;color:var(--t-ink)}
+.page-foot{position:absolute;bottom:5mm;right:8mm;font-size:9px;color:#aab}
+
+/* cut lines */
+.cut{outline:1px dashed #99a; }
+.cutgrid{display:grid;gap:0}
+.cutgrid>*{border:1px dashed #aab;margin:-0.5px}
+.scissor{position:relative}
+.scissor::before{content:"✂";position:absolute;left:-4px;top:-11px;font-size:11px;color:#bbc}
+
+/* generic board */
+.empty-note{color:var(--muted);text-align:center;padding:40px 20px;font-size:14px}
+
+/* ===== game components ===== */
+.gtitle{text-align:center;font-weight:800;font-size:22px;margin:0 0 3mm;color:var(--t-ink)}
+.gsub{text-align:center;font-size:11px;color:#889;margin:-2mm 0 3mm}
+.media{display:block;max-width:100%;max-height:100%;object-fit:contain}
+
+/* snake & ladder */
+.snake-grid{display:grid;width:100%;border:3px solid var(--t2);border-radius:6px;overflow:hidden}
+.snake-cell{border:1px solid var(--t3);padding:3px;position:relative;display:flex;flex-direction:column;font-size:10px;line-height:1.2;min-height:0;overflow:hidden}
+.snake-cell .n{position:absolute;top:2px;left:3px;font-size:9px;font-weight:800;color:var(--t2);opacity:.8}
+.snake-cell .q{margin-top:11px;font-weight:600;color:var(--t-ink);word-break:keep-all}
+.snake-cell .pic{flex:1;display:flex;align-items:center;justify-content:center;min-height:0;margin-top:2px}
+.snake-cell .pic img{max-height:100%;max-width:100%;object-fit:contain}
+.snake-cell.start{background:var(--t3)}
+.snake-cell.finish{background:var(--t1);color:#fff}
+.snake-cell .badge{position:absolute;bottom:2px;right:3px;font-size:11px}
+
+/* bingo */
+.bingo{display:grid;gap:2px;background:var(--t2);border:4px solid var(--t2);border-radius:10px;aspect-ratio:1/1}
+.bingo-cell{background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:4px;font-size:12px;font-weight:600;color:var(--t-ink);word-break:keep-all;overflow:hidden}
+.bingo-cell.free{background:var(--t3);font-weight:800}
+.bingo-cell img{max-width:90%;max-height:60%;object-fit:contain;margin-bottom:2px}
+.bingo-head{display:grid;margin-bottom:3px}
+.bingo-head div{text-align:center;font-weight:900;color:#fff;background:var(--t1);font-size:20px;padding:4px 0;border-radius:6px;margin:0 1px}
+
+/* monopoly */
+.mono-board{display:grid;width:100%;aspect-ratio:1/1;background:var(--t-soft);border:3px solid var(--t2)}
+.mono-cell{border:1px solid var(--t2);background:#fff;display:flex;flex-direction:column;font-size:8.5px;line-height:1.15;overflow:hidden;position:relative}
+.mono-cell .bar{height:8px;background:var(--t1)}
+.mono-cell .nm{padding:2px 3px;font-weight:700;word-break:keep-all;color:var(--t-ink)}
+.mono-cell .pic{flex:1;display:flex;align-items:center;justify-content:center;min-height:0}
+.mono-cell .pic img{max-width:96%;max-height:96%;object-fit:contain}
+.mono-cell.corner{background:var(--t3);font-size:11px;font-weight:800;align-items:center;justify-content:center;text-align:center}
+.mono-center{display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center;color:var(--t2)}
+.mono-center .big{font-size:34px;font-weight:900;letter-spacing:0}
+.ledger{width:100%;border-collapse:collapse;font-size:12px}
+.ledger th,.ledger td{border:1px solid var(--t2);padding:6px 8px;text-align:center}
+.ledger th{background:var(--t1);color:#fff}
+.ledger td.l{text-align:left}
+
+/* track loop */
+.track{display:grid;gap:0;width:100%;aspect-ratio:1.3/1}
+.track-cell{border:2px solid #fff;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:4px;font-size:10px;font-weight:700;color:#fff;word-break:keep-all;overflow:hidden}
+.track-cell img{max-width:80%;max-height:46%;object-fit:contain;margin-bottom:2px}
+.track-mid{display:flex;align-items:center;justify-content:center;text-align:center;color:var(--t2);font-weight:900;font-size:26px}
+
+/* ghost leg */
+.ladder svg{width:100%;height:auto;display:block}
+.ladder .lbl{font-size:11px;font-weight:700}
+
+/* dobble */
+.dobble-card{border-radius:50%;aspect-ratio:1/1;position:relative;background:#fff;overflow:hidden}
+.dobble-card .s{position:absolute;transform-origin:center;display:flex;align-items:center;justify-content:center;text-align:center;line-height:1;border-radius:50%;overflow:hidden}
+.dobble-card .s img{width:100%;height:100%;object-fit:contain}
+
+/* halli galli */
+.halli-card{border:2px solid var(--t2);border-radius:10px;aspect-ratio:2/3;display:flex;flex-wrap:wrap;align-content:center;justify-content:center;gap:4%;padding:6%;background:#fff}
+.halli-card .f{font-size:26px;display:flex;align-items:center;justify-content:center}
+.halli-card .f img{max-width:46px;max-height:46px;object-fit:contain}
+
+/* memory */
+.mem-card{border:2px solid var(--t2);border-radius:10px;aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;text-align:center;padding:6px;background:#fff;font-weight:700;color:var(--t-ink);word-break:keep-all;overflow:hidden;font-size:13px}
+.mem-card img{max-width:84%;max-height:84%;object-fit:contain}
+.mem-back{background:var(--t1);color:#fff;font-size:24px;font-weight:900}
+
+/* wheel */
+.wheel-wrap{display:flex;flex-direction:column;align-items:center}
+.wheel{position:relative;width:88%;aspect-ratio:1/1}
+.wheel svg{width:100%;height:100%}
+.wheel .wt{font-size:11px;font-weight:700}
+.pointer-cut{margin-top:6mm;text-align:center}
+
+/* cards: money / mission / flash */
+.gcard{border:1px dashed #99a;border-radius:8px;padding:8px;display:flex;flex-direction:column;background:#fff;position:relative;overflow:hidden}
+.money{border:2px solid var(--t2);border-radius:10px;height:100%;display:flex;flex-direction:column;justify-content:space-between;padding:8px 10px;background:linear-gradient(135deg,var(--t-soft),#fff)}
+.money .val{font-size:30px;font-weight:900;color:var(--t2);text-align:center}
+.money .top{display:flex;justify-content:space-between;font-size:11px;font-weight:700;color:var(--t2)}
+.money .ttl{text-align:center;font-size:11px;font-weight:700;color:var(--t-ink)}
+.miss{border:2px solid var(--t2);border-radius:10px;height:100%;display:flex;flex-direction:column;background:#fff;overflow:hidden}
+.miss .h{background:var(--t1);color:#fff;text-align:center;font-weight:800;font-size:13px;padding:5px}
+.miss .b{flex:1;display:flex;align-items:center;justify-content:center;text-align:center;padding:8px;font-weight:600;color:var(--t-ink);word-break:keep-all;font-size:13px}
+.miss .b img{max-width:80%;max-height:70%;object-fit:contain}
+.flash{border:2px solid var(--t2);border-radius:10px;height:100%;display:flex;flex-direction:column;background:#fff;overflow:hidden}
+.flash .q{flex:1;display:flex;align-items:center;justify-content:center;text-align:center;padding:8px;font-weight:700;font-size:15px;color:var(--t-ink);word-break:keep-all}
+.flash .a{border-top:1px dashed var(--t2);background:var(--t-soft);text-align:center;font-size:11px;padding:5px;color:var(--t2);font-weight:700}
+.flash .q img{max-width:80%;max-height:80%;object-fit:contain}
+
+@media (max-width:980px){
+  .editor.active{grid-template-columns:1fr}
+  .panel-stack{position:static;max-height:none}
+}
+
+/* ---------- PRINT ---------- */
+@media print{
+  body{background:#fff}
+  .topbar,.wrap-controls,.stage-bar,.no-print{display:none !important}
+  .stage-wrap{background:#fff;padding:0;border-radius:0}
+  .wrap{max-width:none;padding:0;margin:0}
+  #stage{gap:0}
+  .page{box-shadow:none;margin:0 !important;transform:none !important;page-break-after:always;break-inside:avoid;page-break-inside:avoid}
+  .page:last-child{page-break-after:auto}
+}
+</style>
+<style>
+/* ===== 귀여운 캐주얼 오버라이드 ===== */
+.gtitle{font-weight:900;color:var(--t2);text-shadow:0 1px 0 #fff}
+
+/* 사다리와 뱀 보드 */
+.snake-board{position:relative;margin:0 auto;border-radius:20px;background:var(--t-soft);padding:6px;box-shadow:0 4px 14px rgba(0,0,0,.12)}
+.snake-grid{position:relative;z-index:1;width:100%;height:100%;border:none;border-radius:15px;overflow:hidden;display:grid;gap:3px;background:transparent}
+.snake-overlay{position:absolute;left:6px;top:6px;width:calc(100% - 12px);height:calc(100% - 12px);z-index:3;pointer-events:none}
+.snake-cell{border:2px solid #fff;border-radius:12px;background:var(--t3);position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:3px;overflow:hidden;color:var(--t-ink);min-height:0}
+.snake-cell.alt{background:#ffffff}
+.snake-cell.start{background:#bbf7d0}
+.snake-cell.finish{background:#fde68a}
+.snake-cell .n{position:absolute;top:1px;left:4px;font-size:.82em;font-weight:900;color:var(--t2);opacity:.7}
+.snake-cell .q{font-weight:700;line-height:1.12;word-break:keep-all;max-height:100%;overflow:hidden}
+.snake-cell .big{font-weight:900;font-size:1.15em;line-height:1.05}
+.snake-cell .pic{width:90%;flex:1;display:flex;align-items:center;justify-content:center;min-height:0}
+.snake-cell .pic img{max-width:100%;max-height:100%;object-fit:contain}
+.snake-cell .badge{position:absolute;bottom:0;right:3px;font-size:.82em;font-weight:800;background:rgba(255,255,255,.7);border-radius:6px;padding:0 2px}
+.snake-cell .badge.up{color:#b45309}.snake-cell .badge.dn{color:#15803d}
+
+/* 도블 — 그림 최대 크기 (컨테이너 쿼리) */
+.dobble-card{container-type:size;border:none;box-shadow:0 3px 9px rgba(0,0,0,.14);background:#fff;border-radius:50%}
+.dobble-card .s{display:flex;align-items:center;justify-content:center;text-align:center;line-height:1;border-radius:50%;overflow:hidden}
+.dobble-card .s .media{width:100%;height:100%;object-fit:cover}
+.dobble-card .dtxt{font-size:.62em;line-height:1.05;word-break:keep-all;color:var(--t-ink);font-weight:800}
+.dobble-card .demoji{line-height:1}
+
+/* 도블 그림칸 도안 */
+.tpl-note{border:2px dashed var(--t2);background:var(--t-soft);border-radius:12px;padding:8px 12px;font-size:11.5px;line-height:1.7;color:var(--t-ink);margin-bottom:5mm}
+.tpl-frame{border:4px solid #111;border-radius:6px;padding:4mm}
+.tpl-grid{display:grid;gap:4mm}
+.tpl-box{aspect-ratio:1/1;border:2px solid #111;border-radius:6px;position:relative;background:#fff}
+.tpl-box.off{border-style:dashed;opacity:.25}
+.tpl-box .tpl-n{position:absolute;top:2px;left:5px;font-size:10px;font-weight:800;color:#888}
+
+/* 빙고 / 부루마블 / 트랙 / 카드류 둥글둥글 */
+.bingo{border-radius:18px}
+.bingo-cell{border-radius:9px}
+.mono-cell{border-radius:7px;border:1.5px solid #fff;background:var(--t-soft)}
+.mono-cell .bar{height:7px;border-radius:7px 7px 0 0}
+.mono-cell.corner{border-radius:11px}
+.track-cell{border-radius:15px;box-shadow:0 2px 0 rgba(0,0,0,.13)}
+.halli-card{border-radius:16px;box-shadow:0 3px 8px rgba(0,0,0,.1)}
+.halli-card .fz{font-size:24px;font-weight:900}
+.mem-card{border-radius:15px;box-shadow:0 2px 7px rgba(0,0,0,.1)}
+
+/* 게임 화폐 — 귀엽고 캐주얼 */
+.money{border-width:2.5px;border-radius:16px;box-shadow:0 3px 8px rgba(0,0,0,.1)}
+.money .top{align-items:center;font-weight:800}
+.money .mas{font-size:20px}
+.money .val{font-weight:900;text-shadow:0 1px 0 #fff}
+.money .ttl{color:var(--t-ink);opacity:.8}
+.miss,.flash{border-radius:15px;box-shadow:0 3px 8px rgba(0,0,0,.1)}
+.miss .h{border-radius:12px 12px 0 0}
+</style>
+<style>
+/* ===== 초등학생 친화 UX 리프레시 ===== */
+@font-face{
+  font-family:'Pretendard Variable';
+  font-weight:45 920;
+  font-style:normal;
+  font-display:swap;
+  src:url('./assets/fonts/PretendardVariable.woff2') format('woff2-variations');
+}
+:root{
+  --bg:#f7fbf4;
+  --panel:#ffffff;
+  --ink:#172033;
+  --muted:#5d6878;
+  --line:#dbe5ee;
+  --brand:#2563eb;
+  --brand2:#f97316;
+  --accent:#16a34a;
+  --ok:#16a34a;
+  --shadow:0 10px 26px rgba(23,32,51,.10);
+  --snake-page:#fff8f2;
+  --snake-cell:#ffe5d8;
+  --snake-cell-alt:#fff2eb;
+  --snake-border:#f5ad95;
+  --snake-num:#bf5f46;
+  --snake-start:#dff2cf;
+  --snake-finish:#ffe7a6;
+  --snake-ladder:#b9845b;
+  --snake-body:#6cae75;
+}
+body{
+  font-family:'Pretendard Variable','Pretendard','Apple SD Gothic Neo','Malgun Gothic',system-ui,sans-serif;
+  background:linear-gradient(180deg,#fffdf7 0,#f0f9ff 48%,#f7fbf4 100%);
+  color:var(--ink);
+  font-size:16px;
+}
+button,input,textarea,select{font:inherit}
+.topbar{
+  background:rgba(255,255,255,.94);
+  color:var(--ink);
+  border-bottom:1px solid rgba(37,99,235,.16);
+  padding:12px 22px;
+  box-shadow:0 4px 18px rgba(23,32,51,.08);
+  backdrop-filter:blur(10px);
+}
+.topbar h1{font-size:20px;font-weight:900;letter-spacing:0}
+.topbar .sub{font-size:13px;color:var(--muted);opacity:1}
+.topbar button{
+  min-height:40px;
+  background:#f8fafc;
+  color:var(--ink);
+  border:1px solid var(--line);
+  border-radius:8px;
+  padding:9px 13px;
+  font-weight:800;
+}
+.topbar button:hover{background:#eef6ff;border-color:#9cc8ff}
+.wrap{max-width:1320px;padding:22px}
+.home-intro{
+  text-align:left;
+  background:#fff;
+  border:1px solid var(--line);
+  border-left:6px solid var(--brand2);
+  border-radius:8px;
+  padding:18px 20px;
+  margin:6px 0 18px;
+  box-shadow:var(--shadow);
+}
+.home-intro h2{font-size:28px;line-height:1.22;margin:0 0 6px;font-weight:900;letter-spacing:0}
+.home-intro p{font-size:15px;color:var(--muted)}
+.grid{grid-template-columns:repeat(auto-fill,minmax(245px,1fr));gap:12px}
+.card-game{
+  border-radius:8px;
+  padding:17px;
+  min-height:164px;
+  border:1px solid #dce7f2;
+  box-shadow:0 3px 12px rgba(23,32,51,.06);
+  background:#fff;
+}
+.card-game:hover,.card-game:focus-visible{
+  transform:translateY(-2px);
+  box-shadow:0 12px 24px rgba(37,99,235,.14);
+  border-color:#75b7ff;
+  outline:none;
+}
+.card-game .emoji{
+  width:48px;
+  height:48px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin-bottom:12px;
+  border-radius:8px;
+  background:#fff7ed;
+  font-size:28px;
+}
+.card-game h3{font-size:18px;font-weight:900;margin-bottom:6px;letter-spacing:0}
+.card-game p{font-size:13.5px;color:#4b5563;line-height:1.48}
+.card-game .tag{
+  top:12px;
+  right:12px;
+  border-radius:6px;
+  background:#eef6ff;
+  color:#1d4ed8;
+  font-size:11px;
+  padding:4px 8px;
+}
+.editor{grid-template-columns:minmax(320px,390px) minmax(0,1fr);gap:18px}
+.panel{
+  border-radius:8px;
+  padding:17px;
+  box-shadow:0 6px 20px rgba(23,32,51,.08);
+}
+.panel-stack{gap:12px;top:76px}
+.sec-title{
+  font-size:14px;
+  color:#1d4ed8;
+  text-transform:none;
+  letter-spacing:0;
+  margin-bottom:12px;
+}
+.field{margin-bottom:14px}
+.field>label{font-size:14px;font-weight:900;margin-bottom:6px}
+.field .hint,.hint{font-size:12.5px;color:var(--muted);line-height:1.5}
+textarea,input[type=text],input[type=number],select{
+  border-radius:8px;
+  border-color:#d4dee8;
+  background:#fbfdff;
+  padding:11px 12px;
+}
+textarea{min-height:150px}
+input:focus,textarea:focus,select:focus{box-shadow:0 0 0 3px rgba(37,99,235,.14)}
+.btn{
+  min-height:42px;
+  border-radius:8px;
+  font-size:14px;
+  padding:10px 14px;
+}
+.btn.primary{background:#2563eb}
+.btn.primary:hover{background:#1d4ed8;filter:none}
+.btn.ghost{background:#f1f5f9;color:#172033;border:1px solid #dbe5ee}
+.btn.ghost:hover{background:#e8f2ff;border-color:#a9cdf8}
+.btn-row{gap:8px}
+.preset-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}
+.preset-row select{min-height:42px}
+.preset-field{background:#f8fbff;border:1px solid #dbeafe;border-radius:8px;padding:12px;margin-bottom:14px}
+.asset-palette{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin-top:8px}
+.asset-chip{border:1px solid #d4dee8;background:#fff;border-radius:8px;padding:8px 9px;font-size:12.5px;font-weight:850;text-align:left}
+.asset-chip:hover{background:#f8fbff;border-color:#a9cdf8}
+.asset-chip.full{grid-column:1/-1;text-align:center;background:#172033;color:#fff;border-color:#172033}
+.asset-chip.full:hover{background:#263449;border-color:#263449}
+.decal-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:8px}
+.decal-actions button{min-height:36px;padding:7px 8px;font-size:12.5px}
+.themes{gap:9px}
+.swatch{
+  width:44px;
+  height:44px;
+  border-radius:8px;
+  border:2px solid #fff;
+  box-shadow:0 0 0 1px var(--line),0 2px 7px rgba(23,32,51,.10);
+}
+.swatch.sel{border-color:#fff;box-shadow:0 0 0 3px var(--ink),0 3px 8px rgba(23,32,51,.16)}
+.chips{gap:8px}
+.chip{
+  border-radius:8px;
+  padding:8px 12px;
+  font-size:14px;
+  font-weight:800;
+  background:#fff;
+}
+.chip.sel{background:#172033;border-color:#172033;color:#fff}
+.items{max-height:340px;gap:8px}
+.item{
+  border-radius:8px;
+  padding:7px;
+  background:#fff;
+}
+.item .num{min-width:24px;font-size:12px;color:#1d4ed8}
+.item input{min-height:34px;font-size:14px}
+.item.no-image{grid-template-columns:auto 1fr auto}
+.item .thumb{width:34px;height:34px;border-radius:6px}
+.item .iconbtn{
+  width:34px;
+  height:34px;
+  border-radius:8px;
+  font-size:15px;
+}
+.stage-wrap{
+  border-radius:8px;
+  background:#edf4fb;
+  padding:18px;
+  border:1px solid #d6e3ef;
+}
+.stage-bar{gap:8px;margin-bottom:14px}
+.stage-bar .title{font-size:16px;font-weight:900}
+.page{box-shadow:0 5px 22px rgba(15,23,42,.16)}
+.page-pad{padding:11mm}
+.gtitle{font-size:24px;font-weight:900;letter-spacing:0;margin-bottom:3mm}
+.gsub{font-size:12px;color:#64748b;line-height:1.35;margin:-1mm 0 3.5mm}
+.page-foot{color:#94a3b8}
+.cut{outline:1px dashed rgba(100,116,139,.48)}
+.cutgrid>*{border-color:rgba(100,116,139,.45)}
+
+/* 출력물 공통: 큰 글자와 안정된 칸 */
+.media{object-fit:contain}
+.bingo{gap:3px;border-width:3px;border-radius:8px;background:var(--t2)}
+.bingo.fill-page{aspect-ratio:auto}
+.bingo-cell{
+  border-radius:6px;
+  padding:5px;
+  font-size:13px;
+  font-weight:800;
+  line-height:1.22;
+}
+.bingo-cell.free{background:#fff7c2;color:#7c2d12}
+.bingo-head div{border-radius:6px;font-size:21px;letter-spacing:0}
+.mono-board{
+  border-radius:8px;
+  border-width:2px;
+  padding:2mm;
+  gap:1.2mm;
+  background:#f8fafc;
+}
+.mono-cell{
+  border-radius:6px;
+  border:1px solid rgba(37,99,235,.20);
+  background:#fff;
+  font-size:9.4px;
+  line-height:1.18;
+}
+.mono-cell .bar{height:7px;border-radius:6px 6px 0 0}
+.mono-cell .nm{padding:3px 4px;font-weight:800}
+.mono-cell.corner{border-radius:6px;font-size:11px;background:#fff7c2}
+.mono-center .big{font-size:31px;letter-spacing:0}
+.ledger th,.ledger td{padding:7px 8px}
+.track{
+  gap:1.4mm;
+  border:2px solid rgba(37,99,235,.18);
+}
+.track-cell{
+  border-radius:8px;
+  font-size:11px;
+  line-height:1.18;
+  padding:5px;
+  border:1.5px solid rgba(255,255,255,.9);
+  box-shadow:none;
+}
+.track-cell span{
+  display:block;
+  max-width:100%;
+  overflow-wrap:anywhere;
+}
+.track-mid{font-size:25px;letter-spacing:0}
+.ladder svg,.ladder{width:100%;height:auto;display:block}
+.ladder-line{stroke-linecap:round;vector-effect:non-scaling-stroke}
+.ladder-vertical{stroke:var(--t2);stroke-width:4.2;opacity:.55}
+.ladder-rung{stroke:var(--t1);stroke-width:4.8;opacity:.72}
+.ladder-start{filter:drop-shadow(0 2px 2px rgba(15,23,42,.12))}
+.ladder-result{fill:#fff;stroke:var(--t2);stroke-width:2}
+.ladder-result-text{font-size:14px;font-weight:800;fill:var(--t-ink)}
+.dobble-card{border:none;box-shadow:none}
+.dobble-card .dtxt{font-weight:900;color:#111827;overflow-wrap:anywhere}
+.halli-card,.mem-card,.money,.miss,.flash{border-radius:8px;box-shadow:none}
+.halli-card{gap:3%;padding:7%}
+.halli-card .f{font-size:30px;flex:0 0 30%;aspect-ratio:1/1}
+.halli-card .f img{max-width:100%;max-height:100%;object-fit:contain}
+.halli-card .f:only-child{flex-basis:72%}
+.halli-card .fz{font-size:25px}
+.mem-card{font-size:14px;line-height:1.22}
+.mem-card span{overflow-wrap:anywhere}
+.mem-back{font-size:28px}
+.wheel{width:86%;max-width:190mm}
+.wheel text{letter-spacing:0}
+.wheel-list{width:100%;display:grid;grid-template-columns:repeat(2,1fr);gap:2mm 4mm;margin-top:4mm;font-size:10.5px;color:#475569}
+.wheel-list div{border:1px solid #dbe5ee;border-radius:6px;padding:2mm 3mm;background:#f8fafc;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.money .val{font-size:34px}
+.money .ttl{font-size:12px}
+.miss .h{font-size:14px}
+.miss .b,.flash .q{font-size:14px;line-height:1.28}
+.flash .a{font-size:12px}
+
+/* 사다리와 뱀: 그림은 흐리게, 칸 내용은 또렷하게 */
+.snake-board{
+  border-radius:8px;
+  background:var(--snake-page);
+  padding:5px;
+  border:2.4px solid var(--snake-border);
+  box-shadow:inset 0 0 0 2px rgba(255,255,255,.55);
+}
+.snake-grid{
+  gap:3px;
+  border-radius:6px;
+  z-index:1;
+}
+.snake-overlay{
+  left:5px;
+  top:5px;
+  width:calc(100% - 10px);
+  height:calc(100% - 10px);
+  z-index:4;
+  opacity:.42;
+  mix-blend-mode:multiply;
+}
+.snake-overlay *{vector-effect:non-scaling-stroke}
+.snake-decal-layer{
+  position:absolute;
+  left:5px;
+  top:5px;
+  width:calc(100% - 10px);
+  height:calc(100% - 10px);
+  z-index:5;
+  pointer-events:auto;
+}
+.snake-decal{
+  position:absolute;
+  transform-origin:center;
+  opacity:.70;
+  mix-blend-mode:normal;
+  pointer-events:none;
+  touch-action:none;
+  cursor:grab;
+  user-select:none;
+}
+.snake-decal:active{cursor:grabbing}
+.snake-decal img{
+  width:100%;
+  height:100%;
+  display:block;
+  object-fit:contain;
+  pointer-events:none;
+  user-select:none;
+  -webkit-user-drag:none;
+}
+.snake-decal.sel{
+  opacity:.82;
+  outline:1.5px dashed rgba(15,23,42,.45);
+  outline-offset:4px;
+  mix-blend-mode:normal;
+}
+.decal-handle{
+  display:none;
+  position:absolute;
+  left:50%;
+  width:14px;
+  height:14px;
+  border-radius:50%;
+  border:2px solid #fff;
+  background:#172033;
+  box-shadow:0 1px 4px rgba(15,23,42,.35);
+  pointer-events:auto;
+  cursor:nwse-resize;
+}
+.snake-decal.sel .decal-handle{display:block}
+.decal-handle.tail{top:-10px;transform:translate(-50%,-50%)}
+.decal-handle.head{bottom:-10px;transform:translate(-50%,50%)}
+.decal-handle::after{
+  content:attr(data-label);
+  position:absolute;
+  left:16px;
+  top:50%;
+  transform:translateY(-50%);
+  font-size:10px;
+  color:#172033;
+  background:#fff;
+  border:1px solid #d4dee8;
+  border-radius:5px;
+  padding:1px 4px;
+  white-space:nowrap;
+}
+.snake-cell{
+  border-radius:8px;
+  border:1.4px solid rgba(255,255,255,.82);
+  background:var(--snake-cell);
+  padding:5px 4px 4px;
+}
+.snake-cell.alt{background:var(--snake-cell-alt)}
+.snake-cell.start{background:var(--snake-start)}
+.snake-cell.finish{background:var(--snake-finish)}
+.snake-cell .n,
+.snake-cell .q,
+.snake-cell .pic,
+.snake-cell .big,
+.snake-cell .badge{position:relative;z-index:6}
+.snake-cell .n{
+  position:absolute;
+  top:3px;
+  left:3px;
+  width:20px;
+  height:20px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:50%;
+  background:#fff;
+  color:var(--snake-num);
+  border:1.5px solid var(--snake-border);
+  box-shadow:0 1px 2px rgba(15,23,42,.10);
+  font-size:10px;
+  font-weight:950;
+  line-height:1;
+  opacity:1;
+}
+.snake-cell .q{
+  width:100%;
+  min-height:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(255,255,255,.38);
+  border:1px solid rgba(255,255,255,.45);
+  border-radius:6px;
+  padding:18px 5px 5px;
+  font-weight:900;
+  line-height:1.12;
+  overflow-wrap:anywhere;
+  word-break:keep-all;
+  text-align:center;
+}
+.snake-cell .badge{
+  position:absolute;
+  bottom:2px;
+  right:3px;
+  background:rgba(255,255,255,.9);
+  border:1px solid rgba(148,163,184,.35);
+}
+.snake-cell .big{
+  width:100%;
+  height:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  font-weight:950;
+  font-size:1.35em;
+}
+.answer-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:3mm}
+.answer-card{border:1px solid var(--snake-border);border-radius:8px;background:#fff;padding:3mm;min-height:23mm}
+.answer-card .ans-top{display:flex;align-items:center;gap:2mm;margin-bottom:1.5mm}
+.answer-card .ans-num{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--snake-cell);color:var(--snake-num);font-weight:950;font-size:11px}
+.answer-card .ans-q{font-size:10.5px;color:#64748b;font-weight:800;line-height:1.25}
+.answer-card .ans-a{font-size:15px;color:var(--t-ink);font-weight:950;line-height:1.25}
+
+@media (max-width:980px){
+  .topbar{align-items:flex-start;flex-wrap:wrap}
+  .topbar .sub{width:100%}
+  .editor.active{grid-template-columns:1fr}
+  .home-intro h2{font-size:24px}
+}
+@media print{
+  html,body{margin:0 !important;padding:0 !important}
+  body{background:#fff;font-size:0 !important;line-height:0 !important}
+  .wrap{max-width:none !important;margin:0 !important;padding:0 !important;font-size:15px;line-height:1.5}
+  .editor.active{display:block !important}
+  .stage-wrap{background:#fff !important;border:0 !important;border-radius:0 !important;padding:0 !important;overflow:visible !important;min-height:0 !important}
+  #stage{display:block !important}
+  .page{box-shadow:none;margin:0 !important;transform:none !important;break-after:page;page-break-after:always;break-inside:avoid;page-break-inside:avoid}
+  .page:last-child{break-after:auto;page-break-after:auto}
+  .snake-overlay{opacity:.30}
+  .snake-decal.sel{outline:none}
+  .decal-handle{display:none !important}
+}
+/* 교체 모달 */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.48);z-index:9000;display:flex;align-items:center;justify-content:center}
+.modal-box{background:#fff;border-radius:18px;padding:28px 22px 20px;max-width:310px;width:90%;box-shadow:0 8px 40px rgba(0,0,0,.18);text-align:center}
+.modal-box p{font-size:15px;font-weight:700;color:#1e293b;margin-bottom:18px;line-height:1.5}
+.modal-btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.modal-btns button{flex:1;min-width:72px;padding:10px 8px;border-radius:10px;border:none;font-size:13px;font-weight:700;cursor:pointer;transition:filter .15s}
+.modal-btns button:hover{filter:brightness(.93)}
+.mbtn-replace{background:var(--brand,#4f46e5);color:#fff}
+.mbtn-append{background:#e0e7ff;color:#3730a3}
+.mbtn-cancel{background:#f1f5f9;color:#94a3b8}
+/* 항목 관리 바 */
+.item-bar{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.item-bar button{padding:6px 11px;border-radius:8px;border:none;font-size:12px;font-weight:700;cursor:pointer;background:#f1f5f9;color:#475569;transition:background .15s}
+.item-bar button:hover{background:#e2e8f0}
+.item-bar .ibtn-defall{background:#fee2e2;color:#dc2626}
+.item-bar .ibtn-defall:hover{background:#fecaca}
+.item-bar .ibtn-selmode.on{background:#e0e7ff;color:#4338ca}
+.item-bar .ibtn-seldel{background:#ef4444;color:#fff}
+.item-bar .ibtn-seldel:hover{background:#dc2626}
+/* 선택 모드 체크박스 */
+.item .sel-check{width:16px;height:16px;cursor:pointer;flex-shrink:0;accent-color:var(--brand,#4f46e5)}
+.item.sel-selected{background:#eff6ff;border-color:#93c5fd}
+</style>
 </head>
 <body>
-    <div id="root"></div>
 
-    <script type="text/babel" data-presets="env,react">
-        const { useState, useRef, useEffect, useCallback, useMemo } = React;
+<div class="topbar">
+  <h1>🎲 보드게임 메이커</h1>
+  <span class="sub">쉬운 선택, 큰 글자, 바로 인쇄</span>
+  <span class="spacer"></span>
+  <button id="btnHome" class="no-print">🏠 목록</button>
+  <button id="btnSave" class="no-print">💾 저장</button>
+  <button id="btnLoad" class="no-print">📂 열기</button>
+</div>
 
-        // --- 도블 수학 (오더 7: 카드당 그림 8개, 총 57장) ---
-        const generateDobbleDeck = (n) => {
-            let cards = [];
-            let infinityCard = [];
-            for (let i = 0; i <= n; i++) infinityCard.push(i);
-            cards.push(infinityCard);
+<div class="wrap">
+  <!-- HOME -->
+  <div id="home">
+    <div class="home-intro">
+      <h2>오늘 만들 게임을 골라요</h2>
+      <p>단어, 문제, 사진을 넣으면 게임판과 카드가 자동으로 만들어져요.</p>
+    </div>
+    <div class="grid" id="gameGrid"></div>
+  </div>
 
-            for (let i = 0; i < n; i++) {
-                let card = [0];
-                for (let j = 0; j < n; j++) card.push((n + 1) + i * n + j);
-                cards.push(card);
-            }
+  <!-- EDITOR -->
+  <div id="editor" class="editor">
+    <div class="panel-stack wrap-controls">
+      <div class="panel">
+        <p class="sec-title">🎨 1. 모양 고르기</p>
+        <div class="field">
+          <div class="themes" id="themeRow"></div>
+        </div>
+        <div class="field">
+          <label>용지 크기</label>
+          <div class="chips" id="paperRow"></div>
+          <div class="hint">학교 프린터는 A4가 가장 편해요.</div>
+        </div>
+        <div id="gameOpts"></div>
+      </div>
 
-            for (let i = 0; i < n; i++) {
-                for (let j = 0; j < n; j++) {
-                    let card = [i + 1];
-                    for (let k = 0; k < n; k++) {
-                        card.push((n + 1) + k * n + ((i * k + j) % n));
-                    }
-                    cards.push(card);
-                }
-            }
-            return cards;
+      <div class="panel">
+        <p class="sec-title">✍️ 2. 내용 넣기</p>
+        <div class="field">
+          <label>한 줄에 하나씩 적기</label>
+          <textarea id="bulk" placeholder="예)&#10;물의 끓는 점은?&#10;세종대왕이 만든 글자는?&#10;3 + 5 = ?"></textarea>
+          <div class="hint">번호나 쉼표가 있어도 자동으로 정리해요.</div>
+        </div>
+        <div class="btn-row">
+          <button class="btn primary" id="btnParse">✨ 넣기</button>
+          <button class="btn ghost" id="btnAddItem">＋ 하나 추가</button>
+        </div>
+        <div class="items" id="itemList"></div>
+        <div class="item-bar" id="itemBar" style="display:none">
+          <button class="ibtn-selmode" id="btnSelMode">선택</button>
+          <button class="ibtn-seldel" id="btnSelDel" style="display:none">선택 삭제</button>
+          <button class="ibtn-defall" id="btnDelAll">전체 삭제</button>
+        </div>
+        <div class="hint" id="itemCount" style="margin-top:8px"></div>
+      </div>
+    </div>
+
+    <div class="stage-wrap">
+      <div class="stage-bar">
+        <span class="title" id="stageTitle"></span>
+        <span class="spacer"></span>
+        <button class="btn ghost no-print" id="btnRefresh">🔄 새로 섞기</button>
+        <button class="btn primary no-print" id="btnPrint">🖨️ 인쇄 / PDF</button>
+      </div>
+      <div id="stage"></div>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="imgPicker" accept="image/*" style="display:none">
+<input type="file" id="loadPicker" accept="application/json" style="display:none">
+
+<script>
+/* =========================================================
+   커스텀 보드게임 제작기 — 코어 엔진 (v2)
+   ========================================================= */
+const PAPER = {
+  A4:{w:210,h:297}, A3:{w:297,h:420}, B4:{w:257,h:364}
+};
+const THEMES = [
+  {id:'peach', name:'피치', t1:'#f2a38b',t2:'#c96f5a',t3:'#ffe3d5',ink:'#4b2c27',soft:'#fff7f1',
+    snake:{page:'#fff8f2',cell:'#ffe3d5',alt:'#fff0e8',border:'#f2a38b',num:'#b85f49',start:'#dbeecb',finish:'#ffe5a8',ladder:'#b9855b',body:'#74a978'}},
+  {id:'rose', name:'로즈', t1:'#e8a5b5',t2:'#b96c82',t3:'#f9dce5',ink:'#4c2731',soft:'#fff5f8',
+    snake:{page:'#fff7fa',cell:'#f9dce5',alt:'#fff0f4',border:'#e8a5b5',num:'#a95670',start:'#d9ead7',finish:'#ffe8b6',ladder:'#a9826b',body:'#7da978'}},
+  {id:'serenity', name:'스카이', t1:'#9eb8e8',t2:'#6787bf',t3:'#dbe8ff',ink:'#23344f',soft:'#f5f9ff',
+    snake:{page:'#f7fbff',cell:'#dbe8ff',alt:'#edf4ff',border:'#9eb8e8',num:'#5578b4',start:'#dcefd8',finish:'#fff0b9',ladder:'#9b8668',body:'#78a989'}},
+  {id:'sage', name:'세이지', t1:'#a8c8a2',t2:'#71996f',t3:'#e0efd9',ink:'#253d2b',soft:'#f7fbf4',
+    snake:{page:'#fbfdf6',cell:'#e0efd9',alt:'#f1f7ec',border:'#a8c8a2',num:'#5d8a5d',start:'#d6ead2',finish:'#fff0bb',ladder:'#a58a62',body:'#5fa47d'}},
+  {id:'butter', name:'버터', t1:'#e9cc72',t2:'#b99236',t3:'#fff0b8',ink:'#493b18',soft:'#fffbed',
+    snake:{page:'#fffdf2',cell:'#fff0b8',alt:'#fff8dd',border:'#e9cc72',num:'#a57f28',start:'#d9edd4',finish:'#ffe1a8',ladder:'#ab8450',body:'#70a46f'}},
+  {id:'lilac', name:'라일락', t1:'#c6b4e9',t2:'#8b74be',t3:'#ece4ff',ink:'#332a4b',soft:'#faf7ff',
+    snake:{page:'#fbf8ff',cell:'#ece4ff',alt:'#f5efff',border:'#c6b4e9',num:'#7b65b2',start:'#ddedd7',finish:'#ffedba',ladder:'#9a8264',body:'#79a985'}},
+];
+
+const state = {
+  gameId:null, theme:'peach', paper:'A4',
+  items:[],          // {text, img}
+  opts:{},           // per-game options
+  seed:1
+};
+
+/* ---------- helpers ---------- */
+const $ = s=>document.querySelector(s);
+const el = (t,c,h)=>{const e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e;};
+const esc = s=>(s==null?'':String(s)).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+function newSeed(){ return Math.floor(Date.now()%1000000000); }
+function hashString(s){
+  let h=2166136261;
+  for(let i=0;i<String(s).length;i++){ h^=String(s).charCodeAt(i); h=Math.imul(h,16777619); }
+  return h>>>0;
+}
+function mulberry32(a){
+  return function(){
+    a|=0; a=(a+0x6D2B79F5)|0;
+    let t=Math.imul(a^a>>>15,1|a);
+    t=(t+Math.imul(t^t>>>7,61|t))^t;
+    return ((t^t>>>14)>>>0)/4294967296;
+  };
+}
+let renderSalt=0;
+function rngFor(label){
+  const base=(state.seed||1) ^ hashString(`${state.gameId||'home'}:${label}:${renderSalt++}`);
+  return mulberry32(base>>>0);
+}
+
+/* 기본 맞춤법/공백 정리 (브라우저 내장, 인터넷 불필요) */
+function cleanText(raw){
+  let s = String(raw);
+  s = s.replace(/ /g,' ');                 // nbsp
+  s = s.replace(/[ \t]+/g,' ');                 // 다중 공백
+  s = s.replace(/\s+/g,' ');                     // 모든 공백 1칸
+  s = s.replace(/\s*([?!.,])/g,'$1');            // 부호 앞 공백 제거
+  s = s.replace(/([?!.,])\1+/g,'$1');            // 중복 부호 ??? -> ?
+  s = s.replace(/([?!.,])(?=[^\s?!.,])/g,'$1 '); // 부호 뒤 한 칸
+  s = s.trim();
+  // 흔한 띄어쓰기/오타 보정
+  const fix = {
+    '되요':'돼요','안되':'안 돼','뭐에요':'뭐예요','이에요':'이에요',
+    '몇일':'며칠','왠지':'웬지','금새':'금세','어떻해':'어떡해',
+    '구지':'굳이','바램':'바람','설겆이':'설거지','희안':'희한'
+  };
+  for(const k in fix) s = s.split(k).join(fix[k]);
+  // 첫 글자 대문자(영문)
+  return s;
+}
+
+/* 붙여넣기 → 항목 배열 */
+function parseBulk(raw){
+  if(!raw.trim()) return [];
+  let parts;
+  if(raw.includes('\n')) parts = raw.split(/\r?\n/);
+  else if(raw.includes(',')) parts = raw.split(',');
+  else parts = raw.split(/\r?\n/);
+  return parts
+    .map(p=>p.replace(/^\s*\d+[).\.]\s*/,''))   // 앞 번호 제거 "1. " "2) "
+    .map(p=>p.replace(/^\s*[-•*]\s*/,''))        // 불릿 제거
+    .map(cleanText)
+    .filter(p=>p.length>0)
+    .map(t=>state.gameId==='snake'?snakeQAItem(t):({text:t,img:null}));
+}
+
+/* ---------- theme application ---------- */
+function applyTheme(){
+  const t = THEMES.find(x=>x.id===state.theme)||THEMES[0];
+  const r=document.documentElement.style;
+  r.setProperty('--t1',t.t1); r.setProperty('--t2',t.t2);
+  r.setProperty('--t3',t.t3); r.setProperty('--t-ink',t.ink);
+  r.setProperty('--t-soft',t.soft);
+  const s=t.snake||{};
+  r.setProperty('--snake-page',s.page||t.soft);
+  r.setProperty('--snake-cell',s.cell||t.t3);
+  r.setProperty('--snake-cell-alt',s.alt||t.soft);
+  r.setProperty('--snake-border',s.border||t.t1);
+  r.setProperty('--snake-num',s.num||t.t2);
+  r.setProperty('--snake-start',s.start||'#dff2cf');
+  r.setProperty('--snake-finish',s.finish||'#ffe7a6');
+  r.setProperty('--snake-ladder',s.ladder||'#b9845b');
+  r.setProperty('--snake-body',s.body||'#6cae75');
+}
+
+/* =========================================================
+   게임 레지스트리 (각 게임은 render(ctx)=>HTML 반환)
+   ctx = {items, theme, paper, opts, pageStyle}
+   ========================================================= */
+const GAMES = {};
+function reg(g){ GAMES[g.id]=g; }
+
+/* page helper: 용지 크기에 맞춘 .page div 생성 */
+function pageOpen(extraClass){
+  const p=PAPER[state.paper];
+  return `<div class="page ${extraClass||''}" style="width:${p.w}mm;height:${p.h}mm">`;
+}
+function pageOpenAuto(extraClass){ // 높이 자동(카드 여러장 흐름)
+  const p=PAPER[state.paper];
+  return `<div class="page ${extraClass||''}" style="width:${p.w}mm;min-height:${p.h}mm">`;
+}
+function foot(label){ return `<div class="page-foot">${esc(label||'커스텀 보드게임 제작기')}</div>`; }
+
+/* 미리보기 스케일: 컨테이너 폭에 맞춤 */
+function scalePages(){
+  const stage=$('#stage');
+  const wrapW = $('.stage-wrap').clientWidth - 44;
+  const pw = PAPER[state.paper].w * 3.78; // mm->px approx at 96dpi
+  let scale = Math.min(1, wrapW/pw);
+  stage.querySelectorAll('.page').forEach(pg=>{
+    pg.style.transformOrigin='top center';
+    pg.style.transform = scale<1?`scale(${scale})`:'none';
+    if(scale<1){
+      const h=pg.getBoundingClientRect().height;
+      pg.style.marginBottom = (h*(scale-1))+'px';
+    } else {
+      pg.style.marginBottom = '0';
+    }
+  });
+}
+
+/* ---------- shared content helpers ---------- */
+const EMOJI_POOL=['🍎','⭐','🐶','🌙','🎈','🍕','🚀','🐢','🌻','🎸','🍩','🐱','⚽','🦄','🍓','🐬','🎯','🌈','🧩','🐸','🍔','🎁','🦋','🍇','🐰','🎵','🍉','🐝','🚗','🌟','🐙','🍒','🦊','🎺','🐳','🥕','🪁','🐞','🍪','🛸'];
+function picOf(item){ return item&&item.img ? `<img class="media" src="${item.img}">` : ''; }
+function textOf(item,i){ return item&&item.text ? esc(item.text) : ''; }
+function shortText(s,max){
+  const str=String(s||'').trim();
+  return str.length>max ? str.slice(0,Math.max(1,max-1))+'…' : str;
+}
+function balancedLines(text,maxLines){
+  const words=String(text||'').trim().split(/\s+/).filter(Boolean);
+  if(words.length<=1) return [String(text||'').trim()].filter(Boolean);
+  const total=words.join('').length + words.length - 1;
+  const target=Math.ceil(total/maxLines);
+  const lines=[];
+  let line='';
+  words.forEach(word=>{
+    if(line && line.length + 1 + word.length > target && lines.length < maxLines-1){
+      lines.push(line);
+      line=word;
+    }else{
+      line=line?`${line} ${word}`:word;
+    }
+  });
+  if(line) lines.push(line);
+  return lines;
+}
+function snakeQuestionHtml(text){
+  const raw=String(text||'').trim();
+  if(!raw) return '';
+  if(raw.includes('\n')) return raw.split(/\n+/).map(esc).join('<br>');
+  let lines;
+  if(raw.includes(': ')){
+    const [head,...rest]=raw.split(': ');
+    const body=rest.join(': ');
+    lines=[`${head}:`].concat(balancedLines(body,2));
+  }else if(/[=]/.test(raw) && raw.length>12){
+    lines=raw.replace(/\s*=\s*/,' = ').split(/(?=\s=\s)|(?<=려면)\s/).filter(Boolean);
+    if(lines.length>3) lines=balancedLines(raw,3);
+  }else{
+    const compact=raw.replace(/\s/g,'');
+    const maxLines=compact.length>18?3:2;
+    lines=balancedLines(raw,maxLines);
+    if(lines.length===1 && compact.length>10){
+      const mid=Math.ceil(raw.length/2);
+      let cut=raw.indexOf(' ',Math.max(0,mid-4));
+      if(cut<0||cut>mid+4) cut=mid;
+      lines=[raw.slice(0,cut).trim(),raw.slice(cut).trim()].filter(Boolean);
+    }
+  }
+  return lines.slice(0,3).map(esc).join('<br>');
+}
+function snakeFontSize(text,total){
+  const len=String(text||'').replace(/\s/g,'').length;
+  const max=total>=56?16.5:(total>=42?18.5:21);
+  const min=total>=56?10.5:(total>=42?11.5:12.5);
+  if(len<=5) return max;
+  if(len<=9) return max-1;
+  if(len<=14) return max-2.6;
+  if(len<=22) return max-4.4;
+  return min;
+}
+function symOf(item,i){
+  if(item&&item.img) return `<img class="media" src="${item.img}">`;
+  if(item&&item.text) return esc(item.text);
+  return EMOJI_POOL[i%EMOJI_POOL.length];
+}
+function svgData(svg){
+  return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
+}
+function snakeSvg(body,spot,edge,accent,eye='#111'){
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 620">
+    <path d="M63 8 C112 66 25 111 72 176 C116 238 21 271 69 348 C111 415 20 457 65 540 C78 564 75 595 45 609 C18 622 -2 603 8 574 C19 540 37 515 30 476 C22 431 83 397 52 340 C14 270 100 230 54 168 C13 113 85 62 63 8Z" fill="${body}"/>
+    <path d="M63 8 C112 66 25 111 72 176 C116 238 21 271 69 348 C111 415 20 457 65 540 C78 564 75 595 45 609 C18 622 -2 603 8 574 C19 540 37 515 30 476 C22 431 83 397 52 340 C14 270 100 230 54 168 C13 113 85 62 63 8Z" fill="none" stroke="${edge}" stroke-width="3" opacity=".35"/>
+    ${[78,145,220,300,380,465].map((y,i)=>`<g transform="translate(${i%2?82:39} ${y}) rotate(${i%2?18:-14})"><ellipse rx="19" ry="25" fill="${edge}" opacity=".78"/><ellipse rx="12" ry="18" fill="${accent}"/><ellipse rx="18" ry="25" fill="none" stroke="#f6c6bd" stroke-width="4" opacity=".8"/></g>`).join('')}
+    <ellipse cx="30" cy="560" rx="7" ry="7" fill="${eye}"/>
+    <path d="M51 581 C67 598 31 618 47 604 M51 581 C72 590 55 616 63 609" fill="none" stroke="#ef4444" stroke-width="6" stroke-linecap="round"/>
+  </svg>`;
+}
+function ladderSvg(color,stroke,wide){
+  const vb=wide?'0 0 840 230':'0 0 120 620';
+  if(wide){
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vb}"><g transform="rotate(16 420 115)" stroke-linecap="round" stroke-linejoin="round"><path d="M36 78 L804 78 M36 152 L804 152" stroke="${stroke}" stroke-width="24"/><path d="M36 78 L804 78 M36 152 L804 152" stroke="${color}" stroke-width="18"/>${Array.from({length:18},(_,i)=>{const x=74+i*41;return `<path d="M${x} 78 L${x+12} 152" stroke="${stroke}" stroke-width="18"/><path d="M${x} 78 L${x+12} 152" stroke="${color}" stroke-width="12"/>`;}).join('')}</g></svg>`;
+  }
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vb}"><g transform="rotate(-5 60 310)" stroke-linecap="round" stroke-linejoin="round"><path d="M22 24 L22 596 M98 24 L98 596" stroke="${stroke}" stroke-width="22"/><path d="M22 24 L22 596 M98 24 L98 596" stroke="${color}" stroke-width="16"/>${Array.from({length:10},(_,i)=>{const y=72+i*50;return `<path d="M26 ${y} L94 ${y+8}" stroke="${stroke}" stroke-width="16"/><path d="M26 ${y} L94 ${y+8}" stroke="${color}" stroke-width="10"/>`;}).join('')}</g></svg>`;
+}
+const DECAL_ASSETS = {
+  snakeGreen:{name:'초록 점박이 뱀',type:'snake',aspect:.19,src:svgData(snakeSvg('#c8ff8f','#2f934b','#6bb044','#8d6c67'))},
+  snakeYellow:{name:'노랑 무늬 뱀',type:'snake',aspect:.19,src:svgData(snakeSvg('#ffe09b','#6f9b2d','#8ab936','#9c8c77'))},
+  snakePink:{name:'분홍 뱀',type:'snake',aspect:.19,src:svgData(snakeSvg('#f28bd6','#a63439','#bf8ea6','#7a9edc'))},
+  snakeBlue:{name:'파랑 줄무늬 뱀',type:'snake',aspect:.20,src:svgData(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 620"><path d="M72 7 C104 79 15 105 46 185 C76 262 28 322 65 405 C94 471 20 520 31 576 C37 609 77 614 98 591 C117 570 101 542 76 532 C43 518 88 465 68 405 C42 327 85 266 55 188 C26 111 116 58 72 7Z" fill="#1497e5"/><path d="M72 7 C104 79 15 105 46 185 C76 262 28 322 65 405 C94 471 20 520 31 576 C37 609 77 614 98 591 C117 570 101 542 76 532 C43 518 88 465 68 405 C42 327 85 266 55 188 C26 111 116 58 72 7Z" fill="none" stroke="#0b5fa3" stroke-width="3" opacity=".35"/>${Array.from({length:9},(_,i)=>{const y=54+i*55;return `<path d="M18 ${y} Q62 ${y+22} 99 ${y+2}" fill="none" stroke="#26e6d0" stroke-width="18" opacity=".82"/><path d="M18 ${y} Q62 ${y+22} 99 ${y+2}" fill="none" stroke="#111" stroke-width="5"/>`;}).join('')}<ellipse cx="52" cy="568" rx="8" ry="8"/><ellipse cx="88" cy="584" rx="8" ry="8"/></svg>`)},
+  snakeRed:{name:'빨강 줄무늬 뱀',type:'snake',aspect:.23,src:svgData(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150 620"><path d="M80 8 C40 85 123 140 72 230 C31 306 95 370 58 465 C42 506 74 552 103 586 C121 608 94 630 64 603 C44 584 48 551 34 523 C13 477 80 424 60 360 C32 276 86 218 66 148 C51 92 99 52 80 8Z" fill="#e94b4c"/><path d="M80 8 C40 85 123 140 72 230 C31 306 95 370 58 465 C42 506 74 552 103 586 C121 608 94 630 64 603 C44 584 48 551 34 523 C13 477 80 424 60 360 C32 276 86 218 66 148 C51 92 99 52 80 8Z" fill="none" stroke="#b23030" stroke-width="3" opacity=".3"/>${Array.from({length:8},(_,i)=>{const y=58+i*66;return `<path d="M10 ${y} Q75 ${y-24} 142 ${y}" fill="none" stroke="#111" stroke-width="10" stroke-linecap="round"/><path d="M5 ${y+18} Q76 ${y-20} 148 ${y+18}" fill="none" stroke="#8fe13e" stroke-width="10" stroke-linecap="round"/><path d="M15 ${y-18} Q78 ${y-35} 135 ${y-18}" fill="none" stroke="#ffe8da" stroke-width="9" stroke-linecap="round"/>`;}).join('')}<ellipse cx="106" cy="565" rx="10" ry="15"/><ellipse cx="72" cy="583" rx="9" ry="16" transform="rotate(-45 72 583)"/></svg>`)},
+  snakePurple:{name:'보라 줄무늬 뱀',type:'snake',aspect:.24,src:svgData(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 620"><path d="M110 8 C130 87 55 115 76 201 C101 303 51 350 78 446 C93 498 36 533 19 580 C8 612 43 629 83 599 C130 564 79 535 99 492 C133 420 77 358 95 278 C112 201 64 123 110 8Z" fill="#534ce7"/><path d="M110 8 C130 87 55 115 76 201 C101 303 51 350 78 446 C93 498 36 533 19 580 C8 612 43 629 83 599 C130 564 79 535 99 492 C133 420 77 358 95 278 C112 201 64 123 110 8Z" fill="none" stroke="#342c91" stroke-width="4" opacity=".35"/>${Array.from({length:9},(_,i)=>{const y=48+i*58;return `<path d="M56 ${y} Q96 ${y+20} 132 ${y}" fill="none" stroke="#f15aa0" stroke-width="12"/><path d="M50 ${y+17} Q98 ${y+38} 138 ${y+17}" fill="none" stroke="#111" stroke-width="12"/><path d="M45 ${y+32} Q96 ${y+52} 136 ${y+32}" fill="none" stroke="#eee8ff" stroke-width="11"/>`;}).join('')}<ellipse cx="42" cy="566" rx="9" ry="14"/><ellipse cx="84" cy="588" rx="9" ry="14" transform="rotate(72 84 588)"/></svg>`)},
+  ladderBrown:{name:'갈색 사다리',type:'ladder',aspect:.19,src:svgData(ladderSvg('#5a3b31','#111',false))},
+  ladderPurple:{name:'보라 사다리',type:'ladder',aspect:.19,src:svgData(ladderSvg('#55307a','#111',false))},
+  ladderBlue:{name:'파랑 사다리',type:'ladder',aspect:.24,src:svgData(ladderSvg('#135c91','#111',false))},
+  ladderGold:{name:'긴 금색 사다리',type:'ladder',aspect:3.65,src:svgData(ladderSvg('#c39b05','#333',true))},
+  ladderOlive:{name:'올리브 사다리',type:'ladder',aspect:.19,src:svgData(ladderSvg('#60741d','#111',false))}
+};
+function decalAsset(d){
+  return DECAL_ASSETS[d&&d.kind]||null;
+}
+function decalSrc(d){
+  const asset=decalAsset(d);
+  return (d&&d.src)||asset?.src||DECAL_ASSETS.snakeGreen.src;
+}
+function decalAspect(d){
+  const asset=decalAsset(d);
+  return +(d&&d.aspect)||asset?.aspect||.2;
+}
+function decalType(d){
+  const asset=decalAsset(d);
+  return (d&&d.type)||asset?.type||'custom';
+}
+function shuffle(a){
+  const rng=rngFor('shuffle');
+  a=a.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j=Math.floor(rng()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+function need(n,msg){ return `<div class="empty-note">${msg||('내용을 '+n+'개 이상 입력하면 미리보기가 나타납니다.')}</div>`; }
+function rangeChips(id,label,vals,cur){
+  return `<div class="field"><label>${label}</label><div class="chips" data-opt="${id}">`+
+    vals.map(v=>`<div class="chip ${String(v.v)===String(cur)?'sel':''}" data-v="${v.v}">${v.t}</div>`).join('')+
+    `</div></div>`;
+}
+function toggleChip(id,label,cur){
+  return `<div class="field"><label>${label}</label><div class="chips" data-opt="${id}">`+
+    `<div class="chip ${cur?'sel':''}" data-v="1">켜기</div>`+
+    `<div class="chip ${!cur?'sel':''}" data-v="0">끄기</div></div></div>`;
+}
+
+function preset(label,title,items,opts){
+  return {label,title,items,opts:opts||{}};
+}
+function snakeQAItem(line){
+  if(line&&typeof line==='object') return {text:line.text||line.q||'',answer:line.answer||line.a||'',img:null};
+  const parts=String(line||'').split('|');
+  const text=cleanText(parts[0]||'');
+  const answer=parts.length>1?cleanText(parts.slice(1).join('|')):'';
+  return {text,answer,img:null};
+}
+function presetItems(list,gameId){
+  return list.map(text=>gameId==='snake'?snakeQAItem(text):({text,img:null}));
+}
+function presetLine(item){
+  if(item&&typeof item==='object'){
+    const q=item.text||item.q||'';
+    const a=item.answer||item.a||'';
+    return a?`${q} | ${a}`:q;
+  }
+  return String(item);
+}
+const PRESETS = {
+  snake:[
+    preset('수수께끼 · 1-2학년 · 쉬움','수수께끼 여행',[
+      '빨갛고 동그란 과일은? | 사과','밤에 하늘에서 반짝이는 것은? | 별','비 올 때 쓰는 것은? | 우산','손을 씻을 때 쓰는 것은? | 비누',
+      '학교에 갈 때 메는 것은? | 가방','겨울에 손에 끼는 것은? | 장갑','우유를 주는 동물은? | 소','시간을 알려 주는 것은? | 시계',
+      '책을 읽는 곳은? | 도서관','눈사람을 만드는 계절은? | 겨울','건반을 눌러 소리 내는 악기는? | 피아노','바퀴가 네 개인 탈것은? | 자동차',
+      '물을 담아 마시는 것은? | 컵','색칠할 때 쓰는 것은? | 색연필','아침에 뜨는 것은? | 해','발에 신는 것은? | 신발'
+    ],{size:'30'}),
+    preset('수수께끼 · 3-4학년 · 보통','생각 쑥쑥 수수께끼',[
+      '먹을수록 줄어드는 것은? | 연필','입은 없지만 말을 전하는 것은? | 편지','다리가 없지만 흐르는 것은? | 강물','익을수록 고개를 숙이는 것은? | 벼',
+      '펴면 커지고 접으면 작아지는 것은? | 우산','검지만 글씨를 쓰게 해 주는 것은? | 연필심','보이지 않지만 느낄 수 있는 것은? | 바람','가벼운데 멀리 날아가는 것은? | 종이비행기',
+      '잠을 자지 않아도 눈이 있는 것은? | 바늘','매일 바뀌지만 항상 있는 것은? | 날짜','손이 없어도 길을 가리키는 것은? | 표지판','집 안에 있지만 하늘을 보여 주는 것은? | 창문',
+      '빛이 강할수록 짧아지는 것은? | 그림자','소리는 나지만 만질 수 없는 것은? | 음악','가만히 있어도 계속 흐르는 것은? | 시간','쓰면 쓸수록 짧아지는 것은? | 연필'
+    ],{size:'42'}),
+    preset('수수께끼 · 5-6학년 · 도전','도전 수수께끼',[
+      '가장 빠르지만 볼 수 없는 것은? | 생각','나누면 오히려 많아지는 것은? | 이야기','사람마다 다르지만 모두 가진 것은? | 이름','앞으로만 가고 돌아오지 않는 것은? | 시간',
+      '가득 차야 비워지는 것은? | 쓰레기통','작을수록 더 크게 보이는 것은? | 글씨','들어갈 때는 하나, 나올 때는 둘인 것은? | 젓가락질','길지만 발자국이 없는 것은? | 길',
+      '쓸수록 더 많은 생각이 생기는 것은? | 공책','숫자가 많아질수록 가벼워지는 것은? | 풍선 번호표','없으면 찾고 있으면 잊는 것은? | 열쇠','말하지 않아도 약속을 지키는 것은? | 시계',
+      '늘 따라오지만 앞서지 않는 것은? | 그림자','모두가 지나가지만 아무도 잡지 못하는 것은? | 시간','가까울수록 보기 힘든 것은? | 코','틀릴수록 배우는 것은? | 문제'
+    ],{size:'42'}),
+    preset('수학 · 1-2학년 · 덧셈/뺄셈','덧셈 뺄셈 보드',[
+      '7 + 5 = ? | 12','13 - 6 = ? | 7','9 + 8 = ? | 17','16 - 7 = ? | 9','6 + 6 = ? | 12','20 - 9 = ? | 11',
+      '14 + 5 = ? | 19','18 - 8 = ? | 10','8 + 7 = ? | 15','12 - 4 = ? | 8','5 + 9 = ? | 14','17 - 9 = ? | 8',
+      '10을 만들려면 6 + ? | 4','15를 만들려면 8 + ? | 7','19 - 6 = ? | 13','11 + 7 = ? | 18'
+    ],{size:'30'}),
+    preset('수학 · 3-4학년 · 사칙연산','사칙연산 챌린지',[
+      '6 × 7 = ? | 42','56 ÷ 8 = ? | 7','125 + 238 = ? | 363','400 - 176 = ? | 224','9 × 8 = ? | 72','72 ÷ 9 = ? | 8',
+      '34 × 3 = ? | 102','96 ÷ 4 = ? | 24','15 + 28 - 9 = ? | 34','7 × 6 + 5 = ? | 47','100 - 24 ÷ 6 = ? | 96','48 ÷ 6 + 12 = ? | 20',
+      '23 × 4 = ? | 92','144 ÷ 12 = ? | 12','8 × 7 - 10 = ? | 46','36 + 45 = ? | 81','5 × 9 + 8 = ? | 53','81 ÷ 9 + 11 = ? | 20'
+    ],{size:'42'}),
+    preset('수학 · 5-6학년 · 분수/소수','분수 소수 탐험',[
+      '1/2 + 1/4 = ? | 3/4','3/5 + 1/5 = ? | 4/5','4/7 - 2/7 = ? | 2/7','0.7 + 0.25 = ? | 0.95','1.5 - 0.8 = ? | 0.7','2.4 × 3 = ? | 7.2',
+      '3/4의 20은? | 15','0.6을 분수로 나타내면? | 3/5','2/3 + 1/6 = ? | 5/6','5/8 - 1/4 = ? | 3/8','1.2 ÷ 0.3 = ? | 4','15%는 소수로? | 0.15',
+      '0.45를 백분율로? | 45%','2.5 × 0.4 = ? | 1','7/10 + 2/10 = ? | 9/10','3.6 ÷ 0.6 = ? | 6','1/3의 18은? | 6','0.125는 분수로? | 1/8'
+    ],{size:'42'}),
+    preset('수학 · 5-6학년 · 대분수↔가분수','분수 변신 보드',[
+      '2와 1/3을 가분수로 | 7/3','3와 2/5를 가분수로 | 17/5','11/4를 대분수로 | 2와 3/4','17/6을 대분수로 | 2와 5/6','4와 3/7을 가분수로 | 31/7','25/8을 대분수로 | 3와 1/8',
+      '1와 5/6을 가분수로 | 11/6','19/5를 대분수로 | 3와 4/5','5와 1/2을 가분수로 | 11/2','31/9를 대분수로 | 3와 4/9','2와 4/9를 가분수로 | 22/9','22/7을 대분수로 | 3와 1/7',
+      '6와 2/3을 가분수로 | 20/3','29/6을 대분수로 | 4와 5/6','3와 3/4을 가분수로 | 15/4','15/2를 대분수로 | 7와 1/2'
+    ],{size:'42'}),
+    preset('영어 · 3-4학년 · 낱말 뜻','영어 낱말 보드',[
+      'apple 뜻은? | 사과','book 뜻은? | 책','school 뜻은? | 학교','friend 뜻은? | 친구','happy 뜻은? | 행복한','blue 뜻은? | 파란색',
+      'run 뜻은? | 달리다','jump 뜻은? | 뛰다','milk 뜻은? | 우유','chair 뜻은? | 의자','pencil 뜻은? | 연필','window 뜻은? | 창문',
+      'teacher 뜻은? | 선생님','family 뜻은? | 가족','morning 뜻은? | 아침','listen 뜻은? | 듣다'
+    ],{size:'30'}),
+    preset('영어 · 5-6학년 · 낱말 맞추기','영어 단어 맞추기',[
+      '동물: a _ _ m a l | animal','도서관: l i _ r a r y | library','과학: s c i _ n c e | science','조용한: q _ i e t | quiet','어려운: d i f f i _ u l t | difficult','함께: t o g e _ h e r | together',
+      '날씨: w e a _ h e r | weather','건강한: h e a _ t h y | healthy','연습하다: p r a c _ i c e | practice','중요한: i m p o r _ a n t | important','기억하다: r e m e _ b e r | remember','초대하다: i n v _ t e | invite',
+      '방문하다: v i _ i t | visit','비교하다: c o m p _ r e | compare','설명하다: e x p l _ i n | explain','미래: f u _ u r e | future'
+    ],{size:'42'})
+  ],
+  bingo:[
+    preset('국어 · 속담/관용 표현','속담 빙고',['가는 말이 고와야 오는 말이 곱다','티끌 모아 태산','낮말은 새가 듣고 밤말은 쥐가 듣는다','원숭이도 나무에서 떨어진다','고래 싸움에 새우 등 터진다','시작이 반이다','소 잃고 외양간 고친다','하늘의 별 따기','발 없는 말이 천 리 간다','우물 안 개구리','등잔 밑이 어둡다','말 한마디에 천 냥 빚 갚는다','돌다리도 두드려 보고 건너라','고생 끝에 낙이 온다','꿩 먹고 알 먹기','가는 날이 장날','눈 가리고 아웅','바늘 도둑이 소 도둑 된다','호랑이도 제 말 하면 온다','백지장도 맞들면 낫다','개구리 올챙이 적 생각 못 한다','금강산도 식후경','구슬이 서 말이라도 꿰어야 보배','누워서 떡 먹기','산 넘어 산']),
+    preset('과학 · 3-4학년 용어','과학 용어 빙고',['자석','전기','식물','뿌리','줄기','잎','꽃','열매','물의 상태','증발','응결','얼음','공기','소리','빛','그림자','화산','지진','암석','흙','태양','달','별','행성','먹이사슬']),
+    preset('영어 · 3-4학년 단어','English Bingo',['apple','book','chair','desk','pencil','school','teacher','friend','happy','sad','run','jump','blue','green','yellow','family','morning','night','milk','water','window','door','music','game','cloud'])
+  ],
+  mono:[
+    preset('사회 · 우리나라 도시','우리나라 도시 여행',['서울','부산','인천','대구','광주','대전','울산','세종','수원','춘천','강릉','청주','전주','목포','여수','포항','경주','제주','창원','안동','공주','천안','진주','군산']),
+    preset('교실 경제 · 물건 가게','교실 경제 마을',['연필 가게','공책 가게','책방','간식 가게','운동장','문구점','도서관','과학실','음악실','미술실','급식실','방송실','상담실','보건실','체육관','텃밭','컴퓨터실','재활용 센터','은행','우체국','놀이터','버스 정류장','시장','공원'])
+  ],
+  track:[
+    preset('학급 미션 · 쉬움','학급 미션 트랙',['친구 한 명 칭찬하기','손 번쩍 들고 말하기','오늘 배운 것 한 가지 말하기','바른 자세 1분','짝과 하이파이브','좋은 질문 하나 만들기','칠판 글자 읽기','교실 물건 정리하기','감사한 일 말하기','쉬운 퀴즈 내기','앞 사람 응원하기','물 한 모금 마시기']),
+    preset('복습 질문 · 전과목','복습 트랙',['오늘 핵심 낱말은?','문제 하나 직접 만들기','친구 답에 이어 말하기','왜 그렇게 생각했나요?','예를 하나 들기','틀린 부분 고쳐보기','비슷한 낱말 찾기','반대말 말하기','그림으로 설명하기','한 문장으로 정리하기','짝에게 설명하기','새로 알게 된 점 말하기'])
+  ],
+  ghost:[
+    preset('역할 뽑기','역할 사다리',['발표','기록','자료','시간 확인','정리','질문','응원','도구 담당']),
+    preset('발표 순서','발표 순서 사다리',['1번 발표','2번 발표','3번 발표','4번 발표','5번 발표','6번 발표','7번 발표','8번 발표']),
+    preset('재미 미션','미션 사다리',['친구 칭찬','한 번 쉬기','문제 만들기','힌트 주기','노래 한 소절','몸으로 표현','단어 설명','다시 도전'])
+  ],
+  dobble:[
+    preset('동물 이모지 (57개)','동물 도블',['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐸','🐵','🐔','🐧','🐦','🦆','🦅','🦉','🦇','🐺','🐗','🐴','🦄','🐝','🐛','🦋','🐌','🐞','🐜','🐢','🐍','🦎','🐊','🦕','🦖','🐙','🦑','🦐','🦞','🦀','🐡','🐠','🐟','🐬','🐳','🦈','🦩','🦚','🦜','🕊️','🐃','🐆','🐅','🦛']),
+    preset('음식 이모지 (57개)','음식 도블',['🍎','🍊','🍋','🍇','🍓','🍒','🍑','🥝','🍕','🍔','🌮','🍜','🍣','🍦','🍩','🎂','🍫','🍭','🧁','🍿','🥐','🥨','🥑','🫐','🍌','🍉','🍄','🌽','🥕','🧅','🍗','🥩','🍱','🍛','🍲','🍝','🥙','🌯','🥚','🥞','🧇','🥓','🍤','🍡','🍢','🍧','🍨','🍰','🍮','🍯','🧃','🥤','🧋','🍵','☕','🥗','🥘']),
+    preset('사물·자연 이모지 (57개)','사물 도블',['⭐','🌙','☀️','🌈','⚡','🔥','💧','🌊','🌺','🌻','🌸','🍀','🎯','⚽','🎈','🎁','🚀','✈️','🚗','🎸','🎺','📚','⏰','🔭','💡','🎃','🎄','🏆','🌍','🗺️','🎮','🏀','🏈','⚾','🎾','🏐','🎿','🎣','🎨','🎭','🎬','🎤','🎧','🎷','🥁','🎻','🚲','🛵','🚁','🚢','🚂','🎠','🎡','🧩','🔑','🎪','🌵'])
+  ],
+  halli:[
+    preset('과일 세트','과일 할리갈리',['사과','딸기','바나나','포도','수박','귤']),
+    preset('동물 세트','동물 할리갈리',['토끼','고양이','강아지','여우','고래','개구리'])
+  ],
+  memory:[
+    preset('영어 단어 짝','영어 짝맞추기',['apple | 사과','book | 책','school | 학교','friend | 친구','happy | 행복한','water | 물','teacher | 선생님','window | 창문','morning | 아침','family | 가족']),
+    preset('곱셈식 짝','곱셈 짝맞추기',['6×7 | 42','8×9 | 72','7×7 | 49','9×6 | 54','12×3 | 36','11×4 | 44','8×8 | 64','9×9 | 81','7×6 | 42','5×12 | 60']),
+    preset('수도 짝','수도 짝맞추기',['대한민국 | 서울','일본 | 도쿄','중국 | 베이징','미국 | 워싱턴 D.C.','프랑스 | 파리','영국 | 런던','호주 | 캔버라','캐나다 | 오타와'])
+  ],
+  wheel:[
+    preset('발표 질문','발표 룰렛',['가장 기억에 남은 것은?','새로 알게 된 것은?','어려웠던 부분은?','친구에게 질문하기','한 문장으로 정리하기','예시 하나 말하기','내 생각 말하기','다음 시간에 알고 싶은 것']),
+    preset('독서 토론','독서 토론 룰렛',['주인공은 누구인가요?','가장 중요한 사건은?','마음에 든 문장은?','나라면 어떻게 했을까요?','새로 배운 낱말은?','친구에게 추천하나요?','장면을 그림으로 설명하기','결말 바꿔 말하기'])
+  ],
+  cards:[
+    preset('미션 카드 · 학급 활동','미션 카드',['친구에게 칭찬 한마디','오늘 배운 것 말하기','힌트 카드 받기','한 번 더 도전','짝과 의논 30초','문제 하나 만들기','앞 사람 응원하기','좋은 질문 하나 하기'],{mode:'mission'}),
+    preset('찬스 카드 · 보드게임','찬스 카드',['한 칸 앞으로','두 칸 뒤로','주사위 한 번 더','원하는 친구와 자리 바꾸기','힌트 하나 받기','이번 차례 쉬기','가장 가까운 보너스 칸으로','출발점으로 이동'],{mode:'mission'}),
+    preset('플래시카드 · 영어','영어 플래시카드',['apple | 사과','desk | 책상','cloud | 구름','listen | 듣다','quiet | 조용한','together | 함께','science | 과학','healthy | 건강한'],{mode:'flash'})
+  ]
+};
+
+function presetField(gameId){
+  const list=PRESETS[gameId]||[];
+  if(!list.length) return '';
+  return `<div class="field preset-field">
+    <label>바로 넣기 프리셋</label>
+    <div class="preset-row">
+      <select id="presetSelect">
+        <option value="">프리셋 선택</option>
+        ${list.map((p,i)=>`<option value="${i}">${esc(p.label)}</option>`).join('')}
+      </select>
+      <button class="btn ghost" id="btnPresetApply" type="button">적용</button>
+    </div>
+    <div class="hint">학년과 난이도에 맞는 예시를 바로 넣고, 필요한 부분만 고쳐 쓰세요.</div>
+  </div>`;
+}
+function applyPreset(index){
+  const list=PRESETS[state.gameId]||[];
+  const p=list[+index];
+  if(!p) return;
+  state.opts=Object.assign({},state.opts,p.opts||{});
+  if(p.title) state.opts.title=p.title;
+  state.items=presetItems(p.items,state.gameId);
+  state.seed=newSeed();
+  $('#bulk').value=p.items.map(presetLine).join('\n');
+  buildOpts();
+  buildItems();
+  renderStage();
+}
+function gameUsesImages(){
+  const g=GAMES[state.gameId];
+  return !!(g&&g.images);
+}
+
+/* 목업 샘플 — 내용이 없어도 미리보기가 가득 차게 */
+const MOCK_WORDS=['사과','강아지','별','달','자동차','꽃','로켓','거북이','무지개','케이크','풍선','물고기','기차','나비','우산','공룡','연필','피아노','토끼','드럼','고래','당근','연','무당벌레','쿠키','우주선','여우','수박','꿀벌','사탕','오리','버섯','고양이','튤립','요트','북','펭귄','포도','개구리','종이비행기'];
+function mockItems(n){
+  const out=[];
+  for(let i=0;i<n;i++) out.push({text:MOCK_WORDS[i%MOCK_WORDS.length],img:null,_mock:true});
+  return out;
+}
+function withMock(items,n){ // 부족하면 목업으로 채움
+  if(items.length>=n) return items;
+  return items.concat(mockItems(n-items.length));
+}
+
+/* 용지 높이에 맞춰 카드들을 여러 페이지로 자동 분절 */
+function cardPages(cards,o){
+  // o:{cols, aspect(w/h), title, subtitle, foot, gap(mm)}
+  const p=PAPER[state.paper], padmm=12, headmm=20, gap=o.gap!=null?o.gap:3;
+  const usableW=p.w-padmm*2;
+  const cellW=(usableW-(o.cols-1)*gap)/o.cols;
+  const cellH=cellW/o.aspect;
+  const usableH=p.h-padmm*2-headmm;
+  const rows=Math.max(1,Math.floor((usableH+gap)/(cellH+gap)));
+  const perPage=rows*o.cols, totalPages=Math.max(1,Math.ceil(cards.length/perPage));
+  let html='';
+  for(let pg=0;pg<totalPages;pg++){
+    const slice=cards.slice(pg*perPage,(pg+1)*perPage);
+    html+=pageOpen()+`<div class="page-pad">
+      <h2 class="gtitle">${esc(o.title)}</h2>
+      <div class="gsub">${o.subtitle||''}${totalPages>1?` · ${pg+1}/${totalPages}쪽`:''}</div>
+      <div style="display:grid;grid-template-columns:repeat(${o.cols},1fr);gap:${gap}mm;align-content:start">${slice.join('')}</div>
+    </div>${foot(o.foot)}</div>`;
+  }
+  return html;
+}
+
+/* 도블 — 카드 안에서 그림을 최대 크기로, 겹치지 않게 배치 */
+function dobbleLayout(k){
+  if(k<=4){ // 4개: 가운데 없이 꽉 차게
+    return [0,1,2,3].map(i=>{const a=i*Math.PI/2-Math.PI/2+0.35;return{x:50+28*Math.cos(a),y:50+28*Math.sin(a),s:40};});
+  }
+  const m=k-1;
+  const cfg = k<=6? {rr:31,ds:33,dc:30} : {rr:33,ds:29,dc:27};
+  const arr=[{x:50,y:50,s:cfg.dc}];
+  for(let i=0;i<m;i++){const a=i/m*2*Math.PI-Math.PI/2;arr.push({x:50+cfg.rr*Math.cos(a),y:50+cfg.rr*Math.sin(a),s:cfg.ds});}
+  return arr;
+}
+
+/* =========================================================
+   1) 사다리와 뱀
+   ========================================================= */
+function snakeDims(v){
+  const map={
+    '30':{cols:5,rows:6,total:30,label:'5×6'},
+    '42':{cols:6,rows:7,total:42,label:'6×7'},
+    '56':{cols:7,rows:8,total:56,label:'7×8'}
+  };
+  return map[String(v)]||map['42'];
+}
+function snakeAnswerPages(title,entries){
+  const rows=entries.filter(e=>e.answer);
+  if(!rows.length) return '';
+  const perPage=24;
+  let html='';
+  for(let pg=0; pg<Math.ceil(rows.length/perPage); pg++){
+    const slice=rows.slice(pg*perPage,(pg+1)*perPage);
+    html+=pageOpen()+`<div class="page-pad">
+      <h2 class="gtitle">${esc(title)} 정답</h2>
+      <div class="gsub">문제판 칸 번호와 맞춰 확인하세요${rows.length>perPage?` · ${pg+1}/${Math.ceil(rows.length/perPage)}쪽`:''}</div>
+      <div class="answer-grid">${slice.map(e=>`<div class="answer-card">
+        <div class="ans-top"><span class="ans-num">${e.num}</span><div class="ans-q">${snakeQuestionHtml(e.question)}</div></div>
+        <div class="ans-a">${esc(e.answer)}</div>
+      </div>`).join('')}</div>
+    </div>${foot('사다리와 뱀 정답')}</div>`;
+  }
+  return html;
+}
+function snakeStickerControls(){
+  const snakeBtns=Object.entries(DECAL_ASSETS).filter(([,a])=>a.type==='snake')
+    .map(([id,a])=>`<button class="asset-chip" type="button" data-add-decal="${id}">🐍 ${esc(a.name)}</button>`).join('');
+  const ladderBtns=Object.entries(DECAL_ASSETS).filter(([,a])=>a.type==='ladder')
+    .map(([id,a])=>`<button class="asset-chip" type="button" data-add-decal="${id}">🪜 ${esc(a.name)}</button>`).join('');
+  return `<div class="field">
+    <label>뱀·사다리 이미지 배치</label>
+    <div class="hint">PNG는 변환하지 않고 그대로 넣습니다. 보이는 부분만 선택됩니다.</div>
+    <div class="asset-palette">
+      <button class="asset-chip full" type="button" id="snakePngBtn">PNG 그림 추가</button>
+      ${snakeBtns}${ladderBtns}
+    </div>
+    <input type="file" id="snakePngInput" accept="image/png" style="display:none">
+    <div class="decal-actions">
+      <button class="btn ghost" type="button" data-decal-act="smaller">작게</button>
+      <button class="btn ghost" type="button" data-decal-act="bigger">크게</button>
+      <button class="btn ghost" type="button" data-decal-act="rotL">↺ 회전</button>
+      <button class="btn ghost" type="button" data-decal-act="rotR">↻ 회전</button>
+      <button class="btn ghost" type="button" data-decal-act="delete">삭제</button>
+      <button class="btn ghost" type="button" data-decal-act="reset">초기화</button>
+    </div>
+  </div>`;
+}
+function snakeDecalFromPoints(kind,top,bottom,boardRatio){
+  const asset=DECAL_ASSETS[kind]||DECAL_ASSETS.snakeGreen;
+  const dx=bottom.x-top.x, dy=bottom.y-top.y;
+  const dist=Math.max(18,Math.hypot(dx,dy)*1.14);
+  const h=Math.min(72,dist);
+  const w=Math.min(86,Math.max(7,h*boardRatio*asset.aspect));
+  return {
+    kind,
+    x:+((top.x+bottom.x)/2).toFixed(2),
+    y:+((top.y+bottom.y)/2).toFixed(2),
+    w:+w.toFixed(2),
+    h:+h.toFixed(2),
+    r:+(Math.atan2(dx,dy)*180/Math.PI).toFixed(1)
+  };
+}
+function defaultSnakeDecals(links,pos,boardRatio){
+  const snakes=['snakeGreen','snakeYellow','snakeBlue','snakePurple','snakeRed'];
+  const ladders=['ladderBrown','ladderGold','ladderPurple','ladderOlive','ladderBlue'];
+  let si=0, li=0, out=[];
+  Object.keys(links).forEach(k=>{
+    const lk=links[k], a=pos(+k), b=pos(lk.to);
+    if(lk.type==='snake') out.push(snakeDecalFromPoints(snakes[si++%snakes.length],b,a,boardRatio));
+    else out.push(snakeDecalFromPoints(ladders[li++%ladders.length],b,a,boardRatio));
+  });
+  return out;
+}
+function ensureSnakeDecals(c,links,pos,boardRatio){
+  if(!Array.isArray(c.opts.decals)){
+    c.opts.decals=defaultSnakeDecals(links,pos,boardRatio);
+    c.opts.selectedDecal=0;
+  }
+  c.opts.decals=c.opts.decals.filter(d=>d&&(d.src||DECAL_ASSETS[d.kind]));
+  if(c.opts.selectedDecal===undefined || c.opts.selectedDecal>=c.opts.decals.length) c.opts.selectedDecal=c.opts.decals.length?0:null;
+}
+function snakeDecalLayer(c){
+  const selected=c.opts.selectedDecal==null?-1:+c.opts.selectedDecal;
+  const decals=Array.isArray(c.opts.decals)?c.opts.decals:[];
+  return `<div class="snake-decal-layer">${decals.map((d,i)=>{
+    const src=decalSrc(d);
+    return `<div class="snake-decal ${i===selected?'sel':''}" data-decal="${i}" style="left:${d.x}%;top:${d.y}%;width:${d.w}%;height:${d.h}%;transform:translate(-50%,-50%) rotate(${d.r||0}deg)">
+      <img src="${src}" alt="" draggable="false">
+      ${i===selected?`<span class="decal-handle tail" data-handle="tail" data-label="꼬리"></span><span class="decal-handle head" data-handle="head" data-label="머리"></span>`:''}
+    </div>`;
+  }).join('')}</div>`;
+}
+reg({
+  id:'snake', emoji:'🐍', name:'사다리와 뱀', cat:'보드',
+  desc:'주사위를 굴려 이동해요. 사다리는 올라가고, 뱀은 내려가요.',
+  defOpts:{size:'42'},
+  opts:o=>rangeChips('size','판 크기',[{v:'30',t:'짧게 30칸'},{v:'42',t:'알맞게 42칸'},{v:'56',t:'길게 56칸'}],o.size)+snakeStickerControls(),
+  render(c){
+    const dim=snakeDims(c.opts.size||c.opts.n), colsN=dim.cols, rowsN=dim.rows, total=dim.total;
+    const items=c.items.length?c.items:mockItems(total);
+    const order=[];
+    for(let row=rowsN-1;row>=0;row--){
+      const cols=[...Array(colsN).keys()];
+      const rev=((rowsN-1-row)%2===1);
+      (rev?cols.reverse():cols).forEach(col=>order.push(row*colsN+col));
+    }
+    const cellNum=Array(total); order.forEach((cellIdx,i)=>cellNum[cellIdx]=i+1);
+    const idxOfNum={}; cellNum.forEach((num,idx)=>idxOfNum[num]=idx);
+    const pos=num=>{const idx=idxOfNum[num];const r=Math.floor(idx/colsN),col=idx%colsN;return{x:(col+0.5)/colsN*100,y:(r+0.5)/rowsN*100};};
+    // 사다리/뱀 쌍 (판 크기 비례, 겹침 방지)
+    const links={};
+    const L=[[Math.round(total*0.07),Math.round(total*0.42)],[Math.round(total*0.20),Math.round(total*0.63)],[Math.round(total*0.47),Math.round(total*0.86)]];
+    const S=[[Math.round(total*0.92),Math.round(total*0.55)],[Math.round(total*0.74),Math.round(total*0.30)],[Math.round(total*0.50),Math.round(total*0.14)]];
+    L.forEach(([a,b])=>{if(a>1&&b<total&&a<b)links[a]={to:b,type:'ladder'};});
+    S.forEach(([a,b])=>{if(a<total&&b>1&&a>b&&!links[a])links[a]={to:b,type:'snake'};});
+    const boardW=PAPER[c.paper].w-22;
+    const boardH=PAPER[c.paper].h-53;
+    ensureSnakeDecals(c,links,pos,boardH/boardW);
+    // tiles
+    let cells='';
+    const answerEntries=[];
+    for(let idx=0;idx<total;idx++){
+      const num=cellNum[idx];
+      const item=items[(num-1)%items.length];
+      const cls = num===1?'start':(num===total?'finish':((idx+Math.floor(idx/colsN))%2?'alt':''));
+      const showQ = num!==1 && num!==total;
+      if(showQ&&item&&item.answer) answerEntries.push({num,question:item.text||'',answer:item.answer});
+      const qText=showQ&&item&&item.text?item.text:'';
+      const qSize=snakeFontSize(qText,total);
+      cells+=`<div class="snake-cell ${cls}">
+        <span class="n">${num}</span>
+        ${num===1?'<div class="big">🚩<br>출발</div>':''}
+        ${num===total?'<div class="big">🏁<br>도착</div>':''}
+        ${qText?`<div class="q" style="font-size:${qSize}px">${snakeQuestionHtml(qText)}</div>`:''}
+      </div>`;
+    }
+    // SVG 오버레이 (칸에 걸친 뱀/사다리)
+    function ladderSVG(a,b){const dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy)||1,ux=dx/len,uy=dy/len,px=-uy,py=ux,w=2.4;
+      let s=`<g class="ladder-art">`;
+      s+=`<line x1="${a.x+px*w}" y1="${a.y+py*w}" x2="${b.x+px*w}" y2="${b.y+py*w}" stroke="var(--snake-ladder)" stroke-width="1.45" stroke-opacity=".72" stroke-linecap="round"/>`;
+      s+=`<line x1="${a.x-px*w}" y1="${a.y-py*w}" x2="${b.x-px*w}" y2="${b.y-py*w}" stroke="var(--snake-ladder)" stroke-width="1.45" stroke-opacity=".72" stroke-linecap="round"/>`;
+      const rg=Math.max(3,Math.round(len/7));
+      for(let i=1;i<rg;i++){const t=i/rg,mx=a.x+dx*t,my=a.y+dy*t;s+=`<line x1="${mx+px*w}" y1="${my+py*w}" x2="${mx-px*w}" y2="${my-py*w}" stroke="var(--snake-ladder)" stroke-width="1.05" stroke-opacity=".50" stroke-linecap="round"/>`;}
+      s+=`</g>`;
+      return s;}
+    function snakeSVG(a,b){const dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy)||1,angle=Math.atan2(dy,dx)*180/Math.PI,px=-dy/len,py=dx/len;
+      const waves=Math.max(3,Math.round(len/10)), pts=[];
+      const point=t=>({x:a.x+dx*t+px*Math.sin(t*waves*Math.PI)*4.4,y:a.y+dy*t+py*Math.sin(t*waves*Math.PI)*4.4});
+      let p0=point(0), d=`M ${p0.x} ${p0.y}`;
+      for(let i=1;i<=waves*2;i++){
+        const t=i/(waves*2), prev=(i-0.5)/(waves*2), pp=point(prev), p=point(t);
+        d+=` Q ${pp.x} ${pp.y} ${p.x} ${p.y}`;
+      }
+      let s=`<g class="snake-art">`;
+      s+=`<path d="${d}" fill="none" stroke="var(--snake-body)" stroke-width="6.3" stroke-opacity=".22" stroke-linecap="round" stroke-linejoin="round"/>`;
+      s+=`<path d="${d}" fill="none" stroke="var(--snake-body)" stroke-width="5.1" stroke-opacity=".76" stroke-linecap="round" stroke-linejoin="round"/>`;
+      s+=`<path d="${d}" fill="none" stroke="#bbf7d0" stroke-width="2" stroke-opacity=".84" stroke-linecap="round" stroke-dasharray="1.1 3.6"/>`;
+      for(let i=2;i<waves*2;i+=2){const t=i/(waves*2), p=point(t);s+=`<circle cx="${p.x}" cy="${p.y}" r="1.05" fill="#ecfccb" fill-opacity=".70"/>`;}
+      s+=`<g transform="translate(${p0.x} ${p0.y}) rotate(${angle})">`;
+      s+=`<ellipse cx="0" cy="0" rx="5.1" ry="3.7" fill="var(--snake-body)" fill-opacity=".82"/>`;
+      s+=`<path d="M -1.5 2.3 Q 0 3.1 1.5 2.3" fill="none" stroke="#065f46" stroke-width=".7" stroke-opacity=".8"/>`;
+      s+=`<circle cx="-1.7" cy="-1.4" r="1" fill="#fff" fill-opacity=".92"/><circle cx="1.7" cy="-1.4" r="1" fill="#fff" fill-opacity=".92"/>`;
+      s+=`<circle cx="-1.7" cy="-1.4" r=".45" fill="#172033"/><circle cx="1.7" cy="-1.4" r=".45" fill="#172033"/>`;
+      s+=`<path d="M 4.6 0 q 2.3 -1.1 4.1 0 M 4.6 0 q 2.3 1.1 4.1 0" fill="none" stroke="#ef4444" stroke-width=".75" stroke-linecap="round" stroke-opacity=".78"/>`;
+      s+=`</g>`;
+      s+=`</g>`;
+      return s;}
+    const decalLayer=snakeDecalLayer(c);
+    const fs = total>=56?8.2:(total>=42?9.6:11);
+    const title=c.opts.title||'사다리와 뱀';
+    const boardPage=pageOpen()+`<div class="page-pad">
+      <h2 class="gtitle">${esc(title)}</h2>
+      <div class="gsub">${dim.label} 세로형 판 · 주사위를 굴려 이동 · 🪜 위로 / 🐍 아래로</div>
+      <div class="snake-board" style="width:${boardW}mm;height:${boardH}mm">
+        <div class="snake-grid" style="grid-template-columns:repeat(${colsN},1fr);grid-template-rows:repeat(${rowsN},1fr);font-size:${fs}px">${cells}</div>
+        ${decalLayer}
+      </div>
+    </div>${foot()}</div>`;
+    return boardPage+snakeAnswerPages(title,answerEntries);
+  }
+});
+
+/* =========================================================
+   2) 빙고
+   ========================================================= */
+reg({
+  id:'bingo', emoji:'🅱️', name:'빙고', cat:'보드',
+  desc:'단어를 섞어 빙고판을 만들어요. 여러 장도 쉽게 만들 수 있어요.',
+  defOpts:{size:'5',free:1,sheets:'2'},
+  opts:o=>rangeChips('size','판 크기',[{v:3,t:'3×3'},{v:4,t:'4×4'},{v:5,t:'5×5'}],o.size)
+        +toggleChip('free','가운데 FREE 칸',+o.free)
+        +rangeChips('sheets','만들 장수',[{v:1,t:'1장'},{v:2,t:'2장'},{v:4,t:'4장'}],o.sheets),
+  render(c){
+    const size=+c.opts.size||5, free=+c.opts.free&&size%2===1, sheets=+c.opts.sheets||2;
+    const cellsNeeded=size*size-(free?1:0);
+    const pool=withMock(c.items,cellsNeeded);
+    let html='';
+    const perPage = sheets>=4?2:1;
+    for(let s=0;s<sheets;s++){
+      if(s%perPage===0){ if(s>0) html+=foot()+'</div>'; html+=pageOpen()+'<div class="page-pad">'; }
+      const pick=shuffle(pool).slice(0,cellsNeeded);
+      const mid=Math.floor(size*size/2);
+      let cells='', k=0;
+      const headWord=(c.opts.title||'BINGO').slice(0,size).padEnd(size,'★').toUpperCase();
+      let head=`<div class="bingo-head" style="grid-template-columns:repeat(${size},1fr)">`;
+      for(let i=0;i<size;i++) head+=`<div>${esc(headWord[i])}</div>`;
+      head+='</div>';
+      for(let i=0;i<size*size;i++){
+        if(free&&i===mid){ cells+=`<div class="bingo-cell free">★<br>FREE</div>`; continue; }
+        const it=pick[k++];
+        cells+=`<div class="bingo-cell">${it.text?`<span>${esc(it.text)}</span>`:''}</div>`;
+      }
+      const boardH = perPage>1 ? ((PAPER[c.paper].h-86)/2) : (PAPER[c.paper].h-70);
+      html+=`<div style="display:block;width:100%;vertical-align:top;${perPage>1?'margin-bottom:5mm':''}">
+        <div style="font-weight:800;text-align:center;margin:2mm 0;color:var(--t2)">${esc(c.opts.title||'빙고')} ${sheets>1?`#${s+1}`:''}</div>
+        ${head}
+        <div class="bingo fill-page" style="grid-template-columns:repeat(${size},1fr);height:${boardH}mm;aspect-ratio:auto">${cells}</div>
+      </div>`;
+    }
+    html+=foot()+'</div>';
+    return html;
+  }
+});
+
+/* =========================================================
+   3) 부루마블 (장부 방식 · 화폐 없음)
+   ========================================================= */
+reg({
+  id:'mono', emoji:'🏙️', name:'부루마블 (장부식)', cat:'보드',
+  desc:'도시 칸을 돌며 점수를 기록해요. 돈 없이 장부로 간단하게 해요.',
+  defOpts:{per:'7'},
+  opts:o=>rangeChips('per','한 변 칸수',[{v:6,t:'6 (20칸)'},{v:7,t:'7 (24칸)'},{v:8,t:'8 (28칸)'}],o.per),
+  render(c){
+    const per=+c.opts.per||7, dim=per; const totalEdge=per*4-4;
+    // 둘레 좌표(시계 비우기): build grid positions for perimeter
+    const corners=['🚩 출발','🏝️ 무인도','🌏 우주여행','💎 보너스'];
+    let propIdx=0;
+    function cellFor(r,col){
+      const isEdge = r===0||r===dim-1||col===0||col===dim-1;
+      if(!isEdge) return null;
+      const isCorner=(r===0&&col===0)||(r===0&&col===dim-1)||(r===dim-1&&col===0)||(r===dim-1&&col===dim-1);
+      return {r,col,isCorner};
+    }
+    // order perimeter clockwise starting top-left
+    const peri=[];
+    for(let col=0;col<dim;col++)peri.push([0,col]);
+    for(let r=1;r<dim;r++)peri.push([r,dim-1]);
+    for(let col=dim-2;col>=0;col--)peri.push([dim-1,col]);
+    for(let r=dim-2;r>=1;r--)peri.push([r,0]);
+    const pos2idx={}; peri.forEach((p,i)=>pos2idx[p[0]+'_'+p[1]]=i);
+    const pool=c.items.length?c.items:mockItems(Math.max(8,totalEdge));
+    let cornerN=0, pIdx=0;
+    let cellsHtml='';
+    // center
+    cellsHtml+=`<div class="mono-center" style="grid-row:2/${dim};grid-column:2/${dim}">
+      <div class="big">${esc((c.opts.title||'부루마블').slice(0,6))}</div>
+      <div style="font-size:12px;color:#889;margin-top:4px">장부 기록 방식 · 화폐 없음</div>
+      <div style="font-size:40px;margin-top:6px">🎲</div></div>`;
+    for(let r=0;r<dim;r++)for(let col=0;col<dim;col++){
+      const cf=cellFor(r,col); if(!cf) continue;
+      if(cf.isCorner){
+        cellsHtml+=`<div class="mono-cell corner" style="grid-row:${r+1};grid-column:${col+1}">${corners[cornerN++%4]}</div>`;
+      } else {
+        const it=pool[pIdx%pool.length]; pIdx++;
+        const nm = it&&it.text? it.text : `도시 ${pIdx}`;
+        cellsHtml+=`<div class="mono-cell" style="grid-row:${r+1};grid-column:${col+1}">
+          <div class="bar"></div>
+          <div class="nm">${esc(nm)}</div>
+        </div>`;
+      }
+    }
+    const boardH=PAPER[c.paper].h-58;
+    const boardPage=pageOpen()+`<div class="page-pad">
+      <h2 class="gtitle">${esc(c.opts.title||'부루마블')}</h2>
+      <div class="gsub">둘레를 돌며 도시 구입 · 점수는 아래 장부에 기록 (화폐 불필요)</div>
+      <div class="mono-board" style="grid-template-columns:repeat(${dim},1fr);grid-template-rows:repeat(${dim},1fr);height:${boardH}mm">${cellsHtml}</div>
+    </div>${foot()}</div>`;
+    // ledger page
+    let rows='';
+    for(let i=1;i<=18;i++) rows+=`<tr><td>${i}</td><td class="l"></td><td></td><td></td><td></td></tr>`;
+    const ledgerPage=pageOpen()+`<div class="page-pad">
+      <h2 class="gtitle">📒 점수 장부 (화폐 대신 기록)</h2>
+      <div class="gsub">도시를 살 때마다 줄에 기록하고, 통행료를 주고받을 때 ＋/－ 로 적어요</div>
+      <table class="ledger"><thead><tr><th>번호</th><th>도시 / 사건</th><th>플레이어</th><th>＋점수</th><th>－점수</th></tr></thead><tbody>${rows}</tbody></table>
+      <div style="margin-top:8mm;font-size:12px;color:#667">
+        <b>장부 규칙 예시</b><br>· 도시 구입: 도시 점수만큼 내 칸에 －, 은행에 기록<br>· 통행료: 방문자 －, 주인 ＋<br>· 게임 끝에 ＋－ 합산 → 점수 가장 높은 사람 승리
+      </div>
+    </div>${foot('점수 장부')}</div>`;
+    return boardPage+ledgerPage;
+  }
+});
+
+/* =========================================================
+   4) 미니 루프 트랙 (간편 주사위 보드)
+   ========================================================= */
+reg({
+  id:'track', emoji:'🔁', name:'미니 루프 트랙', cat:'보드',
+  desc:'한 바퀴를 도는 쉬운 주사위 게임이에요. 미션 칸을 넣을 수 있어요.',
+  defOpts:{n:'20'},
+  opts:o=>rangeChips('n','칸 수',[{v:16,t:'16칸'},{v:20,t:'20칸'},{v:24,t:'24칸'}],o.n),
+  render(c){
+    const n=+c.opts.n||20;
+    let cols=n>=24?6:5;
+    let rows=Math.ceil((n+4)/2-cols);
+    while(2*(cols+rows)-4 < n) rows++;
+    const total=2*(cols+rows)-4;
+    const peri=[];
+    for(let col=0;col<cols;col++)peri.push([0,col]);
+    for(let r=1;r<rows;r++)peri.push([r,cols-1]);
+    for(let col=cols-2;col>=0;col--)peri.push([rows-1,col]);
+    for(let r=rows-2;r>=1;r--)peri.push([r,0]);
+    const colors=['var(--t1)','var(--t2)']; let cellsHtml='';
+    const pool=c.items.length?c.items:mockItems(Math.max(8,total));
+    cellsHtml+=`<div class="track-mid" style="grid-row:2/${rows};grid-column:2/${cols}">
+      <div>${esc((c.opts.title||'트랙 게임').slice(0,8))}<br><span style="font-size:13px;color:#889">🎲 굴려서 한 바퀴!</span></div></div>`;
+    peri.forEach((p,i)=>{
+      let label, bg=colors[i%2];
+      const it=i===0?null:pool[(i-1)%pool.length];
+      if(i===0){label='🚩 출발';bg='var(--t2)';}
+      else label = it&&it.text? esc(it.text) : `${i}`;
+      cellsHtml+=`<div class="track-cell" style="grid-row:${p[0]+1};grid-column:${p[1]+1};background:${bg}">
+        <span>${label}</span></div>`;
+    });
+    const boardH=PAPER[c.paper].h-62;
+    return pageOpen()+`<div class="page-pad">
+      <h2 class="gtitle">${esc(c.opts.title||'미니 루프 트랙')}</h2>
+      <div class="gsub">주사위를 굴려 칸 이동 · 미션을 수행하며 출발점으로 먼저 돌아오기</div>
+      <div class="track" style="grid-template-columns:repeat(${cols},1fr);grid-template-rows:repeat(${rows},1fr);height:${boardH}mm;background:var(--t-soft);padding:4mm;border-radius:12px">${cellsHtml}</div>
+    </div>${foot()}</div>`;
+  }
+});
+
+/* =========================================================
+   5) 사다리타기 (Ghost Leg)
+   ========================================================= */
+reg({
+  id:'ghost', emoji:'🪜', name:'사다리타기', cat:'보드',
+  desc:'번호를 고르고 선을 따라 내려가요. 역할, 문제, 벌칙 뽑기에 좋아요.',
+  defOpts:{lines:'5'},
+  opts:o=>rangeChips('lines','세로줄(인원)',[{v:4,t:'4명'},{v:5,t:'5명'},{v:6,t:'6명'},{v:8,t:'8명'}],o.lines),
+  render(c){
+    const L=+c.opts.lines||5;
+    const W=900, H=980, padX=70, padTop=82, padBot=110;
+    const gap=(W-padX*2)/(L-1);
+    const rungRows=10;
+    const rowH=(H-padTop-padBot)/(rungRows+1);
+    const rng=rngFor('ghost-rungs');
+    const resultPool=c.items.length?c.items:mockItems(L);
+    const labelLines=(txt,max=7)=>{
+      const clean=String(txt||'?').trim();
+      const cut=max;
+      const lines=clean.length>cut?[clean.slice(0,cut),clean.slice(cut,cut*2)]:[clean];
+      return lines.filter(Boolean);
+    };
+    let svg=`<svg viewBox="0 0 ${W} ${H}" class="ladder">`;
+    // verticals
+    for(let i=0;i<L;i++){const x=padX+i*gap;svg+=`<line class="ladder-line ladder-vertical" x1="${x}" y1="${padTop}" x2="${x}" y2="${H-padBot}"/>`;}
+    // rungs (random, no adjacent overlap per row)
+    for(let r=1;r<=rungRows;r++){
+      const y=padTop+r*rowH; let last=-2;
+      for(let i=0;i<L-1;i++){
+        if(rng()<0.52 && i!==last+1){
+          const x1=padX+i*gap, x2=padX+(i+1)*gap;
+          svg+=`<line class="ladder-line ladder-rung" x1="${x1}" y1="${y}" x2="${x2}" y2="${y}"/>`;
+          last=i;
+        }
+      }
+    }
+    // top labels (참가자) & bottom results
+    for(let i=0;i<L;i++){
+      const x=padX+i*gap;
+      svg+=`<circle class="ladder-start" cx="${x}" cy="${padTop-26}" r="20" fill="var(--t1)"/><text x="${x}" y="${padTop-20}" text-anchor="middle" fill="#fff" font-size="18" font-weight="900">${i+1}</text>`;
+      const it=resultPool[i%resultPool.length];
+      const res = it&&it.text? it.text : '?';
+      const maxChars=L>=7?5:7;
+      const lines=labelLines(res,maxChars);
+      svg+=`<rect class="ladder-result" x="${x-gap*0.43}" y="${H-padBot+8}" width="${gap*0.86}" height="48" rx="8"/>`;
+      svg+=`<text class="ladder-result-text" x="${x}" y="${H-padBot+29}" text-anchor="middle">`;
+      lines.slice(0,2).forEach((line,li)=>{svg+=`<tspan x="${x}" dy="${li?16:0}">${esc(line)}</tspan>`;});
+      svg+=`</text>`;
+    }
+    svg+='</svg>';
+    return pageOpen()+`<div class="page-pad">
+      <h2 class="gtitle">${esc(c.opts.title||'사다리타기')}</h2>
+      <div class="gsub">위 번호에서 출발 → 선을 따라 내려가 결과를 확인하세요</div>
+      ${svg}
+      <div style="margin-top:6mm;font-size:12px;color:#667">결과 칸에 문제·벌칙·역할을 적었어요. 비어 있으면 직접 채워도 좋아요.</div>
+    </div>${foot()}</div>`;
+  }
+});
+
+/* =========================================================
+   6) 도블 (Spot it) — 모든 카드 쌍은 정확히 1개의 공통 그림
+   ========================================================= */
+function dobbleDeck(nPrime){
+  const n=nPrime, cards=[];
+  for(let i=0;i<=n;i++){ const card=[0]; for(let j=0;j<n;j++) card.push(1+i*n+j); cards.push(card); }
+  for(let i=0;i<n;i++) for(let j=0;j<n;j++){
+    const card=[1+i];
+    for(let k=0;k<n;k++) card.push((n+1)+n*k+((i*k+j)%n));
+    cards.push(card);
+  }
+  return cards; // each n+1 symbols, total n^2+n+1
+}
+reg({
+  id:'dobble', emoji:'🎯', name:'도블 (스팟잇)', cat:'카드',
+  desc:'두 카드 사이에 같은 그림이 하나씩 있어요. 관찰 게임을 만들어요.',
+  images:true,
+  defOpts:{order:'auto',view:'cards'},
+  opts:o=>{
+    const n=dobbleN({opts:o,items:state.items});
+    const sym=n*n+n+1;
+    const total=state.items.length;
+    const imgCount=state.items.filter(it=>it.img).length;
+    const canAutoFill=imgCount>=3&&total<sym;
+    const autoFillHtml=canAutoFill
+      ?`<div class="field"><button class="btn primary full" id="dobbleAutoFillBtn" type="button">✨ 나머지 ${sym-total}개 자동 채우기</button>
+          <div class="hint">현재 이미지를 프레임·색상 변형으로 복제합니다. (${total}/${sym}개)</div></div>`
+      :(total>=sym?`<div class="field"><div class="hint" style="color:var(--ok)">✅ 심볼 충분 (${total}/${sym}개)</div></div>`:'');
+    return rangeChips('order','난이도',[{v:'3',t:'쉬움(13장·4그림)'},{v:'5',t:'보통(31장·6그림)'},{v:'7',t:'어려움(57장·8그림)'},{v:'auto',t:'자동'}],o.order)
+      +rangeChips('view','보기 모드',[{v:'cards',t:'🎯 카드 도안'},{v:'template',t:'✏️ 그림칸 도안'}],o.view||'cards')
+      +`<div class="field"><label>이미지 여러 장 넣기</label>
+          <button class="btn ghost full" id="dobbleMultiImgBtn" type="button">🖼️ 이미지 여러 장 선택 (자동 프레임)</button>
+          <input type="file" id="dobbleMultiImgInput" accept="image/*" multiple style="display:none">
+          <div class="hint">여러 사진을 한번에 선택하면 원·별·하트·별 등 모양 프레임을 랜덤 적용해서 추가해요.</div>
+        </div>`
+      +autoFillHtml
+      +`<div class="field"><label>스캔으로 내 그림 넣기</label>
+          <button class="btn ghost full" id="dobbleScanBtn" type="button">📷 스캔한 그림칸 불러오기</button>
+          <input type="file" id="dobbleScanInput" accept="image/*" style="display:none">
+          <div class="hint">① ‘그림칸 도안’을 인쇄해 칸마다 그림을 그리고 ② <b>흰 배경</b>으로 스캔/촬영한 뒤 ③ 이 버튼으로 불러오면 각 칸 그림이 카드에 자동으로 들어갑니다.</div>
+        </div>`;
+  },
+  render(c){
+    const n = dobbleN(c);
+    const sym = n*n+n+1;
+    if(c.opts.view==='template') return dobbleTemplate(c,n,sym);
+    const deck=dobbleDeck(n);
+    // 심볼: 사용자가 넣은 그림/글자 우선, 나머지는 이모지 목업
+    const symHtml=i=>{ const it=c.items[i];
+      if(it&&it.img) return `<img class="media" src="${it.img}">`;
+      if(it&&it.text){
+        const t=it.text.trim();
+        const cp=t.codePointAt(0)||0;
+        // 이모지 코드포인트 범위: Misc Symbols(2600-27FF), 기타기호(2B00-2BFF), 확장이모지(1F000+)
+        if(t.length<=8&&((cp>=0x2600&&cp<=0x27FF)||(cp>=0x2B00&&cp<=0x2BFF)||cp>=0x1F000))
+          return `<span class="demoji">${esc(t)}</span>`;
+        return `<span class="dtxt">${esc(t)}</span>`;
+      }
+      return `<span class="demoji">${EMOJI_POOL[i%EMOJI_POOL.length]}</span>`; };
+    const rotRng=rngFor('dobble-rotation');
+    const cards=deck.map(card=>{
+      const lay=dobbleLayout(card.length);
+      let inner='';
+      card.forEach((symId,k)=>{
+        const Lp=lay[k];
+        const it=c.items[symId];
+        const hasImg=it&&it.img;
+        const rot=Math.floor(rotRng()*(hasImg?16:38)-(hasImg?8:19));
+        inner+=`<div class="s" style="left:${Lp.x}%;top:${Lp.y}%;width:${Lp.s}%;height:${Lp.s}%;transform:translate(-50%,-50%) rotate(${rot}deg);font-size:${(Lp.s*0.82).toFixed(1)}cqmin">${symHtml(symId)}</div>`;
+      });
+      return `<div class="dobble-card cut">${inner}</div>`;
+    });
+    return cardPages(cards,{cols:3,aspect:1,title:c.opts.title||'도블 (스팟잇)',
+      subtitle:`총 ${deck.length}장 · 카드마다 ${n+1}개 그림 · 한 장에 3열 · 이모지는 목업이에요(그림·글자·스캔으로 바꿔보세요) · ✂ 절취선`});
+  }
+});
+function dobbleN(c){ const o=c.opts||{}; if(o.order&&o.order!=='auto') return +o.order||3; const len=(c.items||[]).length; return len>=57?7:(len>=31?5:3); }
+function dobbleGrid(sym){ const cols = sym<=16?4 : (sym<=36?6:8); return {cols, rows:Math.ceil(sym/cols)}; }
+function dobbleTemplate(c,n,sym){
+  const g=dobbleGrid(sym);
+  const padMm=sym<=16?3:2, gapStr=sym<=16?'3mm':'2mm';
+  let boxes='';
+  for(let i=0;i<g.cols*g.rows;i++){const used=i<sym;
+    boxes+=`<div class="tpl-box${used?'':' off'}" style="aspect-ratio:auto">${used?`<span class="tpl-n">${i+1}</span>`:''}</div>`;}
+  const p=PAPER[state.paper];
+  // Chrome의 PDF 변환 반올림 오차와 하단 footer 여유를 감안해 2mm를 남긴다.
+  const frameH=p.h-36; // p.h - topPad(6)-h2(7)-gap(2)-note(8)-gap(2)-botPad(9)-safety(2)
+  // grid 높이 = frame 높이 - frame 테두리(4px CSS=1.058mm)*2 - padding*2
+  const gridH=+(frameH - padMm*2 - 4/96*25.4*2).toFixed(2);
+  const gridW_style=`width:100%;height:${gridH}mm`;
+  return `<div class="page dobble-template-page" style="width:${p.w}mm;height:${p.h}mm;box-sizing:border-box;padding:6mm 7mm 9mm;display:flex;flex-direction:column;gap:2mm;overflow:hidden">
+    <h2 class="gtitle" style="margin:0;font-size:15px;height:7mm;overflow:hidden;flex-shrink:0">✏️ 도블 그림칸 도안 · ${sym}칸</h2>
+    <div class="tpl-note" style="margin:0;height:8mm;overflow:hidden;flex-shrink:0;font-size:10px;padding:2px 10px;line-height:1.5">
+      ① 각 칸 <b>가운데</b>에 그림 1개 · ② 배경은 <b>흰색</b>만 · ③ 진하게 그리기 · ④ <b>바깥 테두리에 딱 맞춰</b> 스캔 후 '스캔 불러오기'
+    </div>
+    <div class="tpl-frame" style="height:${frameH}mm;flex-shrink:0;padding:${padMm}mm;overflow:hidden">
+      <div class="tpl-grid" style="${gridW_style};grid-template-columns:repeat(${g.cols},1fr);grid-template-rows:repeat(${g.rows},1fr);gap:${gapStr}">${boxes}</div>
+    </div>
+    ${foot('그림칸 도안')}
+  </div>`;
+}
+/* =========================================================
+   7) 할리갈리
+   ========================================================= */
+reg({
+  id:'halli', emoji:'🔔', name:'할리갈리', cat:'카드',
+  desc:'같은 그림이 5개가 되면 종을 쳐요. 그림 카드가 자동으로 생겨요.',
+  images:true,
+  defOpts:{copies:'2'},
+  opts:o=>rangeChips('copies','세트 반복',[{v:1,t:'1세트'},{v:2,t:'2세트'},{v:3,t:'3세트'}],o.copies),
+  render(c){
+    const fruits = c.items.length? c.items.slice(0,6) : mockItems(4);
+    const copies=+c.opts.copies||2;
+    const raw=[];
+    fruits.forEach((f,fi)=>{ for(let rep=0;rep<copies;rep++) for(let count=1;count<=5;count++) raw.push({f,fi,count}); });
+    const deck=shuffle(raw);
+    const cards=deck.map(cd=>{
+      const glyph = cd.f.img? `<img src="${cd.f.img}">` : (cd.f.text? `<span class="fz">${esc(cd.f.text.slice(0,2))}</span>` : EMOJI_POOL[cd.fi%EMOJI_POOL.length]);
+      let f=''; for(let i=0;i<cd.count;i++) f+=`<div class="f">${glyph}</div>`;
+      return `<div class="halli-card cut">${f}</div>`;
+    });
+    return cardPages(cards,{cols:4,aspect:2/3,title:c.opts.title||'할리갈리',
+      subtitle:`총 ${deck.length}장 · 같은 과일이 합쳐서 5개면 종을 치세요 🔔 · ✂ 절취선`});
+  }
+});
+
+/* =========================================================
+   8) 메모리 짝맞추기
+   ========================================================= */
+reg({
+  id:'memory', emoji:'🃏', name:'메모리 짝맞추기', cat:'카드',
+  desc:'같은 카드나 서로 맞는 짝을 뒤집어 찾아요.',
+  images:true,
+  defOpts:{mode:'same',back:1},
+  opts:o=>rangeChips('mode','짝 방식',[{v:'same',t:'같은 그림 2장'},{v:'pair',t:'앞↔뒤 ( | 로 구분)'}],o.mode)
+        +toggleChip('back','카드 뒷면 함께 인쇄',+o.back),
+  render(c){
+    const src = c.items.length? c.items : mockItems(6);
+    const cards=[];
+    src.forEach(it=>{
+      if(c.opts.mode==='pair' && it.text && it.text.includes('|')){
+        const [a,b]=it.text.split('|');
+        cards.push({text:a.trim(),img:it.img}); cards.push({text:b.trim(),img:null});
+      } else {
+        cards.push({text:it.text,img:it.img}); cards.push({text:it.text,img:it.img});
+      }
+    });
+    const deck=shuffle(cards);
+    const face=deck.map(cd=>`<div class="mem-card cut">${cd.img?picOf(cd):''}${cd.text?`<span>${esc(cd.text)}</span>`:''}</div>`);
+    let out=cardPages(face,{cols:4,aspect:1,title:c.opts.title||'메모리 짝맞추기',
+      subtitle:`총 ${deck.length}장 (${deck.length/2}쌍) · ✂ 절취선 따라 오려요`});
+    if(+c.opts.back){
+      const backs=deck.map(()=>`<div class="mem-card mem-back cut">★</div>`);
+      out+=cardPages(backs,{cols:4,aspect:1,title:'카드 뒷면',
+        subtitle:'앞면과 같은 칸 수 · 등을 맞대 붙이거나 뒷면만 사용',foot:'뒷면'});
+    }
+    return out;
+  }
+});
+
+/* =========================================================
+   9) 퀴즈 룰렛 (스피너)
+   ========================================================= */
+reg({
+  id:'wheel', emoji:'🎡', name:'퀴즈 룰렛', cat:'카드',
+  desc:'돌림판이 가리킨 문제를 풀어요. 발표 순서 뽑기에도 좋아요.',
+  defOpts:{},
+  opts:o=>'<div class="hint" style="margin-top:6px">칸 수 = 입력한 내용 개수(4~16개 권장)로 자동 생성됩니다.</div>',
+  render(c){
+    const items=c.items.length?c.items.slice(0,16):[0,1,2,3,4,5].map(()=>({text:'',img:null}));
+    const N=Math.max(4,items.length);
+    const cx=300,cy=300,R=270;
+    const colors=['var(--t1)','var(--t2)','var(--t3)','var(--t-soft)'];
+    let svg=`<svg viewBox="0 0 600 600">`;
+    for(let i=0;i<N;i++){
+      const a0=(i/N)*2*Math.PI - Math.PI/2, a1=((i+1)/N)*2*Math.PI - Math.PI/2;
+      const x0=cx+R*Math.cos(a0), y0=cy+R*Math.sin(a0);
+      const x1=cx+R*Math.cos(a1), y1=cy+R*Math.sin(a1);
+      const fill = i%2? 'var(--t2)':'var(--t1)';
+      svg+=`<path d="M${cx},${cy} L${x0},${y0} A${R},${R} 0 0,1 ${x1},${y1} Z" fill="${fill}" stroke="#fff" stroke-width="3"/>`;
+      const am=(a0+a1)/2; const tr=R*0.62;
+      const tx=cx+tr*Math.cos(am), ty=cy+tr*Math.sin(am);
+      const it=items[i]||{};
+      const maxLen = N>=13?6:(N>=9?8:10);
+      const fontSize = N>=13?15:(N>=9?17:20);
+      const label = it.text? shortText(it.text,maxLen) : `${i+1}`;
+      const deg=am*180/Math.PI;
+      svg+=`<text x="${tx}" y="${ty}" fill="#fff" font-size="${fontSize}" font-weight="850" text-anchor="middle" dominant-baseline="middle" transform="rotate(${deg+90},${tx},${ty})">${esc(label)}</text>`;
+    }
+    svg+=`<circle cx="${cx}" cy="${cy}" r="34" fill="#fff" stroke="var(--t2)" stroke-width="4"/><text x="${cx}" y="${cy+7}" text-anchor="middle" font-size="22">🎯</text>`;
+    svg+='</svg>';
+    const listHtml=items.slice(0,N).map((it,i)=>`<div>${i+1}. ${esc(it.text||'')}</div>`).join('');
+    return pageOpen()+`<div class="page-pad wheel-wrap">
+      <h2 class="gtitle">${esc(c.opts.title||'퀴즈 룰렛')}</h2>
+      <div class="gsub">총 ${N}칸 · 가운데에 연필+클립을 꽂고 돌려서 화살표가 가리키는 문제를 풀어요</div>
+      <div class="wheel">${svg}</div>
+      <div class="wheel-list">${listHtml}</div>
+      <div class="pointer-cut">
+        <div style="font-size:11px;color:#889;margin-bottom:3px">▼ 화살표 (오려서 클립에 끼우거나 가운데 핀으로 고정) ✂</div>
+        <svg viewBox="0 0 120 50" style="width:120px"><polygon points="10,25 95,10 95,40" fill="var(--t2)"/><circle cx="100" cy="25" r="9" fill="#fff" stroke="var(--t2)" stroke-width="3"/></svg>
+      </div>
+    </div>${foot()}</div>`;
+  }
+});
+
+/* =========================================================
+   10) 게임 카드 메이커 (화폐 · 미션/찬스 · 플래시 양면)
+   ========================================================= */
+reg({
+  id:'cards', emoji:'💳', name:'게임 카드·화폐', cat:'카드',
+  desc:'게임머니, 미션 카드, 플래시카드를 한 번에 만들어요.',
+  images:true,
+  defOpts:{mode:'money',denoms:'1,5,10,50,100',each:'2'},
+  opts:o=>rangeChips('mode','카드 종류',[{v:'money',t:'게임 화폐'},{v:'mission',t:'미션·찬스'},{v:'flash',t:'플래시(양면)'}],o.mode)
+    + (o.mode==='money'
+        ? `<div class="field"><label>화폐 단위 (쉼표 구분)</label><input type="text" data-opt="denoms" value="${esc(o.denoms||'1,5,10,50,100')}"></div>`
+          + rangeChips('each','단위별 장수',[{v:2,t:'2장'},{v:4,t:'4장'},{v:6,t:'6장'}],o.each)
+        : '<div class="hint" style="margin-top:6px">아래 “내용 입력”의 항목이 카드가 됩니다.'
+          + (o.mode==='flash'?' 정답을 함께 넣으려면 <b>문제 | 정답</b> 형식으로 적으세요.':'')+'</div>'),
+  render(c){
+    const mode=c.opts.mode||'money';
+    let cards=[], subtitle='', title='', aspect=2/3, cols=4;
+    if(mode==='money'){
+      const denoms=(c.opts.denoms||'1,5,10,50,100').split(',').map(s=>s.trim()).filter(Boolean);
+      const each=+c.opts.each||2;
+      title=c.opts.title||'게임 화폐'; subtitle='게임머니 · 단위마다 색이 달라요 · ✂ 절취선 따라 오려 사용'; aspect=1.7; cols=3;
+      const pal=[['#fef3c7','#d97706'],['#dcfce7','#16a34a'],['#dbeafe','#2563eb'],['#fae8ff','#c026d3'],['#ffe4e6','#e11d48'],['#e0e7ff','#4f46e5']];
+      const mascots=['🐰','🦊','🐻','🐼','🦁','🐨','🐯','🐮'];
+      denoms.forEach((d,di)=>{ const p=pal[di%pal.length], m=mascots[di%mascots.length];
+        for(let k=0;k<each;k++){
+          cards.push(`<div class="money cut" style="background:linear-gradient(135deg,${p[0]},#fff);border-color:${p[1]}">
+            <div class="top" style="color:${p[1]}"><span>BANK</span><span class="mas">${m}</span></div>
+            <div class="val" style="color:${p[1]}">${esc(d)}</div>
+            <div class="ttl">★ ${esc(c.opts.title||'게임머니')} ★</div></div>`);
+        }});
+    } else if(mode==='mission'){
+      const src=c.items.length?c.items:mockItems(8);
+      title=c.opts.title||'미션·찬스 카드'; subtitle='미션·찬스 카드 · ✂ 절취선'; aspect=2/3; cols=4;
+      cards=src.map((it,i)=>`<div class="miss cut"><div class="h">${esc(c.opts.title||'미션')} ${i+1}</div><div class="b">${it.img?picOf(it):''}${it.text?`<span>${esc(it.text)}</span>`:''}</div></div>`);
+    } else { // flash
+      const src=c.items.length?c.items:mockItems(8).map(m=>({text:m.text+' | 정답',img:null}));
+      title=c.opts.title||'플래시카드'; subtitle='플래시카드 (앞=문제 / 아래=정답) · 문제 | 정답 형식 · ✂ 절취선'; aspect=2/3; cols=4;
+      cards=src.map(it=>{ let q=it.text||'', a='';
+        if(q.includes('|')){const sp=q.split('|');q=sp[0].trim();a=sp.slice(1).join('|').trim();}
+        return `<div class="flash cut"><div class="q">${it.img?picOf(it):''}${q?`<span>${esc(q)}</span>`:''}</div><div class="a">정답: ${a?esc(a):'______'}</div></div>`; });
+    }
+    return cardPages(cards,{cols,aspect,title,subtitle});
+  }
+});
+
+/* =========================================================
+   도블 이미지 처리 헬퍼
+   ========================================================= */
+/* 이미지에 랜덤 프레임(원/하트/별/삼각/둥근사각) 적용 */
+function applyDobbleFrame(img){
+  const cv=document.createElement('canvas');
+  cv.width=400;cv.height=400;
+  const ctx=cv.getContext('2d');
+  ctx.clearRect(0,0,400,400);
+  const shapes=['circle','heart','star','triangle','squircle'];
+  const shape=shapes[Math.floor(Math.random()*shapes.length)];
+  ctx.translate(200,200);
+  ctx.beginPath();
+  if(shape==='circle'){
+    ctx.arc(0,0,170,0,Math.PI*2);
+  }else if(shape==='heart'){
+    ctx.translate(0,-30);
+    ctx.moveTo(0,-60);
+    ctx.bezierCurveTo(0,-60,-40,-150,-120,-150);
+    ctx.bezierCurveTo(-220,-150,-220,-30,-220,-30);
+    ctx.bezierCurveTo(-220,70,-80,170,0,230);
+    ctx.bezierCurveTo(80,170,220,70,220,-30);
+    ctx.bezierCurveTo(220,-30,220,-150,120,-150);
+    ctx.bezierCurveTo(40,-150,0,-60,0,-60);
+  }else if(shape==='star'){
+    for(let i=0;i<10;i++){
+      const r=i%2?80:180,a=(i*Math.PI)/5-Math.PI/2;
+      ctx.lineTo(Math.cos(a)*r,Math.sin(a)*r);
+    }
+  }else if(shape==='triangle'){
+    ctx.translate(0,30);
+    for(let i=0;i<3;i++){const a=(i*2*Math.PI)/3-Math.PI/2;ctx.lineTo(Math.cos(a)*190,Math.sin(a)*190);}
+  }else{
+    const r=60,s=160;
+    ctx.moveTo(-s+r,-s);ctx.arcTo(s,-s,s,s,r);ctx.arcTo(s,s,-s,s,r);ctx.arcTo(-s,s,-s,-s,r);ctx.arcTo(-s,-s,s,-s,r);
+  }
+  ctx.closePath();
+  ctx.save();ctx.clip();
+  ctx.fillStyle='#fff';ctx.fill();
+  const sc=Math.max(400/img.width,400/img.height);
+  ctx.drawImage(img,-(img.width*sc)/2,-(img.height*sc)/2,img.width*sc,img.height*sc);
+  ctx.restore();
+  ctx.lineWidth=16;
+  ctx.strokeStyle='hsl('+Math.floor(Math.random()*360)+',80%,60%)';
+  ctx.lineJoin='round';ctx.stroke();
+  return cv.toDataURL('image/png');
+}
+
+/* 기존 이미지를 회전/반전/색조 변형으로 변종 생성 */
+function dobbleVariant(src){
+  return new Promise(function(resolve){
+    const img=new Image();
+    img.onload=function(){
+      const cv=document.createElement('canvas');cv.width=400;cv.height=400;
+      const ctx=cv.getContext('2d');
+      ctx.clearRect(0,0,400,400);
+      ctx.translate(200,200);
+      ctx.rotate((Math.random()-.5)*.5);
+      if(Math.random()>.5) ctx.scale(-1,1);
+      ctx.translate(-200,-200);
+      ctx.drawImage(img,0,0,400,400);
+      ctx.setTransform(1,0,0,1,0,0);
+      ctx.globalCompositeOperation='source-atop';
+      ctx.fillStyle='hsla('+Math.floor(Math.random()*360)+',80%,60%,.45)';
+      ctx.fillRect(0,0,400,400);
+      ctx.globalCompositeOperation='source-over';
+      const cols=['#ef4444','#3b82f6','#10b981','#f59e0b','#8b5cf6'];
+      ctx.strokeStyle=cols[Math.floor(Math.random()*cols.length)];
+      ctx.lineWidth=10;ctx.beginPath();
+      ctx.moveTo(Math.random()*400,Math.random()*400);
+      ctx.lineTo(Math.random()*400,Math.random()*400);
+      ctx.stroke();
+      resolve(cv.toDataURL('image/png'));
+    };
+    img.src=src;
+  });
+}
+
+/* 여러 이미지를 도블 심볼로 추가 (자동 프레임 적용) */
+function addDobbleImages(files){
+  function doAdd(replace){
+    if(replace) state.items=[];
+    let loaded=0;
+    Array.from(files).forEach(function(f){
+      const r=new FileReader();
+      r.onload=function(e){
+        const img=new Image();
+        img.onload=function(){
+          const framed=applyDobbleFrame(img);
+          state.items.push({text:null,img:framed});
+          loaded++;
+          if(loaded===files.length){buildItems();buildOpts();renderStage();}
         };
-        // 난이도별 덱 (소수 오더만 사용)
-        const DOBBLE_DECKS = {
-            2: generateDobbleDeck(2),  // 7장, 그림 3개씩
-            3: generateDobbleDeck(3),  // 13장, 그림 4개씩
-            5: generateDobbleDeck(5),  // 31장, 그림 6개씩
-            7: generateDobbleDeck(7),  // 57장, 그림 8개씩
-        };
-        const DIFFICULTY_OPTIONS = [
-            { order: 2, label: '미니',   emoji: '🐣', desc: '7개 그림',  cardDesc: '7장',  btnColor: 'bg-green-400  border-green-700',  activeBg: 'bg-green-500'  },
-            { order: 3, label: '보통',   emoji: '🙂', desc: '13개 그림', cardDesc: '13장', btnColor: 'bg-blue-400   border-blue-700',   activeBg: 'bg-blue-500'   },
-            { order: 5, label: '어려움', emoji: '🔥', desc: '31개 그림', cardDesc: '31장', btnColor: 'bg-orange-400 border-orange-700', activeBg: 'bg-orange-500' },
-            { order: 7, label: '풀판',   emoji: '💀', desc: '57개 그림', cardDesc: '57장', btnColor: 'bg-red-400    border-red-700',    activeBg: 'bg-red-500'    },
-        ];
-
-        const getRandomColor = () => `hsla(${Math.floor(Math.random() * 360)}, 80%, 60%, 0.5)`;
-
-        // --- 전체화면 실행 함수 ---
-        const enterFullscreen = () => {
-            const el = document.documentElement;
-            if (el.requestFullscreen) {
-                el.requestFullscreen().catch(err => console.log(err));
-            } else if (el.webkitRequestFullscreen) {
-                el.webkitRequestFullscreen().catch(err => console.log(err));
-            }
-        };
-
-        // --- 드래그 가능한 스티커 컴포넌트 (Portal 방식: z-index 영역 침범 완전 해결) ---
-        const DraggableSymbol = ({ symId, src, isCenter, playerIdx, onDragEnd, config }) => {
-            const [isDragging, setIsDragging] = useState(false);
-            const [ghostPos, setGhostPos] = useState({ x: 0, y: 0 });
-            const [ghostSize, setGhostSize] = useState({ w: 80, h: 80 });
-            const [startOffset, setStartOffset] = useState({ x: 0, y: 0 });
-            const imgRef = useRef(null);
-
-            const onPointerDown = (e) => {
-                if (isCenter) return;
-                e.preventDefault();
-                const rect = imgRef.current.getBoundingClientRect();
-                setGhostSize({ w: rect.width, h: rect.height });
-                setGhostPos({ x: rect.left, y: rect.top });
-                setStartOffset({ x: e.clientX - rect.left, y: e.clientY - rect.top });
-                setIsDragging(true);
-                try { e.target.setPointerCapture(e.pointerId); } catch(err){}
-            };
-
-            const onPointerMove = (e) => {
-                if (!isDragging) return;
-                setGhostPos({ x: e.clientX - startOffset.x, y: e.clientY - startOffset.y });
-            };
-
-            const onPointerUp = (e) => {
-                if (!isDragging) return;
-                setIsDragging(false);
-                try { e.target.releasePointerCapture(e.pointerId); } catch(err){}
-                if (onDragEnd) {
-                    onDragEnd(symId, playerIdx, e.clientX, e.clientY, () => {});
-                }
-            };
-
-            return (
-                <div className="relative w-full h-full flex items-center justify-center">
-                    {/* 원본: 드래그 중엔 반투명하게 남아있음 */}
-                    <img
-                        ref={imgRef}
-                        src={src}
-                        className={`absolute object-contain select-none drop-shadow-md ${isCenter ? 'pointer-events-none' : 'cursor-grab hover:scale-110 transition-transform duration-100'}`}
-                        style={{
-                            transform: `translate(${config.x}%, ${config.y}%) rotate(${config.rotate}deg) scale(${config.scale})`,
-                            width: '85%',
-                            height: '85%',
-                            touchAction: 'none',
-                            opacity: isDragging ? 0.25 : 1,
-                            transition: isDragging ? 'none' : 'opacity 0.15s',
-                        }}
-                        onPointerDown={onPointerDown}
-                        onPointerMove={onPointerMove}
-                        onPointerUp={onPointerUp}
-                        onPointerCancel={onPointerUp}
-                        draggable="false"
-                    />
-                    {/* 드래그 고스트: body 최상단에 Portal로 렌더링 → 어떤 영역도 뚫음 */}
-                    {isDragging && ReactDOM.createPortal(
-                        <img
-                            src={src}
-                            draggable="false"
-                            style={{
-                                position: 'fixed',
-                                left: ghostPos.x,
-                                top: ghostPos.y,
-                                width: ghostSize.w,
-                                height: ghostSize.h,
-                                transform: `rotate(${config.rotate}deg) scale(1.15)`,
-                                objectFit: 'contain',
-                                pointerEvents: 'none',
-                                zIndex: 99999,
-                                filter: 'drop-shadow(0 12px 28px rgba(0,0,0,0.65)) brightness(1.2)',
-                                userSelect: 'none',
-                                cursor: 'grabbing',
-                            }}
-                        />,
-                        document.body
-                    )}
-                </div>
-            );
-        };
-
-        // --- 플레이어 구역 (그리드 분배 시스템) ---
-        const PlayerZone = ({ idx, name, color, barColor, isTop, width, border, playerCards, scores, handleDragEnd, symbols, roundKey }) => {
-            const card = playerCards[idx];
-            
-            // 8개의 그림을 그리드 셀에 중복 없이 할당 (겹침 및 삐져나옴 완벽 방지)
-            const gridClass = width === 'w-full' ? 'grid-cols-4 grid-rows-2' : 'grid-cols-3 grid-rows-3';
-            const numCells = width === 'w-full' ? 8 : 9;
-
-            const layout = useMemo(() => {
-                if (!card) return [];
-                let cellIndices = Array.from({length: numCells}, (_, i) => i).sort(() => Math.random() - 0.5);
-
-                return card.map((symId, index) => {
-                    return {
-                        symId,
-                        cellIndex: cellIndices[index],
-                        x: Math.random() * 20 - 10, // 상하좌우 10% 범위 내에서만 흔들림
-                        y: Math.random() * 20 - 10,
-                        rotate: Math.random() * 360,
-                        scale: Math.random() * 0.3 + 0.7 // 크기 0.7 ~ 1.0 보장
-                    };
-                });
-            }, [card, roundKey, numCells]);
-
-            return (
-                <div className={`relative flex flex-col ${width} h-full ${color} ${border || ''} box-border`}>
-                    {/* 테두리 점수 바 */}
-                    <div className={`absolute ${isTop ? 'top-0' : 'bottom-0'} left-0 w-full ${barColor} py-1 z-0 shadow-inner`}>
-                        <div className={`text-white text-center text-sm md:text-base font-bold tracking-widest ${isTop ? 'rotate-180' : ''}`}>
-                            {name} : {scores[idx]}점
-                        </div>
-                    </div>
-                    {/* 그리드 영역 (점수 바를 가리지 않도록 상/하단 여백 적용) */}
-                    <div className={`grid ${gridClass} w-full h-full gap-1 p-2 ${isTop ? 'pt-10' : 'pb-10'} place-items-center relative z-10`}>
-                        {Array.from({length: numCells}).map((_, cIdx) => {
-                            const item = layout.find(l => l.cellIndex === cIdx);
-                            return (
-                                <div key={cIdx} className="relative w-full h-full flex items-center justify-center">
-                                    {item && <DraggableSymbol key={`${item.symId}-${roundKey}`} symId={item.symId} src={symbols[item.symId]} playerIdx={idx} onDragEnd={handleDragEnd} config={item} />}
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
-            );
-        };
-
-        // --- 메인 앱 ---
-        const App = () => {
-            const [gameState, setGameState] = useState('menu');
-            const [playerCount, setPlayerCount] = useState(2);
-            const [dobbleOrder, setDobbleOrder] = useState(3); // 기본: 보통 (13그림)
-            const [symbols, setSymbols] = useState([]); // App 레벨에서 상태 관리하여 데이터 영구 보존
-
-            const [deck, setDeck] = useState([]);
-            const [centerCard, setCenterCard] = useState(null);
-            const [playerCards, setPlayerCards] = useState([]);
-            const [scores, setScores] = useState([]);
-            const [cardsRemaining, setCardsRemaining] = useState(0);
-            const [winner, setWinner] = useState(null);
-            const [roundKey, setRoundKey] = useState(0);
-            const [matchFlash, setMatchFlash] = useState(false);
-
-            const centerRef = useRef(null);
-
-            const startGame = (gameSymbols) => {
-                let newDeck = [...DOBBLE_DECKS[dobbleOrder]].sort(() => Math.random() - 0.5);
-                const pCards = [];
-                const initialScores = [];
-                for (let i = 0; i < playerCount; i++) {
-                    pCards.push(newDeck.pop());
-                    initialScores.push(0);
-                }
-                const cCard = newDeck.pop();
-
-                setDeck(newDeck);
-                setCenterCard(cCard);
-                setPlayerCards(pCards);
-                setScores(initialScores);
-                setCardsRemaining(newDeck.length);
-                setWinner(null);
-                setRoundKey(1);
-                setGameState('playing');
-            };
-
-            const handleDragEnd = (symId, playerIdx, clientX, clientY, resetPos) => {
-                if (!centerRef.current || !centerCard) { 
-                    resetPos(); return; 
-                }
-                
-                // 중립 구역(Middle Row 전체) 드롭 감지
-                const rect = centerRef.current.getBoundingClientRect();
-                const isInsideCenter = clientX >= rect.left && clientX <= rect.right &&
-                                       clientY >= rect.top && clientY <= rect.bottom;
-
-                if (isInsideCenter && centerCard.includes(symId)) {
-                    setMatchFlash(true);
-                    setTimeout(() => setMatchFlash(false), 200);
-
-                    const newScores = [...scores];
-                    newScores[playerIdx] += 1;
-                    
-                    const newPlayerCards = [...playerCards];
-                    newPlayerCards[playerIdx] = centerCard;
-                    
-                    let nextCenter = null;
-                    let remaining = [...deck];
-                    if (remaining.length > 0) {
-                        nextCenter = remaining.pop();
-                    }
-
-                    setScores(newScores);
-                    setPlayerCards(newPlayerCards);
-                    setRoundKey(prev => prev + 1);
-                    
-                    if (nextCenter) {
-                        setDeck(remaining);
-                        setCenterCard(nextCenter);
-                        setCardsRemaining(remaining.length);
-                    } else {
-                        setDeck([]);
-                        setCenterCard(null);
-                        setCardsRemaining(0);
-                        
-                        let maxScore = -1;
-                        let winningPlayers = [];
-                        newScores.forEach((s, idx) => {
-                            if (s > maxScore) { maxScore = s; winningPlayers = [idx + 1]; }
-                            else if (s === maxScore) { winningPlayers.push(idx + 1); }
-                        });
-                        setWinner(winningPlayers.join(', ') + '번 플레이어');
-                        setTimeout(() => setGameState('result'), 800);
-                    }
-                } else {
-                    resetPos();
-                }
-            };
-
-            const renderMenu = () => (
-                <div className="flex flex-col items-center justify-center h-screen w-screen p-4 text-center overflow-hidden">
-                    <h1 className="text-4xl md:text-6xl font-bold text-red-500 drop-shadow-md mb-4 leading-tight">🤪 우당탕탕<br/>도블 메이커</h1>
-                    <div className="bg-white p-5 md:p-8 rounded-3xl shadow-xl border-4 border-black max-w-md w-full space-y-5">
-                        {/* 인원 선택 */}
-                        <div>
-                            <h2 className="text-lg md:text-xl mb-3 text-gray-700 font-bold">몇 명이서 할까요?</h2>
-                            <div className="flex justify-center space-x-4">
-                                {[2, 3, 4].map(num => (
-                                    <button
-                                        key={num}
-                                        onClick={() => setPlayerCount(num)}
-                                        className={`w-14 h-14 md:w-16 md:h-16 rounded-full text-2xl border-4 transition-transform ${playerCount === num ? 'bg-blue-500 text-white border-blue-700 scale-110' : 'bg-gray-200 border-gray-400'}`}
-                                    >
-                                        {num}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* 난이도 선택 */}
-                        <div>
-                            <h2 className="text-lg md:text-xl mb-3 text-gray-700 font-bold">난이도 선택</h2>
-                            <div className="grid grid-cols-2 gap-2">
-                                {DIFFICULTY_OPTIONS.map(opt => (
-                                    <button
-                                        key={opt.order}
-                                        onClick={() => { setDobbleOrder(opt.order); setSymbols([]); }}
-                                        className={`py-3 px-2 rounded-2xl border-4 transition-all text-left ${dobbleOrder === opt.order ? opt.activeBg + ' text-white border-black scale-105 shadow-lg' : 'bg-gray-100 border-gray-300 text-gray-700'}`}
-                                    >
-                                        <div className="text-2xl">{opt.emoji}</div>
-                                        <div className="font-bold text-base">{opt.label}</div>
-                                        <div className={`text-xs mt-0.5 ${dobbleOrder === opt.order ? 'text-white/90' : 'text-gray-500'}`}>{opt.desc} / {opt.cardDesc}</div>
-                                    </button>
-                                ))}
-                            </div>
-                            {dobbleOrder !== 3 && symbols.length > 0 && (
-                                <p className="text-xs text-orange-600 mt-2 font-bold">⚠️ 난이도 바꾸면 그림이 초기화됩니다</p>
-                            )}
-                        </div>
-
-                        <button
-                            onClick={() => { enterFullscreen(); setGameState('creating'); }}
-                            className="w-full bg-green-500 hover:bg-green-600 text-white text-2xl md:text-3xl py-4 rounded-xl shadow-[0_6px_0_#166534] active:shadow-[0_0px_0_#166534] active:translate-y-[6px] transition-all border-4 border-black"
-                        >
-                            그림 그리러 가기!
-                        </button>
-                    </div>
-                </div>
-            );
-
-            const renderCreator = () => (
-                <CreatorView
-                    symbols={symbols}
-                    setSymbols={setSymbols}
-                    required={DOBBLE_DECKS[dobbleOrder].length}
-                    onStart={(finalSymbols) => {
-                        enterFullscreen();
-                        setSymbols(finalSymbols);
-                        startGame(finalSymbols);
-                    }}
-                    onBack={() => setGameState('menu')}
-                />
-            );
-
-            // 중앙 중립 구역 레이아웃
-            const centerLayout = useMemo(() => {
-                if (!centerCard) return [];
-                let cellIndices = Array.from({length: 9}, (_, i) => i).sort(() => Math.random() - 0.5);
-                return centerCard.map((symId, index) => ({
-                    symId,
-                    cellIndex: cellIndices[index],
-                    x: Math.random() * 20 - 10,
-                    y: Math.random() * 20 - 10,
-                    rotate: Math.random() * 360,
-                    scale: Math.random() * 0.4 + 0.8
-                }));
-            }, [centerCard, roundKey]);
-
-            const renderPlaying = () => {
-                return (
-                    <div className="flex flex-col w-screen h-screen bg-gray-900 text-white font-bold select-none touch-none overflow-hidden">
-                        
-                        {/* --- TOP ROW (상단 영역) --- */}
-                        <div className="flex w-full h-1/3 relative z-10 border-b-2 border-gray-700">
-                            {playerCount >= 2 && (
-                                playerCount === 2 ? (
-                                    <PlayerZone idx={1} name="P2 (빨강)" color="bg-red-900/30" barColor="bg-red-600" isTop={true} width="w-full" playerCards={playerCards} scores={scores} handleDragEnd={handleDragEnd} symbols={symbols} roundKey={roundKey} />
-                                ) : (
-                                    <>
-                                        <PlayerZone idx={1} name="P2 (빨강)" color="bg-red-900/30" barColor="bg-red-600" isTop={true} width="w-1/2" border="border-r-4 border-gray-900" playerCards={playerCards} scores={scores} handleDragEnd={handleDragEnd} symbols={symbols} roundKey={roundKey} />
-                                        <PlayerZone idx={2} name="P3 (초록)" color="bg-green-900/30" barColor="bg-green-600" isTop={true} width="w-1/2" playerCards={playerCards} scores={scores} handleDragEnd={handleDragEnd} symbols={symbols} roundKey={roundKey} />
-                                    </>
-                                )
-                            )}
-                        </div>
-
-                        {/* --- MIDDLE ROW (중앙 중립 구역) --- */}
-                        <div ref={centerRef} className={`relative flex flex-col items-center justify-center w-full h-1/3 transition-colors duration-200 z-0 ${matchFlash ? 'bg-yellow-500/50' : 'bg-gray-800'}`}>
-                            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none opacity-20 text-center">
-                                <span className="text-5xl md:text-7xl tracking-widest uppercase">중립 구역</span>
-                                <span className="text-2xl md:text-3xl mt-2">남은 카드: {cardsRemaining}장</span>
-                            </div>
-                            
-                            {/* 중앙 전용 3x3 그리드 적용 */}
-                            <div className={`grid grid-cols-3 grid-rows-3 w-[65vmin] h-[65vmin] md:w-[45vmin] md:h-[45vmin] place-items-center relative z-10 transition-transform duration-200 ${matchFlash ? 'scale-110' : 'scale-100'}`}>
-                                {Array.from({length: 9}).map((_, cIdx) => {
-                                    const item = centerLayout.find(l => l.cellIndex === cIdx);
-                                    return (
-                                        <div key={cIdx} className="relative w-full h-full flex items-center justify-center">
-                                            {item && <DraggableSymbol key={`center-${item.symId}-${roundKey}`} symId={item.symId} src={symbols[item.symId]} isCenter={true} config={item} />}
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-
-                        {/* --- BOTTOM ROW (하단 영역) --- */}
-                        <div className="flex w-full h-1/3 relative z-10 border-t-2 border-gray-700">
-                            {playerCount <= 3 ? (
-                                <PlayerZone idx={0} name="P1 (파랑)" color="bg-blue-900/30" barColor="bg-blue-600" isTop={false} width="w-full" playerCards={playerCards} scores={scores} handleDragEnd={handleDragEnd} symbols={symbols} roundKey={roundKey} />
-                            ) : (
-                                <>
-                                    <PlayerZone idx={0} name="P1 (파랑)" color="bg-blue-900/30" barColor="bg-blue-600" isTop={false} width="w-1/2" border="border-r-4 border-gray-900" playerCards={playerCards} scores={scores} handleDragEnd={handleDragEnd} symbols={symbols} roundKey={roundKey} />
-                                    <PlayerZone idx={3} name="P4 (보라)" color="bg-purple-900/30" barColor="bg-purple-600" isTop={false} width="w-1/2" playerCards={playerCards} scores={scores} handleDragEnd={handleDragEnd} symbols={symbols} roundKey={roundKey} />
-                                </>
-                            )}
-                        </div>
-
-                        {/* 시작 오버레이 */}
-                        <div className="absolute inset-0 pointer-events-none flex items-center justify-center opacity-0 animate-[fadeOut_3s_ease-in-out] z-[200]">
-                            <div className="bg-black/80 text-white text-2xl p-6 rounded-3xl border-4 border-yellow-400 text-center shadow-2xl">
-                                내 구역의 정답을 찾아<br/>
-                                <span className="text-yellow-400 text-4xl mt-2 block">가운데로 끌어다 놓으세요!</span>
-                            </div>
-                        </div>
-                    </div>
-                );
-            };
-
-            const renderResult = () => (
-                <div className="flex flex-col items-center justify-center h-screen w-screen space-y-8 bg-purple-600 text-white p-4 overflow-hidden">
-                    <h1 className="text-5xl md:text-6xl font-bold animate-bounce text-yellow-300 drop-shadow-[0_5px_5px_rgba(0,0,0,0.5)]">🎉 게임 종료! 🎉</h1>
-                    <div className="text-3xl md:text-4xl bg-white text-black px-10 py-6 rounded-3xl shadow-2xl border-4 border-black text-center w-full max-w-md">
-                        우승자: <br/><span className="text-5xl md:text-6xl text-red-500 block mt-4">{winner}!!</span>
-                    </div>
-                    <div className="flex space-x-4">
-                        <button onClick={() => startGame(symbols)} className="bg-green-500 text-white text-xl md:text-2xl px-6 py-4 rounded-xl border-4 border-black shadow-[0_6px_0_#166534] active:translate-y-[6px] active:shadow-none transition-all">
-                            <i className="fas fa-redo mr-2"></i> 다시 하기
-                        </button>
-                        <button onClick={() => setGameState('menu')} className="bg-blue-500 text-white text-xl md:text-2xl px-6 py-4 rounded-xl border-4 border-black shadow-[0_6px_0_#1e3a8a] active:translate-y-[6px] active:shadow-none transition-all">
-                            <i className="fas fa-home mr-2"></i> 처음으로
-                        </button>
-                    </div>
-                </div>
-            );
-
-            return (
-                <div>
-                    <style>{`@keyframes fadeOut { 0% { opacity: 1; } 80% { opacity: 1; } 100% { opacity: 0; } }`}</style>
-                    {gameState === 'menu' && renderMenu()}
-                    {gameState === 'creating' && renderCreator()}
-                    {gameState === 'playing' && renderPlaying()}
-                    {gameState === 'result' && renderResult()}
-                </div>
-            );
-        };
-
-        // --- 크리에이터 뷰 ---
-        const CreatorView = ({ symbols, setSymbols, required, onStart, onBack }) => {
-            const [viewMode, setViewMode] = useState('draw');
-            const canvasRef = useRef(null);
-            const fileInputRef = useRef(null);
-            const cameraInputRef = useRef(null);
-            // 모바일에서만 카메라 버튼 표시 (데스크톱은 capture 속성이 갤러리로 fallback됨)
-            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-            
-            const [isDrawing, setIsDrawing] = useState(false);
-            const [history, setHistory] = useState([]);
-            const [historyStep, setHistoryStep] = useState(-1);
-            const [isGenerating, setIsGenerating] = useState(false);
-            const [isProcessingFiles, setIsProcessingFiles] = useState(false);
-            const [toastMsg, setToastMsg] = useState('');
-
-            useEffect(() => {
-                if (viewMode !== 'draw') return;
-                // 레이아웃 완성 후 캔버스 내부 해상도를 실제 표시 크기로 맞춤 (좌표 불일치 방지)
-                requestAnimationFrame(() => {
-                    const canvas = canvasRef.current;
-                    if (!canvas) return;
-                    const rect = canvas.getBoundingClientRect();
-                    if (rect.width > 0 && rect.height > 0) {
-                        canvas.width = Math.round(rect.width);
-                        canvas.height = Math.round(rect.height);
-                    }
-                    initCanvas();
-                });
-            }, [viewMode]);
-
-            const showToast = (msg) => {
-                setToastMsg(msg);
-                setTimeout(() => setToastMsg(''), 1500);
-            };
-
-            const initCanvas = () => {
-                const canvas = canvasRef.current;
-                if (!canvas) return;
-                const ctx = canvas.getContext('2d');
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.lineWidth = 10;
-                ctx.lineCap = 'round';
-                ctx.lineJoin = 'round';
-                ctx.strokeStyle = 'black';
-                setHistory([canvas.toDataURL('image/png')]);
-                setHistoryStep(0);
-            };
-
-            const saveHistoryState = (canvas) => {
-                const dataUrl = canvas.toDataURL('image/png');
-                const newHistory = history.slice(0, historyStep + 1);
-                newHistory.push(dataUrl);
-                setHistory(newHistory);
-                setHistoryStep(newHistory.length - 1);
-            };
-
-            const getCoordinates = (e) => {
-                const canvas = canvasRef.current;
-                const rect = canvas.getBoundingClientRect();
-                const scaleX = canvas.width / rect.width;
-                const scaleY = canvas.height / rect.height;
-                let clientX, clientY;
-
-                if (e.touches && e.touches.length > 0) {
-                    clientX = e.touches[0].clientX;
-                    clientY = e.touches[0].clientY;
-                } else {
-                    clientX = e.clientX;
-                    clientY = e.clientY;
-                }
-                return {
-                    x: (clientX - rect.left) * scaleX,
-                    y: (clientY - rect.top) * scaleY
-                };
-            };
-
-            const startDrawing = (e) => {
-                e.preventDefault();
-                setIsDrawing(true);
-                const { x, y } = getCoordinates(e);
-                const ctx = canvasRef.current.getContext('2d');
-                ctx.beginPath();
-                ctx.moveTo(x, y);
-            };
-
-            const draw = (e) => {
-                e.preventDefault();
-                if (!isDrawing) return;
-                const { x, y } = getCoordinates(e);
-                const ctx = canvasRef.current.getContext('2d');
-                ctx.lineTo(x, y);
-                ctx.stroke();
-            };
-
-            const stopDrawing = (e) => {
-                if(e) e.preventDefault();
-                if (isDrawing) {
-                    setIsDrawing(false);
-                    saveHistoryState(canvasRef.current);
-                }
-            };
-
-            const handleUndo = () => {
-                if (historyStep > 0) {
-                    setHistoryStep(historyStep - 1);
-                    const canvas = canvasRef.current;
-                    const ctx = canvas.getContext('2d');
-                    const img = new Image();
-                    img.onload = () => {
-                        ctx.clearRect(0, 0, canvas.width, canvas.height);
-                        ctx.drawImage(img, 0, 0);
-                    };
-                    img.src = history[historyStep - 1];
-                }
-            };
-
-            const clearCanvas = () => {
-                const canvas = canvasRef.current;
-                const ctx = canvas.getContext('2d');
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                saveHistoryState(canvas);
-            };
-
-            const handleSaveDraw = () => {
-                if (historyStep > 0) {
-                    const dataUrl = canvasRef.current.toDataURL('image/png');
-                    setSymbols(prev => {
-                        if (prev.length < required) return [...prev, dataUrl];
-                        return prev;
-                    });
-                    clearCanvas();
-                    showToast("🎨 그림 1장 추가 완료!");
-                }
-            };
-
-            const applyRandomFrame = (img) => {
-                const canvas = document.createElement('canvas');
-                canvas.width = 400; canvas.height = 400;
-                const ctx = canvas.getContext('2d');
-
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-                const shapes = ['circle', 'heart', 'star', 'triangle', 'squircle'];
-                const shape = shapes[Math.floor(Math.random() * shapes.length)];
-
-                ctx.translate(200, 200);
-                ctx.beginPath();
-
-                if (shape === 'circle') ctx.arc(0, 0, 170, 0, Math.PI * 2);
-                else if (shape === 'heart') {
-                    ctx.translate(0, -30);
-                    ctx.moveTo(0, -60);
-                    ctx.bezierCurveTo(0, -60, -40, -150, -120, -150);
-                    ctx.bezierCurveTo(-220, -150, -220, -30, -220, -30);
-                    ctx.bezierCurveTo(-220, 70, -80, 170, 0, 230);
-                    ctx.bezierCurveTo(80, 170, 220, 70, 220, -30);
-                    ctx.bezierCurveTo(220, -30, 220, -150, 120, -150);
-                    ctx.bezierCurveTo(40, -150, 0, -60, 0, -60);
-                } else if (shape === 'star') {
-                    for (let i = 0; i < 10; i++) {
-                        const radius = i % 2 === 0 ? 180 : 80;
-                        const angle = (i * Math.PI) / 5 - Math.PI / 2;
-                        ctx.lineTo(Math.cos(angle) * radius, Math.sin(angle) * radius);
-                    }
-                } else if (shape === 'triangle') {
-                    ctx.translate(0, 30);
-                    for (let i = 0; i < 3; i++) {
-                        const angle = (i * 2 * Math.PI) / 3 - Math.PI / 2;
-                        ctx.lineTo(Math.cos(angle) * 190, Math.sin(angle) * 190);
-                    }
-                } else if (shape === 'squircle') {
-                    const r = 60, s = 160;
-                    ctx.moveTo(-s+r, -s);
-                    ctx.arcTo(s, -s, s, s, r);
-                    ctx.arcTo(s, s, -s, s, r);
-                    ctx.arcTo(-s, s, -s, -s, r);
-                    ctx.arcTo(-s, -s, s, -s, r);
-                }
-                ctx.closePath();
-                ctx.save();
-                ctx.clip(); 
-
-                ctx.fillStyle = 'white';
-                ctx.fill();
-
-                const scale = Math.max(400 / img.width, 400 / img.height);
-                const w = img.width * scale;
-                const h = img.height * scale;
-                ctx.drawImage(img, -w/2, -h/2, w, h);
-                ctx.restore();
-
-                ctx.lineWidth = 16;
-                ctx.strokeStyle = `hsl(${Math.floor(Math.random() * 360)}, 80%, 60%)`;
-                ctx.lineJoin = 'round';
-                ctx.stroke();
-
-                return canvas.toDataURL('image/png');
-            };
-
-            const processFiles = async (files) => {
-                setIsProcessingFiles(true);
-                const newUrls = [];
-                for (let i = 0; i < files.length; i++) {
-                    const file = files[i];
-                    const url = await new Promise((resolve) => {
-                        const reader = new FileReader();
-                        reader.onload = (e) => {
-                            const img = new Image();
-                            img.onload = () => resolve(applyRandomFrame(img));
-                            img.src = e.target.result;
-                        };
-                        reader.readAsDataURL(file);
-                    });
-                    newUrls.push(url);
-                }
-
-                setSymbols(prev => {
-                    const spaceLeft = required - prev.length;
-                    return [...prev, ...newUrls.slice(0, spaceLeft)];
-                });
-                setIsProcessingFiles(false);
-                showToast(`✂️ 스티커 ${files.length}장 추가 완료!`);
-            };
-
-            const handleFileUpload = (e) => {
-                if (!e.target.files || e.target.files.length === 0) return;
-                processFiles(Array.from(e.target.files));
-                e.target.value = '';
-            };
-
-            const deleteSymbol = (idx) => {
-                setSymbols(symbols.filter((_, i) => i !== idx));
-            };
-
-            // 그림을 기기 갤러리/다운로드 폴더에 저장
-            const saveSymbolToGallery = async (src, idx) => {
-                try {
-                    // dataURL → Blob 변환
-                    const res = await fetch(src);
-                    const blob = await res.blob();
-                    const file = new File([blob], `doble-${idx + 1}.png`, { type: 'image/png' });
-
-                    // 모바일: Web Share API (갤러리에 직접 저장 가능)
-                    if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-                        await navigator.share({ files: [file], title: `도블 그림 ${idx + 1}` });
-                    } else {
-                        // PC: 다운로드 링크로 저장
-                        const a = document.createElement('a');
-                        a.href = src;
-                        a.download = `doble-${idx + 1}.png`;
-                        a.click();
-                    }
-                    showToast(`💾 그림 ${idx + 1}번 저장됨!`);
-                } catch (err) {
-                    if (err.name !== 'AbortError') showToast('저장 실패 😥');
-                }
-            };
-
-            const generateMissingAndStart = async () => {
-                setIsGenerating(true);
-                const currentCount = symbols.length;
-                const needed = required - currentCount;
-                let finalSymbols = [...symbols];
-
-                if (needed > 0 && currentCount > 0) {
-                    for (let i = 0; i < needed; i++) {
-                        const baseSrc = symbols[Math.floor(Math.random() * currentCount)];
-                        const newSymbolUrl = await generateVariant(baseSrc);
-                        finalSymbols.push(newSymbolUrl);
-                        if (i % 5 === 0) await new Promise(r => setTimeout(r, 10)); // 브라우저 멈춤 방지
-                    }
-                }
-                
-                setTimeout(() => {
-                    setIsGenerating(false);
-                    onStart(finalSymbols);
-                }, 200);
-            };
-
-            const generateVariant = (baseDataUrl) => {
-                return new Promise((resolve) => {
-                    const img = new Image();
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        canvas.width = 400; canvas.height = 400;
-                        const ctx = canvas.getContext('2d');
-                        
-                        ctx.clearRect(0, 0, canvas.width, canvas.height);
-                        ctx.translate(canvas.width/2, canvas.height/2);
-                        ctx.rotate((Math.random() - 0.5) * 0.5); 
-                        if (Math.random() > 0.5) ctx.scale(-1, 1);
-                        ctx.translate(-canvas.width/2, -canvas.height/2);
-
-                        ctx.drawImage(img, 0, 0);
-                        ctx.setTransform(1, 0, 0, 1, 0, 0);
-
-                        ctx.globalCompositeOperation = 'source-atop';
-                        ctx.fillStyle = getRandomColor();
-                        ctx.fillRect(0, 0, canvas.width, canvas.height);
-                        
-                        ctx.globalCompositeOperation = 'source-over';
-                        ctx.strokeStyle = ['#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6'][Math.floor(Math.random()*5)];
-                        ctx.lineWidth = 10;
-                        ctx.beginPath();
-                        ctx.moveTo(Math.random()*400, Math.random()*400);
-                        ctx.lineTo(Math.random()*400, Math.random()*400);
-                        ctx.stroke();
-
-                        resolve(canvas.toDataURL('image/png'));
-                    };
-                    img.src = baseDataUrl;
-                });
-            };
-
-            const isFull = symbols.length >= required;
-            const canAutoFill = symbols.length >= 3 && !isFull;
-
-            const LoadingOverlay = () => isProcessingFiles && (
-                <div className="absolute inset-0 bg-black/50 z-50 flex flex-col items-center justify-center text-white rounded-3xl">
-                    <i className="fas fa-spinner fa-spin text-5xl mb-4"></i>
-                    <p className="text-xl font-bold mt-4">스티커 싹둑 오리는 중...</p>
-                </div>
-            );
-
-            const Toast = () => toastMsg && (
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black/80 text-white px-6 py-3 rounded-full text-xl md:text-2xl font-bold animate-bounce z-50 shadow-2xl">
-                    {toastMsg}
-                </div>
-            );
-
-            if (viewMode === 'draw') {
-                return (
-                    <div className="flex flex-col h-screen w-screen bg-orange-100 p-4 items-center justify-center relative overflow-hidden">
-                        <button onClick={onBack} className="absolute top-4 left-4 text-gray-600 bg-white/50 px-3 py-1 rounded-full shadow z-50"><i className="fas fa-home"></i> 처음으로</button>
-                        <button onClick={() => setViewMode('gallery')} className="absolute top-4 right-4 text-blue-600 bg-white/50 px-4 py-2 rounded-full font-bold shadow-md ring-2 ring-blue-300 z-50">
-                            보관함 확인 <i className="fas fa-arrow-right"></i>
-                        </button>
-
-                        <div className="w-full max-w-lg bg-white p-4 md:p-6 rounded-3xl shadow-xl border-4 border-black flex flex-col h-[85vh] relative mt-10">
-                            <LoadingOverlay />
-                            <Toast />
-                            
-                            <div className="text-center mb-4">
-                                <h2 className="text-2xl font-bold">그림판 ({symbols.length} / {required}장)</h2>
-                                <p className="text-gray-500 text-sm">추가하면 화면이 안 넘어가고 카운트만 오릅니다!</p>
-                            </div>
-                            
-                            <div className="w-full aspect-square bg-gray-200 rounded-2xl overflow-hidden relative touch-none shadow-inner border-2 border-gray-300 transparent-bg">
-                                <canvas
-                                    ref={canvasRef}
-                                    width={400}
-                                    height={400}
-                                    className="cursor-crosshair w-full h-full block touch-none"
-                                    onMouseDown={startDrawing}
-                                    onMouseMove={draw}
-                                    onMouseUp={stopDrawing}
-                                    onMouseOut={stopDrawing}
-                                    onTouchStart={startDrawing}
-                                    onTouchMove={draw}
-                                    onTouchEnd={stopDrawing}
-                                />
-                            </div>
-
-                            <div className="mt-4 flex justify-between px-2">
-                                <div className="flex gap-2">
-                                    <button onClick={handleUndo} disabled={historyStep <= 0} className="w-12 h-12 bg-gray-100 rounded-full border-2 border-black disabled:opacity-50"><i className="fas fa-undo"></i></button>
-                                </div>
-                                <button onClick={clearCanvas} className="px-4 py-2 bg-red-100 rounded-xl border-2 border-black text-red-600 font-bold"><i className="fas fa-trash"></i> 싹지우기</button>
-                            </div>
-
-                            <div className="mt-6 flex flex-col gap-3">
-                                <button onClick={handleSaveDraw} disabled={isFull} className="w-full py-4 bg-blue-500 text-white text-xl rounded-xl border-4 border-black font-bold shadow-[0_4px_0_#1e3a8a] active:translate-y-[4px] active:shadow-none transition-all disabled:bg-gray-400">
-                                    <i className="fas fa-pen mr-2"></i> 이 그림 저장하기
-                                </button>
-                                
-                                <div className="flex gap-2">
-                                    <input type="file" accept="image/*" multiple ref={fileInputRef} onChange={handleFileUpload} className="hidden" />
-                                    {isMobile && <input type="file" accept="image/*" capture="environment" ref={cameraInputRef} onChange={handleFileUpload} className="hidden" />}
-
-                                    <button onClick={() => fileInputRef.current.click()} disabled={isFull} className={`${isMobile ? 'flex-1' : 'w-full'} py-3 bg-indigo-100 rounded-xl border-2 border-black disabled:opacity-50 text-base font-bold shadow-[0_3px_0_#000] active:translate-y-[3px] active:shadow-none transition-all`}>
-                                        <i className="fas fa-images"></i> 갤러리 다중선택
-                                    </button>
-                                    {isMobile && (
-                                        <button onClick={() => cameraInputRef.current.click()} disabled={isFull} className="flex-1 py-3 bg-teal-100 rounded-xl border-2 border-black disabled:opacity-50 text-base font-bold shadow-[0_3px_0_#000] active:translate-y-[3px] active:shadow-none transition-all text-red-600">
-                                            <i className="fas fa-camera"></i> 바로 찰칵!
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                );
-            }
-
-            return (
-                <div className="flex flex-col h-screen w-screen bg-orange-100 p-4 items-center justify-center relative overflow-hidden">
-                    <div className="w-full max-w-2xl bg-white p-4 md:p-6 rounded-3xl shadow-xl border-4 border-black flex flex-col h-[90vh]">
-                        <LoadingOverlay />
-                        <div className="flex justify-between items-center mb-4 pb-4 border-b-2 border-gray-200">
-                            <button onClick={() => setViewMode('draw')} className="text-blue-600 font-bold text-lg bg-blue-50 px-3 py-2 rounded-lg border-2 border-blue-200 hover:bg-blue-100 shadow">
-                                <i className="fas fa-plus"></i> 더 추가하기
-                            </button>
-                            <h2 className="text-2xl font-bold hidden md:block">모인 스티커들 ({symbols.length}/{required})</h2>
-                            <span className="text-xl font-bold md:hidden">{symbols.length}/{required}</span>
-                        </div>
-
-                        {/* 보관함은 자체적으로 스크롤 가능하게 유지 */}
-                        <div className="flex-1 overflow-y-auto p-3 bg-gray-100 rounded-2xl border-2 border-gray-300 shadow-inner" style={{ touchAction: 'auto' }}>
-                            <div className="grid grid-cols-4 sm:grid-cols-5 gap-3">
-                                {symbols.map((src, idx) => (
-                                    <div key={idx} className="relative aspect-square rounded-xl flex items-center justify-center group animate-fade-in transparent-bg border-2 border-gray-200">
-                                        <img src={src} className="w-full h-full object-contain p-1 drop-shadow-sm" alt={`Symbol ${idx}`} />
-                                        {/* 삭제 버튼 (우상단) */}
-                                        <button
-                                            onClick={() => deleteSymbol(idx)}
-                                            className="absolute top-0 right-0 translate-x-1/4 -translate-y-1/4 bg-red-500 text-white w-6 h-6 text-xs rounded-full font-bold shadow-md border-2 border-black active:scale-90 z-10"
-                                        ><i className="fas fa-times"></i></button>
-                                        {/* 저장 버튼 (좌하단) */}
-                                        <button
-                                            onClick={() => saveSymbolToGallery(src, idx)}
-                                            className="absolute bottom-0 left-0 -translate-x-1/4 translate-y-1/4 bg-blue-500 text-white w-6 h-6 text-xs rounded-full font-bold shadow-md border-2 border-black active:scale-90 z-10"
-                                            title="갤러리에 저장"
-                                        ><i className="fas fa-download"></i></button>
-                                    </div>
-                                ))}
-                                {Array.from({length: required - symbols.length}).map((_, i) => (
-                                    <div key={`empty-${i}`} className="aspect-square bg-gray-200 border-2 border-dashed border-gray-400 rounded-xl flex flex-col items-center justify-center text-gray-400">
-                                        <i className="fas fa-question text-xl mb-1"></i>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                        
-                        <div className="mt-6 flex flex-col gap-3">
-                            {canAutoFill && (
-                                <button 
-                                    onClick={generateMissingAndStart} 
-                                    disabled={isGenerating}
-                                    className="w-full py-4 bg-yellow-400 text-black text-2xl rounded-xl border-4 border-black font-bold shadow-[0_4px_0_#000] active:translate-y-[4px] active:shadow-none transition-all flex flex-col items-center"
-                                >
-                                    {isGenerating ? '스티커 무한 복사 중... 🧙‍♂️' : (
-                                        <>
-                                            <span>이대로 대충 시작! 🚀</span>
-                                            <span className="text-base font-normal mt-1">나머지 {required - symbols.length}개 자동 복사</span>
-                                        </>
-                                    )}
-                                </button>
-                            )}
-                            {isFull && (
-                                <button 
-                                    onClick={() => onStart(symbols)}
-                                    className="w-full py-5 bg-green-500 text-white text-3xl rounded-xl border-4 border-black font-bold shadow-[0_6px_0_#166534] active:translate-y-[6px] active:shadow-none transition-all"
-                                >
-                                    드래그 게임 시작! 🎉
-                                </button>
-                            )}
-                            {!canAutoFill && !isFull && (
-                                <div className="text-center p-4 bg-gray-100 rounded-xl border-2 border-dashed border-gray-400 text-gray-600 font-bold text-lg">
-                                    최소 3장 이상 모아주세요!<br/>
-                                    <span className="text-sm font-normal text-gray-500">(현재 {symbols.length}장 / 목표 {required}장)</span>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            );
-        };
-
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
-    </script>
+        img.src=e.target.result;
+      };
+      r.readAsDataURL(f);
+    });
+  }
+  if(state.items.length>0){
+    showReplaceModal(
+      '기존 항목 '+state.items.length+'개가 있어요.\n새 이미지 '+files.length+'장을 어떻게 넣을까요?',
+      function(){ doAdd(true); },
+      function(){ doAdd(false); }
+    );
+  }else{
+    doAdd(false);
+  }
+}
+
+/* 도블 나머지 심볼 자동 채우기 (기존 이미지를 변형 복제) */
+async function generateDobbleMissing(){
+  const n=dobbleN({opts:state.opts,items:state.items});
+  const sym=n*n+n+1;
+  const needed=sym-state.items.length;
+  if(needed<=0||state.items.length<3) return;
+  const btn=document.getElementById('dobbleAutoFillBtn');
+  if(btn){btn.disabled=true;btn.textContent='생성 중...';}
+  const base=state.items.filter(function(it){return it.img;}).map(function(it){return it.img;});
+  if(!base.length){
+    alert('먼저 이미지를 3장 이상 넣어주세요.');
+    if(btn){btn.disabled=false;}
+    buildOpts();return;
+  }
+  for(let i=0;i<needed;i++){
+    const src=base[Math.floor(Math.random()*base.length)];
+    const v=await dobbleVariant(src);
+    state.items.push({text:null,img:v});
+    if(i%5===0) await new Promise(function(r){setTimeout(r,10);});
+  }
+  buildItems();buildOpts();renderStage();
+}
+
+/* =========================================================
+   APP — UI 연결
+   ========================================================= */
+const GAME_ORDER=['snake','bingo','mono','track','ghost','dobble','halli','memory','wheel','cards'];
+
+function buildHome(){
+  const grid=$('#gameGrid'); grid.innerHTML='';
+  GAME_ORDER.forEach(id=>{
+    const g=GAMES[id]; if(!g)return;
+    const card=el('div','card-game');
+    card.innerHTML=`<span class="tag">${g.cat}</span><span class="emoji">${g.emoji}</span><h3>${g.name}</h3><p>${g.desc}</p>`;
+    card.setAttribute('role','button');
+    card.setAttribute('tabindex','0');
+    card.setAttribute('aria-label',`${g.name} 만들기`);
+    card.onclick=()=>openGame(id);
+    card.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openGame(id);}};
+    grid.appendChild(card);
+  });
+}
+
+function buildThemeRow(){
+  if(!THEMES.some(t=>t.id===state.theme)) state.theme='peach';
+  const row=$('#themeRow'); row.innerHTML='';
+  THEMES.forEach(t=>{
+    const s=el('div','swatch'+(t.id===state.theme?' sel':''));
+    s.style.background=t.t3;
+    s.style.boxShadow=t.id===state.theme
+      ? `0 0 0 3px ${t.t2},0 3px 8px rgba(23,32,51,.16)`
+      : `0 0 0 1px ${t.t1},0 2px 7px rgba(23,32,51,.10)`;
+    s.title=t.name;
+    s.onclick=()=>{state.theme=t.id;buildThemeRow();applyTheme();renderStage();};
+    row.appendChild(s);
+  });
+}
+function buildPaperRow(){
+  const row=$('#paperRow'); row.innerHTML='';
+  ['A4','A3','B4'].forEach(p=>{
+    const c=el('div','chip'+(p===state.paper?' sel':''),p);
+    c.onclick=()=>{state.paper=p;buildPaperRow();renderStage();};
+    row.appendChild(c);
+  });
+}
+
+function clamp(n,min,max){ return Math.max(min,Math.min(max,n)); }
+const DECAL_HIT_CACHE = new Map();
+function prepareDecalHit(src){
+  if(!src) return null;
+  if(DECAL_HIT_CACHE.has(src)) return DECAL_HIT_CACHE.get(src);
+  const rec={ready:false,ok:false,canvas:null,ctx:null};
+  DECAL_HIT_CACHE.set(src,rec);
+  const img=new Image();
+  img.onload=()=>{
+    try{
+      const max=720;
+      const scale=Math.min(1,max/Math.max(img.naturalWidth||img.width,img.naturalHeight||img.height));
+      const canvas=document.createElement('canvas');
+      canvas.width=Math.max(1,Math.round((img.naturalWidth||img.width)*scale));
+      canvas.height=Math.max(1,Math.round((img.naturalHeight||img.height)*scale));
+      const ctx=canvas.getContext('2d',{willReadFrequently:true});
+      ctx.drawImage(img,0,0,canvas.width,canvas.height);
+      rec.canvas=canvas; rec.ctx=ctx; rec.ok=true;
+    }catch(err){
+      rec.ok=false;
+    }
+    rec.ready=true;
+  };
+  img.onerror=()=>{rec.ready=true;rec.ok=false;};
+  img.src=src;
+  return rec;
+}
+function decalAlphaHit(d,u,v){
+  const rec=prepareDecalHit(decalSrc(d));
+  if(!rec||!rec.ready||!rec.ok||!rec.ctx) return true;
+  const w=rec.canvas.width, h=rec.canvas.height;
+  const px=clamp(Math.round(u*(w-1)),0,w-1);
+  const py=clamp(Math.round(v*(h-1)),0,h-1);
+  const radius=2;
+  try{
+    for(let y=Math.max(0,py-radius);y<=Math.min(h-1,py+radius);y++){
+      for(let x=Math.max(0,px-radius);x<=Math.min(w-1,px+radius);x++){
+        if(rec.ctx.getImageData(x,y,1,1).data[3]>18) return true;
+      }
+    }
+  }catch(err){
+    return true;
+  }
+  return false;
+}
+function decalLocalPoint(d,rect,clientX,clientY){
+  const wpx=(+(d.w)||10)/100*rect.width;
+  const hpx=(+(d.h)||10)/100*rect.height;
+  if(wpx<1||hpx<1) return null;
+  const cx=(+(d.x)||50)/100*rect.width;
+  const cy=(+(d.y)||50)/100*rect.height;
+  const dx=clientX-rect.left-cx;
+  const dy=clientY-rect.top-cy;
+  const r=(+(d.r)||0)*Math.PI/180;
+  const cos=Math.cos(r), sin=Math.sin(r);
+  const localX=dx*cos+dy*sin;
+  const localY=-dx*sin+dy*cos;
+  const u=localX/wpx+.5;
+  const v=localY/hpx+.5;
+  if(u<0||u>1||v<0||v>1) return null;
+  return {u,v};
+}
+function findSnakeDecalAt(board,clientX,clientY){
+  const list=Array.isArray(state.opts.decals)?state.opts.decals:[];
+  const rect=board.getBoundingClientRect();
+  for(let i=list.length-1;i>=0;i--){
+    const d=list[i];
+    const local=decalLocalPoint(d,rect,clientX,clientY);
+    if(local&&decalAlphaHit(d,local.u,local.v)) return {idx:i,decal:d,rect};
+  }
+  return null;
+}
+function addSnakeDecal(kind){
+  const asset=DECAL_ASSETS[kind]||DECAL_ASSETS.snakeGreen;
+  if(!Array.isArray(state.opts.decals)) state.opts.decals=[];
+  const h=asset.type==='snake'?52:(asset.aspect>1?18:48);
+  const boardRatio=(PAPER[state.paper].h-53)/(PAPER[state.paper].w-22);
+  const w=Math.min(86,Math.max(7,h*boardRatio*asset.aspect));
+  state.opts.decals.push({kind,x:50,y:50,w:+w.toFixed(2),h,r:asset.type==='ladder'?-16:0});
+  state.opts.selectedDecal=state.opts.decals.length-1;
+  renderStage();
+}
+function addSnakePngDecal(file){
+  if(!file) return;
+  const name=file.name||'';
+  if(file.type&&file.type!=='image/png'){alert('PNG 파일만 그대로 넣을 수 있어요.');return;}
+  if(!file.type&&!/\.png$/i.test(name)){alert('PNG 파일을 선택해 주세요.');return;}
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const src=e.target.result;
+    const img=new Image();
+    img.onload=()=>{
+      if(!Array.isArray(state.opts.decals)) state.opts.decals=[];
+      const aspect=(img.naturalWidth||img.width)/(img.naturalHeight||img.height)||.2;
+      const boardRatio=(PAPER[state.paper].h-53)/(PAPER[state.paper].w-22);
+      const h=aspect>1?20:54;
+      const w=Math.min(92,Math.max(5,h*boardRatio*aspect));
+      state.opts.decals.push({
+        kind:'customPng',
+        type:'custom',
+        name:name||'PNG 그림',
+        src,
+        aspect:+aspect.toFixed(4),
+        x:50,
+        y:50,
+        w:+w.toFixed(2),
+        h:+h.toFixed(2),
+        r:0
+      });
+      state.opts.selectedDecal=state.opts.decals.length-1;
+      prepareDecalHit(src);
+      renderStage();
+    };
+    img.onerror=()=>alert('PNG 이미지를 읽지 못했어요.');
+    img.src=src;
+  };
+  reader.readAsDataURL(file);
+}
+function selectedSnakeDecal(){
+  const list=Array.isArray(state.opts.decals)?state.opts.decals:[];
+  const idx=state.opts.selectedDecal==null?-1:+state.opts.selectedDecal;
+  return {list,idx,decal:list[idx]};
+}
+function snakeDecalAction(act){
+  const {list,idx,decal}=selectedSnakeDecal();
+  if(act==='reset'){
+    delete state.opts.decals;
+    delete state.opts.selectedDecal;
+    renderStage();
+    return;
+  }
+  if(!decal) return;
+  if(act==='delete'){
+    list.splice(idx,1);
+    state.opts.selectedDecal=list.length?Math.min(idx,list.length-1):null;
+  }else if(act==='bigger'){
+    decal.w=clamp(decal.w*1.14,3,120); decal.h=clamp(decal.h*1.14,5,120);
+  }else if(act==='smaller'){
+    decal.w=clamp(decal.w*.88,3,120); decal.h=clamp(decal.h*.88,5,120);
+  }else if(act==='rotL'){
+    decal.r=(decal.r||0)-15;
+  }else if(act==='rotR'){
+    decal.r=(decal.r||0)+15;
+  }
+  renderStage();
+}
+function wireSnakeDecalControls(){
+  document.querySelectorAll('[data-add-decal]').forEach(btn=>{
+    btn.onclick=()=>addSnakeDecal(btn.dataset.addDecal);
+  });
+  document.querySelectorAll('[data-decal-act]').forEach(btn=>{
+    btn.onclick=()=>snakeDecalAction(btn.dataset.decalAct);
+  });
+  const pngBtn=document.getElementById('snakePngBtn');
+  const pngInput=document.getElementById('snakePngInput');
+  if(pngBtn&&pngInput){
+    pngBtn.onclick=()=>pngInput.click();
+    pngInput.onchange=function(){
+      if(this.files&&this.files[0]) addSnakePngDecal(this.files[0]);
+      this.value='';
+    };
+  }
+}
+function applyDecalElStyle(el,d){
+  el.style.left=d.x+'%';
+  el.style.top=d.y+'%';
+  el.style.width=d.w+'%';
+  el.style.height=d.h+'%';
+  el.style.transform=`translate(-50%,-50%) rotate(${d.r||0}deg)`;
+}
+function decalEndpointsPx(d,rect){
+  const cx=d.x/100*rect.width, cy=d.y/100*rect.height;
+  const h=d.h/100*rect.height;
+  const r=(d.r||0)*Math.PI/180;
+  const ux=Math.sin(r), uy=Math.cos(r);
+  return {
+    tail:{x:cx-ux*h/2,y:cy-uy*h/2},
+    head:{x:cx+ux*h/2,y:cy+uy*h/2}
+  };
+}
+function bindSnakeDecals(){
+  const board=document.querySelector('.snake-board');
+  if(!board||state.gameId!=='snake') return;
+  const layer=board.querySelector('.snake-decal-layer');
+  if(!layer) return;
+  (state.opts.decals||[]).forEach(d=>prepareDecalHit(decalSrc(d)));
+  layer.onpointerdown=e=>{
+    const handle=e.target&&e.target.dataset?e.target.dataset.handle:null;
+    const list=Array.isArray(state.opts.decals)?state.opts.decals:[];
+    let idx=null, d=null, el=null, rect=board.getBoundingClientRect();
+    if(handle){
+      el=e.target.closest('.snake-decal');
+      idx=el?+el.dataset.decal:null;
+      d=list[idx];
+    }else{
+      const hit=findSnakeDecalAt(board,e.clientX,e.clientY);
+      if(!hit){
+        if(state.opts.selectedDecal!=null){
+          state.opts.selectedDecal=null;
+          renderStage();
+        }
+        return;
+      }
+      idx=hit.idx; d=hit.decal; rect=hit.rect;
+      el=board.querySelector(`.snake-decal[data-decal="${idx}"]`);
+    }
+    if(!d||!el) return;
+    const selectionChanged=+state.opts.selectedDecal!==idx;
+    state.opts.selectedDecal=idx;
+    board.querySelectorAll('.snake-decal.sel').forEach(x=>x.classList.remove('sel'));
+    el.classList.add('sel');
+    e.preventDefault();
+    layer.setPointerCapture&&layer.setPointerCapture(e.pointerId);
+    if(handle){
+      const endpoints=decalEndpointsPx(d,rect);
+      const fixed=handle==='head'?endpoints.tail:endpoints.head;
+      const move=ev=>{
+        const moving={x:clamp(ev.clientX-rect.left,0,rect.width),y:clamp(ev.clientY-rect.top,0,rect.height)};
+        const tail=handle==='head'?fixed:moving;
+        const head=handle==='head'?moving:fixed;
+        const dx=head.x-tail.x, dy=head.y-tail.y;
+        const hpx=Math.max(36,Math.hypot(dx,dy));
+        const wpx=Math.max(16,hpx*decalAspect(d));
+        d.x=clamp(((tail.x+head.x)/2)/rect.width*100,-8,108);
+        d.y=clamp(((tail.y+head.y)/2)/rect.height*100,-8,108);
+        d.h=clamp(hpx/rect.height*100,5,120);
+        d.w=clamp(wpx/rect.width*100,3,120);
+        d.r=Math.atan2(dx,dy)*180/Math.PI;
+        applyDecalElStyle(el,d);
+      };
+      const up=ev=>{
+        window.removeEventListener('pointermove',move);
+        window.removeEventListener('pointerup',up);
+      };
+      window.addEventListener('pointermove',move);
+      window.addEventListener('pointerup',up);
+      return;
+    }
+    const start={x:e.clientX,y:e.clientY,dx:d.x,dy:d.y};
+    const move=ev=>{
+      d.x=clamp(start.dx+(ev.clientX-start.x)/rect.width*100,-8,108);
+      d.y=clamp(start.dy+(ev.clientY-start.y)/rect.height*100,-8,108);
+      applyDecalElStyle(el,d);
+    };
+    const up=ev=>{
+      window.removeEventListener('pointermove',move);
+      window.removeEventListener('pointerup',up);
+      if(selectionChanged) renderStage();
+    };
+    window.addEventListener('pointermove',move);
+    window.addEventListener('pointerup',up);
+  };
+}
+
+/* 게임별 옵션 + 제목 */
+function buildOpts(){
+  const g=GAMES[state.gameId]; const box=$('#gameOpts');
+  let html=`<p class="sec-title" style="margin-top:14px">⚙️ 게임 설정</p>`;
+  html+=`<div class="field"><label>제목</label><input type="text" data-opt="title" value="${esc(state.opts.title||'')}" placeholder="${esc(g.name)}"></div>`;
+  html+=presetField(state.gameId);
+  html+= g.opts? g.opts(state.opts):'';
+  box.innerHTML=html;
+  // wire inputs
+  box.querySelectorAll('input[data-opt]').forEach(inp=>{
+    inp.oninput=()=>{state.opts[inp.dataset.opt]=inp.value;renderStage();};
+  });
+  box.querySelectorAll('.chips[data-opt]').forEach(ch=>{
+    ch.querySelectorAll('.chip').forEach(chip=>{
+      chip.onclick=()=>{
+        state.opts[ch.dataset.opt]=chip.dataset.v;
+        ch.querySelectorAll('.chip').forEach(x=>x.classList.remove('sel'));
+        chip.classList.add('sel');
+        buildOpts();          // 일부 옵션은 다른 옵션 UI를 바꿈(예: 카드 종류)
+        renderStage();
+      };
+    });
+  });
+  const presetBtn=document.getElementById('btnPresetApply');
+  const presetSelect=document.getElementById('presetSelect');
+  if(presetBtn&&presetSelect){
+    presetBtn.onclick=()=>applyPreset(presetSelect.value);
+  }
+  // 게임별 특수 도구 연결
+  if(state.gameId==='dobble'){
+    const sb=document.getElementById('dobbleScanBtn'), si=document.getElementById('dobbleScanInput');
+    if(sb&&si){ sb.onclick=()=>si.click(); si.onchange=function(){ if(this.files&&this.files[0]) importDobbleScan(this.files[0]); this.value=''; }; }
+    const mb=document.getElementById('dobbleMultiImgBtn'), mi=document.getElementById('dobbleMultiImgInput');
+    if(mb&&mi){ mb.onclick=()=>mi.click(); mi.onchange=function(){ if(this.files&&this.files.length) addDobbleImages(Array.from(this.files)); this.value=''; }; }
+    const afb=document.getElementById('dobbleAutoFillBtn');
+    if(afb) afb.onclick=()=>generateDobbleMissing();
+  }
+  if(state.gameId==='snake') wireSnakeDecalControls();
+}
+
+/* 스캔 이미지에서 그리드 외곽 경계 감지 + 프레임 내부 여백 제거 */
+function detectGridBounds(img,padMm){
+  const W=img.width, H=img.height;
+  const sc=Math.min(1,600/W);
+  const AW=Math.round(W*sc), AH=Math.round(H*sc);
+  const ac=document.createElement('canvas');
+  ac.width=AW; ac.height=AH;
+  const actx=ac.getContext('2d');
+  actx.drawImage(img,0,0,AW,AH);
+  const px=actx.getImageData(0,0,AW,AH).data;
+  function rowDark(y){
+    let n=0;
+    for(let x=0;x<AW;x++){const i=(~~y*AW+x)*4;if(px[i]+px[i+1]+px[i+2]<450)n++;}
+    return n/AW;
+  }
+  function colDark(x){
+    let n=0;
+    for(let y=0;y<AH;y++){const i=(y*AW+~~x)*4;if(px[i]+px[i+1]+px[i+2]<450)n++;}
+    return n/AH;
+  }
+  const THR=0.55;
+  let top=~~(AH*0.10),bottom=~~(AH*0.90),left=~~(AW*0.02),right=~~(AW*0.98);
+  for(let y=~~(AH*0.05);y<~~(AH*0.80);y++){if(rowDark(y)>THR){top=y;break;}}
+  for(let y=AH-2;y>~~(AH*0.30);y--){if(rowDark(y)>THR){bottom=y;break;}}
+  for(let x=~~(AW*0.01);x<~~(AW*0.45);x++){if(colDark(x)>THR){left=x;break;}}
+  for(let x=AW-2;x>~~(AW*0.55);x--){if(colDark(x)>THR){right=x;break;}}
+  top+=3;bottom-=3;left+=3;right-=3;
+  const s=1/sc;
+  // 프레임 내부 여백(mm)을 스캔 픽셀로 변환해 제거 (A4 기준: W/210 px/mm)
+  const padPx=Math.round(padMm*W/210);
+  return {
+    top:~~(top*s)+padPx,
+    bottom:~~(bottom*s)-padPx,
+    left:~~(left*s)+padPx,
+    right:~~(right*s)-padPx
+  };
+}
+
+/* 도블 그림칸 스캔 -> 각 칸 그림 잘라서 카드에 넣기 */
+function importDobbleScan(file){
+  function runScan(n,replace){
+    const sym=n*n+n+1,g=dobbleGrid(sym);
+    // 템플릿 CSS 값 (sym>16 이면 2mm, 아니면 3mm)
+    const padMm=sym>16?2:3, gapMm=sym>16?2:3;
+    const r=new FileReader();
+    r.onload=function(e){
+      const img=new Image();
+      img.onload=function(){
+        const W=img.width;
+        // CSS px -> 스캔 px 변환: A4=793.7 CSS px, W 스캔 px => 1 CSS px = W/793.7 scan px
+        const c2p=W/793.7;
+        const bd=detectGridBounds(img,padMm);
+        const gW=bd.right-bd.left, gH=bd.bottom-bd.top;
+        // CSS gap을 스캔 px로: gapMm * W/210
+        const gapPx=gapMm*W/210;
+        // 정확한 셀 크기 (gap 고려)
+        const cellW=(gW-(g.cols-1)*gapPx)/g.cols;
+        const cellH=(gH-(g.rows-1)*gapPx)/g.rows;
+        // 인셋 계산 (CSS 값 기반 정밀 계산):
+        // 셀 border: 2px, 번호 left:5px, 번호 width~12px CSS, 여유:5px
+        const iL=(2+5+12+5)*c2p;   // 24px CSS
+        // 셀 border: 2px, 번호 top:2px, 번호 height~12px CSS, 여유:5px
+        const iT=(2+2+12+5)*c2p;   // 21px CSS
+        const iR=(2+4)*c2p;        // 6px CSS (border + 여유)
+        const iB=(2+4)*c2p;        // 6px CSS
+        const newItems=[];
+        for(let idx=0;idx<sym;idx++){
+          const row=~~(idx/g.cols),col=idx%g.cols;
+          // CSS grid 정확한 셀 위치
+          const cellX=bd.left+col*(cellW+gapPx);
+          const cellY=bd.top+row*(cellH+gapPx);
+          const sx=cellX+iL, sy=cellY+iT;
+          const sw=cellW-iL-iR, sh=cellH-iT-iB;
+          const side=Math.min(sw,sh);
+          const ox=sx+(sw-side)/2, oy=sy+(sh-side)/2;
+          const cv=document.createElement('canvas');cv.width=cv.height=300;
+          const cx=cv.getContext('2d');cx.fillStyle='#fff';cx.fillRect(0,0,300,300);
+          cx.drawImage(img,ox,oy,side,side,0,0,300,300);
+          newItems.push({text:null,img:cv.toDataURL('image/jpeg',0.85)});
+        }
+        if(replace)state.items=newItems;
+        else state.items=state.items.concat(newItems);
+        state.opts.order=String(n);
+        state.opts.view='cards';
+        buildOpts();buildItems();renderStage();
+        alert(sym+'개 칸 그림을 불러왔어요!');
+      };
+      img.onerror=function(){alert('이미지를 읽지 못했어요. 다른 파일로 시도해 주세요.');};
+      img.src=e.target.result;
+    };
+    r.readAsDataURL(file);
+  }
+  function afterSizeSelect(n){
+    if(state.items.length>0){
+      showReplaceModal(
+        '기존 항목 '+state.items.length+'개가 있어요.\n스캔 그림을 어떻게 넣을까요?',
+        function(){runScan(n,true);},
+        function(){runScan(n,false);}
+      );
+    }else{runScan(n,true);}
+  }
+  // 항상 크기 선택 모달 표시 (현재 설정과 무관하게 사용자가 확인)
+  showScanSizeModal(afterSizeSelect);
+}
+
+
+/* 스캔 템플릿 크기 선택 모달 */
+function showScanSizeModal(onSelect){
+  const modal=document.getElementById('scanSizeModal');
+  modal.style.display='';
+  const close=()=>{modal.style.display='none';};
+  document.getElementById('scanBtn13').onclick=function(){close();onSelect(3);};
+  document.getElementById('scanBtn31').onclick=function(){close();onSelect(5);};
+  document.getElementById('scanBtn57').onclick=function(){close();onSelect(7);};
+  modal.querySelector('.modal-overlay').onclick=function(e){if(e.target===this)close();};
+}
+/* 교체/추가 모달 */
+function showReplaceModal(msg, onReplace, onAppend){
+  const modal=document.getElementById('replaceModal');
+  document.getElementById('modalMsg').textContent=msg;
+  modal.style.display='';
+  const close=()=>{ modal.style.display='none'; };
+  document.getElementById('modalBtnReplace').onclick=()=>{ close(); onReplace(); };
+  document.getElementById('modalBtnAppend').onclick=()=>{ close(); onAppend(); };
+  document.getElementById('modalBtnCancel').onclick=close;
+  modal.querySelector('.modal-overlay').onclick=function(e){ if(e.target===this) close(); };
+}
+
+/* 항목 리스트 */
+let imgTargetIndex=null;
+let selectMode=false;
+const selectedItems=new Set();
+
+function updateItemBar(){
+  const bar=document.getElementById('itemBar');
+  if(!state.items.length){ bar.style.display='none'; selectMode=false; selectedItems.clear(); return; }
+  bar.style.display='';
+  const selModeBtn=document.getElementById('btnSelMode');
+  const selDelBtn=document.getElementById('btnSelDel');
+  if(selectMode){
+    selModeBtn.textContent='취소';
+    selModeBtn.classList.add('on');
+    selDelBtn.style.display='';
+    selDelBtn.textContent='선택 삭제 ('+selectedItems.size+')';
+    selDelBtn.disabled=selectedItems.size===0;
+  }else{
+    selModeBtn.textContent='선택';
+    selModeBtn.classList.remove('on');
+    selDelBtn.style.display='none';
+  }
+}
+
+function buildItems(){
+  const list=$('#itemList'); list.innerHTML='';
+  const useImages=gameUsesImages();
+  state.items.forEach((it,i)=>{
+    const isSel=selectMode&&selectedItems.has(i);
+    const row=el('div','item'+(useImages?'':' no-image')+(isSel?' sel-selected':''));
+    const chkHtml=selectMode?`<input type="checkbox" class="sel-check"${isSel?' checked':''}>`:'' ;
+    row.innerHTML=chkHtml+`<span class="num">${i+1}</span>
+      ${useImages?(it.img?`<img class="thumb" src="${it.img}">`:`<button class="iconbtn" data-act="img" title="사진 넣기">🖼️</button>`):''}
+      <input type="text" value="${esc(it.text||'')}" placeholder="${useImages?'내용 또는 그림 이름':'내용'}">
+      ${useImages&&it.img?`<button class="iconbtn" data-act="imgdel" title="사진 삭제">↺</button>`:''}
+      ${selectMode?'':`<button class="iconbtn del" data-act="del" title="삭제">✕</button>`}`;
+    if(selectMode){
+      row.querySelector('.sel-check').onchange=function(){
+        if(this.checked) selectedItems.add(i); else selectedItems.delete(i);
+        row.classList.toggle('sel-selected',this.checked);
+        updateItemBar();
+      };
+    }
+    row.querySelector('input').oninput=e=>{state.items[i].text=e.target.value;renderStage();};
+    row.querySelectorAll('[data-act]').forEach(b=>{
+      b.onclick=()=>{
+        const a=b.dataset.act;
+        if(a==='del'){state.items.splice(i,1);buildItems();renderStage();}
+        else if(a==='imgdel'){state.items[i].img=null;buildItems();renderStage();}
+        else if(a==='img'){imgTargetIndex=i;$('#imgPicker').click();}
+      };
+    });
+    if(useImages&&it.img){ row.querySelector('.thumb').onclick=()=>{imgTargetIndex=i;$('#imgPicker').click();}; }
+    list.appendChild(row);
+  });
+  $('#itemCount').textContent=`총 ${state.items.length}개 항목${useImages?' · 사진 넣기 가능':' · 이 게임은 글자만 사용'}`;
+  updateItemBar();
+}
+
+/* 이미지 업로드 (base64, 리사이즈) */
+$('#imgPicker').onchange=function(){
+  const f=this.files[0]; if(!f||imgTargetIndex==null){this.value='';return;}
+  const r=new FileReader();
+  r.onload=e=>{
+    const img=new Image();
+    img.onload=()=>{
+      const max=900, sc=Math.min(1,max/Math.max(img.width,img.height));
+      const cv=document.createElement('canvas');
+      cv.width=img.width*sc; cv.height=img.height*sc;
+      cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
+      state.items[imgTargetIndex].img=cv.toDataURL('image/jpeg',0.82);
+      buildItems();renderStage();
+    };
+    img.src=e.target.result;
+  };
+  r.readAsDataURL(f); this.value='';
+};
+
+/* 붙여넣기 분석 */
+$('#btnParse').onclick=()=>{
+  const raw=$('#bulk').value;
+  const parsed=parseBulk(raw);
+  if(!parsed.length){alert('붙여넣은 내용이 없습니다.');return;}
+  // 기존 이미지가 있으면 텍스트만 교체하지 않고, 새 목록으로 대체할지 묻기
+  if(state.items.some(it=>it.img) && !confirm('새로 분석한 내용으로 목록을 바꿀까요? (넣어둔 사진은 사라집니다)')) return;
+  state.items=parsed;
+  buildItems(); renderStage();
+};
+$('#btnAddItem').onclick=()=>{state.items.push({text:'',img:null});buildItems();};
+
+/* 항목 관리 바 */
+document.getElementById('btnSelMode').onclick=function(){
+  selectMode=!selectMode;
+  if(!selectMode) selectedItems.clear();
+  buildItems();
+};
+document.getElementById('btnSelDel').onclick=function(){
+  if(!selectedItems.size) return;
+  const count=selectedItems.size;
+  if(!confirm(count+'개 항목을 삭제할까요?')) return;
+  state.items=state.items.filter((_,i)=>!selectedItems.has(i));
+  selectMode=false; selectedItems.clear();
+  buildItems(); renderStage();
+};
+document.getElementById('btnDelAll').onclick=function(){
+  if(!state.items.length) return;
+  if(!confirm('항목 '+state.items.length+'개를 모두 삭제할까요?')) return;
+  state.items=[]; selectMode=false; selectedItems.clear();
+  buildItems(); renderStage();
+};
+
+/* 렌더 */
+function renderStage(){
+  const g=GAMES[state.gameId]; if(!g)return;
+  applyTheme();
+  renderSalt=0;
+  const ctx={items:state.items,theme:state.theme,paper:state.paper,opts:state.opts};
+  let html;
+  try{ html=g.render(ctx); }catch(e){ html=`<div class="empty-note">미리보기 오류: ${esc(e.message)}</div>`; }
+  $('#stage').innerHTML=html;
+  requestAnimationFrame(()=>{scalePages(); if(state.gameId==='snake') bindSnakeDecals();});
+}
+$('#btnRefresh').onclick=()=>{state.seed=newSeed();renderStage();};
+window.addEventListener('resize',()=>scalePages());
+
+/* 인쇄 */
+$('#btnPrint').onclick=()=>{
+  const p=PAPER[state.paper];
+  let st=document.getElementById('printSize');
+  if(!st){st=document.createElement('style');st.id='printSize';document.head.appendChild(st);}
+  st.textContent=`@media print{@page{size:${p.w}mm ${p.h}mm;margin:0}}`;
+  // scalePages()가 인라인으로 적용한 transform/marginBottom을 인쇄 전 초기화
+  document.querySelectorAll('#stage .page').forEach(pg=>{
+    pg.style.transform='none';
+    pg.style.marginBottom='0';
+  });
+  const oldTitle=document.title;
+  document.title=getPrintTitle();
+  window.print();
+  document.title=oldTitle;
+  // 인쇄 후 다시 스케일 복원
+  scalePages();
+};
+
+function getPrintTitle(){
+  const g=GAMES[state.gameId];
+  if(!g) return document.title;
+  if(state.gameId==='dobble'){
+    const n=dobbleN(state), sym=n*n+n+1;
+    if((state.opts.view||'cards')==='template') return '도블 그림칸 도안 · '+sym+'칸';
+    return '도블 · '+sym+'장';
+  }
+  return (g.name||document.title);
+}
+
+/* 게임 열기 / 홈 */
+function openGame(id){
+  state.gameId=id;
+  state.opts=Object.assign({},GAMES[id].defOpts||{});
+  state.seed=newSeed();
+  $('#home').style.display='none';
+  $('#editor').classList.add('active');
+  $('#stageTitle').textContent=GAMES[id].emoji+' '+GAMES[id].name;
+  buildThemeRow();buildPaperRow();buildOpts();buildItems();renderStage();
+  window.scrollTo(0,0);
+}
+$('#btnHome').onclick=()=>{
+  $('#editor').classList.remove('active');
+  $('#home').style.display='block';
+};
+
+/* 저장 / 불러오기 (JSON 파일) */
+$('#btnSave').onclick=()=>{
+  if(!state.gameId){alert('먼저 게임을 선택하세요.');return;}
+  const data=JSON.stringify({gameId:state.gameId,theme:state.theme,paper:state.paper,opts:state.opts,items:state.items});
+  const blob=new Blob([data],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`보드게임_${GAMES[state.gameId].name}.json`;
+  a.click();
+};
+$('#btnLoad').onclick=()=>$('#loadPicker').click();
+$('#loadPicker').onchange=function(){
+  const f=this.files[0]; if(!f)return;
+  const r=new FileReader();
+  r.onload=e=>{
+    try{
+      const d=JSON.parse(e.target.result);
+      if(!GAMES[d.gameId])throw new Error('알 수 없는 게임');
+      state.gameId=d.gameId;state.theme=THEMES.some(t=>t.id===d.theme)?d.theme:'peach';state.paper=d.paper||'A4';
+      state.opts=d.opts||{};state.items=d.items||[];state.seed=newSeed();
+      $('#home').style.display='none';$('#editor').classList.add('active');
+      $('#stageTitle').textContent=GAMES[d.gameId].emoji+' '+GAMES[d.gameId].name;
+      buildThemeRow();buildPaperRow();buildOpts();buildItems();renderStage();
+    }catch(err){alert('불러오기 실패: '+err.message);}
+  };
+  r.readAsText(f); this.value='';
+};
+
+/* init */
+buildHome();
+</script>
+<!-- 교체/추가 모달 -->
+<div id="scanSizeModal" style="display:none" role="dialog" aria-modal="true">
+  <div class="modal-overlay">
+    <div class="modal-box">
+      <p>몇 칸 도안을 스캔하셨나요?</p>
+      <div class="modal-btns">
+        <button class="mbtn-replace" id="scanBtn57">57칸 (어려움)</button>
+        <button class="mbtn-append" id="scanBtn31">31칸 (보통)</button>
+        <button class="mbtn-cancel" id="scanBtn13">13칸 (쉬움)</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="replaceModal" style="display:none" role="dialog" aria-modal="true">
+  <div class="modal-overlay">
+    <div class="modal-box">
+      <p id="modalMsg"></p>
+      <div class="modal-btns">
+        <button class="mbtn-replace" id="modalBtnReplace">덮어쓰기</button>
+        <button class="mbtn-append" id="modalBtnAppend">추가하기</button>
+        <button class="mbtn-cancel" id="modalBtnCancel">취소</button>
+      </div>
+    </div>
+  </div>
+</div>
 </body>
 </html>

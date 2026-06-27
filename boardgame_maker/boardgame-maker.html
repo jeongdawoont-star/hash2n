@@ -153,9 +153,9 @@ input:focus,textarea:focus,select:focus{outline:none;border-color:var(--brand);b
 .ladder .lbl{font-size:11px;font-weight:700}
 
 /* dobble */
-.dobble-card{border:2px solid var(--t2);border-radius:50%;aspect-ratio:1/1;position:relative;background:#fff;overflow:hidden}
-.dobble-card .s{position:absolute;transform-origin:center;display:flex;align-items:center;justify-content:center;text-align:center;line-height:1}
-.dobble-card .s img{max-width:100%;max-height:100%;object-fit:contain}
+.dobble-card{border-radius:50%;aspect-ratio:1/1;position:relative;background:#fff;overflow:hidden}
+.dobble-card .s{position:absolute;transform-origin:center;display:flex;align-items:center;justify-content:center;text-align:center;line-height:1;border-radius:50%;overflow:hidden}
+.dobble-card .s img{width:100%;height:100%;object-fit:contain}
 
 /* halli galli */
 .halli-card{border:2px solid var(--t2);border-radius:10px;aspect-ratio:2/3;display:flex;flex-wrap:wrap;align-content:center;justify-content:center;gap:4%;padding:6%;background:#fff}
@@ -226,9 +226,9 @@ input:focus,textarea:focus,select:focus{outline:none;border-color:var(--brand);b
 .snake-cell .badge.up{color:#b45309}.snake-cell .badge.dn{color:#15803d}
 
 /* 도블 — 그림 최대 크기 (컨테이너 쿼리) */
-.dobble-card{container-type:size;border:3px solid var(--t2);box-shadow:0 3px 9px rgba(0,0,0,.14);background:#fff;border-radius:50%}
-.dobble-card .s{display:flex;align-items:center;justify-content:center;text-align:center;line-height:1}
-.dobble-card .s .media{width:100%;height:100%;object-fit:contain}
+.dobble-card{container-type:size;border:none;box-shadow:0 3px 9px rgba(0,0,0,.14);background:#fff;border-radius:50%}
+.dobble-card .s{display:flex;align-items:center;justify-content:center;text-align:center;line-height:1;border-radius:50%;overflow:hidden}
+.dobble-card .s .media{width:100%;height:100%;object-fit:cover}
 .dobble-card .dtxt{font-size:.62em;line-height:1.05;word-break:keep-all;color:var(--t-ink);font-weight:800}
 .dobble-card .demoji{line-height:1}
 
@@ -520,7 +520,7 @@ input:focus,textarea:focus,select:focus{box-shadow:0 0 0 3px rgba(37,99,235,.14)
 .ladder-start{filter:drop-shadow(0 2px 2px rgba(15,23,42,.12))}
 .ladder-result{fill:#fff;stroke:var(--t2);stroke-width:2}
 .ladder-result-text{font-size:14px;font-weight:800;fill:var(--t-ink)}
-.dobble-card{border-width:2.4px;box-shadow:none}
+.dobble-card{border:none;box-shadow:none}
 .dobble-card .dtxt{font-weight:900;color:#111827;overflow-wrap:anywhere}
 .halli-card,.mem-card,.money,.miss,.flash{border-radius:8px;box-shadow:none}
 .halli-card{gap:3%;padding:7%}
@@ -1750,7 +1750,10 @@ reg({
       const lay=dobbleLayout(card.length);
       let inner='';
       card.forEach((symId,k)=>{
-        const Lp=lay[k], rot=Math.floor(rotRng()*38-19);
+        const Lp=lay[k];
+        const it=c.items[symId];
+        const hasImg=it&&it.img;
+        const rot=Math.floor(rotRng()*(hasImg?16:38)-(hasImg?8:19));
         inner+=`<div class="s" style="left:${Lp.x}%;top:${Lp.y}%;width:${Lp.s}%;height:${Lp.s}%;transform:translate(-50%,-50%) rotate(${rot}deg);font-size:${(Lp.s*0.82).toFixed(1)}cqmin">${symHtml(symId)}</div>`;
       });
       return `<div class="dobble-card cut">${inner}</div>`;
