@@ -1,0 +1,11 @@
+{
+  "name": "betedu — 불법도박 예방 교육",
+  "short_name": "betedu",
+  "description": "불법 스포츠 도박의 위험성을 체험하는 교육용 시뮬레이션",
+  "display": "fullscreen",
+  "orientation": "portrait",
+  "background_color": "#0b1221",
+  "theme_color": "#0b1221",
+  "start_url": ".",
+  "icons": []
+}

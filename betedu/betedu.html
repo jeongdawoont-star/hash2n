@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#0b1221">
+  <title>betedu — 불법도박 예방 교육</title>
+  <link rel="manifest" href="manifest.json">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; background: #0b1221; overflow-x: hidden; }
+    #root { min-height: 100%; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    // ─────────────────────────────────────────────────────
+    // 실경기 데이터베이스 (2022~2025 시즌 결과 스크랩)
+    // ─────────────────────────────────────────────────────
+
+    const UCL_DB = [
+      { home:"파리 생제르맹",   away:"인터 밀란",      league:"챔피언스리그", note:"24-25 결승", oddsHome:2.10, oddsDraw:3.50, oddsAway:3.40, result:"home", score:"5-0" },
+      { home:"맨체스터 시티",   away:"레알 마드리드",  league:"챔피언스리그", note:"22-23 4강",  oddsHome:1.70, oddsDraw:4.00, oddsAway:4.50, result:"home", score:"4-0" },
+      { home:"나폴리",          away:"리버풀",         league:"챔피언스리그", note:"22-23 조별", oddsHome:2.60, oddsDraw:3.60, oddsAway:2.50, result:"home", score:"4-1" },
+      { home:"아스널",          away:"레알 마드리드",  league:"챔피언스리그", note:"24-25 8강",  oddsHome:2.30, oddsDraw:3.50, oddsAway:2.90, result:"home", score:"3-0" },
+      { home:"도르트문트",      away:"바르셀로나",     league:"챔피언스리그", note:"24-25 8강",  oddsHome:3.20, oddsDraw:3.80, oddsAway:2.10, result:"home", score:"3-1" },
+      { home:"인터 밀란",       away:"바이에른 뮌헨",  league:"챔피언스리그", note:"24-25 8강",  oddsHome:3.00, oddsDraw:3.50, oddsAway:2.30, result:"draw", score:"2-2" },
+      { home:"아스톤 빌라",     away:"파리 생제르맹",  league:"챔피언스리그", note:"24-25 8강",  oddsHome:3.40, oddsDraw:3.70, oddsAway:2.00, result:"home", score:"3-2" },
+      { home:"레알 마드리드",   away:"파리 생제르맹",  league:"챔피언스리그", note:"21-22 16강", oddsHome:2.20, oddsDraw:3.60, oddsAway:3.00, result:"home", score:"3-1" },
+      { home:"레알 마드리드",   away:"도르트문트",     league:"챔피언스리그", note:"23-24 결승", oddsHome:1.90, oddsDraw:3.70, oddsAway:3.90, result:"home", score:"2-0" },
+      { home:"맨체스터 시티",   away:"인터 밀란",      league:"챔피언스리그", note:"22-23 결승", oddsHome:1.65, oddsDraw:3.70, oddsAway:5.50, result:"home", score:"1-0" },
+      { home:"레알 마드리드",   away:"리버풀",         league:"챔피언스리그", note:"21-22 결승", oddsHome:2.90, oddsDraw:3.30, oddsAway:2.40, result:"home", score:"1-0" },
+      { home:"바이에른 뮌헨",   away:"라치오",         league:"챔피언스리그", note:"23-24 16강", oddsHome:1.40, oddsDraw:4.80, oddsAway:7.00, result:"home", score:"3-0" },
+    ];
+
+    const KBO_DB = [
+      { home:"LG 트윈스",     away:"KT 위즈",       league:"KBO 리그", note:"23 시즌",  oddsHome:1.75, oddsAway:2.05, result:"home", score:"6-3" },
+      { home:"삼성 라이온즈", away:"KIA 타이거즈",  league:"KBO 리그", note:"24 시즌",  oddsHome:2.05, oddsAway:1.75, result:"away", score:"2-5" },
+      { home:"SSG 랜더스",    away:"두산 베어스",   league:"KBO 리그", note:"23 시즌",  oddsHome:1.85, oddsAway:1.95, result:"away", score:"4-7" },
+      { home:"NC 다이노스",   away:"키움 히어로즈", league:"KBO 리그", note:"24 시즌",  oddsHome:1.70, oddsAway:2.10, result:"home", score:"5-3" },
+      { home:"한화 이글스",   away:"롯데 자이언츠", league:"KBO 리그", note:"25 시즌",  oddsHome:1.90, oddsAway:1.90, result:"home", score:"8-6" },
+      { home:"KT 위즈",       away:"삼성 라이온즈", league:"KBO 리그", note:"24 시즌",  oddsHome:1.95, oddsAway:1.85, result:"away", score:"1-2" },
+      { home:"KIA 타이거즈",  away:"두산 베어스",   league:"KBO 리그", note:"24 시즌",  oddsHome:1.65, oddsAway:2.20, result:"home", score:"9-4" },
+      { home:"한화 이글스",   away:"NC 다이노스",   league:"KBO 리그", note:"25 시즌",  oddsHome:1.95, oddsAway:1.85, result:"away", score:"5-7" },
+      { home:"SSG 랜더스",    away:"KT 위즈",       league:"KBO 리그", note:"22 시즌",  oddsHome:1.80, oddsAway:2.00, result:"home", score:"6-3" },
+      { home:"롯데 자이언츠", away:"키움 히어로즈", league:"KBO 리그", note:"23 시즌",  oddsHome:1.88, oddsAway:1.92, result:"home", score:"5-4" },
+      { home:"LG 트윈스",     away:"한화 이글스",   league:"KBO 리그", note:"25 시즌",  oddsHome:1.60, oddsAway:2.30, result:"home", score:"10-2" },
+      { home:"키움 히어로즈", away:"두산 베어스",   league:"KBO 리그", note:"22 시즌",  oddsHome:2.10, oddsAway:1.72, result:"home", score:"3-1" },
+    ];
+
+    const NBA_DB = [
+      { home:"오클라호마시티 썬더", away:"인디애나 페이서스",   league:"NBA", note:"24-25 파이널 G7", oddsHome:1.55, oddsAway:2.45, result:"home", score:"103-91" },
+      { home:"인디애나 페이서스",   away:"오클라호마시티 썬더", league:"NBA", note:"24-25 파이널 G1", oddsHome:2.60, oddsAway:1.50, result:"home", score:"111-110" },
+      { home:"오클라호마시티 썬더", away:"인디애나 페이서스",   league:"NBA", note:"24-25 파이널 G2", oddsHome:1.50, oddsAway:2.60, result:"home", score:"123-107" },
+      { home:"보스턴 셀틱스",       away:"댈러스 매버릭스",     league:"NBA", note:"23-24 파이널 G1", oddsHome:1.45, oddsAway:2.80, result:"home", score:"107-89" },
+      { home:"댈러스 매버릭스",     away:"보스턴 셀틱스",       league:"NBA", note:"23-24 파이널 G4", oddsHome:2.10, oddsAway:1.72, result:"home", score:"122-84" },
+      { home:"덴버 너기츠",         away:"마이애미 히트",       league:"NBA", note:"22-23 파이널 G1", oddsHome:1.50, oddsAway:2.60, result:"home", score:"104-93" },
+      { home:"마이애미 히트",       away:"덴버 너기츠",         league:"NBA", note:"22-23 파이널 G2", oddsHome:2.20, oddsAway:1.68, result:"home", score:"111-108" },
+      { home:"보스턴 셀틱스",       away:"골든스테이트 워리어스", league:"NBA", note:"21-22 파이널 G6", oddsHome:1.80, oddsAway:2.00, result:"away", score:"90-103" },
+      { home:"LA 레이커스",         away:"덴버 너기츠",         league:"NBA", note:"23-24 정규",      oddsHome:1.95, oddsAway:1.85, result:"home", score:"119-108" },
+      { home:"밀워키 벅스",         away:"보스턴 셀틱스",       league:"NBA", note:"23-24 정규",      oddsHome:2.05, oddsAway:1.75, result:"home", score:"116-110" },
+      { home:"필라델피아 76ers",    away:"뉴욕 닉스",           league:"NBA", note:"24-25 정규",      oddsHome:1.90, oddsAway:1.90, result:"away", score:"105-112" },
+      { home:"클리블랜드 캐벌리어스", away:"인디애나 페이서스",  league:"NBA", note:"24-25 정규",      oddsHome:1.60, oddsAway:2.30, result:"home", score:"120-114" },
+    ];
+
+    const KOVO_DB = [
+      { home:"현대캐피탈",     away:"대한항공",       league:"V-리그 남", note:"24-25 챔프", oddsHome:1.95, oddsAway:1.85, result:"home", score:"3-0" },
+      { home:"흥국생명",       away:"정관장",         league:"V-리그 여", note:"24-25 챔프", oddsHome:1.65, oddsAway:2.25, result:"home", score:"3-1" },
+      { home:"한국도로공사",   away:"흥국생명",       league:"V-리그 여", note:"22-23 챔프", oddsHome:2.20, oddsAway:1.68, result:"home", score:"3-2" },
+      { home:"대한항공",       away:"우리카드",       league:"V-리그 남", note:"23-24 시즌", oddsHome:1.55, oddsAway:2.40, result:"home", score:"3-1" },
+      { home:"현대건설",       away:"흥국생명",       league:"V-리그 여", note:"23-24 챔프", oddsHome:1.85, oddsAway:1.95, result:"home", score:"3-0" },
+      { home:"삼성화재",       away:"OK저축은행",     league:"V-리그 남", note:"24-25 시즌", oddsHome:2.05, oddsAway:1.75, result:"away", score:"2-3" },
+      { home:"GS칼텍스",       away:"IBK기업은행",    league:"V-리그 여", note:"23-24 시즌", oddsHome:1.90, oddsAway:1.90, result:"home", score:"3-2" },
+      { home:"우리카드",       away:"한국전력",       league:"V-리그 남", note:"24-25 시즌", oddsHome:1.60, oddsAway:2.30, result:"home", score:"3-1" },
+      { home:"KB손해보험",     away:"현대캐피탈",     league:"V-리그 남", note:"24-25 시즌", oddsHome:2.40, oddsAway:1.55, result:"away", score:"1-3" },
+      { home:"정관장",         away:"페퍼저축은행",   league:"V-리그 여", note:"23-24 시즌", oddsHome:1.75, oddsAway:2.05, result:"home", score:"3-2" },
+      { home:"대한항공",       away:"삼성화재",       league:"V-리그 남", note:"23-24 시즌", oddsHome:1.45, oddsAway:2.70, result:"home", score:"3-0" },
+      { home:"현대건설",       away:"한국도로공사",   league:"V-리그 여", note:"24-25 시즌", oddsHome:1.80, oddsAway:2.00, result:"home", score:"3-1" },
+    ];
+
+    const SPORTS = {
+      soccer:     { ic:"⚽", short:"축구", label:"축구 · 챔피언스리그", hasDraw:true,  db:UCL_DB,  season:"22-25" },
+      baseball:   { ic:"⚾", short:"야구", label:"야구 · KBO 리그",     hasDraw:false, db:KBO_DB,  season:"22-25" },
+      basketball: { ic:"🏀", short:"농구", label:"농구 · NBA",          hasDraw:false, db:NBA_DB,  season:"22-25" },
+      volleyball: { ic:"🏐", short:"배구", label:"배구 · V-리그",       hasDraw:false, db:KOVO_DB, season:"22-25" },
+    };
+
+    const RECORD_CFG = {
+      soccer:     { hcap:1.5, total:2.5,   unit:"골" },
+      baseball:   { hcap:1.5, total:8.5,   unit:"점" },
+      basketball: { hcap:5.5, total:220.5, unit:"점" },
+      volleyball: { hcap:1.5, total:3.5,   unit:"세트" },
+    };
+
+    const TABS = [
+      { id:"soccer",       ic:"⚽", name:"축구토토",    sub:"챔스리그" },
+      { id:"baseball",     ic:"⚾", name:"야구토토",    sub:"KBO" },
+      { id:"basketball",   ic:"🏀", name:"농구토토",    sub:"NBA" },
+      { id:"volleyball",   ic:"🏐", name:"배구토토",    sub:"V-리그" },
+      { id:"proto_win",    ic:"🎯", name:"프로토 승부식", sub:"승·무·패" },
+      { id:"proto_record", ic:"📊", name:"프로토 기록식", sub:"핸디·U/O" },
+    ];
+
+    function pickN(arr, n) { return [...arr].sort(()=>Math.random()-0.5).slice(0, n); }
+    function allDB() {
+      return Object.entries(SPORTS).flatMap(([k,v]) => v.db.map(m=>({ ...m, sport:k })));
+    }
+    function buildMatches(tab) {
+      let pool, n = 8;
+      if (SPORTS[tab]) pool = SPORTS[tab].db.map(m=>({ ...m, sport:tab }));
+      else { pool = allDB(); if (tab === "proto_record") n = 6; }
+      return pickN(pool, n).map((m,i)=>({ ...m, id:i }));
+    }
+
+    function parseScore(s) { const [h,a] = String(s).split("-").map(Number); return { h, a, total:h+a }; }
+
+    function recordOptions(m) {
+      const cfg = RECORD_CFG[m.sport] || RECORD_CFG.soccer;
+      const { h, a, total } = parseScore(m.score);
+      return [
+        { key:"hc_home", short:`핸디 -${cfg.hcap} 홈`,   label:`핸디 -${cfg.hcap} ${m.home}`, odds:1.95, win:(h-cfg.hcap)>a },
+        { key:"hc_away", short:`핸디 +${cfg.hcap} 원정`, label:`핸디 +${cfg.hcap} ${m.away}`, odds:1.85, win:(a+cfg.hcap)>h },
+        { key:"under",   short:`언더 ${cfg.total}`,       label:`언더 ${cfg.total}${cfg.unit}`, odds:1.90, win: total<cfg.total },
+        { key:"over",    short:`오버 ${cfg.total}`,       label:`오버 ${cfg.total}${cfg.unit}`, odds:1.90, win: total>cfg.total },
+      ];
+    }
+    function winOptions(m, hasDraw) {
+      const base = [{ key:"home", short:"홈 승", label:`${m.home} 승`, sub:m.home, odds:m.oddsHome, color:"#3b82f6" }];
+      if (hasDraw) base.push({ key:"draw", short:"무승부", label:"무승부", sub:"Draw", odds:m.oddsDraw, color:"#a855f7" });
+      base.push({ key:"away", short:"원정 승", label:`${m.away} 승`, sub:m.away, odds:m.oddsAway, color:"#f87171" });
+      return base;
+    }
+    function getOpts(m, betMode) { return betMode === "record" ? recordOptions(m) : winOptions(m, SPORTS[m.sport]?.hasDraw); }
+    function getSel(m, betMode, key) { return getOpts(m, betMode).find(o=>o.key===key); }
+    function selWin(m, betMode, key) { const o=getSel(m,betMode,key); if(!o) return false; return betMode==="record" ? o.win : (key===m.result); }
+
+    const FAKE_INFO = {
+      name:   "김○○",
+      birth:  "070315",
+      ssn:    "*●●●●●●",
+      phone:  "010-9XXX-XXXX",
+      bank:   "카카오뱅크 3333-XX-XXXXXX",
+      addr:   "서울특별시 ○○구 ○○로 XX번길",
+    };
+
+    const INITIAL_MONEY  = 100000;
+    const BONUS_MONEY    = 100000;
+    const HOUSE_EDGE     = 0.15;
+    const WIN_BIAS_EARLY = 0.64;
+    const WIN_BIAS_LATE  = 0.33;
+    const MAX_FOLD       = 5;
+
+    const TEMPT_WIN  = ["🔥 역시 안목이 다르시네요! 이 정도 실력이면 오늘 대박 나겠는데요?","💎 연속 적중! 당신의 예측 본능은 남다릅니다. 배당 더 올려보세요!","🚀 승부사 기질이 느껴집니다. 지금이 바로 기회입니다!","🎯 완벽한 픽! 지금 배팅 올리면 어떨까요?","💰 잘 나갈 때 크게 가야죠! 지금 흐름 완전 당신 편입니다!","⚡ 오늘 운이 터진 날입니다. 이런 날 놓치면 후회해요!","🏆 이 정도면 전업으로 해도 되겠는데요?"];
+    const TEMPT_LOSS = ["😤 이건 진짜 억울하죠? 다음엔 반드시 맞습니다. 한 번 더!","🎰 통계적으로 이쯤에서 반드시 맞아야 할 타이밍입니다!","💪 손실은 일시적, 수익은 영원합니다. 포기하면 안 되죠!","🔄 여기서 그만두면 손해만 확정입니다. 한 번 더 도전해보세요!","📊 배당이 이렇게 높은데 안 할 이유가 없죠. 만회 찬스!","🎲 지금까지 잃은 거 한 방에 되찾을 수 있어요!","⚽ 이번엔 100% 확신합니다. 전문가들도 다 이쪽으로 봐요!"];
+    const TEMPT_BROKE= ["💳 조금만 더 충전하면 바로 만회할 수 있어요. 이번엔 진짜예요!","🔥 지금이 가장 중요한 타이밍! 포기는 패배자나 하는 겁니다!","💡 고수들은 다 이 순간을 견뎌냈어요. 당신도 할 수 있어요!"];
+
+    const CASHOUT_MSGS = {
+      big_plus:    ["잘 빠져나왔다고 생각하죠?\n실제 도박에선 이 돈을 들고 나올 수 있는 사람이 100명 중 3명도 안 됩니다.","오늘은 운이 좋았을 뿐입니다.\n같은 금액으로 내일 다시 시작한다면 어떻게 될까요?"],
+      small_plus:  ["조금 벌었네요. 근데 여기서 멈출 수 있는 게 진짜 실력입니다.\n현실에서도 딱 이 순간에 그만둘 수 있나요?","소액 수익 상태에서 인출 — 실제 도박장에서는 이 화면이 존재하지 않습니다."],
+      even:        ["본전입니다. 시간과 에너지를 쓴 것치고 남은 게 없네요.","제자리입니다. 도박에 쓴 시간은 돌아오지 않습니다."],
+      small_minus: ["조금 잃었습니다. '이 정도면 괜찮아'라는 생각이 드나요?\n그 생각이 다음에 더 크게 잃는 이유입니다.","만회하고 싶은 마음이 드나요? 그게 중독의 시작입니다."],
+      big_minus:   ["많이 잃었네요. 실제였다면 지금 이 돈을 어떻게 메울 생각을 하고 있을까요?","큰 손실입니다. 현실에서 이 금액을 벌기 위해 얼마나 일해야 하는지 생각해보세요."],
+      bankrupt:    ["파산 상태에서 인출이요? 현실에서 도박 빚은 인간관계와 신용을 같이 가져갑니다.","잔액 0원. 현실에서 이 상황이었다면 지금 어디에 연락하고 있을까요?"],
+    };
+
+    const MISSIONS = [
+      { type:"pattern",    title:"숫자 패턴 기억", desc:"아래 12자리 숫자를 5초간 기억하고 정확히 입력하세요.", generate:()=>Array.from({length:12},()=>Math.floor(Math.random()*10)).join("") },
+      { type:"typing",     title:"문장 따라치기",  desc:"아래 문장을 오타 없이 정확히 입력하세요.",             generate:()=>["나는 지금 가상 도박 시뮬레이션을 하고 있습니다","도박으로 잃은 돈은 거의 대부분 돌아오지 않습니다","지금 내가 느끼는 감정이 도박 중독의 시작점입니다","이 가상의 돈을 실제로 벌려면 며칠이나 걸렸을까요"][Math.floor(Math.random()*4)] },
+      { type:"math",       title:"계산 문제 5개",  desc:"아래 5문제를 모두 맞혀야 5만원이 충전됩니다.",          generate:()=>Array.from({length:5},()=>{const a=Math.floor(Math.random()*60)+10,b=Math.floor(Math.random()*60)+10,op=["+","-","×"][Math.floor(Math.random()*3)];return{q:`${a} ${op} ${b} = ?`,answer:op==="+"?a+b:op==="-"?a-b:a*b};}) },
+      { type:"reflection", title:"반성문 작성",    desc:"\"이 가상의 돈을 실제 생활에서 어떻게 벌 수 있을지\" 50자 이상 써야 충전됩니다.", generate:()=>null },
+    ];
+
+    const fmt      = n => n.toLocaleString("ko-KR")+"원";
+    const randFrom = arr => arr[Math.floor(Math.random()*arr.length)];
+
+    const CASHOUT_LESSONS = {
+      big_plus:    "지금 '잘 빠져나왔다'는 느낌이 가장 위험합니다. 큰 수익의 기억은 뇌에 강하게 각인되어, 다음에 더 크게 베팅하게 만드는 미끼가 됩니다. 오늘 멈출 수 있어야 진짜 승자입니다.",
+      small_plus:  "딱 여기서 멈추는 것이 진짜 실력입니다. '조금 더'를 누르는 순간, 당신의 수익률은 시장의 평균값(마이너스)으로 끌려갑니다.",
+      even:        "본전처럼 보이지만, 쏟은 시간과 감정은 이미 지불했습니다. 도박에서 '0'은 사실 운이 좋은 축에 속합니다.",
+      small_minus: "'이 정도면 만회할 수 있어'라는 생각 — 바로 그 생각이 다음에 더 크게 잃게 만드는 손실 추격(loss chasing)의 시작입니다.",
+      big_minus:   "이 손실을 메우려 다시 베팅하면 손실 추격이 본격화됩니다. 이는 도박 중독의 핵심 작동 원리이며, 의지가 아니라 뇌의 보상회로 문제입니다.",
+      bankrupt:    "잔액 0은 끝이 아니라 빚의 시작점이 되곤 합니다. 현실에서 도박 빚은 신용과 인간관계까지 함께 무너뜨립니다.",
+    };
+
+    const CASHOUT_STATS = {
+      big_plus:    "장기적으로 수익을 내는 스포츠 베터는 단 3~5%. 즉 100명 중 약 95명은 1년 이상 기준으로 결국 돈을 잃습니다. (SportBot AI / BettorEdge, 2025)",
+      small_plus:  "−110 배당에선 승률 52.38%를 넘겨야 본전입니다. 프로 베터조차 승률 53~55%에 불과하고, 전체 계정의 1% 미만입니다. (Boyd's Bets, 2025)",
+      even:        "미국 스포츠북은 2024년 베팅액 약 1,498억 달러 중 137억 달러(9.3%)를 가져갔습니다. 그 차액이 곧 베터의 평균 기대손실입니다. (American Gaming Association, 2024)",
+      small_minus: "스포츠 베터 4명 중 1명이 베팅 때문에 공과금 납부를 놓친 경험이 있습니다. (U.S. News 2025 설문)",
+      big_minus:   "온라인 스포츠 베터의 18%가 생활비로 써야 할 돈까지 잃은 적이 있다고 답했습니다. (Siena College Research Institute, 2024)",
+      bankrupt:    "한국 성인 도박중독 유병률은 약 5.5%(추정 237만 명)로 영국(1.5%)·캐나다(1.6%)의 3배가 넘고, 학교 밖 청소년은 12.6%에 달합니다. (사행산업통합감독위원회, 2022)",
+    };
+
+    function cashoutKey(profit) {
+      return profit>=30000?"big_plus":profit>0?"small_plus":profit===0?"even":profit>=-30000?"small_minus":profit>-80000?"big_minus":"bankrupt";
+    }
+    function getCashoutInfo(profit) {
+      const key = cashoutKey(profit);
+      return { key, msg: randFrom(CASHOUT_MSGS[key]), lesson: CASHOUT_LESSONS[key], stat: CASHOUT_STATS[key] };
+    }
+
+    const TOP_NAV = ["게임구매","경기정보","적중결과","이벤트/혜택","마이페이지"];
+    function BrandTopBar() {
+      return (
+        <div>
+          <div style={{background:"#ffffff",padding:"9px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",borderBottom:"1px solid #e2e8f0"}}>
+            <div style={{fontStyle:"italic",fontWeight:900,fontSize:23,color:"#1a2942",letterSpacing:-1}}>
+              <span style={{borderBottom:"3px solid #e8456b",paddingBottom:1}}>bet</span>edu
+            </div>
+            <div style={{fontSize:10.5,color:"#64748b",display:"flex",gap:7,alignItems:"center"}}>
+              <span>로그인</span><span style={{color:"#cbd5e1"}}>|</span>
+              <span>회원가입</span><span style={{color:"#cbd5e1"}}>|</span>
+              <span>마이페이지</span>
+            </div>
+          </div>
+          <div style={{background:"#1b3a6b",display:"flex"}}>
+            {TOP_NAV.map((t,i)=>(
+              <div key={t} style={{flex:1,textAlign:"center",padding:"10px 0",fontSize:11,fontWeight:600,color:"#dbe4f0",borderRight:i<TOP_NAV.length-1?"1px solid rgba(255,255,255,0.08)":"none"}}>{t}</div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    function GameTabs({ active, onChange }) {
+      return (
+        <div style={{display:"flex",gap:6,overflowX:"auto",padding:"12px 16px 4px",WebkitOverflowScrolling:"touch"}}>
+          {TABS.map(t=>{
+            const on = active===t.id;
+            return (
+              <button key={t.id} onClick={()=>onChange(t.id)} style={{flex:"0 0 auto",minWidth:66,textAlign:"center",background:on?"rgba(27,79,156,0.28)":"rgba(255,255,255,0.04)",border:`1px solid ${on?"#3b82f6":"rgba(255,255,255,0.08)"}`,borderRadius:10,padding:"10px 8px",cursor:"pointer",color:"#e2e8f0"}}>
+                <div style={{fontSize:21,marginBottom:3}}>{t.ic}</div>
+                <div style={{fontSize:9.5,color:on?"#93c5fd":"#94a3b8",fontWeight:700,whiteSpace:"nowrap"}}>{t.name}</div>
+                <div style={{fontSize:8,color:"#475569",marginTop:1,whiteSpace:"nowrap"}}>{t.sub}</div>
+              </button>
+            );
+          })}
+        </div>
+      );
+    }
+
+    function PrivacyModal({ onAgree, onDecline }) {
+      const fields = [
+        { label:"이름",       value: FAKE_INFO.name,  delay: 0 },
+        { label:"주민번호",   value: `${FAKE_INFO.birth}-${FAKE_INFO.ssn}`, delay: 400 },
+        { label:"휴대폰",     value: FAKE_INFO.phone,  delay: 900 },
+        { label:"계좌번호",   value: FAKE_INFO.bank,   delay: 1400 },
+        { label:"주소",       value: FAKE_INFO.addr,   delay: 1900 },
+      ];
+
+      const [typed, setTyped]     = useState(fields.map(()=>""));
+      const [checks, setChecks]   = useState([false, false, false]);
+      const [done, setDone]       = useState(false);
+      const [showWarn, setShowWarn] = useState(false);
+      const rafRef = useRef([]);
+
+      useEffect(() => {
+        fields.forEach((f, fi) => {
+          const t = setTimeout(() => {
+            let i = 0;
+            const tick = () => {
+              i++;
+              setTyped(prev => { const n=[...prev]; n[fi]=f.value.slice(0,i); return n; });
+              if (i < f.value.length) rafRef.current[fi] = setTimeout(tick, 38 + Math.random()*30);
+              else if (fi === fields.length-1) setTimeout(()=>setDone(true), 300);
+            };
+            tick();
+          }, f.delay);
+          rafRef.current.push(t);
+        });
+        return () => rafRef.current.forEach(clearTimeout);
+      }, []);
+
+      const allChecked = checks.every(Boolean);
+
+      function handleAgree() { if (!allChecked) return; setShowWarn(true); }
+
+      if (showWarn) return (
+        <div style={overlayStyle}>
+          <div style={{...modalBox, border:"2px solid rgba(239,68,68,0.6)", maxWidth:400}}>
+            <div style={{fontSize:48, marginBottom:12, textAlign:"center"}}>🚨</div>
+            <h3 style={{fontSize:18, fontWeight:900, color:"#ef4444", textAlign:"center", marginBottom:16}}>
+              개인정보가 전송되었습니다
+            </h3>
+            <div style={{background:"rgba(239,68,68,0.1)", border:"1px solid rgba(239,68,68,0.25)", borderRadius:12, padding:16, marginBottom:16, fontSize:13, color:"#fca5a5", lineHeight:1.9}}>
+              <div style={{marginBottom:8}}>실제 불법 도박 사이트는 이 순간:</div>
+              {["📤 수집한 개인정보를 제3자에게 판매합니다","💳 계좌번호로 금융사기에 악용합니다","📱 보이스피싱·스미싱에 활용합니다","🔒 탈퇴해도 정보는 삭제되지 않습니다"].map(t=>(
+                <div key={t} style={{display:"flex", gap:8, marginBottom:4}}>
+                  <span style={{whiteSpace:"nowrap"}}>{t}</span>
+                </div>
+              ))}
+            </div>
+            <div style={{background:"rgba(245,158,11,0.08)", border:"1px solid rgba(245,158,11,0.2)", borderRadius:10, padding:12, marginBottom:20, fontSize:11, color:"#fde68a", lineHeight:1.7, textAlign:"center"}}>
+              ✅ 이 시뮬레이션에서 입력된 정보는<br/>
+              <strong>가짜이며 실제로 전송·저장되지 않았습니다.</strong><br/>
+              하지만 실제 사이트에서는 진짜입니다.
+            </div>
+            <button onClick={onAgree} style={{width:"100%", padding:"14px 0", fontSize:15, fontWeight:800, background:"linear-gradient(135deg,#f59e0b,#d97706)", color:"#000", border:"none", borderRadius:12, cursor:"pointer"}}>
+              경험했습니다 — 게임 시작 (200,000원)
+            </button>
+          </div>
+        </div>
+      );
+
+      return (
+        <div style={overlayStyle}>
+          <div style={{...modalBox, maxWidth:440}}>
+            <div style={{textAlign:"center", marginBottom:20}}>
+              <div style={{display:"inline-block", background:"linear-gradient(135deg,#f59e0b,#d97706)", borderRadius:10, padding:"6px 16px", fontSize:11, fontWeight:800, color:"#000", marginBottom:10}}>
+                🎁 첫 충전 100% 보너스 이벤트
+              </div>
+              <h3 style={{fontSize:18, fontWeight:900, color:"#fff", marginBottom:4}}>
+                100,000원 → <span style={{color:"#4ade80"}}>200,000원</span> 지급!
+              </h3>
+              <p style={{fontSize:12, color:"#64748b", lineHeight:1.6}}>
+                본인 확인 후 보너스 머니가 즉시 지급됩니다.<br/>
+                아래 정보를 확인하고 동의해주세요.
+              </p>
+            </div>
+
+            <div style={{background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:12, padding:16, marginBottom:16}}>
+              <div style={{fontSize:10, color:"#475569", marginBottom:12, letterSpacing:1}}>📋 본인 확인 정보</div>
+              {fields.map((f,i) => (
+                <div key={f.label} style={{display:"flex", alignItems:"center", gap:12, marginBottom:10, padding:"8px 10px", background:"rgba(255,255,255,0.03)", borderRadius:8}}>
+                  <span style={{fontSize:11, color:"#64748b", width:60, flexShrink:0}}>{f.label}</span>
+                  <span style={{fontSize:13, color: typed[i].length === f.value.length ? "#e2e8f0" : "#f59e0b", fontFamily:"monospace", flex:1, minHeight:18}}>
+                    {typed[i]}
+                    {typed[i].length < f.value.length && <span style={{animation:"blink 0.8s infinite", opacity:0.7}}>|</span>}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            <div style={{display:"flex", flexDirection:"column", gap:8, marginBottom:20, opacity: done ? 1 : 0.4, transition:"opacity 0.5s"}}>
+              {[
+                "개인정보 수집 및 이용에 동의합니다 (필수)",
+                "제3자 정보 제공에 동의합니다 (필수)",
+                "마케팅·광고성 정보 수신에 동의합니다 (필수)",
+              ].map((label, i) => (
+                <label key={i} style={{display:"flex", alignItems:"flex-start", gap:10, cursor: done ? "pointer" : "default", padding:"8px 12px", background: checks[i] ? "rgba(59,130,246,0.1)" : "rgba(255,255,255,0.03)", border:`1px solid ${checks[i] ? "rgba(59,130,246,0.3)" : "rgba(255,255,255,0.08)"}`, borderRadius:8, transition:"all 0.15s"}}>
+                  <input type="checkbox" checked={checks[i]} disabled={!done}
+                    onChange={()=>{ const n=[...checks]; n[i]=!n[i]; setChecks(n); }}
+                    style={{width:16, height:16, marginTop:1, accentColor:"#3b82f6", cursor: done ? "pointer" : "default", flexShrink:0}}/>
+                  <span style={{fontSize:12, color: checks[i] ? "#93c5fd" : "#64748b", lineHeight:1.5}}>{label}</span>
+                </label>
+              ))}
+            </div>
+
+            <div style={{display:"flex", gap:10}}>
+              <button onClick={onDecline} style={{flex:1, padding:"13px 0", fontSize:13, fontWeight:600, background:"rgba(255,255,255,0.05)", color:"#64748b", border:"1px solid rgba(255,255,255,0.1)", borderRadius:10, cursor:"pointer"}}>
+                동의 안 함<br/><span style={{fontSize:10, color:"#475569"}}>(100,000원만 지급)</span>
+              </button>
+              <button onClick={handleAgree} disabled={!allChecked}
+                style={{flex:2, padding:"13px 0", fontSize:14, fontWeight:800, background: allChecked ? "linear-gradient(135deg,#22c55e,#16a34a)" : "rgba(255,255,255,0.06)", color: allChecked ? "#fff" : "#475569", border:"none", borderRadius:10, cursor: allChecked ? "pointer" : "default", transition:"all 0.2s", boxShadow: allChecked ? "0 4px 16px rgba(34,197,94,0.4)" : "none"}}>
+                모두 동의하고 지급받기<br/><span style={{fontSize:12, color: allChecked ? "#86efac" : "#334155"}}>+100,000원 보너스 즉시 지급</span>
+              </button>
+            </div>
+
+            {!done && (
+              <p style={{textAlign:"center", fontSize:10, color:"#334155", marginTop:10}}>
+                정보 확인 중... 잠시 후 동의 버튼이 활성화됩니다
+              </p>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    const overlayStyle = {position:"fixed", inset:0, background:"rgba(0,0,0,0.92)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:200, padding:20, overflowY:"auto"};
+    const modalBox     = {background:"#0f1923", borderRadius:20, padding:24, width:"100%", border:"1px solid rgba(255,255,255,0.1)"};
+
+    function FireworksCanvas({ active }) {
+      const cvRef=useRef(null); const animRef=useRef(null); const pts=useRef([]);
+      useEffect(()=>{
+        if(!active) return;
+        const cv=cvRef.current; if(!cv) return;
+        const ctx=cv.getContext("2d"); cv.width=cv.offsetWidth; cv.height=cv.offsetHeight;
+        let t=0;
+        function burst(x,y){const cols=["#f59e0b","#ef4444","#4ade80","#3b82f6","#a855f7","#ec4899","#fff"];for(let i=0;i<24;i++){const a=(Math.PI*2/24)*i,sp=3+Math.random()*4;pts.current.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,color:randFrom(cols),life:1,decay:0.018+Math.random()*0.012,size:3+Math.random()*3});}}
+        function loop(){ctx.clearRect(0,0,cv.width,cv.height);t++;if(t%18===0)burst(cv.width*0.2+Math.random()*cv.width*0.6,cv.height*0.1+Math.random()*cv.height*0.5);pts.current=pts.current.filter(p=>p.life>0);pts.current.forEach(p=>{ctx.save();ctx.globalAlpha=p.life;ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);ctx.fill();ctx.restore();p.x+=p.vx;p.y+=p.vy;p.vy+=0.12;p.life-=p.decay;});animRef.current=requestAnimationFrame(loop);}
+        loop(); return()=>{cancelAnimationFrame(animRef.current);pts.current=[];};
+      },[active]);
+      if(!active) return null;
+      return <canvas ref={cvRef} style={{position:"absolute",inset:0,width:"100%",height:"100%",pointerEvents:"none",borderRadius:20}}/>;
+    }
+
+    function SoccerAnim({ win }) {
+      const [bx,setBx]=useState(50); const [dir,setDir]=useState(1); const fr=useRef(0);
+      useEffect(()=>{ const id=setInterval(()=>{fr.current++;if(fr.current%40===0)setDir(d=>-d);setBx(x=>{const nx=x+dir*2.5;return nx>90?90:nx<10?10:nx;});},30); return()=>clearInterval(id); },[dir]);
+      const bounce=Math.abs(Math.sin(fr.current*0.18)*6);
+      return (
+        <div style={{position:"relative",width:"100%",height:80,marginBottom:4}}>
+          <div style={{position:"absolute",left:4,top:8,width:7,height:52,background:"#94a3b8",borderRadius:4}}/>
+          <div style={{position:"absolute",left:4,top:8,width:46,height:7,background:"#94a3b8",borderRadius:4}}/>
+          <div style={{position:"absolute",right:4,top:8,width:7,height:52,background:"#94a3b8",borderRadius:4}}/>
+          <div style={{position:"absolute",right:4,top:8,width:46,height:7,background:"#94a3b8",borderRadius:4}}/>
+          <div style={{position:"absolute",bottom:4+bounce,left:`${bx}%`,transform:"translateX(-50%)",fontSize:26,filter:win?"drop-shadow(0 0 8px #f59e0b)":"none"}}>⚽</div>
+          {win&&<div style={{position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",fontSize:10,fontWeight:800,color:"#f59e0b",letterSpacing:2,whiteSpace:"nowrap"}}>⚡ GOAL! ⚡</div>}
+        </div>
+      );
+    }
+
+    function App() {
+      const [screen,setScreen]         = useState("intro");
+      const [showPrivacy,setShowPrivacy] = useState(false);
+      const [bonusGranted,setBonusGranted] = useState(false);
+      const [money,setMoney]           = useState(INITIAL_MONEY);
+      const [round,setRound]           = useState(0);
+      const [totalBet,setTotalBet]     = useState(0);
+      const [history,setHistory]       = useState([]);
+      const [activeTab,setActiveTab]   = useState("soccer");
+      const [betMode,setBetMode]       = useState("win");
+      const [matches,setMatches]       = useState(()=>buildMatches("soccer"));
+      const [selections,setSelections] = useState({});
+      const [betAmount,setBetAmount]   = useState(10000);
+      const [showResult,setShowResult] = useState(null);
+      const [temptMsg,setTemptMsg]     = useState(null);
+      const [reviveCount,setReviveCount] = useState(0);
+      const [missionState,setMissionState] = useState(null);
+      const [missionInput,setMissionInput] = useState("");
+      const [missionPhase,setMissionPhase] = useState("show");
+      const [missionTimer,setMissionTimer] = useState(5);
+      const [mathAnswers,setMathAnswers]   = useState([]);
+      const [cashoutMsg,setCashoutMsg]     = useState(null);
+      const timerRef = useRef(null);
+
+      const totalCharged  = INITIAL_MONEY + (bonusGranted ? BONUS_MONEY : 0) + reviveCount*50000;
+      const totalLoss     = totalCharged - money;
+      const currentProfit = money - totalCharged;
+      const danger        = money < INITIAL_MONEY*0.3;
+
+      function startGame() { setScreen("game"); setShowPrivacy(true); }
+
+      function handlePrivacyAgree() { setBonusGranted(true); setMoney(INITIAL_MONEY + BONUS_MONEY); setShowPrivacy(false); }
+      function handlePrivacyDecline() { setBonusGranted(false); setMoney(INITIAL_MONEY); setShowPrivacy(false); }
+
+      function changeTab(tab) {
+        setActiveTab(tab);
+        setBetMode(tab === "proto_record" ? "record" : "win");
+        setMatches(buildMatches(tab));
+        setSelections({});
+      }
+
+      function toggleSel(mid, key) {
+        setSelections(prev=>{
+          const next={...prev};
+          if(next[mid]===key){delete next[mid];}
+          else{if(Object.keys(next).length>=MAX_FOLD&&!next[mid])return prev;next[mid]=key;}
+          return next;
+        });
+      }
+      const foldCount = Object.keys(selections).length;
+      const totalOdds = Object.entries(selections).reduce((acc,[mid,key])=>{
+        const m=matches.find(x=>x.id===Number(mid));if(!m)return acc;
+        const o=getSel(m,betMode,key);return acc*(o?o.odds:1);
+      },1);
+
+      function placeBet() {
+        if(foldCount===0||betAmount<=0||betAmount>money)return;
+        const folds=Object.entries(selections).map(([mid,key])=>{
+          const m=matches.find(x=>x.id===Number(mid));
+          const o=getSel(m,betMode,key);
+          const win=selWin(m,betMode,key);
+          const sp=SPORTS[m.sport];
+          const actualLabel = betMode==="record"
+            ? `합계 ${parseScore(m.score).total}${RECORD_CFG[m.sport]?.unit||""}`
+            : (m.result==="home"?`${m.home} 승`:m.result==="draw"?"무승부":`${m.away} 승`);
+          return{match:`${m.home} vs ${m.away}`, ic:sp?.ic||"⚽", bet:o?o.label:key, odds:o?o.odds:1, win, realScore:m.score, actualLabel};
+        });
+        const allWin=folds.every(f=>f.win);
+        const profit=allWin?Math.floor(betAmount*totalOdds)-betAmount:-betAmount;
+        const nm=money+profit;
+        setMoney(nm);setTotalBet(p=>p+betAmount);setRound(r=>r+1);
+        setHistory(h=>[...h,{round:round+1,folds,betAmount,totalOdds:totalOdds.toFixed(2),allWin,profit,balance:nm}]);
+        setShowResult({folds,totalOdds,profit,newMoney:nm,betAmount,allWin});
+        setTemptMsg(nm<=0?randFrom(TEMPT_BROKE):allWin?randFrom(TEMPT_WIN):randFrom(TEMPT_LOSS));
+        setSelections({});
+      }
+
+      function closeResult() {
+        if(showResult.newMoney<=0){setShowResult(null);setTemptMsg(null);setScreen("mission");startMission();}
+        else{setShowResult(null);setTemptMsg(null);}
+      }
+
+      function handleCashout(){setCashoutMsg(getCashoutInfo(currentProfit));}
+      function confirmCashout(){setCashoutMsg(null);setScreen("final");}
+
+      function startMission(){
+        const m=MISSIONS[reviveCount%MISSIONS.length];const data=m.generate?.();
+        setMissionState({...m,data});setMissionInput("");setMathAnswers([]);setMissionPhase("show");
+        if(m.type==="pattern"){setMissionTimer(5);timerRef.current=setInterval(()=>{setMissionTimer(t=>{if(t<=1){clearInterval(timerRef.current);setMissionPhase("input");return 0;}return t-1;});},1000);}
+        else setMissionPhase("input");
+      }
+
+      function checkMission(){
+        const m=missionState;let pass=false;
+        if(m.type==="pattern")pass=missionInput.trim()===m.data;
+        else if(m.type==="typing")pass=missionInput.trim()===m.data;
+        else if(m.type==="math")pass=m.data.every((q,i)=>parseInt(mathAnswers[i])===q.answer);
+        else if(m.type==="reflection")pass=missionInput.trim().length>=50;
+        if(pass){setReviveCount(c=>c+1);setMoney(50000);setMissionState(null);setScreen("game");}
+        else setMissionPhase("fail");
+      }
+
+      function resetAll(){setScreen("intro");setMoney(INITIAL_MONEY);setRound(0);setTotalBet(0);setHistory([]);setReviveCount(0);setSelections({});setBonusGranted(false);setActiveTab("soccer");setBetMode("win");setMatches(buildMatches("soccer"));}
+
+      const bg=danger?"linear-gradient(135deg,#1a0505 0%,#2d0808 60%,#1a0000 100%)":"linear-gradient(135deg,#0b1221 0%,#0f1f36 60%,#091529 100%)";
+      const iSt={width:"100%",padding:"11px 14px",background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.15)",borderRadius:8,color:"#fff",fontSize:20,letterSpacing:4,fontFamily:"monospace",boxSizing:"border-box"};
+      const tSt={width:"100%",padding:"11px 14px",background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.15)",borderRadius:8,color:"#fff",fontSize:13,resize:"none",boxSizing:"border-box"};
+
+      const tabMeta = TABS.find(t=>t.id===activeTab);
+      const srcLabel = SPORTS[activeTab]
+        ? `🟢 실경기 DB · ${SPORTS[activeTab].short} ${SPORTS[activeTab].season}`
+        : activeTab==="proto_record" ? "🟢 실경기 DB · 기록식 혼합" : "🟢 실경기 DB · 승부식 혼합";
+
+      if(screen==="intro") return (
+        <div style={{background:bg,minHeight:"100vh",color:"#e8e8e8",fontFamily:"'Noto Sans KR',sans-serif"}}>
+          <div style={{maxWidth:480,margin:"0 auto"}}>
+            <BrandTopBar/>
+            <div style={{padding:"40px 20px",textAlign:"center"}}>
+              <div style={{fontSize:52,marginBottom:8}}>🏆</div>
+              <div style={{fontSize:10,letterSpacing:5,color:"#f59e0b",marginBottom:12}}>SPORTS BETTING SIMULATOR</div>
+              <h1 style={{fontSize:32,fontWeight:900,color:"#fff",marginBottom:8,lineHeight:1.2}}>스포츠 베팅으로<br/><span style={{color:"#4ade80"}}>월 1,000만원?</span></h1>
+              <p style={{color:"#f59e0b",fontSize:14,marginBottom:6,fontWeight:700}}>"나는 달라. 분석하면 충분히 이길 수 있어."</p>
+              <p style={{color:"#64748b",fontSize:12,lineHeight:1.9,marginBottom:28}}>가상 100,000원으로 직접 경험해보세요.<br/>실제 돈은 사용되지 않습니다.</p>
+              <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:28}}>
+                {[["💰","첫 충전 100% 보너스! 지금 바로 시작하면 20만원 지급!"],["📊","AI 분석 적중률 87%! 오늘의 추천 픽 확인하기"],["🚀","어제 10만원 → 오늘 380만원! 실제 수익 인증"],["🎯","전문 분석가의 황금픽 무료 공개 — 오늘만!"]].map(([ic,t])=>(
+                  <div key={t} style={{background:"rgba(245,158,11,0.1)",border:"1px solid rgba(245,158,11,0.2)",borderRadius:10,padding:"10px 14px",display:"flex",gap:10,alignItems:"center",textAlign:"left"}}>
+                    <span style={{fontSize:20}}>{ic}</span><span style={{fontSize:12,color:"#fde68a",lineHeight:1.5}}>{t}</span>
+                  </div>
+                ))}
+              </div>
+              <button onClick={startGame} style={{width:"100%",padding:"16px 0",fontSize:17,fontWeight:800,background:"linear-gradient(135deg,#f59e0b,#d97706)",color:"#000",border:"none",borderRadius:12,cursor:"pointer",boxShadow:"0 4px 24px rgba(245,158,11,0.5)"}}>
+                지금 바로 100,000원 받고 시작! →
+              </button>
+              <p style={{fontSize:10,color:"#1e293b",marginTop:10}}>교육용 시뮬레이션 | 실제 돈 없음</p>
+            </div>
+          </div>
+        </div>
+      );
+
+      if(screen==="mission") return (
+        <div style={{background:"linear-gradient(135deg,#1a0505,#2d0808,#1a0000)",minHeight:"100vh",color:"#e8e8e8",fontFamily:"'Noto Sans KR',sans-serif"}}>
+          <div style={{maxWidth:480,margin:"0 auto",padding:"40px 20px"}}>
+            <div style={{textAlign:"center",marginBottom:24}}>
+              <div style={{fontSize:52,marginBottom:8}}>💀</div>
+              <h2 style={{fontSize:26,fontWeight:900,color:"#ef4444",marginBottom:8}}>잔액 부족!</h2>
+              <p style={{color:"#94a3b8",fontSize:13,lineHeight:1.7}}>충전하려면 아래 미션을 완료하세요.<br/><span style={{color:"#f59e0b"}}>미션 완료 시 50,000원 충전</span></p>
+              <div style={{color:"#64748b",fontSize:11,marginTop:6}}>부활 {reviveCount}회 | 누적 투입 {fmt(totalCharged)}</div>
+            </div>
+            {missionState&&(
+              <div style={{background:"rgba(255,255,255,0.05)",borderRadius:16,padding:22}}>
+                <div style={{fontSize:11,color:"#64748b",marginBottom:4}}>미션 {reviveCount+1} — {missionState.title}</div>
+                <div style={{fontSize:13,color:"#cbd5e1",marginBottom:18,lineHeight:1.7}}>{missionState.desc}</div>
+                {missionState.type==="pattern"&&(missionPhase==="show"?<div style={{textAlign:"center"}}><div style={{fontSize:26,fontWeight:900,letterSpacing:6,color:"#f59e0b",marginBottom:12,fontFamily:"monospace"}}>{missionState.data}</div><div style={{fontSize:40,fontWeight:900,color:"#ef4444"}}>{missionTimer}</div><div style={{fontSize:11,color:"#64748b"}}>초 후 사라집니다</div></div>:<input value={missionInput} onChange={e=>setMissionInput(e.target.value)} placeholder="기억한 숫자 입력..." style={iSt}/>)}
+                {missionState.type==="typing"&&(<><div style={{background:"rgba(245,158,11,0.08)",border:"1px solid rgba(245,158,11,0.2)",borderRadius:8,padding:14,marginBottom:14,fontSize:14,color:"#fde68a",lineHeight:1.7,fontWeight:600}}>{missionState.data}</div><textarea value={missionInput} onChange={e=>setMissionInput(e.target.value)} placeholder="위 문장을 정확히 입력..." rows={3} style={tSt}/></>)}
+                {missionState.type==="math"&&(<div style={{display:"flex",flexDirection:"column",gap:10}}>{missionState.data.map((q,i)=>(<div key={i} style={{display:"flex",alignItems:"center",gap:12}}><span style={{flex:1,color:"#e2e8f0",fontSize:16,fontFamily:"monospace"}}>{q.q}</span><input type="number" value={mathAnswers[i]||""} onChange={e=>{const a=[...mathAnswers];a[i]=e.target.value;setMathAnswers(a);}} style={{width:80,padding:"8px 12px",background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.15)",borderRadius:8,color:"#fff",fontSize:16,textAlign:"center"}}/></div>))}</div>)}
+                {missionState.type==="reflection"&&(<><textarea value={missionInput} onChange={e=>setMissionInput(e.target.value)} placeholder="최소 50자 이상..." rows={5} style={tSt}/><div style={{textAlign:"right",fontSize:11,color:missionInput.length>=50?"#4ade80":"#ef4444",marginTop:4}}>{missionInput.length}/50자</div></>)}
+                {missionPhase==="fail"&&<div style={{background:"rgba(239,68,68,0.12)",border:"1px solid rgba(239,68,68,0.3)",borderRadius:8,padding:10,marginBottom:10,textAlign:"center",color:"#fca5a5",fontSize:13}}>❌ 틀렸습니다. 다시 시도하세요.</div>}
+                {missionPhase!=="show"&&(<div style={{display:"flex",gap:10,marginTop:18}}><button onClick={checkMission} style={{flex:1,padding:"13px 0",fontWeight:700,fontSize:14,background:"linear-gradient(135deg,#22c55e,#16a34a)",color:"#fff",border:"none",borderRadius:10,cursor:"pointer"}}>제출</button><button onClick={()=>setScreen("final")} style={{padding:"13px 18px",fontSize:12,background:"rgba(255,255,255,0.06)",color:"#94a3b8",border:"1px solid rgba(255,255,255,0.1)",borderRadius:10,cursor:"pointer"}}>포기 →결과</button></div>)}
+              </div>
+            )}
+          </div>
+        </div>
+      );
+
+      if(screen==="final") return (
+        <div style={{background:bg,minHeight:"100vh",color:"#e8e8e8",fontFamily:"'Noto Sans KR',sans-serif"}}>
+          <div style={{maxWidth:480,margin:"0 auto",padding:"40px 20px"}}>
+            <div style={{textAlign:"center",marginBottom:28}}><div style={{fontSize:52,marginBottom:8}}>📋</div><h2 style={{fontSize:26,fontWeight:900,color:"#fff",marginBottom:6}}>체험 결과 리포트</h2></div>
+            {bonusGranted&&(
+              <div style={{background:"rgba(239,68,68,0.1)",border:"1px solid rgba(239,68,68,0.25)",borderRadius:14,padding:16,marginBottom:16}}>
+                <div style={{fontSize:12,color:"#f87171",fontWeight:700,marginBottom:8}}>🔐 개인정보 제공 체험</div>
+                <div style={{fontSize:13,color:"#fca5a5",lineHeight:1.8}}>
+                  이 시뮬레이션에서 입력된 정보는 <strong>모두 가짜</strong>이며 실제로 저장·전송되지 않았습니다.<br/>
+                  하지만 실제 불법 도박 사이트에서 이 정보를 입력했다면, 지금쯤 개인정보가 다크웹에서 거래되고 있을 수 있습니다.
+                </div>
+              </div>
+            )}
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:16}}>
+              {[["총 베팅 횟수",`${round}회`,"#94a3b8"],["총 투입 금액",fmt(totalCharged),"#f59e0b"],["파산 횟수",`${reviveCount}회`,"#f87171"],["최종 손실",fmt(Math.max(0,totalLoss)),"#ef4444"]].map(([l,v,c])=>(
+                <div key={l} style={{background:"rgba(255,255,255,0.05)",borderRadius:12,padding:"14px 18px"}}><div style={{fontSize:10,color:"#475569",marginBottom:4}}>{l}</div><div style={{fontSize:18,fontWeight:800,color:c}}>{v}</div></div>
+              ))}
+            </div>
+            <div style={{background:"rgba(239,68,68,0.1)",border:"1px solid rgba(239,68,68,0.2)",borderRadius:14,padding:20,marginBottom:16}}>
+              <div style={{fontSize:12,color:"#f87171",fontWeight:700,marginBottom:8}}>⏱ 이 손실을 벌기 위한 노동 시간</div>
+              <div style={{fontSize:30,fontWeight:900,color:"#fff",marginBottom:4}}>{Math.ceil(Math.max(0,totalLoss)/10000)}시간</div>
+              <div style={{fontSize:11,color:"#64748b"}}>시급 10,000원 기준</div>
+            </div>
+            {history.length>0&&(<div style={{background:"rgba(255,255,255,0.03)",borderRadius:14,padding:18,marginBottom:16}}><div style={{fontSize:11,color:"#475569",marginBottom:10}}>베팅 히스토리</div><div style={{maxHeight:180,overflowY:"auto"}}>{history.map((h,i)=>(<div key={i} style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px solid rgba(255,255,255,0.04)",fontSize:12}}><span style={{color:"#475569"}}>#{h.round} {h.folds.length}폴/{h.totalOdds}배</span><span style={{color:h.allWin?"#4ade80":"#ef4444",fontWeight:700}}>{h.allWin?"+":""}{fmt(h.profit)}</span></div>))}</div></div>)}
+            <div style={{background:"rgba(245,158,11,0.07)",border:"1px solid rgba(245,158,11,0.15)",borderRadius:14,padding:18,marginBottom:20}}>
+              <div style={{fontSize:12,color:"#f59e0b",fontWeight:700,marginBottom:8}}>📞 실제로 도움이 필요하다면</div>
+              <div style={{fontSize:13,color:"#cbd5e1",lineHeight:1.9}}>한국도박문제관리센터 <strong style={{color:"#fff"}}>1336</strong> (24시간, 무료)</div>
+            </div>
+            <button onClick={resetAll} style={{width:"100%",padding:"15px 0",fontSize:15,fontWeight:700,background:"rgba(255,255,255,0.08)",color:"#fff",border:"1px solid rgba(255,255,255,0.12)",borderRadius:12,cursor:"pointer"}}>처음으로 →</button>
+          </div>
+        </div>
+      );
+
+      return (
+        <div style={{background:bg,minHeight:"100vh",color:"#e8e8e8",fontFamily:"'Noto Sans KR',sans-serif"}}>
+
+          {showPrivacy && <PrivacyModal onAgree={handlePrivacyAgree} onDecline={handlePrivacyDecline}/>}
+
+          <div style={{maxWidth:480,margin:"0 auto",position:"relative",paddingBottom: foldCount>0 ? 210 : 48}}>
+
+            <div style={{position:"sticky",top:0,zIndex:50,boxShadow:"0 4px 16px rgba(0,0,0,0.45)"}}>
+              <BrandTopBar/>
+              <div style={{background:danger?"#2a0a0a":"#0c1726",borderBottom:`1px solid ${danger?"rgba(239,68,68,0.35)":"rgba(59,130,246,0.25)"}`,padding:"12px 16px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <div>
+                  <div style={{fontSize:10,color:"#64748b",letterSpacing:2}}>보유 금액</div>
+                  <div style={{fontSize:26,fontWeight:900,color:danger?"#ef4444":"#4ade80"}}>{fmt(money)}</div>
+                  <div style={{fontSize:10,color:"#475569",marginTop:2}}>
+                    {round}번째 베팅
+                    {bonusGranted && <span style={{marginLeft:6,color:"#f59e0b"}}>+보너스 지급됨</span>}
+                  </div>
+                </div>
+                <div style={{display:"flex",flexDirection:"column",gap:6,alignItems:"flex-end"}}>
+                  <button onClick={handleCashout} style={{padding:"9px 16px",fontSize:13,fontWeight:800,background:"linear-gradient(135deg,#f59e0b,#d97706)",color:"#000",border:"none",borderRadius:8,cursor:"pointer",boxShadow:"0 2px 10px rgba(245,158,11,0.4)"}}>💰 인출하기</button>
+                  <button onClick={()=>setScreen("final")} style={{padding:"5px 12px",fontSize:10,background:"rgba(255,255,255,0.05)",color:"#64748b",border:"1px solid rgba(255,255,255,0.08)",borderRadius:6,cursor:"pointer"}}>결과 보기</button>
+                </div>
+              </div>
+              <div style={{padding:"8px 16px",background:"#0b2447",borderBottom:"1px solid rgba(59,130,246,0.2)",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <span style={{fontSize:12,color:"#93c5fd"}}>📋 선택: <strong style={{color:"#fff"}}>{foldCount}</strong>/{MAX_FOLD} | 배당: <span style={{color:"#f59e0b",fontWeight:700}}>{totalOdds.toFixed(2)}배</span></span>
+                <span style={{fontSize:9,color:"#4ade80"}}>{srcLabel}</span>
+              </div>
+            </div>
+
+            <GameTabs active={activeTab} onChange={changeTab}/>
+
+            <div style={{padding:"6px 16px 0"}}>
+              <div style={{fontSize:11,color:"#94a3b8",letterSpacing:1,marginBottom:10,fontWeight:700,display:"flex",justifyContent:"space-between"}}>
+                <span>{tabMeta?.ic} {tabMeta?.name} <span style={{color:"#475569"}}>(최대 5폴더)</span></span>
+                <span style={{color:betMode==="record"?"#a855f7":"#3b82f6"}}>{betMode==="record"?"기록식 · 핸디/언더오버":"승부식 · 승무패"}</span>
+              </div>
+              <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                {matches.map(m=>{
+                  const sel=selections[m.id];
+                  const opts=getOpts(m,betMode);
+                  const sp=SPORTS[m.sport];
+                  const cfg=RECORD_CFG[m.sport];
+                  return(
+                    <div key={m.id} style={{background:sel?"rgba(59,130,246,0.1)":"rgba(255,255,255,0.03)",border:`1px solid ${sel?"rgba(59,130,246,0.45)":"rgba(255,255,255,0.07)"}`,borderRadius:12,padding:"12px 14px"}}>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+                        <div style={{fontSize:9,color:"#3b82f6",fontWeight:700,background:"rgba(59,130,246,0.12)",borderRadius:4,padding:"2px 7px"}}>{sp?.ic} {m.league}</div>
+                        {m.note && <div style={{fontSize:9,color:"#475569"}}>{m.note}</div>}
+                      </div>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+                        <div style={{textAlign:"center",flex:1}}><div style={{fontSize:9,color:"#3b82f6",fontWeight:700,letterSpacing:1,marginBottom:2}}>🏠 홈</div><div style={{fontSize:13,fontWeight:700,color:"#e2e8f0",lineHeight:1.3}}>{m.home}</div></div>
+                        <div style={{padding:"0 10px",fontSize:11,color:"#334155",fontWeight:700}}>vs</div>
+                        <div style={{textAlign:"center",flex:1}}><div style={{fontSize:9,color:"#f87171",fontWeight:700,letterSpacing:1,marginBottom:2}}>✈️ 어웨이</div><div style={{fontSize:13,fontWeight:700,color:"#e2e8f0",lineHeight:1.3}}>{m.away}</div></div>
+                      </div>
+                      {betMode==="record" && cfg && (
+                        <div style={{fontSize:9,color:"#64748b",marginBottom:6}}>📊 기준 — 핸디캡 {cfg.hcap} · 언더/오버 {cfg.total}{cfg.unit}</div>
+                      )}
+                      {betMode==="record" ? (
+                        <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+                          {opts.map(o=>{
+                            const active=sel===o.key;
+                            return(<button key={o.key} onClick={()=>toggleSel(m.id,o.key)} style={{flex:"1 1 47%",padding:"8px 6px",borderRadius:8,cursor:"pointer",background:active?"rgba(59,130,246,0.22)":"rgba(255,255,255,0.05)",border:`1px solid ${active?"#3b82f6":"rgba(255,255,255,0.09)"}`,color:"#e2e8f0"}}><div style={{fontSize:10,color:active?"#93c5fd":"#94a3b8",marginBottom:2,fontWeight:700}}>{o.short}</div><div style={{fontWeight:800,fontSize:14,color:active?"#fff":"#f59e0b"}}>{o.odds.toFixed(2)}</div></button>);
+                          })}
+                        </div>
+                      ) : (
+                        <div style={{display:"flex",gap:6}}>
+                          {opts.map(o=>{
+                            const active=sel===o.key;
+                            return(<button key={o.key} onClick={()=>toggleSel(m.id,o.key)} style={{flex:1,padding:"8px 4px",fontSize:10,borderRadius:8,cursor:"pointer",background:active?`${o.color}33`:"rgba(255,255,255,0.05)",border:`1px solid ${active?o.color:"rgba(255,255,255,0.09)"}`,color:"#e2e8f0",transition:"all 0.12s"}}><div style={{fontSize:8,color:active?o.color:"#475569",marginBottom:1,fontWeight:700}}>{o.short}</div><div style={{fontSize:8,color:"#334155",marginBottom:3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{o.sub}</div><div style={{fontWeight:800,fontSize:14,color:active?"#fff":"#f59e0b"}}>{o.odds.toFixed(2)}</div></button>);
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {foldCount>0 && (
+            <div style={{position:"fixed",left:0,right:0,bottom:0,zIndex:60,display:"flex",justifyContent:"center",pointerEvents:"none"}}>
+              <div style={{width:"100%",maxWidth:480,background:"#0c1726",borderTop:"2px solid #1b4f9c",boxShadow:"0 -10px 28px rgba(0,0,0,0.6)",padding:"12px 16px 16px",pointerEvents:"auto"}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+                  <span style={{fontSize:12,color:"#93c5fd"}}>{betMode==="record"?"기록식":"승부식"} <strong style={{color:"#fff"}}>{foldCount}</strong>폴 · 합산배당 <span style={{color:"#f59e0b",fontWeight:800}}>{totalOdds.toFixed(2)}배</span></span>
+                  <span style={{fontSize:12,color:"#64748b"}}>적중 시 <span style={{color:"#4ade80",fontWeight:700}}>{fmt(Math.floor(betAmount*totalOdds))}</span></span>
+                </div>
+                <div style={{display:"flex",gap:6,marginBottom:8}}>
+                  {[0.1,0.25,0.5,1.0].map(r=>(<button key={r} onClick={()=>setBetAmount(Math.floor(money*r))} style={{flex:1,padding:"6px 0",fontSize:11,fontWeight:600,background:"rgba(255,255,255,0.05)",color:"#94a3b8",border:"1px solid rgba(255,255,255,0.09)",borderRadius:7,cursor:"pointer"}}>{r*100}%</button>))}
+                </div>
+                <div style={{display:"flex",gap:8,alignItems:"center"}}>
+                  <input type="number" value={betAmount} onChange={e=>setBetAmount(Math.min(money,Math.max(1000,parseInt(e.target.value)||0)))} style={{flex:1,minWidth:0,padding:"12px 14px",background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.14)",borderRadius:8,color:"#fff",fontSize:18,fontWeight:700,boxSizing:"border-box"}}/>
+                  <button onClick={placeBet} style={{flex:"0 0 46%",padding:"14px 0",fontSize:15,fontWeight:900,background:"linear-gradient(135deg,#1b4f9c,#2563eb)",color:"#fff",border:"none",borderRadius:10,cursor:"pointer",boxShadow:"0 4px 16px rgba(37,99,235,0.45)"}}>
+                    {foldCount===1?"단폴 베팅":`${foldCount}폴더 베팅`}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {showResult&&(
+            <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.9)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:100,padding:20}}>
+              <div style={{position:"relative",background:"#0f1923",borderRadius:20,padding:28,width:"100%",maxWidth:400,textAlign:"center",border:`2px solid ${showResult.profit>=0?"rgba(74,222,128,0.4)":"rgba(239,68,68,0.4)"}`,overflow:"hidden"}}>
+                <FireworksCanvas active={showResult.profit>=0}/>
+                <SoccerAnim win={showResult.profit>=0}/>
+                <div style={{position:"relative",zIndex:1}}>
+                  <h3 style={{fontSize:26,fontWeight:900,color:showResult.profit>=0?"#4ade80":"#ef4444",marginBottom:6}}>{showResult.profit>=0?"🎉 적중!":"💸 낙첨"}</h3>
+                  <div style={{marginBottom:10}}>{showResult.folds.map((f,i)=>(<div key={i} style={{padding:"4px 0",borderBottom:"1px solid rgba(255,255,255,0.04)"}}><div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:f.win?"#4ade80":"#ef4444"}}><span style={{color:"#475569"}}>{f.ic} {f.match.slice(0,15)}</span><span>{f.win?"✅":"❌"} {f.bet} ({f.odds.toFixed(2)})</span></div><div style={{textAlign:"right",fontSize:9.5,color:"#64748b",marginTop:1}}>실제 {f.realScore} · {f.actualLabel}</div></div>))}</div>
+                  {showResult.folds.length>1&&<div style={{fontSize:12,color:"#94a3b8",marginBottom:8}}>합산 {showResult.totalOdds.toFixed(2)}배</div>}
+                  <div style={{fontSize:32,fontWeight:900,color:"#fff",marginBottom:4}}>{showResult.profit>=0?"+":""}{fmt(showResult.profit)}</div>
+                  <div style={{fontSize:13,color:"#64748b",marginBottom:14}}>잔액: {fmt(showResult.newMoney)}</div>
+                  {temptMsg&&<div style={{background:showResult.profit>=0?"rgba(74,222,128,0.08)":"rgba(245,158,11,0.08)",border:`1px solid ${showResult.profit>=0?"rgba(74,222,128,0.2)":"rgba(245,158,11,0.2)"}`,borderRadius:10,padding:"10px 14px",marginBottom:14,fontSize:12,color:showResult.profit>=0?"#86efac":"#fde68a",lineHeight:1.7,textAlign:"left"}}>{temptMsg}</div>}
+                  <button onClick={closeResult} style={{width:"100%",padding:"13px 0",fontSize:14,fontWeight:700,background:showResult.profit>=0?"rgba(74,222,128,0.18)":"rgba(239,68,68,0.18)",color:"#fff",border:`1px solid ${showResult.profit>=0?"rgba(74,222,128,0.3)":"rgba(239,68,68,0.3)"}`,borderRadius:10,cursor:"pointer"}}>
+                    {showResult.newMoney<=0?"💀 충전 미션으로 →":"계속하기"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {cashoutMsg&&(
+            <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.88)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:100,padding:20,overflowY:"auto"}}>
+              <div style={{background:"#0f1923",borderRadius:20,padding:28,width:"100%",maxWidth:400,textAlign:"center",border:"2px solid rgba(245,158,11,0.4)"}}>
+                <div style={{fontSize:44,marginBottom:12}}>🏧</div>
+                <h3 style={{fontSize:18,fontWeight:900,color:"#f59e0b",marginBottom:16}}>인출하기</h3>
+                <div style={{background:"rgba(245,158,11,0.07)",border:"1px solid rgba(245,158,11,0.18)",borderRadius:12,padding:18,marginBottom:12,textAlign:"left"}}>
+                  <div style={{fontSize:11,color:"#64748b",marginBottom:6}}>현재 잔액 {currentProfit>=0?<span style={{color:"#4ade80"}}>(수익 +{fmt(currentProfit)})</span>:<span style={{color:"#ef4444"}}>(손실 {fmt(currentProfit)})</span>}</div>
+                  <div style={{fontSize:26,fontWeight:900,color:money>totalCharged?"#4ade80":money===totalCharged?"#fff":"#ef4444",marginBottom:12}}>{fmt(money)}</div>
+                  <div style={{fontSize:13,color:"#94a3b8",lineHeight:1.9,whiteSpace:"pre-line"}}>{cashoutMsg.msg}</div>
+                </div>
+                <div style={{background:"rgba(59,130,246,0.1)",border:"1px solid rgba(59,130,246,0.25)",borderRadius:12,padding:"14px 16px",marginBottom:10,textAlign:"left"}}>
+                  <div style={{fontSize:11,color:"#93c5fd",fontWeight:800,marginBottom:6,letterSpacing:1}}>💡 오늘의 교훈</div>
+                  <div style={{fontSize:12.5,color:"#dbeafe",lineHeight:1.85}}>{cashoutMsg.lesson}</div>
+                </div>
+                <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,padding:"12px 16px",marginBottom:20,textAlign:"left"}}>
+                  <div style={{fontSize:10,color:"#64748b",fontWeight:700,marginBottom:5,letterSpacing:1}}>📊 알아두면 좋은 통계</div>
+                  <div style={{fontSize:11.5,color:"#94a3b8",lineHeight:1.8}}>{cashoutMsg.stat}</div>
+                </div>
+                <div style={{display:"flex",gap:10}}>
+                  <button onClick={()=>setCashoutMsg(null)} style={{flex:1,padding:"12px 0",fontSize:13,fontWeight:700,background:"rgba(255,255,255,0.06)",color:"#94a3b8",border:"1px solid rgba(255,255,255,0.1)",borderRadius:10,cursor:"pointer"}}>계속하기</button>
+                  <button onClick={confirmCashout} style={{flex:1,padding:"12px 0",fontSize:13,fontWeight:700,background:"linear-gradient(135deg,#f59e0b,#d97706)",color:"#000",border:"none",borderRadius:10,cursor:"pointer"}}>인출 (결과보기)</button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+  </script>
+</body>
+</html>
