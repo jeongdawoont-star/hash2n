@@ -169,6 +169,15 @@
   .queue-section::-webkit-scrollbar { width:8px; }
   .queue-section::-webkit-scrollbar-thumb { background:var(--line); border-radius:8px; }
   .queue-label { font-family:var(--round); font-size:clamp(13px,0.9vw,17px); color:var(--wood); padding:4px 4px 1vh; }
+  .queue-now {
+    position:sticky; top:0; z-index:3;
+    background:#FFF3EC; border:3px solid var(--coral); border-radius:16px;
+    padding:1.2vh 0.9vw; margin-bottom:1vh;
+    box-shadow:0 6px 0 rgba(255,122,89,0.22);
+  }
+  .queue-now-label { font-family:var(--round); font-size:clamp(12px,0.8vw,15px); color:var(--coral-dk); margin-bottom:5px; }
+  .queue-now-name { font-family:var(--round); font-size:clamp(16px,1.1vw,21px); color:var(--wood-deep); padding-right:18px; }
+  .queue-now-song { font-size:clamp(12px,0.85vw,15px); color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:3px; }
   .queue-item { background:var(--card); border:3px solid var(--line); border-radius:16px; padding:1.2vh 0.9vw; margin-bottom:1vh; transition:all 0.3s; position:relative; box-shadow:0 5px 0 rgba(184,138,92,0.10); }
   .queue-item:hover { background: #FFF9F2; transform: translateY(-1px); border-color: var(--coral); }
   .queue-item.active { border-color:var(--coral); background:#FFF3EC; box-shadow:0 6px 0 rgba(255,122,89,0.22); }
@@ -231,27 +240,11 @@
   .end-overlay {
     position:absolute; inset:0;
     background: linear-gradient(135deg, #181109, #312113, #110904);
-    display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
-    z-index:20; display:none; text-align:center; padding:5vh 4vh;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    z-index:20; display:none; text-align:center; padding:4vh;
     color: #FFF3EC;
     overflow: hidden;
   }
-
-  /* 종료화면 대형 LED 전광판 (중상단 네온 속담) */
-  .end-signboard {
-    position: relative; z-index: 2;
-    width: min(92vw, 1000px);
-    background:#140d05; border:0.7vh solid #D79A4E; border-radius:2vh;
-    padding:0.6vh 0; margin-bottom:3vh; overflow:hidden;
-    box-shadow:0 0.6vh 0 rgba(140,94,54,0.45), inset 0 0 6vh rgba(0,0,0,0.8);
-    animation: slide-up-premium 0.6s cubic-bezier(0.34,1.56,0.64,1);
-  }
-  .end-signboard .bulbs { height:1vh; margin:0.3vh 0.8vw; background:radial-gradient(circle at center,#FFE7A6 0 38%,transparent 44%); background-size:2.6vh 100%; background-repeat:repeat-x; animation:bulbflash 0.9s steps(1) infinite; }
-  .end-signboard .bulbs.b2 { animation-delay:0.45s; }
-  .end-led { position:relative; overflow:hidden; padding:2vh 0; }
-  .end-led::after { content:''; position:absolute; inset:0; pointer-events:none; background-image:radial-gradient(rgba(0,0,0,0.4) 1px, transparent 1.5px); background-size:5px 5px; opacity:0.5; }
-  .end-marquee-track { display:flex; white-space:nowrap; animation:marquee 16s linear infinite; }
-  .end-marquee-text { font-family:var(--round); font-size:clamp(28px,5.5vh,62px); line-height:1.25; padding-right:5vw; color:#a9ff9f; text-shadow:0 0 16px currentColor, 0 0 6px currentColor, 0 0 2px currentColor; }
   
   /* 밤하늘 별 효과 */
   .end-overlay::after {
@@ -338,7 +331,7 @@
   <div class="end-content-box">
     <div class="end-icon-premium">🌙</div>
     <div class="end-title" style="color:#FFE7C5; font-size: clamp(26px, 3vh, 38px);">오늘 방송을 종료합니다</div>
-
+    
     <!-- 통계 카드 -->
     <div class="end-card">
       <div class="end-card-title">🎙️ 오늘의 마음 전달 기록</div>
@@ -347,7 +340,7 @@
 
     <div class="end-quote" id="endQuote" style="color:var(--yellow); font-size: clamp(16px, 2.1vh, 22px); min-height: 54px; margin-bottom: 20px;"></div>
     <div class="end-sub" style="color:#D2BEA6; font-size: clamp(13px, 1.4vh, 17px);">따뜻한 사연을 보내준 친구들 고마워요. 내일 또 만나요!</div>
-
+    
     <button class="btn-reset" onclick="location.reload()" style="background:var(--coral); color:#fff; box-shadow:0 6px 0 var(--coral-dk); border-radius:14px; margin-top:20px; font-size: 16px; padding: 12px 28px;">↩ 처음으로 돌아가기</button>
   </div>
 </div>
@@ -430,6 +423,7 @@
 
     <div class="queue-section">
       <div class="queue-label">📋 사연 목록</div>
+      <div id="queueNow" class="queue-now" style="display:none"></div>
       <div id="queueList"><div style="color:var(--muted);font-size:14px;padding:8px">사연을 불러오는 중...</div></div>
     </div>
   </div>
@@ -670,6 +664,7 @@
   };
 
   let koVoice = null;
+  let enVoice = null;
   let ttsKeepAlive = null;
 
   function loadVoices() {
@@ -678,10 +673,18 @@
            || voices.find(v => v.lang === 'ko-KR')
            || voices.find(v => v.lang && v.lang.startsWith('ko'))
            || null;
+    enVoice = voices.find(v => v.lang === 'en-US' && /google/i.test(v.name))
+           || voices.find(v => v.lang === 'en-US')
+           || voices.find(v => v.lang && v.lang.startsWith('en'))
+           || null;
   }
   if (window.speechSynthesis) { loadVoices(); speechSynthesis.onvoiceschanged = loadVoices; }
 
   function speak(text, onEnd, opts) {
+    speakChunks([{ text, lang: 'ko-KR', karaokeOffset }], onEnd, opts);
+  }
+
+  function speakChunks(chunks, onEnd, opts) {
     opts = opts || {};
     if (!opts.ignoreCheck && !isBroadcasting) {
       if (!window.selectStoryForTestingInProgress) {
@@ -693,31 +696,52 @@
     speechSynthesis.cancel();
     clearInterval(ttsKeepAlive);
 
-    const utt = new SpeechSynthesisUtterance(text);
-    utt.lang = 'ko-KR';
-    if (koVoice) utt.voice = koVoice;
-    utt.rate = 0.95;
-    utt.pitch = 1.05;
+    const safeChunks = chunks
+      .map(c => typeof c === 'string' ? { text: c, lang: 'ko-KR' } : c)
+      .filter(c => c && c.text && c.text.trim());
+    if (!safeChunks.length) { onEnd && onEnd(); return; }
 
-    if (opts.karaoke) {
-      utt.onboundary = (e) => {
-        const rel = e.charIndex - karaokeOffset;
-        if (rel >= 0) highlightKaraoke(rel);
-      };
-    }
-
-    const done = () => {
+    let finished = false;
+    const finish = () => {
+      if (finished) return;
+      finished = true;
       ttsInProgress = false;
       clearInterval(ttsKeepAlive);
       if (opts.karaoke) finishKaraoke();
       onEnd && onEnd();
     };
-    utt.onend = done;
-    utt.onerror = (e) => { if (e && e.error === 'interrupted') return; done(); };
+
+    const voiceForLang = (lang) => {
+      if (lang && lang.startsWith('en')) return enVoice || koVoice;
+      return koVoice || enVoice;
+    };
+
+    let idx = 0;
+    const speakNext = () => {
+      if (idx >= safeChunks.length) { finish(); return; }
+      const chunk = safeChunks[idx++];
+      const utt = new SpeechSynthesisUtterance(chunk.text);
+      utt.lang = chunk.lang || 'ko-KR';
+      const voice = chunk.voice || voiceForLang(utt.lang);
+      if (voice) utt.voice = voice;
+      utt.rate = chunk.rate || 0.95;
+      utt.pitch = chunk.pitch || 1.05;
+
+      if (opts.karaoke && typeof chunk.karaokeOffset === 'number') {
+        utt.onboundary = (e) => {
+          const rel = e.charIndex - chunk.karaokeOffset;
+          if (rel >= 0) highlightKaraoke(rel);
+        };
+      }
+
+      utt.onend = speakNext;
+      utt.onerror = (e) => { if (e && e.error === 'interrupted') return; speakNext(); };
+      speechSynthesis.speak(utt);
+    };
 
     ttsInProgress = true;
     setTtsStatus(true, '읽는 중...');
-    speechSynthesis.speak(utt);
+    speakNext();
 
     ttsKeepAlive = setInterval(() => {
       if (!speechSynthesis.speaking) { clearInterval(ttsKeepAlive); return; }
@@ -790,8 +814,56 @@
     document.getElementById('endMarqueeText2').textContent = t;
   }
 
+  function escapeHtml(str) {
+    return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+  }
+
+  function toDate(value) {
+    if (!value) return null;
+    if (typeof value.toDate === 'function') return value.toDate();
+    if (typeof value.seconds === 'number') return new Date(value.seconds * 1000);
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+
+  function formatRequestDate(value) {
+    const date = toDate(value);
+    if (!date) return '';
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    return `${yyyy}년 ${mm}월 ${dd}일 신청`;
+  }
+
+  function storySenderLabel(story, suffix) {
+    const dateText = formatRequestDate(story.createdAt);
+    return `${story.name}님의 사연${dateText ? ` (${dateText})` : ''}${suffix ? ` ${suffix}` : ''}`;
+  }
+
+  function isEnglishTtsText(text) {
+    const sample = String(text || '').replace(/https?:\/\/\S+/g, '');
+    const latin = (sample.match(/[A-Za-z]/g) || []).length;
+    const hangul = (sample.match(/[가-힣]/g) || []).length;
+    return latin >= 2 && latin > hangul;
+  }
+
+  function ttsLangFor(text) {
+    return isEnglishTtsText(text) ? 'en-US' : 'ko-KR';
+  }
+
+  function buildStoryTtsChunks(s) {
+    const storyIntro = '입니다. 사연을 들어볼게요. ';
+    return [
+      { text: `${s.name}님의 신청곡은 `, lang: 'ko-KR' },
+      { text: s.artist || '가수 미상', lang: ttsLangFor(s.artist) },
+      { text: '의 ', lang: 'ko-KR' },
+      { text: s.songTitle || '제목 미상', lang: ttsLangFor(s.songTitle) },
+      { text: `${storyIntro}${s.story || ''}`, lang: 'ko-KR', karaokeOffset: storyIntro.length }
+    ];
+  }
+
   function buildStoryTtsText(s) {
-    return `${s.name}님의 신청곡은 ${s.artist}의 ${s.songTitle}입니다. 사연을 들어볼게요. ${s.story}`;
+    return buildStoryTtsChunks(s).map(chunk => chunk.text).join('');
   }
 
   function buildClosingText(message, sessionName) {
@@ -823,24 +895,43 @@
 
   function renderQueue() {
     const list = document.getElementById('queueList');
+    const now = document.getElementById('queueNow');
     if (!stories.length) {
+      if (now) now.style.display = 'none';
       list.innerHTML = '<div style="color:var(--muted);font-size:14px;padding:8px">사연이 없습니다</div>';
       return;
     }
+
+    if (now) {
+      const currentStory = currentIdx >= 0 ? stories[currentIdx] : null;
+      if (currentStory) {
+        now.style.display = 'block';
+        now.innerHTML = `
+          <div class="queue-badge"></div>
+          <div class="queue-now-label">지금 재생 중</div>
+          <div class="queue-now-name">${escapeHtml(storySenderLabel(currentStory))}</div>
+          <div class="queue-now-song">${escapeHtml(currentStory.artist)} — ${escapeHtml(currentStory.songTitle)}</div>
+        `;
+      } else {
+        now.style.display = 'none';
+        now.innerHTML = '';
+      }
+    }
+
     list.innerHTML = stories.map((s, i) => {
       const isCurrent = i === currentIdx;
       const isPlayed = i < currentIdx;
       return `<div class="queue-item ${isCurrent ? 'active' : ''} ${isPlayed ? 'played' : ''}" id="queue-item-${i}" onclick="selectStoryForTesting(${i})" style="cursor:pointer; transition: background 0.2s;">
         ${isCurrent ? '<div class="queue-badge"></div>' : ''}
         <div class="queue-item-header">
-          <div class="queue-name">${s.name}</div>
-          <div class="queue-num">#${s.order}</div>
+          <div class="queue-name">${escapeHtml(s.name)}</div>
+          <div class="queue-num">#${escapeHtml(s.order)}</div>
         </div>
-        <div class="queue-song">${s.artist} — ${s.songTitle}</div>
+        <div class="queue-song">${escapeHtml(s.artist)} — ${escapeHtml(s.songTitle)}</div>
       </div>`;
     }).join('');
 
-    // 현재 재생 중인 사연으로 부드럽게 자동 스크롤
+    // 현재 재생 중인 사연을 목록 안에서도 화면 중앙 근처에 유지한다.
     if (currentIdx >= 0) {
       const activeItem = document.getElementById(`queue-item-${currentIdx}`);
       if (activeItem) {
@@ -852,7 +943,8 @@
           const sectionHeight = section.clientHeight;
           // 아이템이 보이는 영역 밖에 있을 때만 스크롤
           if (itemTop < sectionScrollTop + 40 || itemTop + itemHeight > sectionScrollTop + sectionHeight - 40) {
-            section.scrollTo({ top: itemTop - sectionHeight / 3, behavior: 'smooth' });
+            const targetTop = Math.max(0, itemTop - sectionHeight / 2 + itemHeight / 2);
+            section.scrollTo({ top: targetTop, behavior: 'smooth' });
           }
         }
       }
@@ -872,7 +964,7 @@
     currentIdx = idx;
     const s = stories[idx];
     
-    document.getElementById('storySender').textContent = s.name + '님의 사연 (테스트)';
+    document.getElementById('storySender').textContent = storySenderLabel(s, '(테스트)');
     document.getElementById('storySong').textContent = '🎵 ' + s.artist + ' — ' + s.songTitle;
     buildStoryKaraoke(s.story);
     document.getElementById('currentNum').textContent = idx + 1;
@@ -959,7 +1051,7 @@
     currentIdx = idx;
     const s = stories[idx];
 
-    document.getElementById('storySender').textContent = s.name + '님의 사연';
+    document.getElementById('storySender').textContent = storySenderLabel(s);
     document.getElementById('storySong').textContent = '🎵 ' + s.artist + ' — ' + s.songTitle;
     buildStoryKaraoke(s.story);
     document.getElementById('currentNum').textContent = idx + 1;
@@ -968,10 +1060,10 @@
     renderQueue();
     ytLoad(s.ytUrl);
 
-    const prefix = `${s.name}님의 신청곡은 ${s.artist}의 ${s.songTitle}입니다. 사연을 들어볼게요. `;
-    karaokeOffset = prefix.length;
-    const ttsText = buildStoryTtsText(s);
-    speak(ttsText, () => {
+    const ttsChunks = buildStoryTtsChunks(s);
+    const storyChunk = ttsChunks.find(chunk => typeof chunk.karaokeOffset === 'number');
+    karaokeOffset = storyChunk ? storyChunk.karaokeOffset : 0;
+    speakChunks(ttsChunks, () => {
       setTtsStatus(false, '읽기 완료');
       ytPlay();
       
