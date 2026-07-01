@@ -4,6 +4,7 @@ import { RECORDS } from '../records.js';
 // 전역 상태
 // ────────────────────────────────────────────────────
 let currentSearch = '';
+let currentCategory = 'all';
 
 const LEGACY_SITE_HOSTS = new Set(['jeongdawoont-star.github.io']);
 const LEGACY_SITE_PATH_PREFIX = '/hash2n/';
@@ -80,17 +81,25 @@ function nl2br(text) {
 function renderCards(container) {
   container.innerHTML = '';
 
-  const filtered = currentSearch
-    ? RECORDS.filter(r =>
-        (r.title || '').toLowerCase().includes(currentSearch) ||
-        (r.tags  || '').toLowerCase().includes(currentSearch) ||
-        (r.desc  || '').toLowerCase().includes(currentSearch)
-      )
-    : RECORDS;
+  let filtered = RECORDS;
+
+  // 1. 카테고리 필터링
+  if (currentCategory !== 'all') {
+    filtered = filtered.filter(r => r.category === currentCategory);
+  }
+
+  // 2. 검색어 필터링
+  if (currentSearch) {
+    filtered = filtered.filter(r =>
+      (r.title || '').toLowerCase().includes(currentSearch) ||
+      (r.tags  || '').toLowerCase().includes(currentSearch) ||
+      (r.desc  || '').toLowerCase().includes(currentSearch)
+    );
+  }
 
   if (RECORDS.length === 0) {
     container.innerHTML = `
-      <div class="text-center py-12 label-font text-on-surface-variant">
+      <div class="text-center py-12 label-font text-on-surface-variant col-span-full">
         아직 등록된 기록이 없습니다.<br>
         <span class="text-xs mt-2 block text-[#b2b2ad]">records.js 파일에 기록을 추가해 주세요.</span>
       </div>`;
@@ -99,9 +108,10 @@ function renderCards(container) {
   }
 
   if (filtered.length === 0) {
+    const filterDesc = currentSearch ? `"${currentSearch}"` : "선택한 카테고리";
     container.innerHTML = `
-      <div class="text-center py-12 label-font text-on-surface-variant">
-        "${currentSearch}"에 해당하는 기록이 없습니다.
+      <div class="text-center py-12 label-font text-on-surface-variant col-span-full">
+        ${filterDesc}에 해당하는 기록이 없습니다.
       </div>`;
     hideLoadingOverlay();
     return;
@@ -119,48 +129,52 @@ function renderCards(container) {
     ).join('');
 
     const card = `
-      <div class="bg-surface-container-lowest rounded-3xl p-6 flex flex-col items-center gap-4 hover:bg-tertiary-container transition-all group border border-transparent hover:border-[#fcf7e1]">
+      <div class="bg-surface-container-lowest rounded-3xl p-6 flex flex-col h-full justify-between hover:bg-tertiary-container transition-all group border border-transparent hover:border-[#fcf7e1]">
 
-        <div class="w-full flex justify-between items-center mb-2">
-          <span class="label-font text-xl font-bold text-outline-variant">#${String(displayNum).padStart(3, '0')}</span>
-        </div>
+        <div class="flex flex-col items-center gap-4 w-full">
+          <div class="w-full flex justify-between items-center">
+            <span class="label-font text-xl font-bold text-outline-variant">#${String(displayNum).padStart(3, '0')}</span>
+          </div>
 
-        <div class="w-full rounded-2xl overflow-hidden mb-2 bg-[#f0ece6] min-h-[160px] flex items-center justify-center">
-          <img src="${item.image}"
-            class="w-full h-auto object-contain"
-            alt="${title}"
-            loading="lazy"
-            decoding="async"
-            onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-          <div style="display:none" class="w-full min-h-[160px] flex flex-col items-center justify-center gap-2 text-[#b2b2ad]">
-            <span class="material-symbols-outlined text-4xl">image</span>
-            <span class="label-font text-xs">이미지 준비 중</span>
+          <div class="w-full rounded-2xl overflow-hidden bg-[#f0ece6] aspect-video flex items-center justify-center relative transition-shadow duration-300 group-hover:shadow-sm">
+            <img src="${item.image}"
+              class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              alt="${title}"
+              loading="lazy"
+              decoding="async"
+              onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <div style="display:none" class="w-full h-full flex flex-col items-center justify-center gap-2 text-[#b2b2ad]">
+              <span class="material-symbols-outlined text-4xl">image</span>
+              <span class="label-font text-xs">이미지 준비 중</span>
+            </div>
+          </div>
+
+          <div class="w-full text-center flex flex-col items-center gap-2 px-2">
+            <h3 class="font-bold text-2xl text-on-surface leading-tight">${nl2br(title)}</h3>
+            <p class="text-sm text-on-surface-variant leading-relaxed text-left w-full mt-1">${nl2br(desc)}</p>
+            <div class="mt-3 flex flex-wrap justify-center gap-2 w-full">${tagsHtml}</div>
           </div>
         </div>
 
-        <div class="w-full text-center flex flex-col items-center gap-2 px-2">
-          <h3 class="font-bold text-2xl text-on-surface">${nl2br(title)}</h3>
-          <p class="text-sm text-on-surface-variant leading-relaxed">${nl2br(desc)}</p>
-          <div class="mt-2 flex flex-wrap justify-center gap-2">${tagsHtml}</div>
-        </div>
+        <div class="w-full mt-6 flex flex-col gap-2">
+          <a href="${resolvedLink}" target="_blank" rel="noopener noreferrer" class="w-full">
+            <button class="w-full bg-primary text-[#fff7f6] label-font px-6 py-3.5 rounded-2xl hover:shadow-[0_10px_20px_rgba(124,85,86,0.15)] transition-all active:scale-95 flex items-center justify-center gap-2 font-semibold">
+              바로가기
+              <span class="material-symbols-outlined text-sm">arrow_outward</span>
+            </button>
+          </a>
 
-        <a href="${resolvedLink}" target="_blank" rel="noopener noreferrer" class="w-full mt-4">
-          <button class="w-full bg-primary text-[#fff7f6] label-font px-6 py-4 rounded-2xl hover:shadow-[0_10px_20px_rgba(124,85,86,0.15)] transition-all active:scale-95 flex items-center justify-center gap-2">
-            바로가기
-            <span class="material-symbols-outlined text-sm">arrow_outward</span>
+          <button
+            onclick="toggleQr(this)"
+            data-link="${resolvedLink.replace(/"/g, '&quot;')}"
+            class="w-full flex items-center justify-center gap-1.5 text-[#b2b2ad] hover:text-[#7c5556] transition-colors label-font text-xs py-2 rounded-xl hover:bg-[#f5f0ea]">
+            <span class="material-symbols-outlined text-sm">qr_code</span>
+            QR 코드 열기
           </button>
-        </a>
-
-        <button
-          onclick="toggleQr(this)"
-          data-link="${resolvedLink.replace(/"/g, '&quot;')}"
-          class="mt-1 w-full flex items-center justify-center gap-1.5 text-[#b2b2ad] hover:text-[#7c5556] transition-colors label-font text-xs py-1.5 rounded-xl hover:bg-[#f5f0ea]">
-          <span class="material-symbols-outlined text-sm">qr_code</span>
-          QR 코드 열기
-        </button>
-        <div class="qr-panel hidden w-full flex-col items-center gap-2 py-2">
-          <img class="qr-img rounded-2xl shadow-md" width="200" height="200" alt="QR 코드">
-          <span class="label-font text-[10px] text-[#b2b2ad]">카메라로 스캔하세요</span>
+          <div class="qr-panel hidden w-full flex-col items-center gap-2 py-2">
+            <img class="qr-img rounded-2xl shadow-md mx-auto" width="200" height="200" alt="QR 코드">
+            <span class="label-font text-[10px] text-[#b2b2ad]">카메라로 스캔하세요</span>
+          </div>
         </div>
 
       </div>`;
@@ -270,6 +284,63 @@ window.toggleDarkMode = function() {
     const isDark = document.documentElement.classList.contains('dark');
     const toggle = document.getElementById('darkModeToggle');
     if (toggle) toggle.checked = isDark;
+
+    // 카테고리 탭 클릭 이벤트 바인딩
+    const tabContainer = document.getElementById('categoryTabs');
+    if (tabContainer) {
+      tabContainer.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const category = btn.dataset.category || 'all';
+          currentCategory = category;
+          
+          // 활성화 스타일 업데이트
+          tabContainer.querySelectorAll('button').forEach(b => {
+            b.className = 'px-5 py-2.5 rounded-full text-sm font-semibold active:scale-95 transition-all bg-surface-container-lowest text-on-surface hover:bg-surface-variant border border-outline-variant/10';
+          });
+          btn.className = 'px-5 py-2.5 rounded-full text-sm font-semibold active:scale-95 transition-all bg-primary text-white shadow-md';
+          
+          render();
+          pregenerateQrCodes();
+        });
+      });
+    }
+
+    // 캐릭터 무작위 순환 및 인터랙션 기능
+    const mascots = [
+      document.getElementById('headerMascot'),
+      document.getElementById('mainMascot')
+    ].filter(Boolean);
+
+    if (mascots.length > 0) {
+      let currentImgNum = Math.floor(Math.random() * 8) + 1;
+      const setMascotSrc = (num) => {
+        mascots.forEach(img => {
+          img.src = `img/characters/${num}.png`;
+        });
+      };
+
+      // 초기 무작위 이미지 지정
+      setMascotSrc(currentImgNum);
+
+      // 클릭 시 다음 무작위 캐릭터로 전환 (바운스 피드백 효과 적용)
+      mascots.forEach(img => {
+        img.addEventListener('click', () => {
+          img.style.transform = 'scale(0.85)';
+          setTimeout(() => {
+            let nextNum;
+            do {
+              nextNum = Math.floor(Math.random() * 8) + 1;
+            } while (nextNum === currentImgNum);
+            currentImgNum = nextNum;
+            setMascotSrc(currentImgNum);
+            img.style.transform = 'scale(1.15)';
+            setTimeout(() => {
+              img.style.transform = '';
+            }, 150);
+          }, 100);
+        });
+      });
+    }
 
     render();
     pregenerateQrCodes();

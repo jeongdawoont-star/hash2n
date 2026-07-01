@@ -3,45 +3,36 @@
 <head>
   <meta charset="utf-8"/>
   <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-  <title>해시 코딩 기록소 | 교실 프로젝트와 코딩 아카이브</title>
-  <meta name="description" content="해시 코딩 기록소는 교실 프로젝트, 수업용 웹앱, 학급 자동화 도구를 모아 둔 코딩 아카이브입니다. 해시 코딩 기록소로 검색하면 최신 프로젝트를 확인할 수 있습니다."/>
-  <meta name="keywords" content="해시 코딩 기록소, 해시 코딩, 해시브라운 코딩, 바이브코딩, 교실 프로젝트, 수업 도구, 학급 자동화"/>
+  <title>해시브라운 코딩 기록소 | 교실 프로젝트와 코딩 아카이브</title>
+  <meta name="description" content="해시브라운 코딩 기록소는 교실 프로젝트, 수업용 웹앱, 학급 자동화 도구를 모아 둔 코딩 아카이브입니다. 해시브라운 코딩 기록소로 검색하면 최신 프로젝트를 확인할 수 있습니다."/>
+  <meta name="keywords" content="해시브라운 코딩 기록소, 해시브라운 코딩, 바이브코딩, 교실 프로젝트, 수업 도구, 학급 자동화"/>
   <meta name="robots" content="index,follow"/>
   <link rel="canonical" href="https://hash2n.vercel.app/"/>
   <meta property="og:type" content="website"/>
-  <meta property="og:site_name" content="해시 코딩 기록소"/>
-  <meta property="og:title" content="해시 코딩 기록소 | 교실 프로젝트와 코딩 아카이브"/>
+  <meta property="og:site_name" content="해시브라운 코딩 기록소"/>
+  <meta property="og:title" content="해시브라운 코딩 기록소 | 교실 프로젝트와 코딩 아카이브"/>
   <meta property="og:description" content="교실에서 바로 쓰는 활동 트래커, 자동화 도구, 수업 자료, 코딩 실험을 정리한 프로젝트 아카이브입니다."/>
   <meta property="og:url" content="https://hash2n.vercel.app/"/>
   <meta property="og:image" content="https://hash2n.vercel.app/hashbrown.png"/>
   <meta name="twitter:card" content="summary_large_image"/>
-  <meta name="twitter:title" content="해시 코딩 기록소 | 교실 프로젝트와 코딩 아카이브"/>
+  <meta name="twitter:title" content="해시브라운 코딩 기록소 | 교실 프로젝트와 코딩 아카이브"/>
   <meta name="twitter:description" content="교실에서 바로 쓰는 활동 트래커, 자동화 도구, 수업 자료, 코딩 실험을 정리한 프로젝트 아카이브입니다."/>
   <meta name="twitter:image" content="https://hash2n.vercel.app/hashbrown.png"/>
   <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "WebSite",
-      "name": "해시 코딩 기록소",
+      "name": "해시브라운 코딩 기록소",
       "description": "교실 프로젝트와 코딩 아카이브",
       "alternateName": [
+        "해시브라운 코딩 기록소",
+        "해시브라운 코딩",
+        "해시브라운 바이브코딩",
+        "Hashbrown Coding Log",
+        "Hashbrown Coding Archive",
         "Hash Coding Log",
-        "Hash Coding Archive",
-        "Hash Coding Records",
         "해시 코딩 기록소",
         "해시코딩 기록소",
-        "해시 코딩 아카이브",
-        "해시코딩 아카이브",
-        "해시 코딩",
-        "해시 코딩 저장소",
-        "해시 코딩 프로젝트",
-        "해시 코딩 프로젝트 모음",
-        "해시브라운 해시툰",
-        "해시툰",
-        "해시브라운 코딩",
-        "해시 바이브코딩",
-        "해시브라운 바이브코딩",
-        "해시브라운 바이브코딩 저장소",
         "바이브코딩 저장소"
       ],
       "url": "https://hash2n.vercel.app/",
@@ -97,6 +88,8 @@
     html.dark #searchPanel > div,
     html.dark #settingsPanel > div { background-color: #1b1f21 !important; color: #ecebe7 !important; }
     html.dark #recordContainer .hover\:bg-tertiary-container:hover { background-color: #242a2d !important; }
+    html.dark #categoryTabs button:not(.bg-primary) { background-color: #1b1f21 !important; color: #ecebe7 !important; border-color: #2f3436 !important; }
+    html.dark #categoryTabs button:not(.bg-primary):hover { background-color: #242a2d !important; }
     html.dark .text-on-surface,
     html.dark .text-on-surface-variant,
     html.dark .text-outline-variant { color: #ecebe7 !important; }
@@ -138,9 +131,32 @@
     </div>
   </div>
 
-  <header class="fixed top-0 left-0 w-full z-40 bg-[#fbf9f5]/90 backdrop-blur-md flex justify-between items-center px-6 py-4 border-b border-[#efeee9]">
-    <div class="flex items-center gap-4">
-      <h1 class="text-xl font-bold text-[#7c5556] headline-font tracking-tight">Hash Coding Log</h1>
+  <script>
+    if (window.location.protocol === 'file:') {
+      setTimeout(() => {
+        const overlay = document.getElementById('pageLoadingOverlay');
+        if (overlay) {
+          overlay.innerHTML = `
+            <div class="bg-white dark:bg-[#1b1f21] p-6 rounded-3xl max-w-sm text-center shadow-lg border border-red-200 mx-4">
+              <span class="material-symbols-outlined text-red-500 text-5xl mb-2">warning</span>
+              <h3 class="font-bold text-lg text-red-600 mb-2">로컬 파일 직접 실행 불가</h3>
+              <p class="text-xs text-[#7c5556] leading-relaxed mb-4">
+                브라우저의 보안 정책(CORS)으로 인해 <code>file://</code> 경로로 직접 파일을 더블클릭해 열면 작동하지 않습니다.
+              </p>
+              <p class="text-[10px] text-outline-variant leading-relaxed">
+                VS Code의 <strong>Live Server</strong> 확장 프로그램을 사용하거나 로컬 웹 서버 주소(예: <code>http://localhost:5500</code>)로 접속해 주세요.
+              </p>
+            </div>
+          `;
+        }
+      }, 1500);
+    }
+  </script>
+
+  <header class="fixed top-0 left-0 w-full z-40 bg-[#fbf9f5]/90 backdrop-blur-md flex justify-between items-center px-6 py-3 border-b border-[#efeee9] transition-colors duration-200">
+    <div class="flex items-center gap-3">
+      <img id="headerMascot" src="img/characters/1.png" alt="해시브라운 캐릭터 로고" class="w-8 h-8 rounded-full object-cover border border-[#efeee9] shadow-sm cursor-pointer hover:scale-110 active:scale-95 transition-all duration-200"/>
+      <h1 class="text-lg md:text-xl font-bold text-[#7c5556] headline-font tracking-tight">해시브라운 코딩 기록소</h1>
     </div>
     <div class="flex items-center gap-2">
       <button onclick="openSearch()" class="p-2 rounded-full hover:bg-[#efeee9] transition-colors active:scale-95 duration-150">
@@ -150,45 +166,84 @@
   </header>
 
   <main class="pt-28 px-6 max-w-7xl mx-auto">
-    <section class="mb-10 relative flex justify-center">
-      <div class="text-center">
-        <h2 class="headline-font text-4xl md:text-5xl font-extrabold text-primary tracking-tighter">해시 코딩 기록소</h2>
+    <section class="mb-8 relative flex justify-center">
+      <div class="flex items-center justify-center gap-4 md:gap-5">
+        <img id="mainMascot" src="img/characters/1.png" alt="해시브라운 캐릭터" class="w-16 h-16 md:w-20 md:h-20 rounded-2xl object-contain shadow-sm cursor-pointer hover:scale-110 hover:rotate-3 active:scale-90 transition-all duration-300"/>
+        <h2 class="headline-font text-3xl md:text-5xl font-extrabold text-primary tracking-tighter">해시브라운 코딩 기록소</h2>
       </div>
     </section>
 
     <details class="seo-toggle">
       <summary>
         <span class="seo-toggle-line" aria-hidden="true"></span>
-        <span class="seo-toggle-label">프로젝트 링크/검색어 펼치기</span>
+        <span class="seo-toggle-label">프로젝트 아카이브 검색용 링크 펼치기</span>
         <span class="seo-toggle-caret" aria-hidden="true">▶</span>
       </summary>
       <div class="seo-toggle-body">
-        <p class="max-w-4xl mx-auto mb-3 text-sm md:text-base text-[#6e6664] leading-7 text-center">
-          교실에서 실제로 쓰는 웹 도구, 학생 활동 관리 앱, 자동화 실험, 수업용 자료를 모아 둔 코딩 아카이브입니다.
+        <p class="max-w-4xl mx-auto mb-5 text-sm md:text-base text-[#6e6664] leading-7 text-center dark:text-[#ecebe7]/80">
+          <strong>해시브라운 코딩 기록소</strong>는 초등학교 교실에서 유용하게 사용하는 웹앱, 수업 자료, 자동화 유틸리티, 학생 활동 관리 트래커 등을 모아둔 코딩 아카이브 공간입니다.
         </p>
         <section class="mb-8 max-w-4xl mx-auto">
-          <div class="bg-[#fffdf9] border border-[#ece7de] rounded-3xl p-6 md:p-8 shadow-sm">
-            <h3 class="headline-font text-2xl font-extrabold text-primary tracking-tight">주요 프로젝트</h3>
-            <p class="mt-3 text-sm md:text-base text-[#5f5956] leading-7">
-              이 페이지는 수업 보조 도구, 학급 운영 자동화, 발표 자료, AI 기반 실험 프로젝트를 한곳에서 소개합니다. 아래 링크는 검색엔진과 방문자가 바로 접근할 수 있는 대표 페이지입니다.
+          <div class="bg-[#fffdf9] dark:bg-[#1b1f21] border border-[#ece7de] dark:border-[#2f3436] rounded-3xl p-6 md:p-8 shadow-sm">
+            <h3 class="headline-font text-2xl font-extrabold text-primary tracking-tight mb-4">카테고리별 주요 프로젝트 목록</h3>
+            <p class="text-sm text-[#5f5956] dark:text-[#ecebe7]/70 leading-relaxed mb-6">
+              아래 링크는 검색엔진(Google 등)의 인덱싱 및 빠른 접근을 위해 정리한 대표 도구 목록입니다. 클릭하시면 해당 서비스 페이지로 바로 연결됩니다.
             </p>
-            <ul class="mt-5 grid grid-cols-1 md:grid-cols-2 gap-3 text-sm md:text-base text-[#4f4a47]">
-              <li><a class="underline decoration-[#d3c3be] underline-offset-4 hover:text-primary" href="./vibe-apps/속담그림퀴즈.html">속담 그림 퀴즈: 직접 그리며 배우는 저학년용 속담 퀴즈</a></li>
-              <li><a class="underline decoration-[#d3c3be] underline-offset-4 hover:text-primary" href="./score_tracker/">활동 트래커: 학생 미션 제출과 검사 상태를 관리하는 학급용 점수 트래커</a></li>
-              <li><a class="underline decoration-[#d3c3be] underline-offset-4 hover:text-primary" href="./vibe-apps/weekly-notice-automation.html">주간학습 및 알림장 자동화 도구</a></li>
-              <li><a class="underline decoration-[#d3c3be] underline-offset-4 hover:text-primary" href="./vibe-apps/dictation-studio.html">받아쓰기 Studio: Google TTS 기반 받아쓰기 음원 생성기</a></li>
-              <li><a class="underline decoration-[#d3c3be] underline-offset-4 hover:text-primary" href="./vibe-apps/social-open-class-script.html">사회 공개수업 역할극 대본</a></li>
-              <li><a class="underline decoration-[#d3c3be] underline-offset-4 hover:text-primary" href="./vibe-apps/design-elements-slide.html">조형 요소와 조형 원리 슬라이드</a></li>
-              <li><a class="underline decoration-[#d3c3be] underline-offset-4 hover:text-primary" href="./vibe-apps/songsabot.html">학교생활 AI 분쟁처리 시스템 소개</a></li>
-            </ul>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm text-[#4f4a47] dark:text-[#ecebe7]/90">
+              <!-- 교실 도구 카테고리 -->
+              <div class="flex flex-col gap-3">
+                <h4 class="font-bold text-primary text-base border-b border-[#efeee9] dark:border-[#2f3436] pb-1.5 flex items-center gap-1.5">🏫 교실 도구</h4>
+                <ul class="flex flex-col gap-2">
+                  <li><a class="underline decoration-[#d3c3be] hover:text-primary transition-colors" href="./vibe-apps/속담그림퀴즈.html">속담 그림 퀴즈</a></li>
+                  <li><a class="underline decoration-[#d3c3be] hover:text-primary transition-colors" href="./vibe-apps/radio.html">학급 사연 라디오</a></li>
+                  <li><a class="underline decoration-[#d3c3be] hover:text-primary transition-colors" href="./vibe-apps/pair-draw.html">랜덤 짝뽑기</a></li>
+                  <li><a class="underline decoration-[#d3c3be] hover:text-primary transition-colors" href="./vibe-apps/Child%20Morning.html">아침 활동 플래너</a></li>
+                  <li><a class="underline decoration-[#d3c3be] hover:text-primary transition-colors" href="./vibe-apps/student-tracker-demo.html">학생 과제 트랙커</a></li>
+                  <li><a class="underline decoration-[#d3c3be] hover:text-primary transition-colors" href="./vibe-apps/songsabot.html">학급 분쟁 사건 조사서</a></li>
+                </ul>
+              </div>
+
+              <!-- 게임 · 놀이 카테고리 -->
+              <div class="flex flex-col gap-3">
+                <h4 class="font-bold text-primary text-base border-b border-[#efeee9] dark:border-[#2f3436] pb-1.5 flex items-center gap-1.5">🎮 게임 · 놀이</h4>
+                <ul class="flex flex-col gap-2">
+                  <li><a class="underline decoration-[#d3c3be] hover:text-primary transition-colors" href="./boardgame_maker/boardgame-maker.html">보드게임 메이커</a></li>
+                  <li><a class="underline decoration-[#d3c3be] hover:text-primary transition-colors" href="./vibe-apps/find-tresure.html">두근두근 보물찾기</a></li>
+                  <li><a class="underline decoration-[#d3c3be] hover:text-primary transition-colors" href="./vibe-apps/doble-maker.html">도블 메이커</a></li>
+                  <li><a class="underline decoration-[#d3c3be] hover:text-primary transition-colors" href="./vibe-apps/Choong-Yeok-the-Loyalty-and-Traitor-web.html">충역: 임진왜란 마피아</a></li>
+                </ul>
+              </div>
+
+              <!-- 업무 · 유틸 카테고리 -->
+              <div class="flex flex-col gap-3">
+                <h4 class="font-bold text-primary text-base border-b border-[#efeee9] dark:border-[#2f3436] pb-1.5 flex items-center gap-1.5">⚙️ 업무 · 유틸</h4>
+                <ul class="flex flex-col gap-2">
+                  <li><a class="underline decoration-[#d3c3be] hover:text-primary transition-colors" href="https://jeongdawoont-star.github.io/wallpaper_line">바탕화면 선긋기 매니저</a></li>
+                  <li><a class="underline decoration-[#d3c3be] hover:text-primary transition-colors" href="./vibe-apps/weekly-notice-automation.html">알림장/주간학습 자동화</a></li>
+                  <li><a class="underline decoration-[#d3c3be] hover:text-primary transition-colors" href="./vibe-apps/dictation-studio.html">받아쓰기 Studio</a></li>
+                  <li><a class="underline decoration-[#d3c3be] hover:text-primary transition-colors" href="./vibe-apps/design-elements-slide.html">미술 조형요소 슬라이드</a></li>
+                  <li><a class="underline decoration-[#d3c3be] hover:text-primary transition-colors" href="./vibe-apps/social-open-class-script.html">사회 공개수업 역할극대본</a></li>
+                </ul>
+              </div>
+            </div>
           </div>
         </section>
       </div>
     </details>
 
-    <section class="bg-surface-container rounded-3xl p-4 md:p-8 max-w-2xl mx-auto">
-      <div class="grid grid-cols-1 gap-8" id="recordContainer">
-        <div class="text-center py-12 label-font text-on-surface-variant">
+    <!-- 카테고리 필터 탭 -->
+    <div class="flex flex-wrap justify-center gap-2 mb-8" id="categoryTabs">
+      <button data-category="all" class="px-5 py-2.5 rounded-full text-sm font-semibold active:scale-95 transition-all bg-primary text-white shadow-md">전체</button>
+      <button data-category="class-tools" class="px-5 py-2.5 rounded-full text-sm font-semibold active:scale-95 transition-all bg-surface-container-lowest text-on-surface hover:bg-surface-variant border border-outline-variant/10">교실 도구</button>
+      <button data-category="games" class="px-5 py-2.5 rounded-full text-sm font-semibold active:scale-95 transition-all bg-surface-container-lowest text-on-surface hover:bg-surface-variant border border-outline-variant/10">게임 · 놀이</button>
+      <button data-category="automation" class="px-5 py-2.5 rounded-full text-sm font-semibold active:scale-95 transition-all bg-surface-container-lowest text-on-surface hover:bg-surface-variant border border-outline-variant/10">업무 · 유틸</button>
+      <button data-category="etc" class="px-5 py-2.5 rounded-full text-sm font-semibold active:scale-95 transition-all bg-surface-container-lowest text-on-surface hover:bg-surface-variant border border-outline-variant/10">기타</button>
+    </div>
+
+    <section class="bg-surface-container rounded-3xl p-4 md:p-8 w-full max-w-7xl mx-auto mb-16">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="recordContainer">
+        <div class="text-center py-12 label-font text-on-surface-variant col-span-full">
           로딩 중...
         </div>
       </div>
