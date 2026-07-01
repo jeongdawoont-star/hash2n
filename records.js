@@ -45,7 +45,7 @@ export const RECORDS = [
     desc: "생신 용돈 드리기 위해 알아보다가\n구매 대신 셀프로 만들어 드렸다.\n4종 도안 및 문구 수정 가능.\n금액 조절 가능. PDF 출력 후 조립하면 된다.",
     tags: "diy, craft, unplugged",
     category: "etc",
-    link: "./돈병풍만들기/donbyeongpung_v3.html",
+    link: "./vibe-apps/donbyeongpung_v3.html",
     image: "img-re/21.avif",
   },
 
