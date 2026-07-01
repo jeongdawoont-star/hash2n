@@ -36,7 +36,7 @@ export const RECORDS = [
     desc: "기타 코드와 가사를 함께 볼 수 있는 웹 악보집이다.\n자동 스크롤, 코드 운지법 다이어그램 표시, 유튜브 연동을 지원한다.\n나만의 악보를 직접 추가하여 연주에 활용할 수 있다.",
     tags: "guitar, chord, band, songbook",
     category: "games",
-    link: "./밴드공연 악보/songbook.html",
+    link: "#",
     image: "img-re/22.avif",
   },
 
