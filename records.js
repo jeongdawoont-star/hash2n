@@ -32,6 +32,15 @@ export const RECORDS = [
   // ▼ 여기에 새 기록을 붙여넣으세요 (최신 항목을 맨 위에) ▼
 
   {
+    title: "나의 악보집",
+    desc: "기타 코드와 가사를 함께 볼 수 있는 웹 악보집이다.\n자동 스크롤, 코드 운지법 다이어그램 표시, 유튜브 연동을 지원한다.\n나만의 악보를 직접 추가하여 연주에 활용할 수 있다.",
+    tags: "guitar, chord, band, songbook",
+    category: "games",
+    link: "./밴드공연 악보/songbook.html",
+    image: "img-re/22.avif",
+  },
+
+  {
     title: "돈병풍 메이커",
     desc: "생신 용돈 드리기 위해 알아보다가\n구매 대신 셀프로 만들어 드렸다.\n4종 도안 및 문구 수정 가능.\n금액 조절 가능. PDF 출력 후 조립하면 된다.",
     tags: "diy, craft, unplugged",
