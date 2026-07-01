@@ -1,3 +1,8 @@
 node_modules/
 .deploy-hardened/
 .vercel
+
+# 밴드공연 악보 폴더 내 대용량 동영상 및 스크랩 에셋 제외
+밴드공연 악보/*
+!밴드공연 악보/songbook.html
+!밴드공연 악보/band-songbook-data.js
