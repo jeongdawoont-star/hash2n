@@ -13,18 +13,28 @@ const rand = (arr) => arr[Math.floor(Math.random() * arr.length)];
 const randInt = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
 const esc = (s) => String(s).replace(/[&<>"]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
 
-/* 전체화면 요청 헬퍼 */
+/* 전체화면 요청 헬퍼 — 모바일·태블릿은 세로 방향으로 잠근다 */
+function lockPortrait() {
+    try {
+        if (screen.orientation && screen.orientation.lock) {
+            /* 방향 잠금은 전체화면 상태에서만 허용됨. 미지원(데스크톱·iOS)은 조용히 무시 */
+            screen.orientation.lock("portrait").catch(() => {});
+        }
+    } catch (e) { /* 미지원 환경 무시 */ }
+}
 function safeRequestFullscreen() {
     try {
         const doc = document.documentElement;
         if (doc.requestFullscreen) {
-            doc.requestFullscreen().catch((err) => {
+            doc.requestFullscreen().then(lockPortrait).catch((err) => {
                 console.warn("Fullscreen request rejected:", err);
             });
         } else if (doc.webkitRequestFullscreen) {
             doc.webkitRequestFullscreen();
+            lockPortrait();
         } else if (doc.msRequestFullscreen) {
             doc.msRequestFullscreen();
+            lockPortrait();
         }
     } catch (e) {
         console.warn("Fullscreen error:", e);

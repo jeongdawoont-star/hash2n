@@ -89,6 +89,34 @@ input, textarea { font-family: inherit; }
 }
 #edu-badge button:hover { background: rgba(255, 209, 102, .12); }
 
+/* ══════════ 가로 모드 안내 (모바일·태블릿 전용) ══════════ */
+#rotate-guard {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    background: #05060a;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    text-align: center;
+    padding: 20px;
+}
+.rg-icon { font-size: 44px; animation: rgtilt 1.6s ease-in-out infinite; }
+@keyframes rgtilt {
+    0%, 20% { transform: rotate(-90deg); }
+    55%, 100% { transform: rotate(0deg); }
+}
+@media (prefers-reduced-motion: reduce) { .rg-icon { animation: none; } }
+#rotate-guard p { font-size: 18px; font-weight: 700; color: #fff; }
+#rotate-guard p b { color: var(--gold); }
+#rotate-guard span { font-size: 12.5px; color: var(--muted); }
+/* 터치 기기 + 가로 + 낮은 화면(폰·소형 태블릿)에서만 발동 — 데스크톱 가로 모니터는 제외 */
+@media (orientation: landscape) and (max-height: 520px) and (pointer: coarse) {
+    #rotate-guard { display: flex; }
+}
+
 /* ══════════ 폰 프레임 ══════════ */
 #phone {
     position: relative;
