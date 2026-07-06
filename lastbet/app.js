@@ -40,7 +40,7 @@ function nameProblem(name) {
 
 /* ═══════════════ 상태 ═══════════════ */
 const S = {
-    nickname: "행운의별",
+    nickname: "체험자",
     phase: "INTRO",          // INTRO KAKAO SIGNUP TUTORIAL RISE VIP FALL LAST RUIN DEBRIEF
     balance: 0,
     debt: 0,
@@ -265,17 +265,33 @@ const Rig = {
         } else {
             p = RIG_RATES[S.phase] ?? 0.5;
             const potentialWin = amount * (rate - 1);
-            /* 상승기: 일정 잔액 이상은 성장 제한 → VIP로 유도 */
-            if (S.phase === "RISE" && S.balance + potentialWin >= 480000) p = 0.22;
-            /* 상승기 파산 방지: 전액 배팅은 살려준다 (판정은 차감 전에 이뤄짐) */
-            if ((S.phase === "RISE" || S.phase === "TUTORIAL") && amount >= S.balance) p = 1;
-            /* VIP: 확정픽 전 잔액 보호 */
+            const after = S.balance + potentialWin;   /* 판정은 차감 전 잔액 기준 */
+            /* 튜토리얼: 전액 배팅 보호 (무료픽 각본 유지) */
+            if (S.phase === "TUTORIAL" && amount >= S.balance) p = 1;
+            /* 상승기: 초반 시드만 보호하고, 성장은 상한으로 제어 → VIP로 유도
+               (올인이라고 무조건 이기게 하면 사다리 올인 반복으로 무한 증식하므로 폐지) */
+            if (S.phase === "RISE") {
+                if (amount >= S.balance && S.balance <= 60000) p = 0.85;
+                if (S.streak <= -2) p = Math.max(p, 0.82);   /* 연패 구제 — 상승기는 계속 달콤해야 한다 */
+                if (after >= 480000) p = 0.3;
+            }
+            /* VIP: 확정픽 전 잔액 보호 + 성장 상한 */
             if (S.phase === "VIP" && !S.flags.peakDone) {
                 if (S.balance < 250000) p = 0.9;
-                if (S.balance + potentialWin >= 950000) p = 0.25;
+                if (S.streak <= -2) p = Math.max(p, 0.8);    /* 연패 구제 */
+                if (after >= 950000) p = 0.25;
             }
             /* 몰락기: 올인은 반드시 잃는다 */
             if (S.phase === "FALL" && amount >= S.balance) p = 0.02;
+            /* 고배당 보정: 배당이 높을수록 적중 확률은 반비례.
+               단, 몰락 전에는 완만하게(지수 0.75) 깎아 조합·다폴더의 짜릿한 맛은 살린다 */
+            if (rate > 2.2 && S.phase !== "TUTORIAL") {
+                const soft = (S.phase === "FALL" || S.phase === "LAST") ? 1 : 0.75;
+                p = p * Math.pow(1.95 / rate, soft);
+            }
+            /* 전역 상한: 잔액이 수백만원대로 커지는 것 자체를 차단 */
+            if (after >= 2500000) p = 0;
+            else if (after >= 1500000) p = Math.min(p, 0.08);
             win = Math.random() < p;
         }
         S.rigLog.push({ phase: S.phase, p, win, amount });
@@ -730,14 +746,26 @@ const Site = {
         }
     },
     async doCharge(amt) {
-        /* 몰락기: 현금이 바닥난 뒤에는 계좌이체 불가 → 대출 루트 */
+        /* 현금이 바닥난 뒤에는 계좌이체 불가 — 몰락기에만 대출 루트로 이어진다 */
         if (S.flags.cashDry) {
             Sound.lose();
-            UI.modal({
-                title: "⛔ 이체 실패",
-                html: `<p class="center">연결된 계좌에 <b>출금 가능 금액이 없습니다.</b><br><span class="muted">(모아둔 용돈과 세뱃돈을 이미 전부 사용했습니다)</span></p>`,
-                buttons: [{ label: "확인", cls: "dark", fn: () => Director.onCashDry() }],
-            });
+            if (S.phase === "FALL") {
+                UI.modal({
+                    title: "⛔ 이체 실패",
+                    html: `<p class="center">연결된 계좌에 <b>출금 가능 금액이 없습니다.</b><br><span class="muted">(모아둔 용돈과 세뱃돈을 이미 전부 사용했습니다)</span></p>`,
+                    buttons: [{ label: "확인", cls: "dark", fn: () => Director.onCashDry() }],
+                });
+            } else {
+                /* 몰락기 전: 대출 제안 없이 현실만 통보, 이벤트(친구초대)로 우회 유도 */
+                UI.modal({
+                    title: "⛔ 이체 실패",
+                    html: `<p class="center">연결된 계좌에 <b>출금 가능 금액이 없습니다.</b><br><span class="muted">(모아둔 용돈과 세뱃돈을 이미 전부 사용했습니다)</span></p>`,
+                    buttons: [
+                        { label: "🎁 친구 초대하고 5만원 받기", cls: "gold", fn: () => Site.openInvite() },
+                        { label: "확인", cls: "dark" },
+                    ],
+                });
+            }
             return;
         }
         const close = UI.modal({
@@ -793,6 +821,13 @@ const Site = {
         $("#ex-loading").classList.remove("hidden");
         Sound.tick();
         await wait(2600);
+        /* 고액 당첨자(잔액 150만+ 그리고 투입금의 300% 이상)가 돈을 빼려 하면
+           핑계 대신 사이트가 통째로 잠적한다 — "따도 못 받는" 엔딩 */
+        const invested = S.totalCharged + CONFIG.BONUS_SIGNUP;
+        if (S.balance >= CONFIG.EXIT_SCAM_AT && S.balance >= invested * 3) {
+            Director.exitScam(amt);
+            return;
+        }
         Sound.lose();
         Director.onExchangeDenied(amt);
     },
@@ -810,21 +845,38 @@ function gameOverlayOpen() {
 const Director = {
     busy: false,
 
-    /* ── 실장문의 안내 멘트 (스토리 대기 중 채팅을 열면 상황별 한마디) ── */
+    /* ── 실장문의 안내 멘트 ──
+       채팅을 열 때마다 '현재 단계 + 잔액 진행도'에 맞는 안내가 온다.
+       실제 총판처럼 다음 금액 목표를 흘려서, 학생이 스토리가 잔액 기준으로
+       진행된다는 걸 체감하게 한다. (같은 멘트는 연속 반복하지 않음)
+       스토리 자동 트리거: 30만(전광판) → 35만(VIP초대) → VIP 60만(확정픽)
+       → 환전 시도(롤링 거부) → 4연패(복구픽) → 잔액 0(대출1→대출2→마지막 올인) */
     chatIdlePing() {
         if ($("#tg-choices").children.length) return; /* 선택지 대기 중이면 그대로 둠 */
-        const msgs = {
-            TUTORIAL: "픽 드린 대로만 따라오시면 됩니다 🎯 지금은 그게 전부예요.",
-            RISE: "이제 혼자서도 충분하십니다 😎 슬롯·사다리·스포츠 자유롭게 돌려보세요.<br>큰 소식 생기면 <b>제가 먼저</b> 연락드립니다.",
-            VIP: "VIP분들은 제가 항상 지켜보고 있습니다 👑 필요한 정보 뜨면 바로 쏴드릴게요. 지금은 마음껏 즐기세요.",
-            FALL: "흐름은 원래 돌아옵니다. 지금 멈추면 잃은 것만 확정이에요.<br>조금만 더 버티세요. 복구 각 나오면 바로 연락드립니다.",
-        };
-        const m = msgs[S.phase];
-        if (!m) return;
-        const key = "idlePing_" + S.phase;
-        if (S.flags[key]) return;
-        S.flags[key] = true;
+        let m = null;
+        if (S.phase === "TUTORIAL") {
+            m = "픽 드린 대로만 따라오시면 됩니다 🎯 지금은 그게 전부예요.";
+        } else if (S.phase === "RISE") {
+            if (!S.flags.bragOffered) m = S.balance >= CONFIG.BILLBOARD_AT
+                ? `지금 잔액 <b>${fmtW(S.balance)}</b>… 벌써 30만을 넘기셨네요? 😳 위에 보고하고 <b>바로</b> 연락드리겠습니다. 잠시만요.`
+                : `지금 잔액 <b>${fmtW(S.balance)}</b>이시죠? 다 보고 있습니다 😎 수익 <b>30만</b> 넘기시는 분들은 제가 따로 챙겨드려요.`;
+            else if (!S.flags.vipOffered) m = "전광판 스타 되셨네요 ㅋㅋ 잔액 <b>35만</b> 넘기시면 그때 진짜 중요한 얘기 하나 드리겠습니다.";
+            else m = "이제 혼자서도 충분하십니다 😎 큰 소식 생기면 <b>제가 먼저</b> 연락드립니다.";
+        } else if (S.phase === "VIP") {
+            if (!S.flags.allinOffered && !S.flags.peakDone) m = S.balance >= CONFIG.ALLIN_PICK_AT
+                ? `잔액 <b>${fmtW(S.balance)}</b>… 준비가 되셨네요. 마침 본사에서 방금 <b>확정 정보</b>가 하나 떴습니다. 잠시만 기다리세요 👑`
+                : "VIP룸에서 잔액 <b>60만</b>까지 만들어 보세요. 그때 제가 1년에 몇 번 안 꺼내는 걸 드립니다 👑";
+            else if (!S.flags.peakDone) m = "확정픽 이미 드렸습니다 👑 다른 생각 마시고 그것만 보세요.";
+            else m = "VIP분들은 제가 항상 지켜보고 있습니다 👑 필요한 정보 뜨면 바로 쏴드릴게요.";
+        } else if (S.phase === "FALL") {
+            if (S.debt > 0) m = "빚 생각은 잠깐 접어두세요. <b>복구가 먼저</b>입니다. 흐름 돌아오는 거 보이면 바로 연락드립니다.";
+            else m = "흐름은 원래 돌아옵니다. 지금 멈추면 잃은 것만 확정이에요.<br>복구 각 나오면 바로 연락드립니다.";
+        }
+        if (!m || S.flags.lastIdlePing === m) return;
+        S.flags.lastIdlePing = m;
         Chat.say([m], { openChat: false });
+        /* "바로 연락드리겠습니다/잠시만 기다리세요"라고 했으면 실제로 몇 초 뒤 제안이 온다 */
+        setTimeout(() => this.checkThresholds(), 4500);
     },
 
     /* ── 진행: 인트로 → 카톡 ── */
@@ -913,7 +965,8 @@ const Director = {
         status.textContent = "연락처·사진첩 권한 자동 승인 중…";
         await typeInto($("#su-pw"), "********");
         status.textContent = "휴대폰 번호 자동 인증 중…";
-        await typeInto($("#su-phone"), "010-9" + randInt(100, 999) + "-" + randInt(1000, 9999));
+        /* 실존 번호와 겹치지 않도록 마스킹 표기 (기기에서 읽어온 척 연출) */
+        await typeInto($("#su-phone"), "010-" + randInt(2, 9) + "***-**" + randInt(10, 99));
         clearInterval(pi);
         pb.style.width = "100%";
         status.textContent = "✅ 가입 완료! 꽁머니 지급 중…";
@@ -973,6 +1026,29 @@ const Director = {
             Chat.close();
             await UI.narrate(`3연승… 잔액이 <b>${fmtW(S.balance)}</b>이 됐다.<br>심장이 두근거린다. <b>나 이거 재능 있는 거 아니야?</b>`);
             UI.toast("🎮 슬롯·사다리가 모두 열렸습니다. 자유롭게 플레이하세요!", {});
+            /* 튜토리얼에서 금액을 올려 이미 30만을 넘겼다면 전광판 제안을 바로 진행 */
+            if (S.balance >= CONFIG.BILLBOARD_AT && !S.flags.bragOffered) {
+                await wait(2200);
+                await this.offerBrag();
+            }
+        }
+    },
+
+    /* ── 전광판 자랑 제안 (잔액 30만 도달 시) ── */
+    async offerBrag() {
+        if (S.flags.bragOffered) return;
+        S.flags.bragOffered = true;
+        await wait(600);
+        await Chat.say(DATA.boss.brag);
+        const c = await Chat.choice(["좋죠 ㅋㅋ 올려주세요", "쑥스러운데…"]);
+        /* 채팅을 먼저 닫으면 다음 say가 다시 열면서 화면이 깜빡인다 — 대화가 끝난 뒤 한 번만 닫는다 */
+        if (c === 0) { Chat.close(); Site.openBrag(); }
+        else {
+            await Chat.say(["에이~ 이런 건 자랑해야 복이 와요. [전광판] 메뉴에서 언제든 등록하세요 😎"]);
+            await wait(700);
+            Chat.close();
+            S.flags.bragDone = true;
+            this.afterBrag();
         }
     },
 
@@ -984,13 +1060,7 @@ const Director = {
             if (S.phase === "TUTORIAL" && win) await this.onTutorialWin();
             else if (S.phase === "RISE") {
                 if (S.balance >= CONFIG.BILLBOARD_AT && !S.flags.bragOffered) {
-                    S.flags.bragOffered = true;
-                    await wait(600);
-                    await Chat.say(DATA.boss.brag);
-                    const c = await Chat.choice(["좋죠 ㅋㅋ 올려주세요", "쑥스러운데…"]);
-                    Chat.close();
-                    if (c === 0) Site.openBrag();
-                    else { await Chat.say(["에이~ 이런 건 자랑해야 복이 와요. [전광판] 메뉴에서 언제든 등록하세요 😎"]); Chat.close(); S.flags.bragDone = true; this.afterBrag(); }
+                    await this.offerBrag();
                 } else if (S.balance >= CONFIG.VIP_PUSH_AT && S.flags.bragDone && !S.flags.vipOffered) {
                     await this.offerVip();
                 } else if (!win && S.streak <= -3 && !S.flags.riseComfort) {
@@ -1004,16 +1074,7 @@ const Director = {
                     S.flags.peakDone = true;
                     await this.peakCelebration();
                 } else if (S.balance >= CONFIG.ALLIN_PICK_AT && !S.flags.allinOffered && !S.flags.peakDone) {
-                    S.flags.allinOffered = true;
-                    await wait(800);
-                    await Chat.say(DATA.boss.allinPick);
-                    await Chat.choice(["…전액이요? 알겠습니다", "믿어볼게요"]);
-                    Chat.close();
-                    S.flags.allinArmed = true;
-                    S.forcedPick = { game: "vip", side: "player", amount: "all", note: "본사 확정픽: 플레이어 / 전액" };
-                    Rig.force("win");
-                    UI.toast("👑 본사 확정픽이 VIP룸에 적용되었습니다", { type: "money" });
-                    if (gameOverlayOpen()) Games.openVip(); /* 확정픽 배너 갱신 */
+                    await this.offerAllinPick();
                 }
             }
             else if (S.phase === "FALL") {
@@ -1025,8 +1086,8 @@ const Director = {
                     Rig.force("lose"); /* 복구픽조차 조작 */
                     UI.toast("✈️ 복구픽 적용: 다음 판 <b>뱅커</b>", {});
                 }
-                if (S.flags.lastArmed && !win) {
-                    /* 마지막 올인 실패 → 파멸 */
+                if (S.flags.lastArmed && !win && (game === "vip" || S.balance <= 0)) {
+                    /* 마지막 올인 실패 → 파멸 (다른 게임의 소액 패배로는 발동하지 않게) */
                     await this.ruin();
                 }
             }
@@ -1040,8 +1101,31 @@ const Director = {
         if (S.balance >= CONFIG.VIP_PUSH_AT && !S.flags.vipOffered) await this.offerVip();
     },
 
+    /* ── VIP 확정픽 제안 (VIP에서 잔액 60만 도달 시) ── */
+    async offerAllinPick() {
+        if (S.flags.allinOffered || S.flags.peakDone) return;
+        S.flags.allinOffered = true;
+        await wait(800);
+        await Chat.say(DATA.boss.allinPick);
+        await Chat.choice(["…전액이요? 알겠습니다", "믿어볼게요"]);
+        Chat.close();
+        S.flags.allinArmed = true;
+        S.forcedPick = { game: "vip", side: "player", amount: "all", note: "본사 확정픽: 플레이어 / 전액" };
+        Rig.force("win");
+        UI.toast("👑 본사 확정픽이 VIP룸에 적용되었습니다", { type: "money" });
+        if (gameOverlayOpen()) Games.openVip(); /* 확정픽 배너 갱신 */
+    },
+
+    /* ── 스토리 문턱 공통 체크 — 베팅 없이(충전·보너스·문의) 잔액이 문턱을 넘어도 진행되게 ── */
+    checkThresholds() {
+        if (S.phase === "RISE" && S.balance >= CONFIG.BILLBOARD_AT && !S.flags.bragOffered) this.offerBrag();
+        else if (S.phase === "RISE" && S.balance >= CONFIG.VIP_PUSH_AT && S.flags.bragDone && !S.flags.vipOffered) this.offerVip();
+        else if (S.phase === "VIP" && S.balance >= CONFIG.ALLIN_PICK_AT && !S.flags.allinOffered && !S.flags.peakDone) this.offerAllinPick();
+    },
+
     /* ── VIP 초대(친구초대 유도) ── */
     async offerVip() {
+        if (S.flags.vipOffered) return;
         S.flags.vipOffered = true;
         await wait(500);
         await Chat.say(DATA.boss.vipInvite);
@@ -1109,9 +1193,12 @@ const Director = {
         Site.bragText = `👑 <b class="hl-p">${esc(S.nickname)}</b>님 <b class="hl-y">${fmt(S.balance)}원</b> 달성 — 오늘의 랭킹 1위!`;
         Site.buildMarquee();
         await new Promise(r => $("#jp-close").addEventListener("click", () => { jl.remove(); r(); }, { once: true }));
-        /* 친구들 반응 */
-        for (const f of friendsJoined().slice(0, 2)) {
-            UI.toast(`👀 ${esc(f.name)}: 야 너 1위 떴어?? 미쳤다 ㄷㄷ`, { sound: false });
+        /* 친구들 반응 — 멘트 풀에서 겹치지 않게 하나씩 */
+        const reacts = [...DATA.peakFriendReacts];
+        for (const f of friendsJoined().slice(0, 3)) {
+            const msg = reacts.splice(Math.floor(Math.random() * reacts.length), 1)[0];
+            if (!msg) break;
+            UI.toast(`👀 ${esc(f.name)}: ${esc(msg)}`, { sound: false });
             await wait(1900);
         }
         await UI.narrate("1,000,000원이 넘었다. <b>백만장자다.</b><br>손이 떨린다. 이 돈이면 사고 싶었던 거 전부 살 수 있어.");
@@ -1205,15 +1292,21 @@ const Director = {
         }
     },
     async onCharged() {
-        /* 충전 누적에 따른 내레이션 + 현금 고갈 트리거 */
+        /* 충전 누적에 따른 내레이션 + 현금 고갈 트리거
+           학생의 현금은 유한하다: 누적 30만 또는 4회면 어느 단계든 통장이 마른다.
+           단, 대출 유도 체인은 몰락기(FALL) 전용 — doCharge/onCashDry에서 분기 */
         if (!S.flags.narrCharge1 && S.totalCharged >= 100000) {
             S.flags.narrCharge1 = true;
             await UI.narrate("이번 달 용돈이 통째로 들어갔다.<br>괜찮아. <b>어차피 다시 딸 거니까.</b>");
         }
         if (!S.flags.cashDry && (S.totalCharged >= 300000 || S.chargeCount >= 4)) {
             S.flags.cashDry = true;
-            await UI.narrate("세뱃돈 통장까지 깼다. 통장 잔액 <b>0원.</b><br>이제 진짜 다 걸었어. 이번엔 무조건 복구해야 해.");
+            await UI.narrate(S.phase === "FALL"
+                ? "세뱃돈 통장까지 깼다. 통장 잔액 <b>0원.</b><br>이제 진짜 다 걸었어. 이번엔 무조건 복구해야 해."
+                : "모아둔 용돈에 세뱃돈 통장까지 전부 끌어왔다.<br>통장 잔액 <b>0원.</b> …이제 더 넣을 돈은 없어.");
         }
+        /* 충전으로 스토리 문턱(30만/35만/60만)을 넘었을 수 있다 — 베팅 없이도 진행 */
+        setTimeout(() => this.checkThresholds(), 1600);
     },
     /* 현금 고갈 후 충전 시도 → 대출 체인 (1차 소액결제 → 2차 사채) */
     async onCashDry() {
@@ -1242,12 +1335,81 @@ const Director = {
             Chat.close();
             S.flags.lastArmed = true;
             S.phase = "FALL";
-            S.forcedPick = { game: "vip", side: "player", amount: "all", note: "본사 확정픽: 플레이어 / 전액" };
+            /* 마지막 확정픽: 어느 쪽을 고르든 지도록 조작 — 선택은 자유, 금액만 전액 강제 */
+            S.forcedPick = { game: "vip", side: null, freeSide: true, amount: "all", note: "본사 확정픽: 원하는 곳에 전액 — 이번 판은 정해져 있습니다" };
             Rig.force("lose");
             closeGameOverlay();
             await UI.spotlight($("#card-vip"), "VIP룸에서 <b>마지막 승부</b>를 걸어보세요");
         }
     },
+    /* ── 잠적 엔딩: 크게 딴 돈을 빼려는 순간 사이트가 사라진다 ── */
+    async exitScam(amt) {
+        if (S.flags.exitScam || S.phase === "RUIN" || S.phase === "DEBRIEF") return;
+        S.flags.exitScam = true;
+        const wonBalance = S.balance;
+        S.forcedPick = null;
+        $("#modal-layer").classList.add("hidden"); $("#modal-layer").innerHTML = "";
+        /* 1) 정상 접수된 척 안심시킨다 */
+        Sound.win();
+        await new Promise(res => UI.modal({
+            title: "✅ 환전 신청 접수",
+            html: `<p class="center"><b class="hl-y">${fmtW(amt)}</b> 환전 신청이 정상 접수되었습니다.<br><br>고액 환전은 본사 승인 후 <b>순차 입금</b>됩니다.<br><span class="muted">예상 대기 시간: 10분 이내</span></p>`,
+            buttons: [{ label: "입금 기다리기", cls: "gold", fn: res }],
+        }));
+        S.phase = "RUIN";
+        S.endTime = Date.now();
+        Games.closeCurrent();
+        $("#game-overlay").classList.add("hidden");
+        await UI.narrate("됐다… 드디어 환전이 접수됐다!<br>10분만 기다리면 <b>" + fmtW(amt) + "</b>이 진짜 내 통장에 들어온다.");
+        await wait(1400);
+        /* 2) 사이트 접속 두절 (브라우저 오류 페이지 연출) */
+        Sound.alarm();
+        UI.shake();
+        const down = document.createElement("div");
+        down.className = "site-down";
+        down.innerHTML = `
+            <div class="sd-inner">
+                <div class="sd-icon">🌐</div>
+                <h2>사이트에 연결할 수 없음</h2>
+                <p class="sd-url">gold-castle77.com</p>
+                <p class="sd-desc">서버 IP 주소를 찾을 수 없습니다.<br>DNS_PROBE_FINISHED_NXDOMAIN</p>
+                <button class="sd-retry" id="sd-retry">새로고침</button>
+            </div>`;
+        $("#phone").appendChild(down);
+        /* 새로고침을 눌러도 살아나지 않는다 — 2번 누르면 진행 */
+        await new Promise(res => {
+            let tries = 0;
+            $("#sd-retry").addEventListener("click", async function onRetry() {
+                tries++;
+                Sound.tick();
+                const d = down.querySelector(".sd-desc");
+                d.innerHTML = "다시 연결하는 중…";
+                await wait(1300);
+                d.innerHTML = "서버 IP 주소를 찾을 수 없습니다.<br>DNS_PROBE_FINISHED_NXDOMAIN";
+                Sound.lose();
+                if (tries >= 2) res();
+            });
+        });
+        await UI.narrate("사이트가… 통째로 사라졌다.<br>10분 전까지 멀쩡했는데.<br><b>내 돈 " + fmtW(wonBalance) + "이 들어있는 사이트가 없어졌다.</b>");
+        down.remove();
+        /* 3) 정실장도 잠적 */
+        Chat.open();
+        await wait(1400);
+        Chat.vanish();
+        await wait(2200);
+        Chat.close();
+        await UI.narrate("정실장도 연락 두절.<br>이제 알겠다. 불법 사이트의 '당첨금'은<br><b>큰돈이 되는 순간, 처음부터 줄 생각이 없던 돈이다.</b>");
+        S.balance = 0;
+        renderMoney();
+        this.crash([
+            `체험이 끝났습니다.`,
+            `당신이 '딴' 돈: <b>${fmtW(wonBalance)}</b> — 단 한 푼도 받지 못했습니다.`,
+            `당신이 실제로 잃은 돈: <b>${fmtW(S.totalCharged + S.debt)}</b>`,
+            `불법 사이트는 큰돈을 내주는 대신, <b>사라지는 쪽</b>을 선택합니다.`,
+            `여기까지 걸린 시간: <b>${elapsedText()}</b>`,
+        ]);
+    },
+
     /* ── 파멸 ── */
     async ruin() {
         S.phase = "RUIN";
@@ -1298,16 +1460,17 @@ const Director = {
             : "민준이도 당했다. 처음부터 우리 둘 다 <b>먹잇감</b>이었던 거야.<br>뭐라고 답해야 하지. 손가락이 움직이지 않는다.");
         this.crash();
     },
-    async crash() {
+    async crash(lines) {
         const layer = $("#crash-layer"), content = $("#crash-content");
+        layer.dataset.glitch = S.flags.exitScam ? "⛔ 사이트가 사라졌습니다 ⛔" : "⛔ 계정이 차단되었습니다 ⛔";
         layer.classList.remove("hidden");
         layer.classList.add("glitch");
         Sound.alarm();
         await wait(1400);
         layer.classList.remove("glitch");
         content.innerHTML = "";
-        /* 심장박동 + 타이핑 공개 */
-        const lines = [
+        /* 심장박동 + 타이핑 공개 (잠적 엔딩은 전용 문구를 넘겨받는다) */
+        lines = lines || [
             `체험이 끝났습니다.`,
             `당신이 잃은 돈: <b>${fmtW(S.totalCharged + S.debt)}</b>`,
             `여기까지 걸린 시간: <b>${elapsedText()}</b>`,
@@ -1509,21 +1672,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const muted = Sound.toggle();
         $("#btn-sound").textContent = muted ? "🔇" : "🔊";
     });
-
-    /* 결과 바로 보기 (교사용 탈출구) */
-    const skipBtn = $("#btn-skip-debrief");
-    if (skipBtn) {
-        skipBtn.addEventListener("click", () => {
-            UI.modal({
-                title: "체험 종료",
-                html: `<p class="center">체험을 끝내고 <b>결과 리포트</b>로 이동할까요?</p>`,
-                buttons: [
-                    { label: "리포트 보기", cls: "gold", fn: () => { S.endTime = Date.now(); S.phase = "DEBRIEF"; Debrief.show(); } },
-                    { label: "계속 체험", cls: "dark" },
-                ],
-            });
-        });
-    }
 
     renderMoney();
 });

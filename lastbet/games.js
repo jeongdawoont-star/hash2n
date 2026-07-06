@@ -45,9 +45,19 @@ const Games = (() => {
         if (chatEl) {
             every(() => {
                 if (Math.random() < 0.35) return;
+                /* 페르소나 일관성: 멘트 풀과 닉네임 풀을 짝지어 뽑는다 */
                 const fj = friendsJoined();
-                const name = (fj.length && Math.random() < 0.22) ? rand(fj).name : rand(DATA.fakeNames);
-                const text = rand(DATA.shillChat)
+                let name, line;
+                if (fj.length && Math.random() < 0.22) {
+                    name = rand(fj).name;
+                    line = rand(DATA.shillChat);
+                } else {
+                    const r = Math.random();
+                    if (r < 0.18) { name = rand(DATA.fakeNamesNew); line = rand(DATA.shillChatNew); }
+                    else if (r < 0.42) { name = rand(DATA.fakeNames); line = rand(DATA.shillChatVet); }
+                    else { name = rand(DATA.fakeNames); line = rand(DATA.shillChat); }
+                }
+                const text = line
                     .replaceAll("{amt}", rand([randInt(3, 9) + "만", randInt(10, 80) + "만", fmt(randInt(5, 50) * 10000) + "원"]));
                 const div = document.createElement("div");
                 div.className = "chat-msg";
@@ -106,7 +116,12 @@ const Games = (() => {
             if (state.betLocked) return;
             Sound.chip();
             const v = b.dataset.amt;
-            if (v === "reset") state.amount = 0;
+            if (state.allinOnly) {
+                /* 확정픽 적용 중: 어떤 버튼을 눌러도 전액 배팅 */
+                state.amount = S.balance;
+                UI.toast("👑 확정픽은 <b>전액 배팅</b>만 적용됩니다", { type: "warn", sound: false });
+            }
+            else if (v === "reset") state.amount = 0;
             else if (v === "max") state.amount = S.balance;
             else state.amount += +v;
             if (state.amount > S.balance) state.amount = S.balance;
@@ -392,46 +407,75 @@ const Games = (() => {
                 <div class="ladder-result" id="ladder-res"></div>
             </div>
             <div class="ladder-opts">
-                <button class="lopt blue" data-k="left">좌출발<span>×1.95</span></button>
-                <button class="lopt red" data-k="right">우출발<span>×1.95</span></button>
-                <button class="lopt blue" data-k="3">3줄<span>×1.95</span></button>
-                <button class="lopt red" data-k="4">4줄<span>×1.95</span></button>
+                <button class="lopt blue" data-g="start" data-k="left">좌출발<span>×1.95</span></button>
+                <button class="lopt red" data-g="start" data-k="right">우출발<span>×1.95</span></button>
+                <button class="lopt blue" data-g="lines" data-k="3">3줄<span>×1.95</span></button>
+                <button class="lopt red" data-g="lines" data-k="4">4줄<span>×1.95</span></button>
             </div>
+            <div class="combo-hint" id="ladder-combo">💡 출발 + 줄수를 <b>같이</b> 고르면 조합배당 <b class="hl-y">×3.60</b></div>
             ${amountPicker({ presets: [10000, 50000, 100000, 200000] })}
             <button class="mbtn gold wide big" id="btn-ladder-bet">베팅하기</button>
             <div class="room-chat" id="ladder-chat"></div>`;
 
         roomVibe({ viewersEl: $("#room-viewers"), chatEl: $("#ladder-chat"), base: 241 });
 
-        const state = { amount: 0, pick: null, betLocked: false };
-        bindAmountPicker(state, () => 1.95);
+        /* 단픽 ×1.95, 조합픽(출발+줄수) ×3.60 — 실제 사이트가 도박성을 키우는 방식 */
+        const state = { amount: 0, pickStart: null, pickLines: null, betLocked: false };
+        const curRate = () => (state.pickStart && state.pickLines) ? 3.60 : 1.95;
+        bindAmountPicker(state, curRate);
+
+        function refreshCombo() {
+            const el = $("#ladder-combo");
+            if (!el) return;
+            if (state.pickStart && state.pickLines) {
+                el.innerHTML = `🔥 조합픽 <b>${state.pickStart === "left" ? "좌출발" : "우출발"} + ${state.pickLines}줄</b> — 배당 <b class="hl-y">×3.60</b>`;
+                el.classList.add("on");
+            } else {
+                el.innerHTML = `💡 출발 + 줄수를 <b>같이</b> 고르면 조합배당 <b class="hl-y">×3.60</b>`;
+                el.classList.remove("on");
+            }
+            refreshAmount(state, curRate);
+        }
 
         $$(".lopt").forEach(b => b.addEventListener("click", () => {
             if (state.betLocked) return;
             Sound.chip();
-            state.pick = b.dataset.k;
-            $$(".lopt").forEach(x => x.classList.toggle("sel", x === b));
+            const g = b.dataset.g, k = b.dataset.k;
+            if (g === "start") state.pickStart = state.pickStart === k ? null : k;
+            else state.pickLines = state.pickLines === k ? null : k;
+            $$(".lopt").forEach(x => x.classList.toggle("sel",
+                (x.dataset.g === "start" && x.dataset.k === state.pickStart) ||
+                (x.dataset.g === "lines" && x.dataset.k === state.pickLines)));
+            refreshCombo();
         }));
 
         $("#btn-ladder-bet").addEventListener("click", async () => {
             if (state.betLocked) return;
-            if (!state.pick) { UI.toast("좌우출발 또는 줄수를 선택하세요", { type: "warn" }); return; }
+            if (!state.pickStart && !state.pickLines) { UI.toast("좌우출발·줄수 중 하나 이상 선택하세요 (같이 고르면 ×3.60)", { type: "warn" }); return; }
             const amt = state.amount;
             if (!Engine.canBet(amt)) return;
-            const win = Rig.decide(amt, { rate: 1.95 });
+            const rate = curRate();
+            const win = Rig.decide(amt, { rate });
             Engine.placeBet(amt);
             state.betLocked = true; locked = true;
             $("#btn-ladder-bet").disabled = true;
 
-            /* 결과 결정: 승리면 픽과 일치, 패배면 어긋나게 */
+            /* 결과 결정: 승리면 픽 전부 일치, 패배면 딱 하나만 어긋나게(니어미스) */
+            const flipStart = s => s === "left" ? "right" : "left";
+            const flipLines = l => l === "3" ? "4" : "3";
             let start, lines;
-            const pickIsStart = state.pick === "left" || state.pick === "right";
-            if (pickIsStart) {
-                start = win ? state.pick : (state.pick === "left" ? "right" : "left");
+            if (win) {
+                start = state.pickStart || (Math.random() < 0.5 ? "left" : "right");
+                lines = +(state.pickLines || (Math.random() < 0.5 ? "3" : "4"));
+            } else if (state.pickStart && state.pickLines) {
+                if (Math.random() < 0.5) { start = flipStart(state.pickStart); lines = +state.pickLines; }
+                else { start = state.pickStart; lines = +flipLines(state.pickLines); }
+            } else if (state.pickStart) {
+                start = flipStart(state.pickStart);
                 lines = Math.random() < 0.5 ? 3 : 4;
             } else {
-                lines = win ? +state.pick : (state.pick === "3" ? 4 : 3);
                 start = Math.random() < 0.5 ? "left" : "right";
+                lines = +flipLines(state.pickLines);
             }
 
             /* SVG 경로 애니메이션 */
@@ -467,8 +511,8 @@ const Games = (() => {
             resEl.classList.add("show");
             await new Promise(r => after(r, 600));
 
-            const payout = Engine.resolve({ win, rate: 1.95, amount: amt, game: "ladder" });
-            resultPop({ win, amount: amt, payout });
+            const payout = Engine.resolve({ win, rate, amount: amt, game: "ladder" });
+            resultPop({ win, amount: amt, payout, jackpot: win && rate >= 3 });
             locked = false;
 
             after(() => { if (isOpen("ladder") && S.phase !== "RUIN") openLadder(); }, 2800);
@@ -545,20 +589,22 @@ const Games = (() => {
         bindAmountPicker(state, () => state.pick === "tie" ? 8.0 : 1.95);
 
         if (forced) {
-            state.pick = forced.side;
+            /* freeSide 확정픽(마지막 올인): 어디를 고르든 자유 — 어차피 지도록 조작돼 있다 */
+            state.pick = forced.freeSide ? null : forced.side;
             state.amount = forced.amount === "all" ? S.balance : Math.min(forced.amount, S.balance);
+            state.allinOnly = forced.amount === "all";
             refreshAmount(state, () => 1.95);
         }
 
         $$(".bacc-bet").forEach(b => b.addEventListener("click", () => {
             if (state.betLocked) return;
-            if (forced && b.dataset.k !== forced.side) { UI.toast("👑 확정픽이 적용되어 있습니다: 플레이어 / 전액", { type: "warn" }); return; }
+            if (forced && !forced.freeSide && b.dataset.k !== forced.side) { UI.toast("👑 확정픽이 적용되어 있습니다: 플레이어 / 전액", { type: "warn" }); return; }
             Sound.chip();
             state.pick = b.dataset.k;
             $$(".bacc-bet").forEach(x => x.classList.toggle("sel", x === b));
             refreshAmount(state, () => state.pick === "tie" ? 8.0 : 1.95);
         }));
-        if (forced) $$(".bacc-bet").forEach(x => x.classList.toggle("sel", x.dataset.k === forced.side));
+        if (forced && !forced.freeSide) $$(".bacc-bet").forEach(x => x.classList.toggle("sel", x.dataset.k === forced.side));
 
         $("#btn-bacc-bet").addEventListener("click", async () => {
             if (state.betLocked) return;
