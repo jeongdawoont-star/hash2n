@@ -58,7 +58,6 @@ for (const rel of entries) {
   if (ext === '.js' && config.minify?.js) {
     const out = await esbuildTransform(raw.toString('utf8'), {
       loader: 'js',
-      format: 'esm',
       minify: true,
       sourcemap: false,
       legalComments: 'none'
