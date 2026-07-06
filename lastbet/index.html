@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>도박의 덫 — LAST BET (교육용 시뮬레이션)</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ══════════════ 교육용 안내 (프레임 밖) ══════════════ -->
+<div id="edu-badge">
+    <span class="dot"></span> 교육용 시뮬레이션 · 실제 돈이 사용되지 않습니다
+    <button id="btn-skip-debrief" title="체험을 끝내고 결과 리포트로 이동">결과 바로 보기</button>
+</div>
+
+<!-- ══════════════ 스마트폰 프레임 ══════════════ -->
+<div id="phone">
+    <div id="phone-notch"></div>
+
+    <!-- 상태바 -->
+    <div id="status-bar">
+        <span id="clock">12:30</span>
+        <div class="status-icons">
+            <span>5G</span><span class="signal">▂▄▆█</span><span>🔋 41%</span>
+        </div>
+    </div>
+
+    <!-- ────────── 화면 0: 인트로 ────────── -->
+    <section id="screen-intro" class="screen active">
+        <div class="intro-inner">
+            <div class="intro-logo">🎰</div>
+            <h1>도박의 덫</h1>
+            <p class="intro-sub">LAST BET · 실전 체험 시뮬레이션</p>
+            <div class="intro-desc">
+                <p>지금부터 당신은 평범한 학생이 됩니다.</p>
+                <p>어느 날 밤, 친구에게 <b>메시지 하나</b>가 도착하면서<br>모든 것이 시작됩니다.</p>
+                <p class="intro-warn">이 체험의 모든 돈·유저·당첨은 가상입니다.<br>하지만 여러분이 느낄 감정은 <b>진짜</b>입니다.</p>
+            </div>
+            <div class="intro-form">
+                <label for="nickname-input">이름을 입력하세요 <b>(실명으로 하면 몰입이 커집니다)</b></label>
+                <input id="nickname-input" type="text" maxlength="8" placeholder="예: 김민준" autocomplete="off">
+                <p class="intro-privacy">🔒 입력한 이름은 어디에도 저장·전송되지 않고, 오직 이 화면 안에서 체험을 위해서만 쓰입니다.</p>
+                <button id="btn-start" class="btn-gold big">체험 시작하기</button>
+            </div>
+            <p class="intro-credit">불법도박 예방 교육 · 도움이 필요하면 국번없이 1336</p>
+        </div>
+    </section>
+
+    <!-- ────────── 화면 1: 메신저(카톡풍) ────────── -->
+    <section id="screen-kakao" class="screen">
+        <div class="kk-header">
+            <span class="kk-back">‹</span>
+            <div class="kk-title">
+                <b>민준</b>
+                <span class="kk-sub">중학교 동창</span>
+            </div>
+            <span class="kk-icons">🔍 ☰</span>
+        </div>
+        <div id="kk-messages" class="kk-messages"></div>
+        <div class="kk-inputbar">
+            <span class="kk-plus">＋</span>
+            <div class="kk-input">메시지 입력</div>
+            <span class="kk-emoji">😊</span>
+        </div>
+    </section>
+
+    <!-- ────────── 화면 2: 도박 사이트 ────────── -->
+    <section id="screen-site" class="screen">
+        <div class="site-scroll" id="site-scroll">
+
+            <header class="site-header">
+                <div id="btn-menu" class="hamburger" title="메뉴">☰</div>
+                <div class="site-logo">
+                    <h1>💸 황금성 <span>GOLD CASTLE</span></h1>
+                </div>
+                <div class="user-chip" id="user-chip">
+                    <div class="user-chip-name" id="chip-nickname">GUEST</div>
+                    <div class="user-chip-money" id="chip-balance">로그인</div>
+                    <div class="user-chip-debt hidden" id="chip-debt"></div>
+                </div>
+            </header>
+
+            <!-- 전광판 마퀴 -->
+            <div class="marquee" id="marquee">
+                <span class="marquee-icon">📢</span>
+                <div class="marquee-track"><div class="marquee-text" id="marquee-text"></div></div>
+            </div>
+
+            <!-- 라이브 지표 -->
+            <div class="live-strip">
+                <span class="live-dot"></span> 실시간 접속 <b id="live-count">1,204</b>명
+                <span class="live-sep">|</span> 오늘 총 환전액 <b id="live-payout">₩384,120,000</b>
+            </div>
+
+            <!-- 웰컴 배너 -->
+            <div class="welcome-banner" id="welcome-banner">
+                <h3>🚨 신규 회원 특별 혜택</h3>
+                <p>가입 즉시 <b>꽁머니 50,000원</b> + 첫충 <b>100% 보너스</b><br>
+                메이저 안전공원 · 먹튀이력 0 · 환전 1초컷</p>
+                <button class="btn-gold" id="btn-banner-join">지금 가입하고 5만원 받기</button>
+            </div>
+
+            <!-- 게임 카드 -->
+            <div class="section-title">🎮 인기 게임</div>
+            <div class="game-grid">
+                <div class="game-card" id="card-slot">
+                    <div class="live-badge">HOT</div>
+                    <div class="game-card-bg bg-slot"><span class="gc-icon">🎰</span><span class="gc-title">황금성 슬롯</span></div>
+                    <div class="game-card-foot">역대 잭팟 ₩23,400,000</div>
+                </div>
+                <div class="game-card" id="card-powerball">
+                    <div class="live-badge live">LIVE</div>
+                    <div class="game-card-bg bg-pb"><span class="gc-icon">🎱</span><span class="gc-title">파워볼 홀짝</span></div>
+                    <div class="game-card-foot">15초 초스피드 추첨</div>
+                </div>
+                <div class="game-card" id="card-ladder">
+                    <div class="live-badge live">LIVE</div>
+                    <div class="game-card-bg bg-ladder"><span class="gc-icon">🔀</span><span class="gc-title">네임드 사다리</span></div>
+                    <div class="game-card-foot">좌우 3줄 4줄 실시간</div>
+                </div>
+                <div class="game-card locked" id="card-vip">
+                    <div class="live-badge vip">VIP</div>
+                    <div class="game-card-bg bg-vip"><span class="gc-icon">👑</span><span class="gc-title">VIP 바카라</span></div>
+                    <div class="game-card-foot" id="vip-foot">🔒 초대권 필요</div>
+                </div>
+                <div class="game-card wide" id="card-sports">
+                    <div class="live-badge live">LIVE</div>
+                    <div class="game-card-bg bg-sports"><span class="gc-icon">⚽</span><span class="gc-title">스포츠 토토</span></div>
+                    <div class="game-card-foot">축구·야구·농구·배구 실경기 배당 · 조합배팅 최대 3폴더</div>
+                </div>
+            </div>
+
+            <!-- 퀵 메뉴 -->
+            <div class="section-title">⚡ 퀵 메뉴</div>
+            <div class="quick-grid">
+                <button class="quick-item" id="menu-charge"><span>💰</span>충전</button>
+                <button class="quick-item" id="menu-exchange"><span>💸</span>환전</button>
+                <button class="quick-item" id="menu-invite"><span>🎁</span>친구초대</button>
+                <button class="quick-item" id="menu-rank"><span>🏆</span>전광판</button>
+            </div>
+
+            <!-- 이벤트 배너 -->
+            <div class="event-banner" id="event-invite-banner">
+                <b>🤝 친구 초대 이벤트</b>
+                <p>친구 1명 가입 시 <span class="hl">50,000원</span> 무한 지급!<br>친구 2명이면 <span class="hl">VIP 바카라 초대권</span>까지!</p>
+            </div>
+
+            <div style="height:90px"></div>
+        </div>
+
+        <!-- 하단 네비 -->
+        <nav class="bottom-nav">
+            <button class="nav-item" id="nav-home"><span>🏠</span>홈</button>
+            <button class="nav-item" id="nav-rank"><span>🏆</span>전광판</button>
+            <button class="nav-item play" id="nav-play"><span>🎮</span>게임</button>
+            <button class="nav-item" id="nav-chat"><span>✈️</span>실장문의<b id="chat-badge" class="badge hidden">1</b></button>
+            <button class="nav-item" id="nav-money"><span>💰</span>충환전</button>
+        </nav>
+
+        <!-- 가짜 브라우저 바 -->
+        <div class="browser-bar">
+            <span>◁</span><span>▷</span>
+            <div class="url">🔒 gold-castle77.com</div>
+            <span>⟳</span>
+        </div>
+    </section>
+
+    <!-- ────────── 게임 오버레이 ────────── -->
+    <section id="game-overlay" class="layer hidden">
+        <div class="overlay-header">
+            <button id="btn-game-back">‹ 뒤로</button>
+            <h3 id="game-title"></h3>
+            <div class="overlay-balance" id="game-balance"></div>
+        </div>
+        <div id="game-body"></div>
+    </section>
+
+    <!-- ────────── 채팅(텔레그램풍) 오버레이 ────────── -->
+    <section id="chat-layer" class="layer hidden">
+        <div class="tg-header">
+            <button id="btn-chat-back">‹</button>
+            <div class="tg-avatar">정</div>
+            <div class="tg-title">
+                <b id="chat-contact-name">황금성 총판 정실장</b>
+                <span id="chat-contact-status" class="online">온라인</span>
+            </div>
+        </div>
+        <div id="tg-messages" class="tg-messages"></div>
+        <div id="tg-choices" class="tg-choices"></div>
+        <div class="tg-inputbar">
+            <div class="tg-input">메시지</div>
+            <span>🎤</span>
+        </div>
+    </section>
+
+    <!-- ────────── 공용 레이어 ────────── -->
+    <div id="toast-container"></div>
+    <div id="modal-layer" class="hidden"></div>
+    <div id="spotlight-layer" class="hidden">
+        <div id="spotlight-hole"></div>
+        <div id="spotlight-tip"></div>
+    </div>
+    <div id="narration-bar" class="hidden">
+        <p id="narration-text"></p>
+        <span class="narr-next">터치하여 계속 ▸</span>
+    </div>
+    <div id="fx-layer"></div>
+    <div id="flash-layer"></div>
+
+    <!-- ────────── 파멸 시퀀스 ────────── -->
+    <section id="crash-layer" class="layer hidden">
+        <div id="crash-content"></div>
+    </section>
+
+    <button id="btn-sound" title="소리 켜기/끄기">🔊</button>
+</div>
+
+<!-- ══════════════ 디브리핑 (프레임 밖 전체화면) ══════════════ -->
+<section id="debrief-layer" class="hidden">
+    <div id="debrief-content"></div>
+</section>
+
+<script src="data.js"></script>
+<script src="sports-data.js"></script>
+<script src="app.js"></script>
+<script src="games.js"></script>
+<script src="debrief.js"></script>
+</body>
+</html>
