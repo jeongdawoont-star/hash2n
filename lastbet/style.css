@@ -2,6 +2,15 @@
    도박의 덫 — LAST BET · 스타일
    ═══════════════════════════════════════════════════════════ */
 
+/* 삼성인터넷 등의 '웹사이트 어둡게'(강제 색 변환) 회피 신호:
+   ①color-scheme 선언 ②prefers-color-scheme 미디어쿼리 존재(다크 테마 자체 지원으로 인식) */
+@media (prefers-color-scheme: dark) {
+    :root { color-scheme: dark; }
+}
+@media (prefers-color-scheme: light) {
+    :root { color-scheme: dark; }   /* 이 페이지는 항상 다크 디자인 */
+}
+
 :root {
     color-scheme: dark;   /* 브라우저 강제 다크모드의 색 재변환 방지 (원래 다크 디자인) */
     --bg: #0a0d16;
@@ -206,8 +215,16 @@ body.allow-landscape #rotate-guard { display: none !important; }
 #crash-layer { z-index: 100; background: #05060a; }
 
 /* ══════════ 인트로 ══════════ */
-#screen-intro { background: radial-gradient(600px 400px at 50% 0%, #1c2440 0%, var(--bg) 70%); }
-.intro-inner { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 28px; text-align: center; gap: 14px; }
+#screen-intro {
+    background: radial-gradient(600px 400px at 50% 0%, #1c2440 0%, var(--bg) 70%);
+    overflow-y: auto;   /* 낮은 화면(인앱 브라우저 등)에서 시작 버튼까지 스크롤 가능하게 */
+}
+.intro-inner {
+    flex: none;
+    min-height: 100%;   /* 내용이 넘치면 자연스럽게 늘어나 스크롤됨 (고정 높이 + center의 상단 잘림 방지) */
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 28px; text-align: center; gap: 14px;
+}
 .intro-logo { font-size: 64px; filter: drop-shadow(0 6px 18px rgba(255, 209, 102, .35)); }
 .intro-inner h1 { font-size: 40px; letter-spacing: 6px; background: linear-gradient(180deg, #fff, var(--gold)); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .intro-sub { color: var(--muted); font-size: 13px; letter-spacing: 3px; }
