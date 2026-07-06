@@ -13,6 +13,24 @@ const rand = (arr) => arr[Math.floor(Math.random() * arr.length)];
 const randInt = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
 const esc = (s) => String(s).replace(/[&<>"]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
 
+/* 전체화면 요청 헬퍼 */
+function safeRequestFullscreen() {
+    try {
+        const doc = document.documentElement;
+        if (doc.requestFullscreen) {
+            doc.requestFullscreen().catch((err) => {
+                console.warn("Fullscreen request rejected:", err);
+            });
+        } else if (doc.webkitRequestFullscreen) {
+            doc.webkitRequestFullscreen();
+        } else if (doc.msRequestFullscreen) {
+            doc.msRequestFullscreen();
+        }
+    } catch (e) {
+        console.warn("Fullscreen error:", e);
+    }
+}
+
 /* 이름 검증: 완성형 한글 2~8자, 같은 글자 반복 금지 → 실패 시 사유 문자열, 성공 시 null */
 function nameProblem(name) {
     if (!/^[가-힣]{2,8}$/.test(name)) return "한글 이름으로 2글자 이상 입력해주세요 (영어·숫자·자음만 입력은 안 돼요)";
@@ -428,17 +446,7 @@ const KK = {
         if (onLink) {
             const card = $("#kk-link-card");
             card.classList.add("pulse");
-            card.addEventListener("click", (e) => {
-                const doc = document.documentElement;
-                if (doc.requestFullscreen) {
-                    doc.requestFullscreen().catch(() => {});
-                } else if (doc.webkitRequestFullscreen) {
-                    doc.webkitRequestFullscreen();
-                } else if (doc.msRequestFullscreen) {
-                    doc.msRequestFullscreen();
-                }
-                onLink(e);
-            }, { once: true });
+            card.addEventListener("click", onLink, { once: true });
         }
     },
 };
@@ -829,22 +837,23 @@ const Director = {
                 html: `<p class="center">이름을 넣지 않으면 <b>'체험자'</b>로 진행됩니다.<br>실명을 넣으면 몰입이 훨씬 커져요.</p>`,
                 buttons: [
                     { label: "✏️ 이름 입력하기", cls: "gold", fn: () => $("#nickname-input").focus() },
-                    { label: "'체험자'로 시작", cls: "dark", fn: () => this.begin("체험자") },
+                    { label: "'체험자'로 시작", cls: "dark", fn: () => Director.begin("체험자") },
                 ],
             });
             return;
         }
         const problem = nameProblem(nick);
         if (problem) { UI.toast(problem, { type: "warn" }); $("#nickname-input").focus(); return; }
-        this.begin(nick);
+        Director.begin(nick);
     },
     async begin(nick) {
+        safeRequestFullscreen();
         S.nickname = nick;
         Sound.unlock();
         S.phase = "KAKAO";
         UI.showScreen("#screen-kakao");
         await wait(600);
-        await KK.play(DATA.kakaoIntro, { onLink: () => this.enterSite() });
+        await KK.play(DATA.kakaoIntro, { onLink: () => Director.enterSite() });
     },
 
     /* ── 사이트 진입 → 가입 ── */
@@ -1339,8 +1348,16 @@ document.addEventListener("DOMContentLoaded", () => {
     setInterval(() => Site.tickLive(), 3500);
 
     /* 인트로 */
-    $("#btn-start").addEventListener("click", () => Director.start());
-    $("#nickname-input").addEventListener("keydown", e => { if (e.key === "Enter") Director.start(); });
+    $("#btn-start").addEventListener("click", () => {
+        safeRequestFullscreen();
+        Director.start();
+    });
+    $("#nickname-input").addEventListener("keydown", e => {
+        if (e.key === "Enter") {
+            safeRequestFullscreen();
+            Director.start();
+        }
+    });
 
     /* 배너 가입 버튼 */
     $("#btn-banner-join").addEventListener("click", () => { if (S.phase === "SIGNUP") Director.openSignup(); });
@@ -1494,16 +1511,19 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     /* 결과 바로 보기 (교사용 탈출구) */
-    $("#btn-skip-debrief").addEventListener("click", () => {
-        UI.modal({
-            title: "체험 종료",
-            html: `<p class="center">체험을 끝내고 <b>결과 리포트</b>로 이동할까요?</p>`,
-            buttons: [
-                { label: "리포트 보기", cls: "gold", fn: () => { S.endTime = Date.now(); S.phase = "DEBRIEF"; Debrief.show(); } },
-                { label: "계속 체험", cls: "dark" },
-            ],
+    const skipBtn = $("#btn-skip-debrief");
+    if (skipBtn) {
+        skipBtn.addEventListener("click", () => {
+            UI.modal({
+                title: "체험 종료",
+                html: `<p class="center">체험을 끝내고 <b>결과 리포트</b>로 이동할까요?</p>`,
+                buttons: [
+                    { label: "리포트 보기", cls: "gold", fn: () => { S.endTime = Date.now(); S.phase = "DEBRIEF"; Debrief.show(); } },
+                    { label: "계속 체험", cls: "dark" },
+                ],
+            });
         });
-    });
+    }
 
     renderMoney();
 });
