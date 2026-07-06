@@ -935,6 +935,8 @@ const Director = {
         safeRequestFullscreen();
         S.nickname = nick;
         Sound.unlock();
+        /* 교육용 배지는 인트로에서 고지했으므로, 체험 중에는 몰입을 위해 숨긴다 (리포트 하단에 재고지) */
+        $("#edu-badge").classList.add("hidden");
         S.phase = "KAKAO";
         UI.showScreen("#screen-kakao");
         await wait(600);
