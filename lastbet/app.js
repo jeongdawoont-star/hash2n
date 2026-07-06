@@ -36,10 +36,33 @@ function safeRequestFullscreen() {
             doc.msRequestFullscreen();
             lockPortrait();
         }
+        setTimeout(recoverPortrait, 900);   /* 일부 기기는 전체화면 진입과 동시에 가로로 뒤집힌다 */
     } catch (e) {
         console.warn("Fullscreen error:", e);
     }
 }
+
+/* ── 가로 전환 자동 복구 ──
+   일부 폰·브라우저는 전체화면 웹앱을 강제로 가로로 돌린다(자동회전 꺼져 있어도).
+   ① 세로 잠금 재시도 → ② 1초 내 복구가 안 되면 전체화면을 해제해 원인 자체를 제거한다. */
+const mobileLandscape = () =>
+    window.matchMedia("(orientation: landscape) and (pointer: coarse) and (max-height: 520px)").matches;
+let rpExitTimer = null, rpDebounce = null;
+function recoverPortrait() {
+    if (document.body.classList.contains("allow-landscape")) return;
+    if (!mobileLandscape()) return;
+    lockPortrait();
+    clearTimeout(rpExitTimer);
+    rpExitTimer = setTimeout(() => {
+        if (mobileLandscape() && document.fullscreenElement && document.exitFullscreen) {
+            document.exitFullscreen().catch(() => {});
+        }
+    }, 1000);
+}
+window.addEventListener("resize", () => {
+    clearTimeout(rpDebounce);
+    rpDebounce = setTimeout(recoverPortrait, 350);
+});
 
 /* 이름 검증: 완성형 한글 2~8자, 같은 글자 반복 금지 → 실패 시 사유 문자열, 성공 시 null */
 function nameProblem(name) {
@@ -1681,6 +1704,13 @@ document.addEventListener("DOMContentLoaded", () => {
     $("#btn-sound").addEventListener("click", () => {
         const muted = Sound.toggle();
         $("#btn-sound").textContent = muted ? "🔇" : "🔊";
+    });
+
+    /* 가로 화면 탈출 버튼: 전체화면 해제 후 그대로 진행 (세로 복구가 불가능한 기기용) */
+    $("#rg-exit").addEventListener("click", async () => {
+        try { if (document.exitFullscreen && document.fullscreenElement) await document.exitFullscreen(); } catch (e) {}
+        lockPortrait();
+        document.body.classList.add("allow-landscape");
     });
 
     renderMoney();

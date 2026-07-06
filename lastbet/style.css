@@ -111,11 +111,22 @@ input, textarea { font-family: inherit; }
 @media (prefers-reduced-motion: reduce) { .rg-icon { animation: none; } }
 #rotate-guard p { font-size: 18px; font-weight: 700; color: #fff; }
 #rotate-guard p b { color: var(--gold); }
-#rotate-guard span { font-size: 12.5px; color: var(--muted); }
+#rotate-guard span { font-size: 12.5px; color: var(--muted); line-height: 1.6; }
+#rg-exit {
+    margin-top: 14px;
+    font-size: 13px; font-weight: 700;
+    color: var(--gold);
+    border: 1px solid rgba(255, 209, 102, .45);
+    border-radius: 999px;
+    padding: 10px 18px;
+    background: rgba(255, 209, 102, .08);
+}
 /* 터치 기기 + 가로 + 낮은 화면(폰·소형 태블릿)에서만 발동 — 데스크톱 가로 모니터는 제외 */
 @media (orientation: landscape) and (max-height: 520px) and (pointer: coarse) {
     #rotate-guard { display: flex; }
 }
+/* 탈출 버튼을 누른 경우: 가로 그대로 진행 */
+body.allow-landscape #rotate-guard { display: none !important; }
 
 /* ══════════ 폰 프레임 ══════════ */
 #phone {
