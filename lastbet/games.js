@@ -123,8 +123,16 @@ const Games = (() => {
             }
             else if (v === "reset") state.amount = 0;
             else if (v === "max") state.amount = S.balance;
-            else state.amount += +v;
-            if (state.amount > S.balance) state.amount = S.balance;
+            else {
+                const before = state.amount;
+                state.amount = Math.min(state.amount + +v, S.balance);
+                /* 이미 잔액 한도에 걸려 있으면 그 버튼 금액으로 새로 시작 — 초기화를 먼저 눌러야 하는 답답함 제거 */
+                if (state.amount === before) state.amount = Math.min(+v, S.balance);
+                if (state.amount === before) {
+                    if (S.balance <= 0) UI.toast("잔액이 없습니다 — 충전이 필요해요", { type: "warn", sound: false });
+                    else UI.toast("이미 <b>잔액 전액</b>이 배팅 금액입니다", { type: "warn", sound: false });
+                }
+            }
             refreshAmount(state, rateGetter);
         }));
     }
@@ -179,7 +187,7 @@ const Games = (() => {
 
             /* 결과 선결정 */
             let winInfo = null;
-            const baseWin = Rig.decide(amt, { rate: 2.0 });
+            const baseWin = Rig.decide(amt, { rate: 2.0, game: "slot" });
             if (baseWin) {
                 const pool = SLOT_WINS.flatMap(w => Array(w.w).fill(w));
                 winInfo = rand(pool);
@@ -232,6 +240,7 @@ const Games = (() => {
             state.betLocked = false; locked = false;
             const sp = $("#btn-spin");
             if (sp) sp.disabled = false;
+            if (state.amount > S.balance) state.amount = S.balance; /* 패배 후 잔액보다 큰 배팅액이 남지 않게 */
             refreshAmount(state, () => 2.0);
         });
     }
@@ -332,7 +341,8 @@ const Games = (() => {
             if (state.betLocked || state.closed) return;
             if (!state.side) { UI.toast("홀 또는 짝을 선택하세요", { type: "warn" }); return; }
             if (!Engine.canBet(state.amount)) return;
-            state.win = Rig.decide(state.amount, { rate: 1.95 });
+            state.win = Rig.decide(state.amount, { rate: 1.95, game: "powerball" });
+            state.usedPick = !!forced; /* 실장 픽을 따라간 베팅인지 — 튜토리얼 진행 판정에 사용 */
             Engine.placeBet(state.amount);
             if (forced) S.forcedPick = null;
             state.betLocked = true; locked = true;
@@ -379,7 +389,7 @@ const Games = (() => {
             /* 정산 */
             await new Promise(r => after(r, 700));
             if (state.betLocked) {
-                const payout = Engine.resolve({ win: state.win, rate: 1.95, amount: state.amount, game: "powerball" });
+                const payout = Engine.resolve({ win: state.win, rate: 1.95, amount: state.amount, game: "powerball", pick: state.usedPick });
                 resultPop({ win: state.win, amount: state.amount, payout });
             }
             locked = false;
@@ -455,7 +465,7 @@ const Games = (() => {
             const amt = state.amount;
             if (!Engine.canBet(amt)) return;
             const rate = curRate();
-            const win = Rig.decide(amt, { rate });
+            const win = Rig.decide(amt, { rate, game: "ladder" });
             Engine.placeBet(amt);
             state.betLocked = true; locked = true;
             $("#btn-ladder-bet").disabled = true;
@@ -614,7 +624,7 @@ const Games = (() => {
             if (amt < VIP_MIN) { UI.toast("VIP룸 최소 배팅은 100,000원입니다", { type: "warn" }); if (amt > 0 && S.balance < VIP_MIN) Director.onBroke(); return; }
             if (!Engine.canBet(amt)) return;
             const rate = state.pick === "tie" ? 8.0 : 1.95;
-            const win = Rig.decide(amt, { rate });
+            const win = Rig.decide(amt, { rate, game: "vip" });
             Engine.placeBet(amt);
             if (forced) S.forcedPick = null;
             state.betLocked = true; locked = true;
@@ -762,7 +772,7 @@ const Games = (() => {
             const amt = state.amount;
             if (!Engine.canBet(amt)) return;
             const rate = state.totalOdds;
-            const win = Rig.decide(amt, { rate });
+            const win = Rig.decide(amt, { rate, game: "sports" });
             Engine.placeBet(amt);
             state.betLocked = true; locked = true;
             const btn = $("#btn-sp-bet");
@@ -809,5 +819,5 @@ const Games = (() => {
         });
     }
 
-    return { openSlot, openPowerball, openLadder, openVip, openSports, closeCurrent, tryLockExit };
+    return { openSlot, openPowerball, openLadder, openVip, openSports, closeCurrent, tryLockExit, isOpen, isBusy: () => locked };
 })();

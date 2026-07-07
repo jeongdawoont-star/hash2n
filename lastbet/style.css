@@ -149,11 +149,17 @@ body.allow-landscape #rotate-guard { display: none !important; }
     box-shadow: 0 30px 80px rgba(0, 0, 0, .7), 0 0 0 8px #05060a;
     overflow: hidden;
 }
-@media (max-width: 480px), (max-height: 900px) {
+/* 화면 꽉 채우기: 작은 화면 + 터치 전용 기기(hover 없음)는 뷰포트 크기와 무관하게 항상.
+   (페이지 줌 축소·'PC 버전 보기' 등으로 폰 뷰포트가 480px보다 크게 잡히는 예외 대응) */
+@media (max-width: 480px), (max-height: 900px), (hover: none) and (pointer: coarse) {
     #phone { border-radius: 0; box-shadow: none; border: none; width: 100vw; height: 100vh; height: 100dvh; }
     #phone-notch { display: none; }
     #edu-badge { top: auto; bottom: 8px; }
 }
+/* JS 폴백(body.handheld): 미디어쿼리 신호가 어긋나는 브라우저용 — 위 블록과 동일 규칙 */
+body.handheld #phone { border-radius: 0; box-shadow: none; border: none; width: 100vw; height: 100vh; height: 100dvh; }
+body.handheld #phone-notch { display: none; }
+body.handheld #edu-badge { top: auto; bottom: 8px; }
 #phone-notch {
     position: absolute;
     top: 8px;

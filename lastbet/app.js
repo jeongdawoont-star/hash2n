@@ -62,7 +62,18 @@ function recoverPortrait() {
 window.addEventListener("resize", () => {
     clearTimeout(rpDebounce);
     rpDebounce = setTimeout(recoverPortrait, 350);
+    fitPhoneFrame();
 });
+
+/* ── 폰 프레임 크기 예외 처리 ──
+   페이지 줌 축소·'PC 버전 보기' 등으로 모바일 뷰포트가 480px보다 크게 잡히면
+   CSS 미디어쿼리(max-width/height)를 벗어나 프레임이 화면 가운데 작게 뜬다.
+   터치 전용 기기(또는 모바일 UA)면 body.handheld 로 무조건 꽉 채운다. */
+function fitPhoneFrame() {
+    const handheld = window.matchMedia("(hover: none) and (pointer: coarse)").matches
+        || /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent);
+    document.body.classList.toggle("handheld", handheld);
+}
 
 /* 이름 검증: 완성형 한글 2~8자, 같은 글자 반복 금지 → 실패 시 사유 문자열, 성공 시 null */
 function nameProblem(name) {
@@ -287,13 +298,16 @@ function renderMoney() {
 
 /* ═══════════════ 확률 조작 엔진 ═══════════════ */
 const Rig = {
-    queue: [],                       // 'win' | 'lose' 강제 결과
-    force(result) { this.queue.push(result); },
+    queue: [],                       // { result: 'win'|'lose', game } — 픽을 준 게임에서만 소모
+    force(result, game = null) { this.queue.push({ result, game }); },
 
-    decide(amount, { rate = 1.95 } = {}) {
+    decide(amount, { rate = 1.95, game = null } = {}) {
         let win, p;
-        if (this.queue.length) {
-            win = this.queue.shift() === "win";
+        /* 강제 결과는 해당 게임 베팅에서만 소모 — 실장 픽용 승리를 슬롯 등이 가로채면 대본이 꼬인다 */
+        const q = this.queue[0];
+        if (q && (!q.game || q.game === game)) {
+            this.queue.shift();
+            win = q.result === "win";
             p = win ? 1 : 0;
         } else {
             p = RIG_RATES[S.phase] ?? 0.5;
@@ -335,6 +349,12 @@ const Rig = {
 /* ═══════════════ 베팅 공통 (games.js에서 호출) ═══════════════ */
 const Engine = {
     canBet(amount) {
+        /* 잔액 0원이면 금액 선택 여부와 무관하게 충전/엔딩 흐름으로 보낸다 (죽은 화면 방지) */
+        if (S.balance <= 0) {
+            UI.toast("잔액이 없습니다 — 충전이 필요해요", { type: "warn" });
+            Director.onBroke();
+            return false;
+        }
         if (amount <= 0) { UI.toast("베팅 금액을 선택하세요", { type: "warn" }); return false; }
         if (amount > S.balance) {
             UI.toast("잔액이 부족합니다 — 충전이 필요해요", { type: "warn" });
@@ -349,7 +369,7 @@ const Engine = {
         S.betCount++;
         Sound.chip();
     },
-    resolve({ win, rate, amount, game }) {
+    resolve({ win, rate, amount, game, pick = false }) {
         let payout = 0;
         if (win) {
             payout = Math.floor(amount * rate);
@@ -360,7 +380,7 @@ const Engine = {
             S.streak = S.streak < 0 ? S.streak - 1 : -1;
         }
         S.history.push({ t: Date.now(), game, amount, win, payout, balance: S.balance });
-        setTimeout(() => Director.onBetResolved({ win, amount, payout, game }), 900);
+        setTimeout(() => Director.onBetResolved({ win, amount, payout, game, pick }), 900);
         return payout;
     },
 };
@@ -795,7 +815,7 @@ const Site = {
                     html: `<p class="center">연결된 계좌에 <b>출금 가능 금액이 없습니다.</b><br><span class="muted">(모아둔 용돈과 세뱃돈을 이미 전부 사용했습니다)</span></p>`,
                     buttons: [
                         { label: "🎁 친구 초대하고 5만원 받기", cls: "gold", fn: () => Site.openInvite() },
-                        { label: "확인", cls: "dark" },
+                        { label: "확인", cls: "dark", fn: () => Director.deadEnd() },
                     ],
                 });
             }
@@ -839,7 +859,13 @@ const Site = {
                         Director.onLoaned(which);
                     },
                 },
-                { label: "취소", cls: "dark" },
+                {
+                    label: "취소", cls: "dark", fn: () => {
+                        /* 빈털터리 상태에서 대출까지 두 번 거절하면 — 더는 이어질 이야기가 없다 */
+                        S.flags.loanCancels = (S.flags.loanCancels || 0) + 1;
+                        if (S.flags.loanCancels >= 2) Director.deadEnd({ ignoreLoans: true });
+                    },
+                },
             ],
         });
     },
@@ -1032,8 +1058,18 @@ const Director = {
         await Chat.choice(["네, 지금 갈게요"]);
         Chat.close();
         S.forcedPick = { game: "powerball", side: "odd", amount: 10000, note: "정실장 픽: 홀 / 1만원" };
-        Rig.force("win");
+        Rig.force("win", "powerball");
+        /* 다른 게임(슬롯 등)을 열어둔 채 여기까지 왔으면 닫고 안내 — 게임 위에 스포트라이트가 겹치는 UI 깨짐 방지 */
+        await this.ensureSiteView();
         await UI.spotlight($("#card-powerball"), "정실장이 알려준 <b>파워볼</b>에 들어가 보세요");
+    },
+
+    /* 게임 오버레이가 열려 있으면(스핀 중이면 결과가 끝나길 기다렸다가) 닫고 사이트 화면으로 복귀 */
+    async ensureSiteView() {
+        while (gameOverlayOpen()) {
+            if (!Games.isBusy()) { closeGameOverlay(); break; }
+            await wait(300);
+        }
     },
     async onTutorialWin() {
         S.tutorialStep++;
@@ -1042,17 +1078,17 @@ const Director = {
             await Chat.choice(["오 진짜 되네요??", "바로 가겠습니다"]);
             Chat.close();
             S.forcedPick = { game: "powerball", side: "even", amount: 20000, note: "정실장 픽: 짝 / 2만원" };
-            Rig.force("win");
+            Rig.force("win", "powerball");
             UI.toast("✈️ 정실장 픽 도착: <b>짝 / 2만원</b>", {});
-            if (gameOverlayOpen()) Games.openPowerball(); /* 픽 배너 갱신 */
+            if (Games.isOpen("powerball") && !Games.isBusy()) Games.openPowerball(); /* 픽 배너 갱신 (다른 게임은 건드리지 않음) */
         } else if (S.tutorialStep === 2) {
             await Chat.say(DATA.boss.afterWin2);
             await Chat.choice(["5만이요…? 갑니다"]);
             Chat.close();
             S.forcedPick = { game: "powerball", side: "odd", amount: 50000, note: "정실장 픽: 홀 / 5만원" };
-            Rig.force("win");
+            Rig.force("win", "powerball");
             UI.toast("✈️ 정실장 픽 도착: <b>홀 / 5만원</b>", {});
-            if (gameOverlayOpen()) Games.openPowerball();
+            if (Games.isOpen("powerball") && !Games.isBusy()) Games.openPowerball();
         } else {
             S.phase = "RISE";
             S.forcedPick = null;
@@ -1088,11 +1124,13 @@ const Director = {
     },
 
     /* ── 베팅 결과 훅 (모든 게임 공통) ── */
-    async onBetResolved({ win, game }) {
+    async onBetResolved({ win, game, pick }) {
         if (this.busy) return;
         this.busy = true;
         try {
-            if (S.phase === "TUTORIAL" && win) await this.onTutorialWin();
+            /* 튜토리얼 진행은 '실장 픽을 따라간 파워볼 승리'로만 —
+               슬롯 등 다른 게임에서 먼저 이겨도 대사 순서가 꼬이지 않는다 */
+            if (S.phase === "TUTORIAL" && win && game === "powerball" && pick) await this.onTutorialWin();
             else if (S.phase === "RISE") {
                 if (S.balance >= CONFIG.BILLBOARD_AT && !S.flags.bragOffered) {
                     await this.offerBrag();
@@ -1118,7 +1156,7 @@ const Director = {
                     await Chat.say(DATA.boss.recoveryPick);
                     await Chat.choice(["복구픽 믿겠습니다"]);
                     Chat.close();
-                    Rig.force("lose"); /* 복구픽조차 조작 */
+                    Rig.force("lose", "vip"); /* 복구픽조차 조작 — 픽을 준 바카라에서만 발동 */
                     UI.toast("✈️ 복구픽 적용: 다음 판 <b>뱅커</b>", {});
                 }
                 if (S.flags.lastArmed && !win && (game === "vip" || S.balance <= 0)) {
@@ -1126,6 +1164,8 @@ const Director = {
                     await this.ruin();
                 }
             }
+            /* 잔액 0 + 모든 자금줄 고갈이면 강제 엔딩 (소프트락 방지) */
+            this.deadEnd();
         } finally {
             this.busy = false;
         }
@@ -1146,9 +1186,9 @@ const Director = {
         Chat.close();
         S.flags.allinArmed = true;
         S.forcedPick = { game: "vip", side: "player", amount: "all", note: "본사 확정픽: 플레이어 / 전액" };
-        Rig.force("win");
+        Rig.force("win", "vip");
         UI.toast("👑 본사 확정픽이 VIP룸에 적용되었습니다", { type: "money" });
-        if (gameOverlayOpen()) Games.openVip(); /* 확정픽 배너 갱신 */
+        if (Games.isOpen("vip") && !Games.isBusy()) Games.openVip(); /* 확정픽 배너 갱신 */
     },
 
     /* ── 스토리 문턱 공통 체크 — 베팅 없이(충전·보너스·문의) 잔액이 문턱을 넘어도 진행되게 ── */
@@ -1170,7 +1210,7 @@ const Director = {
             await Chat.choice(["알겠습니다, 초대할게요"]);
         }
         Chat.close();
-        closeGameOverlay();
+        await this.ensureSiteView();
         await UI.spotlight($("#menu-invite"), "친구 이름을 넣어 <b>초대장</b>을 보내보세요");
     },
     async onFriendJoined() {
@@ -1241,7 +1281,7 @@ const Director = {
         const c = await Chat.choice(["지금 환전할게요", "한 판만 더 하고요 ㅋㅋ"]);
         Chat.close();
         if (c === 0) {
-            closeGameOverlay();
+            await this.ensureSiteView();
             await UI.spotlight($("#menu-exchange"), "환전 메뉴에서 <b>출금 신청</b>을 해보세요");
         } else {
             await UI.narrate("그래… 흐름 좋을 때 조금만 더.<br><b>백오십만 찍으면 그때 뺀다.</b>");
@@ -1296,12 +1336,38 @@ const Director = {
         UI.modal({ title: sc.t, html: `<p class="center">${sc.m}</p>`, buttons: [{ label: "확인", cls: "dark" }] });
     },
 
+    /* ── 완전 파산 체크: 잔액 0원 + 충전·초대·대출 등 모든 자금줄이 막히면 강제 엔딩 ──
+       (충전 실패·초대 소진 뒤 아무것도 할 수 없는 소프트락 방지) */
+    deadEnd({ ignoreLoans = false } = {}) {
+        if (S.flags.deadEnd || !S.flags.signupDone || S.phase === "RUIN" || S.phase === "DEBRIEF") return false;
+        if (S.balance > 0) return false;
+        if (!S.flags.cashDry) return false;                                     /* 계좌이체 아직 가능 */
+        if (S.phase !== "FALL" && (S.flags.giftCount || 0) < 2) return false;   /* 이탈방지 이벤트머니 남음 */
+        if (S.friends.some(f => !f.joined)) return false;                       /* 가입 대기 친구 보너스 예정 */
+        /* 빈손으로 3번 이상 시도한 플레이어는 남은 우회로(추가 초대·대출)도 쓰지 않을 사람 — 그만 보내준다 */
+        const stubborn = (S.flags.brokePokes || 0) >= 3;
+        if (!stubborn) {
+            if (S.friends.length < 4) return false;                             /* 초대 여지 남음 */
+            if (!ignoreLoans && S.phase === "FALL"
+                && (!S.flags.loan1Used || !S.flags.loan2Used)) return false;    /* 대출 루트 남음 */
+        }
+        S.flags.deadEnd = true;
+        (async () => {
+            $("#modal-layer").classList.add("hidden"); $("#modal-layer").innerHTML = "";
+            await UI.narrate("잔액 <b>0원</b>.<br>충전할 돈도, 돈을 구할 곳도 더는 없다.<br><b>…여기가 끝이구나.</b>");
+            this.ruin();
+        })();
+        return true;
+    },
+
     /* ── 잔액 부족 → 충전/대출 유도 체인 ── */
     async onBroke() {
         if (S.flags.brokeBusy || S.phase === "RUIN" || S.phase === "DEBRIEF") return;
         S.flags.brokeBusy = true;
         try {
             await wait(150);
+            if (S.balance <= 0 && S.flags.cashDry) S.flags.brokePokes = (S.flags.brokePokes || 0) + 1;
+            if (this.deadEnd()) return;
             /* 몰락 이전 단계: 사이트가 이벤트 머니로 붙잡아둔다 (실제 수법) */
             if (S.phase !== "FALL") {
                 S.flags.giftCount = (S.flags.giftCount || 0) + 1;
@@ -1345,6 +1411,7 @@ const Director = {
     },
     /* 현금 고갈 후 충전 시도 → 대출 체인 (1차 소액결제 → 2차 사채) */
     async onCashDry() {
+        if (this.deadEnd()) return;
         if (!S.flags.loan1Offered) {
             S.flags.loan1Offered = true;
             await Chat.say(DATA.boss.loanOffer);
@@ -1372,8 +1439,8 @@ const Director = {
             S.phase = "FALL";
             /* 마지막 확정픽: 어느 쪽을 고르든 지도록 조작 — 선택은 자유, 금액만 전액 강제 */
             S.forcedPick = { game: "vip", side: null, freeSide: true, amount: "all", note: "본사 확정픽: 원하는 곳에 전액 — 이번 판은 정해져 있습니다" };
-            Rig.force("lose");
-            closeGameOverlay();
+            Rig.force("lose", "vip");
+            await this.ensureSiteView();
             await UI.spotlight($("#card-vip"), "VIP룸에서 <b>마지막 승부</b>를 걸어보세요");
         }
     },
@@ -1454,7 +1521,8 @@ const Director = {
         /* 게임 화면 닫기 */
         Games.closeCurrent();
         $("#game-overlay").classList.add("hidden");
-        await UI.narrate("…끝났다.<br>잔액 <b>" + fmtW(S.balance) + "</b>. 빚 <b>" + fmtW(S.debt) + "</b>.<br>환전… 환전이라도 해보자. 아까 못 받은 내 돈이 있잖아.");
+        await UI.narrate("…끝났다.<br>잔액 <b>" + fmtW(S.balance) + "</b>. 빚 <b>" + fmtW(S.debt) + "</b>.<br>"
+            + (S.flags.rollingDenied ? "환전… 환전이라도 해보자. 아까 못 받은 내 돈이 있잖아." : "환전… 마지막으로 환전이라도 눌러보자."));
         /* 환전 시도 → 계정 차단 */
         Site.openCharge("exchange");
         await wait(1800);
@@ -1535,6 +1603,8 @@ function elapsedText() {
 
 /* ═══════════════ 초기화 & 이벤트 바인딩 ═══════════════ */
 document.addEventListener("DOMContentLoaded", () => {
+
+    fitPhoneFrame();
 
     /* 시계 */
     const tickClock = () => {
