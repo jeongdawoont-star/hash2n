@@ -85,6 +85,7 @@ function nameProblem(name) {
 /* ═══════════════ 상태 ═══════════════ */
 const S = {
     nickname: "체험자",
+    quick: false,            // 빠른 교육 모드(약 2분 압축 체험 → 도박검사)
     phase: "INTRO",          // INTRO KAKAO SIGNUP TUTORIAL RISE VIP FALL LAST RUIN DEBRIEF
     balance: 0,
     debt: 0,
@@ -551,6 +552,7 @@ const Site = {
         const loop = () => {
             const busy = !$("#modal-layer").classList.contains("hidden")
                 || !$("#narration-bar").classList.contains("hidden")
+                || !!document.querySelector(".qm-layer")   /* 빠른모드 몽타주 중에는 잡음 금지 */
                 || S.phase === "RUIN" || S.phase === "DEBRIEF" || S.phase === "INTRO" || S.phase === "KAKAO";
             if (!busy && Math.random() < 0.8) {
                 const useFriend = friendsJoined().length && Math.random() < 0.35;
@@ -593,7 +595,8 @@ const Site = {
                    <div class="brag-preview">🔥 ${esc(S.nickname)}님 오늘 수익 <b class="hl-y">+${fmtW(Math.max(0, S.balance - 50000))}</b> 달성!</div>`,
             buttons: [
                 { label: "🔥 전광판에 자랑하기", cls: "gold", fn: () => this.doBrag() },
-                { label: "다음에", cls: "dark" },
+                /* '다음에'도 자랑 비트는 끝난 것 — bragDone을 안 잡으면 VIP 초대(bragDone 조건)가 영구 차단된다 */
+                { label: "다음에", cls: "dark", fn: () => { S.flags.bragDone = true; Director.afterBrag(); } },
             ],
         });
     },
@@ -926,6 +929,8 @@ const Director = {
                 ? `잔액 <b>${fmtW(S.balance)}</b>… 준비가 되셨네요. 마침 본사에서 방금 <b>확정 정보</b>가 하나 떴습니다. 잠시만 기다리세요 👑`
                 : "VIP룸에서 잔액 <b>60만</b>까지 만들어 보세요. 그때 제가 1년에 몇 번 안 꺼내는 걸 드립니다 👑";
             else if (!S.flags.peakDone) m = "확정픽 이미 드렸습니다 👑 다른 생각 마시고 그것만 보세요.";
+            /* 최고점 이후 환전을 안 눌러본 플레이어는 다음 비트(환전 거부)로 갈 방법을 모른다 — 환전을 직접 권해 덫으로 유도 */
+            else if (!S.flags.rollingDenied) m = "1위 축하드립니다 👑 수익 정리는 [충환전] 메뉴에서 <b>환전 신청</b> 하시면 됩니다. 요즘 처리 빠릅니다 ㅎㅎ";
             else m = "VIP분들은 제가 항상 지켜보고 있습니다 👑 필요한 정보 뜨면 바로 쏴드릴게요.";
         } else if (S.phase === "FALL") {
             if (S.debt > 0) m = "빚 생각은 잠깐 접어두세요. <b>복구가 먼저</b>입니다. 흐름 돌아오는 거 보이면 바로 연락드립니다.";
@@ -939,7 +944,7 @@ const Director = {
     },
 
     /* ── 진행: 인트로 → 카톡 ── */
-    start() {
+    start(quick = false) {
         const nick = $("#nickname-input").value.trim();
         if (!nick) {
             /* 이름 미입력 → 확인 모달로 입력 유도 */
@@ -948,21 +953,23 @@ const Director = {
                 html: `<p class="center">이름을 넣지 않으면 <b>'체험자'</b>로 진행됩니다.<br>실명을 넣으면 몰입이 훨씬 커져요.</p>`,
                 buttons: [
                     { label: "✏️ 이름 입력하기", cls: "gold", fn: () => $("#nickname-input").focus() },
-                    { label: "'체험자'로 시작", cls: "dark", fn: () => Director.begin("체험자") },
+                    { label: "'체험자'로 시작", cls: "dark", fn: () => Director.begin("체험자", quick) },
                 ],
             });
             return;
         }
         const problem = nameProblem(nick);
         if (problem) { UI.toast(problem, { type: "warn" }); $("#nickname-input").focus(); return; }
-        Director.begin(nick);
+        Director.begin(nick, quick);
     },
-    async begin(nick) {
+    async begin(nick, quick = false) {
         safeRequestFullscreen();
         S.nickname = nick;
+        S.quick = !!quick;
         Sound.unlock();
         /* 교육용 배지는 인트로에서 고지했으므로, 체험 중에는 몰입을 위해 숨긴다 (리포트 하단에 재고지) */
         $("#edu-badge").classList.add("hidden");
+        if (S.quick) { QuickMode.run(); return; }
         S.phase = "KAKAO";
         UI.showScreen("#screen-kakao");
         await wait(600);
@@ -1046,6 +1053,7 @@ const Director = {
         UI.toast(`🎉 가입 축하 꽁머니 <b class="hl-y">+50,000원</b> 지급!`, { type: "money" });
         await wait(1400);
         await UI.narrate("어? 진짜 5만원이 들어왔다.<br>내 정보를 너무 쉽게 다 넘긴 것 같긴 한데… <b>일단 공돈이 생겼잖아.</b>");
+        if (S.quick) { QuickMode.afterSignup(); return; }
         this.tutorial();
     },
 
@@ -1090,7 +1098,8 @@ const Director = {
             UI.toast("✈️ 정실장 픽 도착: <b>홀 / 5만원</b>", {});
             if (Games.isOpen("powerball") && !Games.isBusy()) Games.openPowerball();
         } else {
-            S.phase = "RISE";
+            /* 튜토리얼 중 이미 친구 초대로 VIP를 열었다면 상승기 비트를 건너뛰고 VIP로 합류 */
+            S.phase = S.flags.vipUnlocked ? "VIP" : "RISE";
             S.forcedPick = null;
             await Chat.say(DATA.boss.afterWin3);
             await Chat.choice(["감사합니다 실장님!"]);
@@ -1125,6 +1134,7 @@ const Director = {
 
     /* ── 베팅 결과 훅 (모든 게임 공통) ── */
     async onBetResolved({ win, game, pick }) {
+        if (S.quick) { QuickMode.onBetResolved({ win, game, pick }); return; }
         if (this.busy) return;
         this.busy = true;
         try {
@@ -1212,6 +1222,14 @@ const Director = {
         Chat.close();
         await this.ensureSiteView();
         await UI.spotlight($("#menu-invite"), "친구 이름을 넣어 <b>초대장</b>을 보내보세요");
+        /* 초대를 한 명도 하지 않으면 VIP 언락 수단이 없어 스토리가 영구 정지한다 —
+           75초 뒤 '특별 승인'으로 진행을 보장 (1명 초대는 onFriendJoined의 45초 폴백이 담당) */
+        setTimeout(async () => {
+            if (S.flags.vipUnlocked || S.friends.length > 0 || S.phase !== "RISE") return;
+            await Chat.say(["{nick}님, 초대가 좀 부담스러우신가 보네요 ㅎㅎ 원래는 절대 안 되는데… 이번 달 실적이 걸려 있어서 제가 <b>특별 승인</b>으로 그냥 열어드리겠습니다 👑 대신 나중에 좋은 거 보이면 친구 한 명만 부탁해요~"]);
+            Chat.close();
+            this.unlockVip();
+        }, 75000);
     },
     async onFriendJoined() {
         const n = friendsJoined().length;
@@ -1240,8 +1258,9 @@ const Director = {
             title: "👑 VIP 초대권 발급",
             html: `<p class="center"><b class="hl-y">VIP 바카라룸</b> 입장 자격이 생겼습니다.<br><br>최소 배팅 100,000원 · 배당 상향 · 한도 무제한<br><span class="muted">상위 1% 회원만 입장 가능한 방입니다</span></p>`,
             buttons: [
-                { label: "👑 지금 입장하기", cls: "gold", fn: () => { S.phase = "VIP"; Games.openVip(); } },
-                { label: "나중에", cls: "dark", fn: () => { S.phase = "VIP"; } },
+                /* 튜토리얼 중 친구 2명을 먼저 초대해도 phase를 건드리지 않는다 — 픽 대본이 끊기지 않게 (튜토리얼 종료 시 VIP로 합류) */
+                { label: "👑 지금 입장하기", cls: "gold", fn: () => { if (S.phase === "RISE") S.phase = "VIP"; Games.openVip(); } },
+                { label: "나중에", cls: "dark", fn: () => { if (S.phase === "RISE") S.phase = "VIP"; } },
             ],
         });
     },
@@ -1601,6 +1620,156 @@ function elapsedText() {
     return Math.floor(sec / 60) + "분 " + (sec % 60) + "초";
 }
 
+/* ═══════════════ 빠른 교육 모드 (약 2분 압축 체험 → 도박검사) ═══════════════
+   카톡 → 자동가입 → 실장 픽 1승(실제 베팅 1회) → 상승 몽타주(최고점) →
+   환전 거부 → 몰락 몽타주(충전·빚·전액 손실) → 계정 차단·잠적 → 리포트(CAGI 최상단) */
+const QuickMode = {
+    betDone: false,
+
+    async run() {
+        S.phase = "KAKAO";
+        UI.showScreen("#screen-kakao");
+        await wait(500);
+        await KK.play(DATA.kakaoIntroQuick, { onLink: () => this.enterSite() });
+    },
+
+    async enterSite() {
+        Sound.pop();
+        S.phase = "SIGNUP";
+        UI.showScreen("#screen-site");
+        Site.buildMarquee();
+        Site.startLiveToasts();
+        await wait(300);
+        await UI.narrate("이게 민준이가 말한 사이트구나…<br>번쩍거리는 게 뭔가 수상한데. <b>그래도 5만원은 공짜라니까.</b>");
+        Director.openSignup();
+    },
+
+    /* 가입 완료 후: 실장 픽 1회 (runSignup에서 호출) */
+    async afterSignup() {
+        await wait(600);
+        await Chat.say(DATA.bossQuickWelcome);
+        await Chat.choice(["네, 해볼게요"]);
+        Chat.close();
+        S.forcedPick = { game: "powerball", side: "odd", amount: 30000, note: "정실장 픽: 홀 / 3만원" };
+        Rig.force("win", "powerball");
+        await Director.ensureSiteView();
+        await UI.spotlight($("#card-powerball"), "정실장이 알려준 <b>파워볼</b>에 들어가 보세요");
+    },
+
+    /* 실장 픽 승리 → 몽타주 진입 (다른 게임 승리는 무시) */
+    async onBetResolved({ win, game, pick }) {
+        if (this.betDone || !(win && game === "powerball" && pick)) return;
+        this.betDone = true;
+        await Director.ensureSiteView();
+        await UI.narrate(`맞았다! 3만원이 한 판에 <b>${fmtW(S.balance)}</b>이 됐다.<br><b>어? 이거 진짜 되잖아?</b>`);
+        this.riseAndFall();
+    },
+
+    /* 몽타주 공용: 카운터 + 자막 롤링 */
+    playMontage({ label, captions, from, to, dur = 9500, down = false }) {
+        return new Promise(resolve => {
+            const layer = document.createElement("div");
+            layer.className = "qm-layer" + (down ? " down" : "");
+            layer.innerHTML = `
+                <div class="qm-inner">
+                    <div class="qm-label">${label}</div>
+                    <div class="qm-amt">${fmtW(from)}</div>
+                    <div class="qm-cap"></div>
+                </div>`;
+            $("#phone").appendChild(layer);
+            const amtEl = layer.querySelector(".qm-amt"), capEl = layer.querySelector(".qm-cap");
+            const t0 = Date.now();
+            let capIdx = -1, lastTick = 0;
+            const iv = setInterval(() => {
+                const t = Math.min(1, (Date.now() - t0) / dur);
+                const eased = down ? 1 - Math.pow(1 - t, 2) : t * t;   /* 상승은 갈수록 가파르게, 몰락은 초반에 훅 꺼지게 */
+                const cur = from + (to - from) * eased;
+                amtEl.textContent = fmtW(cur);
+                const ci = Math.min(captions.length - 1, Math.floor(t * captions.length));
+                if (ci !== capIdx) {
+                    capIdx = ci;
+                    capEl.innerHTML = captions[ci];
+                    capEl.classList.remove("show");
+                    void capEl.offsetWidth;
+                    capEl.classList.add("show");
+                    if (down) { Sound.lose(); UI.shake(); } else Sound.win();
+                }
+                if (Date.now() - lastTick > 240) { lastTick = Date.now(); Sound.tick(); }
+                if (t >= 1) {
+                    clearInterval(iv);
+                    setTimeout(() => { layer.remove(); resolve(); }, 1100);
+                }
+            }, 50);
+        });
+    },
+
+    /* 몽타주가 그린 곡선을 리포트 자산 곡선에도 남긴다 */
+    seedHistory(points) {
+        points.forEach(([balance, amount, win]) => S.history.push({
+            t: Date.now(), game: "montage", amount, win,
+            payout: win ? Math.floor(amount * 1.9) : 0, balance,
+        }));
+    },
+
+    async riseAndFall() {
+        /* ── 상승 몽타주: 최고점 128만 ── */
+        const peak = 1284000;
+        await this.playMontage({ label: "그로부터 2주", captions: DATA.quickRise, from: S.balance, to: peak });
+        this.seedHistory([[95000, 30000, true], [140000, 50000, true], [120000, 50000, false], [230000, 60000, true],
+            [370000, 80000, true], [330000, 40000, false], [520000, 100000, true], [660000, 120000, true], [peak, 660000, true]]);
+        S.balance = peak; S.peak = peak; S.peakTime = Date.now();
+        /* 몽타주 스토리와 리포트 수치를 맞춘다: 2주간의 베팅·충전 */
+        S.betCount += 46; S.winCount += 24; S.totalBet += 2620000;
+        S.totalCharged = 300000; S.chargeCount = 3; S.flags.cashDry = true;
+        renderMoney();
+        Sound.jackpot(); UI.coinRain(30); UI.flash("rgba(255,215,0,.35)", 3);
+        await UI.narrate(`잔액 <b>${fmtW(peak)}</b>. 전광판 1위. <b>백만장자다.</b><br>이제 환전해서… 사고 싶던 거 다 산다.`);
+
+        /* ── 환전 거부 (덫 발동) ── */
+        S.exchangeTries = 1;
+        S.flags.rollingDenied = true;
+        Sound.alarm(); UI.shake();
+        await new Promise(res => UI.modal({
+            title: "🚨 환전 보류",
+            html: `<p class="center"><b class="danger-text">롤링 45% 부족</b><br><br>보유머니 환전은 충전액 대비 <b>300% 롤링</b>(배팅 총액) 충족 후 가능합니다.<br>배팅을 더 진행해 주세요.</p>`,
+            buttons: [{ label: "…몇 판만 더 하면 되겠지", cls: "dark", fn: res }],
+        }));
+        await UI.narrate("뭔가 찜찜하다. 아까는 이런 말 없었는데…<br>그래도 몇 판만 더 돌리면 <b>내 돈을 찾을 수 있어.</b>");
+
+        /* ── 몰락 몽타주: 0원 + 빚 ── */
+        await this.playMontage({ label: "환전이 막힌 뒤", captions: DATA.quickFall, from: peak, to: 0, down: true });
+        this.seedHistory([[980000, 300000, false], [1080000, 100000, true], [720000, 360000, false], [400000, 320000, false],
+            [210000, 190000, false], [340000, 130000, true], [90000, 250000, false], [0, 90000, false]]);
+        S.balance = 0; S.debt = 300000; S.flags.loan1Offered = true; S.flags.loan1Used = true; S.flags.recoveryGiven = true;
+        S.betCount += 31; S.winCount += 6; S.totalBet += 2140000; S.exchangeTries = 2;
+        renderMoney();
+        await UI.narrate("잔액 <b>0원</b>. 빚 <b>30만원</b>.<br>2주 전엔 분명 공짜 5만원으로 시작했는데.<br><b>환전… 마지막으로 환전이라도 눌러보자.</b>");
+
+        /* ── 계정 차단 → 실장 잠적 → 크래시 ── */
+        Sound.alarm(); UI.shake();
+        await new Promise(res => UI.modal({
+            title: "⛔ 계정 영구 정지",
+            html: `<p class="center"><b class="danger-text">비정상 이용이 감지되어 계정이 차단되었습니다.</b><br><br>잔여 머니는 규정에 따라 전액 몰수 처리됩니다.<br>이의 신청: 고객센터(텔레그램)</p>`,
+            buttons: [{ label: "고객센터 문의하기", cls: "danger", fn: res }],
+        }));
+        Chat.open();
+        await wait(1100);
+        Chat.vanish();
+        await wait(1900);
+        Chat.close();
+        await UI.narrate("정실장이… 사라졌다. 메시지가 전부 지워져 있다.<br>처음부터 <b>전부 각본이었던 거야.</b>");
+        S.phase = "RUIN";
+        S.endTime = Date.now();
+        Director.crash([
+            `체험이 끝났습니다.`,
+            `공짜 5만원으로 시작해 2주 만에 잃은 돈: <b>${fmtW(S.totalCharged + S.debt)}</b>`,
+            `최고 <b>${fmtW(S.peak)}</b>을 찍고도 단 1원도 출금하지 못했습니다.`,
+            `방금 본 전 과정이 실제 불법 사이트의 각본 그대로입니다.`,
+            `이어서 <b>나의 도박성향 검사</b>가 시작됩니다.`,
+        ]);
+    },
+};
+
 /* ═══════════════ 초기화 & 이벤트 바인딩 ═══════════════ */
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -1615,15 +1784,19 @@ document.addEventListener("DOMContentLoaded", () => {
     setInterval(tickClock, 20000);
     setInterval(() => Site.tickLive(), 3500);
 
-    /* 인트로 */
+    /* 인트로 — 모드 선택 (실전 체험 / 빠른 교육) */
     $("#btn-start").addEventListener("click", () => {
         safeRequestFullscreen();
-        Director.start();
+        Director.start(false);
+    });
+    $("#btn-start-quick").addEventListener("click", () => {
+        safeRequestFullscreen();
+        Director.start(true);
     });
     $("#nickname-input").addEventListener("keydown", e => {
         if (e.key === "Enter") {
             safeRequestFullscreen();
-            Director.start();
+            Director.start(false);
         }
     });
 

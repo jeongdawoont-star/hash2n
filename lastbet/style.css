@@ -1835,3 +1835,59 @@ body.debrief-mode #phone, body.debrief-mode #edu-badge { display: none; }
     }
     .pr-foot b { color: #111; }
 }
+
+
+/* ══════════ 인트로 모드 선택 ══════════ */
+.mode-pick { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 2px; }
+.mode-btn {
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
+    border-radius: 14px;
+    padding: 14px 10px 12px;
+    text-align: center;
+    transition: transform .08s;
+}
+.mode-btn:active { transform: scale(.96); }
+.mode-btn .mode-icon { font-size: 26px; }
+.mode-btn .mode-name { font-size: 14.5px; font-weight: 800; }
+.mode-btn .mode-desc { font-size: 10.5px; line-height: 1.55; color: var(--muted); }
+.mode-btn.full {
+    background: linear-gradient(180deg, var(--gold), var(--gold-deep));
+    box-shadow: 0 6px 20px rgba(245, 166, 35, .35);
+}
+.mode-btn.full .mode-name { color: #241a00; }
+.mode-btn.full .mode-desc { color: rgba(36, 26, 0, .72); }
+.mode-btn.full .mode-desc b { color: #241a00; }
+.mode-btn.quick {
+    background: var(--panel);
+    border: 1px solid rgba(58, 139, 255, .55);
+}
+.mode-btn.quick .mode-name { color: var(--blue); }
+.mode-btn.quick .mode-desc b { color: var(--text); }
+
+/* ══════════ 빠른 교육 모드 — 몽타주 ══════════ */
+.qm-layer {
+    position: absolute; inset: 0;
+    z-index: 70;
+    display: flex; align-items: center; justify-content: center;
+    background: radial-gradient(120% 90% at 50% 30%, #101528 0%, #05060a 70%);
+    animation: qm-in .35s ease;
+}
+@keyframes qm-in { from { opacity: 0; } to { opacity: 1; } }
+.qm-inner { text-align: center; padding: 0 26px; width: 100%; }
+.qm-label { font-size: 13px; letter-spacing: 3px; color: var(--muted); margin-bottom: 14px; }
+.qm-amt {
+    font-size: 38px; font-weight: 900; letter-spacing: 1px;
+    color: var(--gold);
+    text-shadow: 0 0 26px rgba(255, 209, 102, .35);
+    font-variant-numeric: tabular-nums;
+}
+.qm-layer.down .qm-amt { color: var(--red); text-shadow: 0 0 26px rgba(255, 77, 77, .35); }
+.qm-cap {
+    margin: 20px auto 0; max-width: 300px; min-height: 48px;
+    font-size: 14.5px; line-height: 1.6; color: #dfe4f2;
+    opacity: 0;
+}
+.qm-cap b { color: var(--gold); }
+.qm-layer.down .qm-cap b { color: var(--red); }
+.qm-cap.show { animation: qm-cap .5s ease forwards; }
+@keyframes qm-cap { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }

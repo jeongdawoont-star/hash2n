@@ -51,7 +51,18 @@
                 <label for="nickname-input">이름을 입력하세요 <b>(실명으로 하면 몰입이 커집니다)</b></label>
                 <input id="nickname-input" type="text" maxlength="8" placeholder="예: 김민준" autocomplete="off">
                 <p class="intro-privacy">🔒 입력한 이름은 어디에도 저장·전송되지 않고, 오직 이 화면 안에서 체험을 위해서만 쓰입니다.</p>
-                <button id="btn-start" class="btn-gold big">체험 시작하기</button>
+                <div class="mode-pick">
+                    <button id="btn-start" class="mode-btn full">
+                        <span class="mode-icon">🎰</span>
+                        <span class="mode-name">실전 체험 모드</span>
+                        <span class="mode-desc">가입부터 파멸까지 전체 시나리오<br><b>15~25분</b> · 권장</span>
+                    </button>
+                    <button id="btn-start-quick" class="mode-btn quick">
+                        <span class="mode-icon">⚡</span>
+                        <span class="mode-name">빠른 교육 모드</span>
+                        <span class="mode-desc">핵심 수법 압축 + 도박성향 검사<br><b>약 2분</b> · 시간이 없을 때</span>
+                    </button>
+                </div>
             </div>
             <p class="intro-credit">불법도박 예방 교육 · 도움이 필요하면 국번없이 1336</p>
         </div>

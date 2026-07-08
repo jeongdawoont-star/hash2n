@@ -25,6 +25,11 @@ const Debrief = {
         const elapsedMs = S.startTime ? (S.endTime - S.startTime) : 0;
         const elapsedMin = Math.max(1, Math.round(elapsedMs / 60000));
         const wageEarned = Math.round(elapsedMs / 3600000 * CONFIG.MIN_WAGE);
+        /* 빠른 모드: 실제 소요(약 2분)로 비교하면 무의미 — 스토리 시간(2주)의 주말 알바로 환산 */
+        const cmpLabelA = S.quick ? "같은 2주, 주말 알바를 했다면" : `${elapsedMin}분 동안 편의점 알바를 했다면`;
+        const cmpLabelB = S.quick ? "같은 2주, 도박을 한 결과" : `${elapsedMin}분 동안 도박을 한 결과`;
+        const cmpEarn = S.quick ? 24 * CONFIG.MIN_WAGE : wageEarned;
+        const cmpSub = S.quick ? `하루 6시간 · 주 2일 × 2주 · 최저시급 ${fmt(CONFIG.MIN_WAGE)}원` : `2026년 최저시급 ${fmt(CONFIG.MIN_WAGE)}원 기준`;
         const workHours = lost > 0 ? Math.ceil(lost / CONFIG.MIN_WAGE) : 0;
         const workDays = Math.ceil(workHours / 8);
         const weekendWeeks = Math.ceil(workHours / 12);          // 주말 알바(6h×2일)
@@ -59,7 +64,7 @@ const Debrief = {
             <section class="db-hero">
                 <p class="db-tile-label">이 체험에서 사라진 (가상의) 진짜 돈</p>
                 <div class="db-hero-value">−${fmt(lost)}<span>원</span></div>
-                <p class="db-hero-sub">충전 ${fmt(S.totalCharged)}원 + 빚 ${fmt(S.debt)}원 · 가입 ${elapsedMin}분 만에</p>
+                <p class="db-hero-sub">충전 ${fmt(S.totalCharged)}원 + 빚 ${fmt(S.debt)}원 · ${S.quick ? "스토리상 2주 (압축 체험)" : `가입 ${elapsedMin}분 만에`}</p>
                 ${S.flags.exitScam ? `<p class="db-hero-sub"><b class="db-critical">${fmt(S.peak)}원을 따고도 한 푼도 받지 못했습니다</b> — 환전을 신청하자 사이트가 통째로 사라졌습니다. 불법 사이트에서는 이기는 것조차 의미가 없습니다.</p>` : ""}
             </section>
 
@@ -75,11 +80,11 @@ const Debrief = {
             <!-- 스탯 타일 -->
             <section class="db-tiles">
                 <div class="db-tile"><p class="db-tile-label">최고 잔액 (최고점)</p><b>${fmt(S.peak)}원</b><span class="db-delta down">▼ 그 후 전액 상실</span></div>
-                <div class="db-tile"><p class="db-tile-label">총 베팅 횟수</p><b>${fmt(S.betCount)}회</b><span class="db-delta">${elapsedMin}분 동안</span></div>
+                <div class="db-tile"><p class="db-tile-label">총 베팅 횟수</p><b>${fmt(S.betCount)}회</b><span class="db-delta">${S.quick ? "스토리 2주 누적" : `${elapsedMin}분 동안`}</span></div>
                 <div class="db-tile"><p class="db-tile-label">총 베팅 금액</p><b>${fmt(S.totalBet)}원</b><span class="db-delta">회전할수록 사이트의 수익</span></div>
                 <div class="db-tile"><p class="db-tile-label">충전 성공</p><b>${S.chargeCount + (S.flags.loan1Used ? 1 : 0) + (S.flags.loan2Used ? 1 : 0)}회</b><span class="db-delta">평균 처리 2초</span></div>
                 <div class="db-tile"><p class="db-tile-label">환전 성공</p><b>0회</b><span class="db-delta down">시도 ${S.exchangeTries}회 전부 거부</span></div>
-                <div class="db-tile"><p class="db-tile-label">체험 소요 시간</p><b>${elapsedText()}</b><span class="db-delta">현실이었다면?</span></div>
+                <div class="db-tile"><p class="db-tile-label">체험 소요 시간</p><b>${elapsedText()}</b><span class="db-delta">${S.quick ? "2주를 압축 체험" : "현실이었다면?"}</span></div>
             </section>
 
             <!-- 시간·기회비용 충격 -->
@@ -87,12 +92,12 @@ const Debrief = {
                 <h2>⏱ 같은 시간, 같은 돈의 두 개의 세계</h2>
                 <div class="db-compare">
                     <div class="db-comp-side">
-                        <p class="db-tile-label">${elapsedMin}분 동안 편의점 알바를 했다면</p>
-                        <b class="good">+${fmt(wageEarned)}원</b>
-                        <span>2026년 최저시급 ${fmt(CONFIG.MIN_WAGE)}원 기준</span>
+                        <p class="db-tile-label">${cmpLabelA}</p>
+                        <b class="good">+${fmt(cmpEarn)}원</b>
+                        <span>${cmpSub}</span>
                     </div>
                     <div class="db-comp-side">
-                        <p class="db-tile-label">${elapsedMin}분 동안 도박을 한 결과</p>
+                        <p class="db-tile-label">${cmpLabelB}</p>
                         <b class="bad">−${fmt(lost)}원</b>
                         <span>빚 ${fmt(S.debt)}원 포함</span>
                     </div>
@@ -131,8 +136,8 @@ const Debrief = {
                 승률이 아니라 <b>구조</b>가 결과를 정하기 때문입니다.</p>` : ""}
             </section>
 
-            <!-- 행동 위험 프로파일 (육각 레이더) -->
-            ${S.betCount >= 2 ? `
+            <!-- 행동 위험 프로파일 (육각 레이더) — 빠른모드는 실제 행동 표본이 없어 표시하지 않음 -->
+            ${(S.betCount >= 2 && !S.quick) ? `
             <section class="db-card">
                 <h2>🧠 도박 행동 위험 프로파일 (행동 관찰 지표)</h2>
                 <p class="db-desc">체험 중 ${esc(S.nickname)}님이 실제로 보인 행동을 정신의학에서 쓰는
@@ -269,6 +274,13 @@ const Debrief = {
         </div>
         <div id="print-report" aria-hidden="true"></div>`;
 
+        /* 빠른 교육 모드: 체험이 끝나면 바로 도박검사(CAGI)로 이어진다 — 최상단 배치 + 자동 시작 */
+        if (S.quick) {
+            const cagi = $("#cagi-card"), hero = $("#debrief-content .db-hero");
+            if (cagi && hero) hero.after(cagi);
+            this._cagi.started = true;
+        }
+
         this.renderChart();
         this.renderCagi();
 
@@ -306,9 +318,11 @@ const Debrief = {
         const cagiLine = S.cagi
             ? `자가진단(CAGI) 결과는 ${S.cagi.score}점으로 '${S.cagi.grade.name}'에 해당합니다.`
             : `자가진단(CAGI)은 실시되지 않았습니다.`;
-        const opinion = `대상자는 ${elapsedMin}분 동안 총 ${fmt(S.betCount)}회(${fmt(S.totalBet)}원) 베팅하였으며, ${ending}.
+        const behaviorLine = S.quick ? ""
+            : `행동 관찰에서는 <b>${esc(top[0].k)}(${top[0].v})</b>, <b>${esc(top[1].k)}(${top[1].v})</b> 지표가 상대적으로 높게 나타났습니다.`;
+        const opinion = `대상자는 ${S.quick ? "약 2분의 압축 체험(스토리상 2주)에서" : `${elapsedMin}분 동안`} 총 ${fmt(S.betCount)}회(${fmt(S.totalBet)}원) 베팅하였으며, ${ending}.
             실제 손실은 충전 ${fmt(S.totalCharged)}원과 부채 ${fmt(S.debt)}원을 합한 <b>${fmt(lost)}원</b>입니다.
-            행동 관찰에서는 <b>${esc(top[0].k)}(${top[0].v})</b>, <b>${esc(top[1].k)}(${top[1].v})</b> 지표가 상대적으로 높게 나타났습니다.
+            ${behaviorLine}
             ${cagiLine} 본 체험의 모든 승패·채팅·타 이용자는 사전에 설계된 가상이며, 동일한 구조가 실제 불법 도박사이트에서 그대로 사용됩니다.`;
 
         const cagiHtml = S.cagi ? `
@@ -370,13 +384,14 @@ const Debrief = {
             <div class="pr-cols">
                 <section class="pr-sec pr-radar">
                     <h2>2. 행동 위험 프로파일</h2>
-                    ${S.betCount >= 2 ? this.radarSvg(behavior) : `<p class="pr-small">표본 부족</p>`}
+                    ${(S.betCount >= 2 && !S.quick) ? this.radarSvg(behavior) : `<p class="pr-small">${S.quick ? "빠른 교육 모드 — 행동 표본 미수집" : "표본 부족"}</p>`}
                 </section>
                 <section class="pr-sec">
                     <h2>지표 해설 (체험 중 실측)</h2>
+                    ${S.quick ? `<p class="pr-small">빠른 교육 모드는 압축 몽타주로 진행되어 행동 지표를 실측하지 않습니다. 실전 체험 모드에서 측정됩니다.</p>` : `
                     <ul class="pr-notes">
                         ${behavior.map(m => `<li><b>${m.k} ${m.v}</b> ${m.note}</li>`).join("")}
-                    </ul>
+                    </ul>`}
                 </section>
             </div>
         </div>
