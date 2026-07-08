@@ -384,11 +384,11 @@ const Debrief = {
             <div class="pr-cols">
                 <section class="pr-sec pr-radar">
                     <h2>2. 행동 위험 프로파일</h2>
-                    ${(S.betCount >= 2 && !S.quick) ? this.radarSvg(behavior) : `<p class="pr-small">${S.quick ? "빠른 교육 모드 — 행동 표본 미수집" : "표본 부족"}</p>`}
+                    ${(S.betCount >= 2 && !S.quick) ? this.radarSvg(behavior) : `<p class="pr-small">${S.quick ? "빠른 교육 모드 — 핵심 선택 2회 직접 체험" : "표본 부족"}</p>`}
                 </section>
                 <section class="pr-sec">
                     <h2>지표 해설 (체험 중 실측)</h2>
-                    ${S.quick ? `<p class="pr-small">빠른 교육 모드는 압축 몽타주로 진행되어 행동 지표를 실측하지 않습니다. 실전 체험 모드에서 측정됩니다.</p>` : `
+                    ${S.quick ? `<p class="pr-small">빠른 교육 모드는 첫 홀짝과 VIP 전액 베팅만 직접 체험하고, 나머지 2주 흐름은 압축해서 보여줍니다.</p>` : `
                     <ul class="pr-notes">
                         ${behavior.map(m => `<li><b>${m.k} ${m.v}</b> ${m.note}</li>`).join("")}
                     </ul>`}

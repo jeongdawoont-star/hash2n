@@ -818,7 +818,7 @@ const Site = {
                     html: `<p class="center">연결된 계좌에 <b>출금 가능 금액이 없습니다.</b><br><span class="muted">(모아둔 용돈과 세뱃돈을 이미 전부 사용했습니다)</span></p>`,
                     buttons: [
                         { label: "🎁 친구 초대하고 5만원 받기", cls: "gold", fn: () => Site.openInvite() },
-                        { label: "확인", cls: "dark", fn: () => Director.deadEnd() },
+                        { label: "확인", cls: "dark", fn: () => { if (!Director.deadEnd()) Director.onBroke(); } },
                     ],
                 });
             }
@@ -1361,12 +1361,15 @@ const Director = {
         if (S.flags.deadEnd || !S.flags.signupDone || S.phase === "RUIN" || S.phase === "DEBRIEF") return false;
         if (S.balance > 0) return false;
         if (!S.flags.cashDry) return false;                                     /* 계좌이체 아직 가능 */
-        if (S.phase !== "FALL" && (S.flags.giftCount || 0) < 2) return false;   /* 이탈방지 이벤트머니 남음 */
         if (S.friends.some(f => !f.joined)) return false;                       /* 가입 대기 친구 보너스 예정 */
+        const vipInviteRouteDone = S.flags.vipUnlocked && friendsJoined().length >= CONFIG.VIP_FRIENDS_NEED;
+        const invitesExhausted = S.friends.length >= 4 || vipInviteRouteDone;    /* 초대/VIP 유도 루트 소진 */
+        const giftsExhausted = (S.flags.giftCount || 0) >= 2;
+        if (S.phase !== "FALL" && !giftsExhausted && !invitesExhausted) return false; /* 이탈방지 이벤트머니 남음 */
         /* 빈손으로 3번 이상 시도한 플레이어는 남은 우회로(추가 초대·대출)도 쓰지 않을 사람 — 그만 보내준다 */
         const stubborn = (S.flags.brokePokes || 0) >= 3;
         if (!stubborn) {
-            if (S.friends.length < 4) return false;                             /* 초대 여지 남음 */
+            if (!invitesExhausted) return false;                                /* 초대 여지 남음 */
             if (!ignoreLoans && S.phase === "FALL"
                 && (!S.flags.loan1Used || !S.flags.loan2Used)) return false;    /* 대출 루트 남음 */
         }
@@ -1621,10 +1624,11 @@ function elapsedText() {
 }
 
 /* ═══════════════ 빠른 교육 모드 (약 2분 압축 체험 → 도박검사) ═══════════════
-   카톡 → 자동가입 → 실장 픽 1승(실제 베팅 1회) → 상승 몽타주(최고점) →
-   환전 거부 → 몰락 몽타주(충전·빚·전액 손실) → 계정 차단·잠적 → 리포트(CAGI 최상단) */
+   카톡 → 자동가입 → 실장 픽 1승(실제 베팅 1회) → 상승 몽타주(VIP 초대) →
+   VIP 전액 베팅(학생 직접 선택, 조작된 패배) → 계정 차단·잠적 → 리포트(CAGI 최상단) */
 const QuickMode = {
     betDone: false,
+    vipLossArmed: false,
 
     async run() {
         S.phase = "KAKAO";
@@ -1658,11 +1662,18 @@ const QuickMode = {
 
     /* 실장 픽 승리 → 몽타주 진입 (다른 게임 승리는 무시) */
     async onBetResolved({ win, game, pick }) {
-        if (this.betDone || !(win && game === "powerball" && pick)) return;
-        this.betDone = true;
-        await Director.ensureSiteView();
-        await UI.narrate(`맞았다! 3만원이 한 판에 <b>${fmtW(S.balance)}</b>이 됐다.<br><b>어? 이거 진짜 되잖아?</b>`);
-        this.riseAndFall();
+        if (!this.betDone) {
+            if (!(win && game === "powerball" && pick)) return;
+            this.betDone = true;
+            await Director.ensureSiteView();
+            await UI.narrate(`맞았다! 3만원이 한 판에 <b>${fmtW(S.balance)}</b>이 됐다.<br><b>어? 이거 진짜 되잖아?</b>`);
+            this.prepareVipLoss();
+            return;
+        }
+        if (this.vipLossArmed && game === "vip" && !win) {
+            this.vipLossArmed = false;
+            await this.finishAfterVipLoss();
+        }
     },
 
     /* 몽타주 공용: 카운터 + 자막 롤링 */
@@ -1711,39 +1722,46 @@ const QuickMode = {
         }));
     },
 
-    async riseAndFall() {
-        /* ── 상승 몽타주: 최고점 128만 ── */
-        const peak = 1284000;
-        await this.playMontage({ label: "그로부터 2주", captions: DATA.quickRise, from: S.balance, to: peak });
+    async prepareVipLoss() {
+        /* ── 상승 몽타주: VIP 초대까지만 압축하고, 전액 손실은 직접 플레이하게 한다 ── */
+        const vipSeed = 684000;
+        await this.playMontage({ label: "그로부터 2주", captions: DATA.quickRise, from: S.balance, to: vipSeed, dur: 7600 });
         this.seedHistory([[95000, 30000, true], [140000, 50000, true], [120000, 50000, false], [230000, 60000, true],
-            [370000, 80000, true], [330000, 40000, false], [520000, 100000, true], [660000, 120000, true], [peak, 660000, true]]);
-        S.balance = peak; S.peak = peak; S.peakTime = Date.now();
-        /* 몽타주 스토리와 리포트 수치를 맞춘다: 2주간의 베팅·충전 */
-        S.betCount += 46; S.winCount += 24; S.totalBet += 2620000;
+            [370000, 80000, true], [330000, 40000, false], [520000, 100000, true], [vipSeed, 180000, true]]);
+        S.balance = vipSeed; S.peak = vipSeed; S.peakTime = Date.now();
+        S.betCount += 22; S.winCount += 12; S.totalBet += 1260000;
         S.totalCharged = 300000; S.chargeCount = 3; S.flags.cashDry = true;
+        S.friends = [{ name: "김하늘", joined: true }, { name: "박도윤", joined: true }];
+        S.flags.vipOffered = true;
+        S.flags.vipUnlocked = true;
+        S.phase = "VIP";
+        $("#card-vip").classList.remove("locked");
+        $("#vip-foot").textContent = "최소배팅 10만 · 한도 무제한";
         renderMoney();
-        Sound.jackpot(); UI.coinRain(30); UI.flash("rgba(255,215,0,.35)", 3);
-        await UI.narrate(`잔액 <b>${fmtW(peak)}</b>. 전광판 1위. <b>백만장자다.</b><br>이제 환전해서… 사고 싶던 거 다 산다.`);
+        Sound.jackpot(); UI.coinRain(28); UI.flash("rgba(255,215,0,.35)", 3);
+        await UI.narrate(`초대한 친구 두 명까지 가입했고, 잔액은 <b>${fmtW(vipSeed)}</b>까지 불어났다.<br>이제 VIP룸만 들어가면 <b>진짜 큰돈</b>을 만들 수 있을 것 같다.`);
+        await Chat.say(DATA.quickVipTrap);
+        await Chat.choice(["제가 직접 골라볼게요"]);
+        Chat.close();
+        this.vipLossArmed = true;
+        S.forcedPick = { game: "vip", side: null, freeSide: true, amount: "all", note: "본사 확정픽: 원하는 곳에 전액 — 이번 판은 정해져 있습니다" };
+        Rig.force("lose", "vip");
+        await Director.ensureSiteView();
+        await UI.spotlight($("#card-vip"), "VIP룸에서 <b>전액 베팅</b>을 직접 걸어보세요");
+    },
 
-        /* ── 환전 거부 (덫 발동) ── */
-        S.exchangeTries = 1;
+    async finishAfterVipLoss() {
+        await wait(2200);
+        await Director.ensureSiteView();
+        S.flags.peakDone = true;
         S.flags.rollingDenied = true;
-        Sound.alarm(); UI.shake();
-        await new Promise(res => UI.modal({
-            title: "🚨 환전 보류",
-            html: `<p class="center"><b class="danger-text">롤링 45% 부족</b><br><br>보유머니 환전은 충전액 대비 <b>300% 롤링</b>(배팅 총액) 충족 후 가능합니다.<br>배팅을 더 진행해 주세요.</p>`,
-            buttons: [{ label: "…몇 판만 더 하면 되겠지", cls: "dark", fn: res }],
-        }));
-        await UI.narrate("뭔가 찜찜하다. 아까는 이런 말 없었는데…<br>그래도 몇 판만 더 돌리면 <b>내 돈을 찾을 수 있어.</b>");
-
-        /* ── 몰락 몽타주: 0원 + 빚 ── */
-        await this.playMontage({ label: "환전이 막힌 뒤", captions: DATA.quickFall, from: peak, to: 0, down: true });
-        this.seedHistory([[980000, 300000, false], [1080000, 100000, true], [720000, 360000, false], [400000, 320000, false],
-            [210000, 190000, false], [340000, 130000, true], [90000, 250000, false], [0, 90000, false]]);
-        S.balance = 0; S.debt = 300000; S.flags.loan1Offered = true; S.flags.loan1Used = true; S.flags.recoveryGiven = true;
-        S.betCount += 31; S.winCount += 6; S.totalBet += 2140000; S.exchangeTries = 2;
+        S.flags.loan1Offered = true;
+        S.flags.loan1Used = true;
+        S.flags.recoveryGiven = true;
+        S.debt = 300000;
+        S.exchangeTries = 2;
         renderMoney();
-        await UI.narrate("잔액 <b>0원</b>. 빚 <b>30만원</b>.<br>2주 전엔 분명 공짜 5만원으로 시작했는데.<br><b>환전… 마지막으로 환전이라도 눌러보자.</b>");
+        await UI.narrate("방금 판은 내가 직접 골랐다.<br>그런데 결과는 내가 고른 쪽만 비껴갔다.<br>잔액 <b>0원</b>. 휴대폰 소액결제 빚 <b>30만원</b>까지 남았다.");
 
         /* ── 계정 차단 → 실장 잠적 → 크래시 ── */
         Sound.alarm(); UI.shake();
