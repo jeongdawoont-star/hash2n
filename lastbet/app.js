@@ -1397,17 +1397,34 @@ const Director = {
                     setBalance(30000);
                     Sound.win();
                     UI.toast("🎁 <b>이탈 방지 이벤트</b> 머니 +30,000원 지급! 저희가 이렇게까지 챙깁니다", { type: "money" });
-                } else Site.openCharge("charge");
+                } else {
+                    if (!S.flags.cashDry) {
+                        await Chat.say(DATA.boss.chargeRemind);
+                        await Chat.choice(["충전하러 가기"]);
+                        Chat.close();
+                    }
+                    Site.openCharge("charge");
+                }
                 return;
             }
             if (!S.flags.firstBrokeNarr) {
                 S.flags.firstBrokeNarr = true;
                 await UI.narrate("잔액이 바닥났다.<br>조금 전까지 <b>백만원이 넘게</b> 있었는데…<br>아니야, 잃은 게 아니야.<br><b>잠깐 맡겨둔 거야. 충전해서 찾아오면 돼.</b>");
                 UI.toast(rand(DATA.temptBroke), {});
+                if (!S.flags.cashDry) {
+                    await Chat.say(DATA.boss.chargeRemindFall);
+                    await Chat.choice(["충전하러 가기"]);
+                    Chat.close();
+                }
                 Site.openCharge("charge");
             } else if (S.flags.cashDry) {
                 await this.onCashDry();
             } else {
+                if (!S.flags.cashDry) {
+                    await Chat.say(DATA.boss.chargeRemindFallAgain);
+                    await Chat.choice(["충전하러 가기"]);
+                    Chat.close();
+                }
                 Site.openCharge("charge");
             }
         } finally {
