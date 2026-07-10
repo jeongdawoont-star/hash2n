@@ -7,6 +7,11 @@
   <meta name="description" content="해시브라운 코딩 기록소는 교실 프로젝트, 수업용 웹앱, 학급 자동화 도구를 모아 둔 코딩 아카이브입니다. 해시브라운 코딩 기록소로 검색하면 최신 프로젝트를 확인할 수 있습니다."/>
   <meta name="keywords" content="해시브라운 코딩 기록소, 해시브라운 코딩, 바이브코딩, 교실 프로젝트, 수업 도구, 학급 자동화"/>
   <meta name="robots" content="index,follow"/>
+  <script>
+    if (window.location.hostname.includes('github.io')) {
+      document.querySelector('meta[name="robots"]')?.setAttribute('content', 'noindex, nofollow');
+    }
+  </script>
   <link rel="canonical" href="https://hash2n.vercel.app/"/>
   <meta property="og:type" content="website"/>
   <meta property="og:site_name" content="해시브라운 코딩 기록소"/>
@@ -195,6 +200,7 @@
               <div class="flex flex-col gap-3">
                 <h4 class="font-bold text-primary text-base border-b border-[#efeee9] dark:border-[#2f3436] pb-1.5 flex items-center gap-1.5">🏫 교실 도구</h4>
                 <ul class="flex flex-col gap-2">
+                  <li><a class="underline decoration-[#d3c3be] hover:text-primary transition-colors" href="./vibe-apps/한글자.html">한글자</a></li>
                   <li><a class="underline decoration-[#d3c3be] hover:text-primary transition-colors" href="./vibe-apps/속담그림퀴즈.html">속담 그림 퀴즈</a></li>
                   <li><a class="underline decoration-[#d3c3be] hover:text-primary transition-colors" href="./vibe-apps/radio.html">학급 사연 라디오</a></li>
                   <li><a class="underline decoration-[#d3c3be] hover:text-primary transition-colors" href="./vibe-apps/pair-draw.html">랜덤 짝뽑기</a></li>

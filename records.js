@@ -32,6 +32,15 @@ export const RECORDS = [
   // ▼ 여기에 새 기록을 붙여넣으세요 (최신 항목을 맨 위에) ▼
 
   {
+    title: "한글자",
+    desc: "종이 한 장에 한 글자씩 크게 출력하여 행사용 배너나 교실 환경 미화용으로 쓰기 좋게 만든 웹앱이다.\n원하는 문구를 입력하면 자동으로 한 글자씩 분할되어 인쇄용 레이아웃을 구성해준다.",
+    tags: "print, classroom, banner, tool",
+    category: "class-tools",
+    link: "./vibe-apps/한글자.html",
+    image: "img/hangulja.png",
+  },
+
+  {
     title: "나의 악보집",
     desc: "기타 코드와 가사를 함께 볼 수 있는 웹 악보집이다.\n자동 스크롤, 코드 운지법 다이어그램 표시, 유튜브 연동을 지원한다.\n나만의 악보를 직접 추가하여 연주에 활용할 수 있다.",
     tags: "guitar, chord, band, songbook",

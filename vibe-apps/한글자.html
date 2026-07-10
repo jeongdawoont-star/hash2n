@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>한글자 — 한 글자씩 포스터 메이커</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&family=Jua&family=Poor+Story&family=Song+Myung&family=Nanum+Gothic:wght@400;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1c1b19;
+    --paper:#eae5da;
+    --line:#c9c2b2;
+    --accent:#b23a2e;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--ink);
+    font-family:'Nanum Gothic', sans-serif;
+    color:var(--paper);
+  }
+
+  /* ---------- 컨트롤 패널 ---------- */
+  .studio{
+    padding:28px 24px 20px;
+    max-width:960px;
+    margin:0 auto;
+  }
+  .studio h1{
+    font-family:'Black Han Sans', sans-serif;
+    font-size:clamp(28px,4vw,44px);
+    letter-spacing:2px;
+    margin:0 0 4px;
+    color:var(--paper);
+  }
+  .studio .tag{
+    font-size:13px;
+    letter-spacing:3px;
+    text-transform:uppercase;
+    color:var(--accent);
+    margin-bottom:18px;
+    font-weight:800;
+  }
+  textarea{
+    width:100%;
+    min-height:90px;
+    resize:vertical;
+    background:var(--paper);
+    color:var(--ink);
+    border:2px solid var(--line);
+    border-radius:4px;
+    padding:14px;
+    font-size:16px;
+    font-family:'Nanum Gothic', sans-serif;
+    line-height:1.5;
+  }
+  .row{
+    display:flex;
+    gap:10px;
+    margin-top:14px;
+    flex-wrap:wrap;
+    align-items:center;
+  }
+  label.field{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-size:13px;
+    color:#c9c2b2;
+    font-weight:800;
+  }
+  select{
+    font-family:'Nanum Gothic', sans-serif;
+    font-weight:800;
+    font-size:13px;
+    padding:9px 12px;
+    border-radius:3px;
+    border:2px solid var(--paper);
+    background:var(--ink);
+    color:var(--paper);
+    cursor:pointer;
+  }
+  button{
+    font-family:'Nanum Gothic', sans-serif;
+    font-weight:800;
+    font-size:14px;
+    letter-spacing:1px;
+    padding:12px 20px;
+    border-radius:3px;
+    border:2px solid var(--paper);
+    background:transparent;
+    color:var(--paper);
+    cursor:pointer;
+    transition:.15s;
+  }
+  button:hover{ background:var(--paper); color:var(--ink); }
+  button.primary{ background:var(--accent); border-color:var(--accent); color:#fff; }
+  button.primary:hover{ background:#8f2c22; }
+  .count{
+    font-size:13px;
+    color:#a8a196;
+    margin-left:auto;
+  }
+  .hint{
+    font-size:12px;
+    color:#8a8478;
+    margin-top:10px;
+    line-height:1.6;
+  }
+
+  /* ---------- 미리보기: 칠판/벽 ---------- */
+  .wall{
+    min-height:80vh;
+    background:
+      radial-gradient(ellipse at 20% 20%, rgba(255,255,255,0.04), transparent 60%),
+      radial-gradient(ellipse at 80% 70%, rgba(255,255,255,0.03), transparent 55%),
+      repeating-linear-gradient(0deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 1px, transparent 1px, transparent 3px),
+      #1e3d31;
+    border-top:14px solid #7a5230;
+    border-bottom:14px solid #7a5230;
+    box-shadow:inset 0 0 120px rgba(0,0,0,.55);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:14px;
+    padding:26px 16px;
+  }
+
+  .line{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    row-gap:6px;
+    flex-wrap:wrap;
+    max-width:100%;
+    padding:4px 2px 8px;
+  }
+  .word-group{
+    display:flex;
+    flex-wrap:nowrap;
+    gap:6px;
+    flex:0 0 auto;
+  }
+
+  .page-slot{
+    width:80px;
+    height:112px;
+    flex:0 0 auto;
+    overflow:visible;
+    position:relative;
+  }
+  .paper{
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    box-shadow:0 4px 8px rgba(0,0,0,.5), 0 1px 3px rgba(0,0,0,.35);
+    background:#fff;
+    position:relative;
+  }
+  .tape{
+    position:absolute;
+    top:-4px;
+    left:50%;
+    width:22px;
+    height:8px;
+    transform:translateX(-50%) rotate(var(--tape-rot,-3deg));
+    background:rgba(255,255,255,0.55);
+    border:1px solid rgba(0,0,0,0.05);
+    box-shadow:0 1px 2px rgba(0,0,0,.25);
+    z-index:5;
+  }
+
+  .page{
+    width:210mm;
+    height:297mm;
+    transform:scale(0.1);
+    transform-origin:top left;
+    position:relative;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+    background:#fff;
+  }
+  .glyph{
+    line-height:1;
+    user-select:none;
+    text-align:center;
+  }
+  .deco{
+    position:absolute;
+    line-height:1;
+    user-select:none;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:50%;
+    background:rgba(255,255,255,.85);
+  }
+
+  /* ---------- 인쇄 ---------- */
+  @media print{
+    body{ background:#fff; }
+    .studio{ display:none; }
+    .wall{
+      display:block; padding:0; margin:0; border:none; box-shadow:none; background:#fff; min-height:0;
+    }
+    .line{ display:block; padding:0; overflow:visible; }
+    .word-group{ display:block; }
+    .page-slot{
+      width:auto; height:auto; margin:0;
+      page-break-after:always;
+    }
+    .paper{ box-shadow:none; overflow:visible; }
+    .tape{ display:none; }
+    .page{ transform:none; width:210mm; height:297mm; }
+    @page{ size:A4; margin:0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="studio">
+  <h1>한글자</h1>
+  <div class="tag">One Character, One Page</div>
+  <textarea id="input" spellcheck="false">안녕하세요 반갑습니다! 오늘도 좋은 하루 되세요.</textarea>
+  <div class="row">
+    <button class="primary" id="generateBtn">🎲 다시 뽑기 (새 스타일)</button>
+    <button id="printBtn">🖨 인쇄 / PDF 저장</button>
+    <label class="field">
+      <input type="checkbox" id="borderToggle" checked style="width:16px;height:16px;">
+      페이지 테두리
+    </label>
+    <label class="field">
+      <input type="checkbox" id="decoToggle" checked style="width:16px;height:16px;">
+      장식 이모지
+    </label>
+    <div class="count" id="countLabel"></div>
+  </div>
+</div>
+
+<div class="wall" id="wall"></div>
+
+<script>
+const FONTS = ['Black Han Sans', 'Do Hyeon', 'Jua', 'Poor Story', 'Song Myung'];
+
+const PALETTES = [
+  {bg:'#fdf6e3', ink:'#2b2b2b', accent:'#c0392b'},
+  {bg:'#fff5f0', ink:'#7a1f1f', accent:'#e07a5f'},
+  {bg:'#f0f4f8', ink:'#1b263b', accent:'#415a77'},
+  {bg:'#fefae0', ink:'#283618', accent:'#606c38'},
+  {bg:'#f8edeb', ink:'#3d0000', accent:'#e29578'},
+  {bg:'#eef2ff', ink:'#22223b', accent:'#4a4e69'},
+  {bg:'#fff0f6', ink:'#590d22', accent:'#ff8fab'},
+  {bg:'#f1faee', ink:'#1d3557', accent:'#e63946'},
+  {bg:'#fdf0d5', ink:'#2b2118', accent:'#780000'},
+  {bg:'#e6f2f2', ink:'#043b3b', accent:'#118a8a'},
+  {bg:'#faf3dd', ink:'#31221b', accent:'#c9184a'},
+  {bg:'#ede7f6', ink:'#2e1a47', accent:'#7b2cbf'}
+];
+
+const BORDER_STYLES = ['solid','dashed','dotted','double','groove','ridge'];
+const TAPE_COLORS = ['rgba(255,244,214,0.6)','rgba(200,230,255,0.55)','rgba(255,214,214,0.55)','rgba(255,255,255,0.5)','rgba(214,255,224,0.55)'];
+const DECOS = [
+  '✨','🌸','⭐','🍀','🔥','💫','🌈','🎉','❤️','🦋','🌟','🍁','🎈','☀️','❄️','🌙','🍂','💥',
+  '🎀','🌺','🌻','🌼','🌷','🍄','🐝','🐞','🦄','🐣','🐬','🐳','🍎','🍒','🍬','🍭','🍩','🧁',
+  '🎊','🎁','🎵','🎶','💎','🔮','🪄','🧸','🪁','🌊','🌵','🍒','🥳','😊','😎','🤩','👑','🕊️',
+  '🌞','🌝','⚡','💧','🌪️','🍉','🍓','🍊','🌰','🍯','🧿','🪅','🎨','🖍️','📎','✂️','🧵','🪴'
+];
+
+function rand(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function randInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+
+// 문장 단위 분리 (마침표, 느낌표, 물음표, 줄바꿈 기준, 구분자 유지)
+function splitSentences(text){
+  const rough = text.split(/(?<=[.!?。！？\n])/u);
+  const sentences = [];
+  for(const s of rough){
+    const trimmed = s.trim();
+    if(trimmed.length>0) sentences.push(trimmed);
+  }
+  return sentences.length ? sentences : [text.trim()];
+}
+
+function makeSentenceStyle(){
+  const pal = rand(PALETTES);
+  const font = rand(FONTS);
+  const borderOn = document.getElementById('borderToggle').checked;
+  const borderStyle = borderOn ? rand(BORDER_STYLES) : 'none';
+  const borderWidth = borderOn ? randInt(6,18) : 0;
+  const borderRadius = Math.random() < 0.5 ? randInt(0,30) : 0;
+  const effectMode = rand(['none','soft','pop3d','beam','neon','stripe']);
+  const tapeRot = (Math.random()*10-5).toFixed(1);
+  const tapeColor = rand(TAPE_COLORS);
+  const decoOn = document.getElementById('decoToggle').checked;
+  const decoCount = decoOn ? randInt(1,3) : 0;
+  const decos = Array.from({length:decoCount}, ()=>rand(DECOS));
+
+  // 글자 테두리(스트로크) — 페이지 테두리 체크박스와는 완전히 별개로 매번 랜덤 결정
+  const strokeWidth = rand([0, 0, 1, 1.5, 2.5, 4]); // mm, 0이 자주 나오게 해 "스트로크 없음"도 섞이게 함
+  const strokeColor = rand([pal.accent, pal.ink, '#ffffff']);
+
+  return { pal, font, borderStyle, borderWidth, borderRadius, effectMode, tapeRot, tapeColor, decos, strokeWidth, strokeColor };
+}
+
+function textShadowFor(style){
+  const {pal, effectMode} = style;
+
+  if(effectMode === 'soft'){
+    // 은은한 그림자
+    return `3mm 3mm 0 ${hexAlpha(pal.accent,0.25)}`;
+
+  } else if (effectMode === 'pop3d'){
+    // 튀어나오는 3D 입체 효과 - 같은 방향으로 겹겹이 쌓인 그림자
+    const layers = [];
+    for(let i=1;i<=12;i++){
+      layers.push(`${(i*1.1).toFixed(1)}mm ${(i*1.1).toFixed(1)}mm 0 ${hexAlpha(pal.ink, Math.max(0.15, 0.9-i*0.06))}`);
+    }
+    return layers.join(', ');
+
+  } else if (effectMode === 'beam'){
+    // 사방으로 뻗는 빛줄기(방사형 빔) 효과
+    const angles = [0,45,90,135,180,225,270,315];
+    const layers = angles.map(a=>{
+      const rad = a*Math.PI/180;
+      const dx = (Math.cos(rad)*16).toFixed(1);
+      const dy = (Math.sin(rad)*16).toFixed(1);
+      return `${dx}mm ${dy}mm 20mm ${hexAlpha(pal.accent,0.4)}`;
+    });
+    return layers.join(', ');
+
+  } else if (effectMode === 'neon'){
+    // 네온사인 글로우 효과
+    return `0 0 6mm ${pal.accent}, 0 0 14mm ${pal.accent}, 0 0 28mm ${hexAlpha(pal.accent,0.7)}, 0 0 42mm ${hexAlpha(pal.accent,0.4)}`;
+
+  } else if (effectMode === 'stripe'){
+    // 이중 컬러 겹침 스트라이프 그림자
+    return `2mm 2mm 0 ${pal.accent}, 4mm 4mm 0 ${hexAlpha(pal.ink,0.5)}, 6mm 6mm 0 ${hexAlpha(pal.accent,0.3)}`;
+
+  } else {
+    return 'none';
+  }
+}
+
+function hexAlpha(hex, alpha){
+  const h = hex.replace('#','');
+  const r = parseInt(h.substring(0,2),16);
+  const g = parseInt(h.substring(2,4),16);
+  const b = parseInt(h.substring(4,6),16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+function buildPage(char, style){
+  const slot = document.createElement('div');
+  slot.className = 'page-slot';
+
+  const paper = document.createElement('div');
+  paper.className = 'paper';
+
+  const tape = document.createElement('div');
+  tape.className = 'tape';
+  tape.style.setProperty('--tape-rot', style.tapeRot + 'deg');
+  tape.style.background = style.tapeColor;
+  paper.appendChild(tape);
+
+  const page = document.createElement('div');
+  page.className = 'page';
+  page.style.background = style.pal.bg;
+  page.style.border = style.borderWidth ? `${style.borderWidth}mm ${style.borderStyle} ${style.pal.accent}` : 'none';
+  page.style.borderRadius = style.borderRadius + 'mm';
+
+  const glyph = document.createElement('div');
+  glyph.className = 'glyph';
+  glyph.textContent = char;
+  glyph.style.fontFamily = `'${style.font}', sans-serif`;
+  glyph.style.color = style.effectMode === 'neon' ? style.pal.accent : style.pal.ink;
+  glyph.style.fontSize = '150mm';
+  glyph.style.textShadow = textShadowFor(style);
+  if(style.strokeWidth > 0){
+    glyph.style.webkitTextStroke = `${style.strokeWidth}mm ${style.strokeColor}`;
+    glyph.style.paintOrder = 'stroke fill';
+  }
+
+  page.appendChild(glyph);
+
+  const cornerPositions = [
+    {top:'10mm', left:'10mm'},
+    {top:'10mm', right:'10mm'},
+    {bottom:'10mm', left:'10mm'},
+    {bottom:'10mm', right:'10mm'}
+  ];
+  const shuffledCorners = cornerPositions.sort(()=>Math.random()-0.5);
+  style.decos.forEach((emoji, i)=>{
+    const d = document.createElement('div');
+    d.className = 'deco';
+    d.textContent = emoji;
+    const size = randInt(22,34);
+    d.style.width = size + 'mm';
+    d.style.height = size + 'mm';
+    d.style.fontSize = (size*0.6) + 'mm';
+    d.style.border = `1.5mm solid ${style.pal.accent}`;
+    const pos = shuffledCorners[i % shuffledCorners.length];
+    Object.entries(pos).forEach(([k,v])=> d.style[k] = v);
+    page.appendChild(d);
+  });
+
+  paper.appendChild(page);
+  slot.appendChild(paper);
+  return slot;
+}
+
+function generate(){
+  const text = document.getElementById('input').value;
+  const wall = document.getElementById('wall');
+  wall.innerHTML = '';
+
+  const sentences = splitSentences(text);
+  let pageCount = 0;
+
+  sentences.forEach(sentence=>{
+    const style = makeSentenceStyle();
+    const words = sentence.split(/\s+/).filter(Boolean);
+
+    const lineEl = document.createElement('div');
+    lineEl.className = 'line';
+
+    words.forEach(word=>{
+      const wordGroup = document.createElement('div');
+      wordGroup.className = 'word-group';
+      for(const char of word){
+        const page = buildPage(char, style);
+        wordGroup.appendChild(page);
+        pageCount++;
+      }
+      lineEl.appendChild(wordGroup);
+    });
+
+    wall.appendChild(lineEl);
+  });
+
+  document.getElementById('countLabel').textContent = `총 ${pageCount}장`;
+}
+
+document.getElementById('generateBtn').addEventListener('click', generate);
+document.getElementById('printBtn').addEventListener('click', ()=> window.print());
+document.getElementById('borderToggle').addEventListener('change', generate);
+document.getElementById('decoToggle').addEventListener('change', generate);
+document.getElementById('input').addEventListener('input', ()=>{
+  clearTimeout(window.__t);
+  window.__t = setTimeout(generate, 400);
+});
+
+window.addEventListener('load', generate);
+</script>
+</body>
+</html>
