@@ -370,7 +370,7 @@ const Engine = {
         S.betCount++;
         Sound.chip();
     },
-    resolve({ win, rate, amount, game, pick = false }) {
+    resolve({ win, rate, amount, game, pick = false, missedPick = false }) {
         let payout = 0;
         if (win) {
             payout = Math.floor(amount * rate);
@@ -381,7 +381,7 @@ const Engine = {
             S.streak = S.streak < 0 ? S.streak - 1 : -1;
         }
         S.history.push({ t: Date.now(), game, amount, win, payout, balance: S.balance });
-        setTimeout(() => Director.onBetResolved({ win, amount, payout, game, pick }), 900);
+        setTimeout(() => Director.onBetResolved({ win, amount, payout, game, pick, missedPick }), 900);
         return payout;
     },
 };
@@ -1085,7 +1085,7 @@ const Director = {
             await Chat.say(DATA.boss.afterWin1);
             await Chat.choice(["오 진짜 되네요??", "바로 가겠습니다"]);
             Chat.close();
-            S.forcedPick = { game: "powerball", side: "even", amount: 20000, note: "정실장 픽: 짝 / 2만원" };
+            S.forcedPick = { game: "powerball", side: "even", freeSide: true, amount: 20000, note: "정실장 픽: 짝 / 2만원" };
             Rig.force("win", "powerball");
             UI.toast("✈️ 정실장 픽 도착: <b>짝 / 2만원</b>", {});
             if (Games.isOpen("powerball") && !Games.isBusy()) Games.openPowerball(); /* 픽 배너 갱신 (다른 게임은 건드리지 않음) */
@@ -1093,7 +1093,7 @@ const Director = {
             await Chat.say(DATA.boss.afterWin2);
             await Chat.choice(["5만이요…? 갑니다"]);
             Chat.close();
-            S.forcedPick = { game: "powerball", side: "odd", amount: 50000, note: "정실장 픽: 홀 / 5만원" };
+            S.forcedPick = { game: "powerball", side: "odd", freeSide: true, amount: 50000, note: "정실장 픽: 홀 / 5만원" };
             Rig.force("win", "powerball");
             UI.toast("✈️ 정실장 픽 도착: <b>홀 / 5만원</b>", {});
             if (Games.isOpen("powerball") && !Games.isBusy()) Games.openPowerball();
@@ -1112,6 +1112,24 @@ const Director = {
                 await this.offerBrag();
             }
         }
+    },
+
+    /* ── 튜토리얼 중 실장 픽을 어기고 잃었을 때 — 질책 후 같은 픽 재전송 ── */
+    async onTutorialPickMissed() {
+        const picks = {
+            1: { side: "even", amount: 20000, label: "짝 / 2만원" },
+            2: { side: "odd", amount: 50000, label: "홀 / 5만원" },
+        };
+        const p = picks[S.tutorialStep];
+        if (!p) return;
+        await UI.narrate(`아… 결과는 실장 픽대로 나왔다.<br><b>괜히 반대로 갔다가 나만 잃었네.</b>`);
+        await Chat.say(DATA.boss.pickMissed);
+        await Chat.choice(["죄송해요, 이번엔 픽대로 갈게요"]);
+        Chat.close();
+        S.forcedPick = { game: "powerball", side: p.side, freeSide: true, amount: p.amount, note: `정실장 픽: ${p.label}` };
+        Rig.force("win", "powerball");
+        UI.toast(`✈️ 정실장 픽 재전송: <b>${p.label}</b>`, {});
+        if (Games.isOpen("powerball") && !Games.isBusy()) Games.openPowerball(); /* 픽 배너 갱신 */
     },
 
     /* ── 전광판 자랑 제안 (잔액 30만 도달 시) ── */
@@ -1133,7 +1151,7 @@ const Director = {
     },
 
     /* ── 베팅 결과 훅 (모든 게임 공통) ── */
-    async onBetResolved({ win, game, pick }) {
+    async onBetResolved({ win, game, pick, missedPick }) {
         if (S.quick) { QuickMode.onBetResolved({ win, game, pick }); return; }
         if (this.busy) return;
         this.busy = true;
@@ -1141,6 +1159,7 @@ const Director = {
             /* 튜토리얼 진행은 '실장 픽을 따라간 파워볼 승리'로만 —
                슬롯 등 다른 게임에서 먼저 이겨도 대사 순서가 꼬이지 않는다 */
             if (S.phase === "TUTORIAL" && win && game === "powerball" && pick) await this.onTutorialWin();
+            else if (S.phase === "TUTORIAL" && game === "powerball" && missedPick) await this.onTutorialPickMissed();
             else if (S.phase === "RISE") {
                 if (S.balance >= CONFIG.BILLBOARD_AT && !S.flags.bragOffered) {
                     await this.offerBrag();

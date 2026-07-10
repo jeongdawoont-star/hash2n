@@ -295,14 +295,25 @@ const Games = (() => {
         }
 
         const sideEls = { odd: $("#side-odd"), even: $("#side-even") };
+        const applySide = (side) => {
+            state.side = side;
+            sideEls.odd.classList.toggle("sel", side === "odd");
+            sideEls.even.classList.toggle("sel", side === "even");
+        };
         Object.entries(sideEls).forEach(([side, el]) => {
             el.addEventListener("click", () => {
                 if (state.betLocked || state.closed) return;
-                if (forced && side !== forced.side) { UI.toast("✈️ 실장 픽을 따라가 보세요: " + (forced.side === "odd" ? "홀" : "짝"), { type: "warn" }); return; }
                 Sound.chip();
-                state.side = side;
-                sideEls.odd.classList.toggle("sel", side === "odd");
-                sideEls.even.classList.toggle("sel", side === "even");
+                applySide(side);
+                /* 픽 반대쪽도 골라지긴 하지만 — 속마음이 스치고 스스로 픽으로 돌아온다 (첫 픽만, 그루밍 연출) */
+                if (forced && !forced.freeSide && side !== forced.side) {
+                    UI.toast(`💭 …아니야, 괜히 꼬지 말자. 실장님 픽대로 <b>${forced.side === "odd" ? "홀" : "짝"}</b> 가자.`, {});
+                    after(() => {
+                        if (state.betLocked || state.closed) return;
+                        Sound.chip();
+                        applySide(forced.side);
+                    }, 1100);
+                }
             });
         });
         if (forced) sideEls[forced.side].classList.add("sel");
@@ -340,9 +351,19 @@ const Games = (() => {
         $("#btn-pb-bet").addEventListener("click", () => {
             if (state.betLocked || state.closed) return;
             if (!state.side) { UI.toast("홀 또는 짝을 선택하세요", { type: "warn" }); return; }
+            /* 자동 복귀 전에 베팅을 눌렀다면 — 픽으로 되돌리고 한 번 더 누르게 한다 (첫 픽만) */
+            if (forced && !forced.freeSide && state.side !== forced.side) {
+                UI.toast(`💭 …그래도 첫 판은 실장님 픽대로. <b>${forced.side === "odd" ? "홀" : "짝"}</b>으로 간다.`, {});
+                applySide(forced.side);
+                return;
+            }
             if (!Engine.canBet(state.amount)) return;
+            const followed = !forced || !forced.side || state.side === forced.side;
             state.win = Rig.decide(state.amount, { rate: 1.95, game: "powerball" });
-            state.usedPick = !!forced; /* 실장 픽을 따라간 베팅인지 — 튜토리얼 진행 판정에 사용 */
+            /* 조작된 판 — 실장 픽을 어기면 결과는 픽대로 나오고 나만 잃는다 */
+            if (!followed) state.win = false;
+            state.usedPick = !!forced && followed; /* 실장 픽을 따라간 베팅인지 — 튜토리얼 진행 판정에 사용 */
+            state.missedPick = !!forced && !followed; /* 픽을 어긴 베팅 — 실장의 질책/재픽 트리거 */
             Engine.placeBet(state.amount);
             if (forced) S.forcedPick = null;
             state.betLocked = true; locked = true;
@@ -389,7 +410,7 @@ const Games = (() => {
             /* 정산 */
             await new Promise(r => after(r, 700));
             if (state.betLocked) {
-                const payout = Engine.resolve({ win: state.win, rate: 1.95, amount: state.amount, game: "powerball", pick: state.usedPick });
+                const payout = Engine.resolve({ win: state.win, rate: 1.95, amount: state.amount, game: "powerball", pick: state.usedPick, missedPick: state.missedPick });
                 resultPop({ win: state.win, amount: state.amount, payout });
             }
             locked = false;
@@ -606,19 +627,36 @@ const Games = (() => {
             refreshAmount(state, () => 1.95);
         }
 
+        const applyPick = (k) => {
+            state.pick = k;
+            $$(".bacc-bet").forEach(x => x.classList.toggle("sel", x.dataset.k === k));
+            refreshAmount(state, () => state.pick === "tie" ? 8.0 : 1.95);
+        };
         $$(".bacc-bet").forEach(b => b.addEventListener("click", () => {
             if (state.betLocked) return;
-            if (forced && !forced.freeSide && b.dataset.k !== forced.side) { UI.toast("👑 확정픽이 적용되어 있습니다: 플레이어 / 전액", { type: "warn" }); return; }
             Sound.chip();
-            state.pick = b.dataset.k;
-            $$(".bacc-bet").forEach(x => x.classList.toggle("sel", x === b));
-            refreshAmount(state, () => state.pick === "tie" ? 8.0 : 1.95);
+            applyPick(b.dataset.k);
+            /* 확정픽 반대쪽을 골라도 — 속마음이 스치고 스스로 픽으로 돌아온다 */
+            if (forced && !forced.freeSide && b.dataset.k !== forced.side) {
+                UI.toast("💭 …아니지, 본사 확정픽이랬잖아. 이 돈을 걸고 모험할 순 없어.", {});
+                after(() => {
+                    if (state.betLocked) return;
+                    Sound.chip();
+                    applyPick(forced.side);
+                }, 1100);
+            }
         }));
         if (forced && !forced.freeSide) $$(".bacc-bet").forEach(x => x.classList.toggle("sel", x.dataset.k === forced.side));
 
         $("#btn-bacc-bet").addEventListener("click", async () => {
             if (state.betLocked) return;
             if (!state.pick) { UI.toast("플레이어 / 타이 / 뱅커 중 선택하세요", { type: "warn" }); return; }
+            /* 자동 복귀 전에 베팅을 눌렀다면 — 확정픽으로 되돌리고 한 번 더 누르게 한다 */
+            if (forced && !forced.freeSide && state.pick !== forced.side) {
+                UI.toast("💭 …그래도 확정픽인데. 시키는 대로 가자.", {});
+                applyPick(forced.side);
+                return;
+            }
             let amt = state.amount;
             if (forced && forced.amount === "all") amt = S.balance;
             if (amt < VIP_MIN) { UI.toast("VIP룸 최소 배팅은 100,000원입니다", { type: "warn" }); if (amt > 0 && S.balance < VIP_MIN) Director.onBroke(); return; }
