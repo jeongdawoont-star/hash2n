@@ -37,7 +37,7 @@ export const RECORDS = [
     tags: "print, classroom, banner, tool",
     category: "class-tools",
     link: "./vibe-apps/한글자.html",
-    image: "img/hangulja.png",
+    image: "img-re/hangulja.avif",
   },
 
   {
