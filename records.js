@@ -37,7 +37,7 @@ export const RECORDS = [
     tags: "class-tools, roulette, random, fun",
     category: "class-tools",
     link: "./vibe-apps/Multi-roulette.html",
-    image: "img/multi-roulette.png",
+    image: "img-re/multi-roulette.avif",
   },
 
   {
