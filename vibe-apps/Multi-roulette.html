@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>멀티룰렛</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-deep:#F0F4F8;
+    --bg-panel:rgba(255, 255, 255, 0.76);
+    --gold:#F5B041;
+    --line:rgba(226, 232, 240, 0.85);
+    --success:#48BB78;
+    --fail:#FEB2B2;
+    --text:#2D3748;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none;}
+  html,body{
+    margin:0; padding:0; width:100%;
+    height:100%;
+    height:100dvh;
+    background: linear-gradient(135deg, #FFEBF0 0%, #E8F0FE 50%, #E6FCF5 100%);
+    font-family:'Nunito',sans-serif;
+    color:var(--text);
+    overflow:hidden;
+    overscroll-behavior:none;
+  }
+
+  #app{
+    position:fixed; inset:0;
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+  }
+
+  #appTitle{
+    font-family:'Jua',sans-serif;
+    font-size:clamp(22px, 5vw, 32px);
+    margin:18px 0 0;
+    background: linear-gradient(135deg, #B19FFB 0%, #91A8D0 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-align: center;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.05));
+    z-index: 10;
+  }
+
+  #stage{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    justify-content:center;
+    align-content:center;
+    width:100%;
+    height:100%;
+    gap:1.6vmin;
+    padding:46px 3vw 40px;
+  }
+
+  .wheelWrap{
+    position:relative;
+    display:flex; align-items:center; justify-content:center;
+    flex:0 0 auto;
+  }
+
+  .pointer{
+    position:absolute;
+    top:-2px;
+    left:50%;
+    transform:translateX(-50%);
+    width:0; height:0;
+    border-left:11px solid transparent;
+    border-right:11px solid transparent;
+    border-top:18px solid var(--gold);
+    filter:drop-shadow(0 2px 6px rgba(245, 176, 65, 0.6));
+    z-index:5;
+    animation:pointerPulse 1.4s ease-in-out infinite;
+  }
+  @keyframes pointerPulse{
+    0%,100%{ filter:drop-shadow(0 2px 6px rgba(245, 176, 65, 0.6)); }
+    50%{ filter:drop-shadow(0 3px 12px rgba(245, 176, 65, 0.9)); }
+  }
+
+  /* 원판 캔버스 전용 스타일 */
+  .wheelCanvas{
+    border-radius:50%;
+    background:#ffffff;
+    box-shadow:0 0 0 6px rgba(255,255,255,0.7), 0 0 0 9px var(--line), 0 10px 30px rgba(160,175,195,0.25);
+    cursor:pointer;
+    touch-action:manipulation;
+    max-width:340px;
+    max-height:340px;
+    transition: transform 0.2s ease;
+  }
+  .wheelCanvas:hover{
+    transform: scale(1.02);
+  }
+
+  #hint{
+    position:fixed;
+    bottom:14px; left:0; right:0;
+    text-align:center;
+    font-size:13px;
+    color:#718096;
+    letter-spacing:0.3px;
+    pointer-events:none;
+    font-weight: 500;
+  }
+
+  /* ---------- 상단 버튼들 ---------- */
+  .cornerBtn{
+    position:fixed;
+    top:14px;
+    width:42px; height:42px;
+    border-radius:50%;
+    border:1px solid rgba(226, 232, 240, 0.8);
+    background:rgba(255, 255, 255, 0.85);
+    backdrop-filter:blur(8px);
+    color:#718096;
+    font-size:19px;
+    display:flex; align-items:center; justify-content:center;
+    z-index:20;
+    cursor:pointer;
+    box-shadow:0 2px 8px rgba(160,175,195,0.2);
+    transition:all 0.2s ease;
+  }
+  .cornerBtn:hover{
+    color: #4A5568;
+    background: #ffffff;
+    box-shadow:0 4px 12px rgba(160,175,195,0.3);
+  }
+  .cornerBtn:active{ transform:scale(0.92); }
+  #settingsBtn{ left:14px; }
+  #fullscreenBtn{ right:14px; }
+
+  /* ---------- 모달 공통 ---------- */
+  .modalBackdrop{
+    position:fixed; inset:0;
+    background:rgba(45, 55, 72, 0.35);
+    backdrop-filter:blur(8px);
+    display:flex; align-items:center; justify-content:center;
+    z-index:50;
+  }
+  .hidden{ display:none !important; }
+
+  .modalCard{
+    background:rgba(255, 255, 255, 0.9);
+    backdrop-filter:blur(16px);
+    border-radius:24px;
+    padding:26px 30px;
+    min-width:280px;
+    max-width:88vw;
+    max-height:82vh;
+    overflow-y:auto;
+    border:1px solid rgba(255, 255, 255, 0.6);
+    box-shadow:0 20px 50px rgba(100, 116, 139, 0.15);
+    animation:popIn 0.32s cubic-bezier(.175,.885,.32,1.275);
+  }
+  @keyframes popIn{
+    from{ transform:scale(0.85); opacity:0; }
+    to{ transform:scale(1); opacity:1; }
+  }
+
+  /* 결과 모달 */
+  #resultModal .modalCard{
+    text-align:center;
+    padding:34px 40px;
+    cursor:pointer;
+    max-width: 440px;
+    border:2px solid rgba(255,255,255,0.8);
+    box-shadow:0 20px 60px rgba(100, 116, 139, 0.2), 0 0 40px rgba(255,223,137,0.15);
+  }
+  .emoji-decor {
+    font-size: 56px;
+    margin-bottom: 12px;
+    animation: bounceEmoji 1.5s ease-in-out infinite;
+    display: inline-block;
+  }
+  @keyframes bounceEmoji {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-12px) scale(1.1); }
+  }
+  #resultModal .badge{
+    font-family:'Jua',sans-serif;
+    font-size:14px;
+    letter-spacing:2px;
+    margin-bottom:10px;
+  }
+  #resultModal.success .badge{
+    color: #48BB78;
+    background: #E6FFFA;
+    padding: 4px 12px;
+    border-radius: 20px;
+    display: inline-block;
+  }
+  #resultModal.fail .badge{
+    color: #E53E3E;
+    background: #FFF5F5;
+    padding: 4px 12px;
+    border-radius: 20px;
+    display: inline-block;
+  }
+  #resultModal .resultText{
+    font-family:'Jua',sans-serif;
+    font-size:clamp(26px,5vw,42px);
+    margin:14px 0 18px;
+    line-height: 1.3;
+    word-break:keep-all;
+  }
+  #resultModal.success .resultText{
+    background: linear-gradient(45deg, #91A8D0, #B19FFB, #F7CAC9, #91A8D0);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: textShine 3s linear infinite;
+    filter: drop-shadow(0 2px 8px rgba(145, 168, 208, 0.25));
+  }
+  #resultModal.fail .resultText{
+    color: #E53E3E;
+    text-shadow: 0 2px 6px rgba(229, 62, 62, 0.15);
+  }
+  @keyframes textShine {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  #resultModal .tapHint{
+    font-size:12px;
+    color:#718096;
+    margin-top: 6px;
+    opacity: 0.8;
+  }
+
+  /* 이펙트 전용 캔버스 */
+  #fxCanvas{
+    position:fixed; inset:0;
+    width:100vw; height:100vh;
+    max-width:none; max-height:none;
+    border-radius:0;
+    background:transparent;
+    box-shadow:none;
+    z-index:55;
+    pointer-events:none;
+  }
+
+  /* 설정 모달 */
+  #settingsModal .modalCard{
+    width:500px;
+    color:#2D3748;
+  }
+  #settingsModal h3{
+    font-family:'Jua',sans-serif;
+    color:#2D3748;
+    margin:0 0 16px;
+    font-size:22px;
+    text-align: center;
+  }
+  #settingsModal h4{
+    font-family:'Jua',sans-serif;
+    color:#4A5568;
+    font-size:15px;
+    margin:20px 0 10px;
+    padding-top:14px;
+    border-top:1px solid rgba(226, 232, 240, 0.8);
+  }
+  .settingRow{ margin-bottom:14px; }
+  .settingRow label{ font-size:14px; color:#4A5568; display:block; margin-bottom:8px; font-weight: 600; }
+  .settingRow input[type="range"]{
+    width:100%;
+    accent-color: #B19FFB;
+  }
+  .rangeValue{ color:#B19FFB; font-weight:800; }
+
+  #wheelTabs{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; }
+  .wheelTabBtn{
+    padding:8px 16px;
+    border-radius:10px;
+    border:1px solid rgba(226, 232, 240, 0.8);
+    background:#FFFFFF;
+    color:#718096;
+    font-family:'Jua',sans-serif;
+    font-size:14px;
+    cursor:pointer;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    transition: all 0.2s ease;
+  }
+  .wheelTabBtn:hover{
+    background:#F7FAFC;
+    color:#4A5568;
+  }
+  .wheelTabBtn.active{
+    background: linear-gradient(135deg, #B19FFB 0%, #91A8D0 100%);
+    color:#FFFFFF;
+    border-color: transparent;
+    box-shadow: 0 4px 10px rgba(177, 159, 251, 0.25);
+  }
+
+  #segRows{ display:flex; flex-direction:column; gap:8px; margin:10px 0 12px; }
+  .segRow{
+    display:flex; align-items:center; gap:8px;
+    background:#FFFFFF;
+    border:1px solid rgba(226, 232, 240, 0.8);
+    border-radius:12px;
+    padding:8px 12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.01);
+  }
+  .segRow .swatch{ width:16px; height:16px; border-radius:50%; flex:0 0 auto; border: 1px solid rgba(0,0,0,0.05); }
+  .segRow input[type="text"]{
+    flex:1;
+    background:transparent;
+    border:none;
+    color:var(--text);
+    font-size:14px;
+    font-family:'Nunito',sans-serif;
+    outline:none;
+    min-width:0;
+    font-weight: 500;
+  }
+  .segRow .failLabel{
+    display:flex; align-items:center; gap:4px;
+    font-size:12px; color:#E53E3E;
+    flex:0 0 auto;
+    white-space:nowrap;
+    cursor: pointer;
+  }
+
+  #copyToAllBtn{
+    width:100%;
+    padding:10px 0;
+    margin-bottom:18px;
+    border-radius:12px;
+    border:1px dashed #B19FFB;
+    background:rgba(177, 159, 251, 0.05);
+    color:#B19FFB;
+    font-family:'Nunito',sans-serif;
+    font-size:13px;
+    font-weight:700;
+    cursor:pointer;
+    transition: all 0.2s ease;
+  }
+  #copyToAllBtn:hover{
+    background:rgba(177, 159, 251, 0.1);
+  }
+
+  .modalBtns{ display:flex; gap:10px; margin-top:8px; }
+  .btn{
+    flex:1;
+    padding:12px 0;
+    border-radius:12px;
+    border:none;
+    font-family:'Jua',sans-serif;
+    font-size:15px;
+    cursor:pointer;
+    transition: all 0.2s ease;
+  }
+  .btn:active{
+    transform: scale(0.97);
+  }
+  .btn.primary{
+    background: linear-gradient(135deg, #B19FFB 0%, #91A8D0 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(177, 159, 251, 0.3);
+  }
+  .btn.primary:hover{
+    box-shadow: 0 6px 16px rgba(177, 159, 251, 0.4);
+  }
+  .btn.secondary{
+    background:#FFFFFF;
+    color:#718096;
+    border:1px solid rgba(226, 232, 240, 0.8);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+  }
+  .btn.secondary:hover{
+    background:#F7FAFC;
+    color:#4A5568;
+  }
+</style>
+</head>
+<body>
+
+  <div id="app">
+    <h1 id="appTitle">멀티룰렛</h1>
+    <button class="cornerBtn" id="settingsBtn" title="설정">⚙</button>
+    <button class="cornerBtn" id="fullscreenBtn" title="전체화면">⛶</button>
+    <div id="stage"></div>
+    <div id="hint">원판을 각각 터치해서 멈춰보세요!</div>
+  </div>
+
+  <!-- 결과 모달 -->
+  <div id="resultModal" class="modalBackdrop hidden">
+    <div class="modalCard">
+      <div class="emoji-decor" id="resultEmoji">🎉</div>
+      <div class="badge" id="resultBadge">RESULT</div>
+      <div class="resultText" id="resultText">--</div>
+      <div class="tapHint">화면을 터치하면 다시 시작합니다</div>
+    </div>
+  </div>
+
+  <!-- 설정 모달 -->
+  <div id="settingsModal" class="modalBackdrop hidden">
+    <div class="modalCard">
+      <h3>룰렛 설정</h3>
+
+      <div class="settingRow">
+        <label>원판 개수: <span class="rangeValue" id="wheelCountValue">3</span>개</label>
+        <input type="range" id="wheelCountRange" min="1" max="8" value="3">
+      </div>
+
+      <h4>원판별 칸 내용 (원판마다 다르게 설정 가능)</h4>
+      <div id="wheelTabs"></div>
+
+      <div class="settingRow">
+        <label><span id="activeWheelLabel">1번 원판</span>의 칸 개수: <span class="rangeValue" id="countValue">6</span>개</label>
+        <input type="range" id="countRange" min="1" max="8" value="6">
+      </div>
+      <div id="segRows"></div>
+      <button type="button" id="copyToAllBtn">이 원판 설정을 다른 모든 원판에 복사</button>
+
+      <div class="modalBtns">
+        <button class="btn secondary" id="cancelSettingsBtn">취소</button>
+        <button class="btn primary" id="saveSettingsBtn">저장</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+(function(){
+  "use strict";
+
+  const PALETTE = ['#F7CAC9', '#91A8D0', '#F9E076', '#98DDCA', '#B19FFB', '#FFAAA6', '#E8AEFF', '#D8E2DC'];
+  const FAIL_COLOR = '#E2E8F0';
+  const STORAGE_KEY = 'multi-roulette-config-v5';
+
+  const DEFAULT_SEGMENTS = [
+    { text:'선택1', fail:false },
+    { text:'선택2', fail:false },
+    { text:'선택3', fail:false },
+    { text:'선택4', fail:false }
+  ];
+
+  const DEFAULT_WHEELS = [
+    {
+      segments: [
+        { text: '외식', fail: false },
+        { text: '배달', fail: false }
+      ]
+    },
+    {
+      segments: [
+        { text: '한식', fail: false },
+        { text: '중식', fail: false },
+        { text: '베트남식', fail: false },
+        { text: '일식', fail: false },
+        { text: '양식', fail: false }
+      ]
+    },
+    {
+      segments: [
+        { text: '고기', fail: false },
+        { text: '해산물', fail: false },
+        { text: '면류', fail: false },
+        { text: '밥류', fail: false }
+      ]
+    }
+  ];
+
+  function cloneSegments(segs){ return segs.map(s => ({ text:s.text, fail:!!s.fail })); }
+
+  // wheelCount / wheels 배열 길이를 서로 맞추고 값 범위를 보정
+  function normalizeConfig(raw){
+    const count = Math.min(8, Math.max(1, (raw && raw.wheelCount) || 3));
+    let wheelsArr = (raw && Array.isArray(raw.wheels)) ? raw.wheels.map(w => ({
+      segments: (w && Array.isArray(w.segments) && w.segments.length) ? cloneSegments(w.segments) : []
+    })) : [];
+    
+    for (let i = wheelsArr.length; i < count; i++) {
+      let defaultSegs;
+      if (i < DEFAULT_WHEELS.length) {
+        defaultSegs = cloneSegments(DEFAULT_WHEELS[i].segments);
+      } else {
+        defaultSegs = cloneSegments(DEFAULT_WHEELS[0].segments);
+      }
+      wheelsArr.push({ segments: defaultSegs });
+    }
+    
+    wheelsArr.forEach((w, i) => {
+      if (!w.segments || w.segments.length === 0) {
+        w.segments = cloneSegments((DEFAULT_WHEELS[i % DEFAULT_WHEELS.length] || DEFAULT_WHEELS[0]).segments);
+      }
+    });
+
+    wheelsArr.length = count;
+    return { wheelCount: count, wheels: wheelsArr };
+  }
+
+  let config = normalizeConfig({ wheelCount:3, wheels: DEFAULT_WHEELS.map(w => ({ segments: cloneSegments(w.segments) })) });
+
+  // ---------- 저장/불러오기 ----------
+  async function loadConfig(){
+    try{
+      const res = await window.storage.get(STORAGE_KEY, false);
+      if (res && res.value){
+        const parsed = JSON.parse(res.value);
+        if (parsed){
+          if (Array.isArray(parsed.wheels) && parsed.wheels.length >= 1){
+            config = normalizeConfig(parsed);
+          } else if (Array.isArray(parsed.segments) && parsed.segments.length >= 1){
+            const count = Math.min(8, Math.max(1, parsed.wheelCount || 3));
+            config = normalizeConfig({
+              wheelCount: count,
+              wheels: new Array(count).fill(0).map(() => ({ segments: parsed.segments }))
+            });
+          }
+        }
+      }
+    }catch(e){ /* 저장된 값 없음 - 기본값 사용 */ }
+  }
+  async function saveConfig(){
+    try{ await window.storage.set(STORAGE_KEY, JSON.stringify(config), false); }
+    catch(e){ /* 저장 실패해도 앱은 계속 동작 */ }
+  }
+
+  // ---------- 전체화면 ----------
+  const fullscreenBtn = document.getElementById('fullscreenBtn');
+  function toggleFullscreen(){
+    if (!document.fullscreenElement){
+      (document.documentElement.requestFullscreen && document.documentElement.requestFullscreen())?.catch?.(()=>{});
+    } else {
+      document.exitFullscreen && document.exitFullscreen().catch(()=>{});
+    }
+  }
+  document.addEventListener('fullscreenchange', () => {
+    fullscreenBtn.textContent = document.fullscreenElement ? '⤢' : '⛶';
+    setTimeout(resizeCanvases, 60);
+    setTimeout(resizeCanvases, 260);
+  });
+  fullscreenBtn.addEventListener('click', toggleFullscreen);
+
+  // ---------- 상태 ----------
+  const stageEl = document.getElementById('stage');
+  let wheels = [];      // [{id, wrap, canvas, ctx, segments, ...state}]
+  let modalOpen = false;
+
+  function makeWheelState(id, segments){
+    return {
+      id,
+      segments,
+      angle: -Math.PI/2 + Math.random()*0.5,
+      speed: 0.035 + Math.random()*0.03,
+      spinning: true,
+      stopping: false,
+      stopped: false,
+      animStart: 0,
+      animDuration: 0,
+      fromAngle: 0,
+      toAngle: 0,
+      targetIndex: null
+    };
+  }
+
+  // ---------- 원판 DOM 재생성 ----------
+  function buildWheels(){
+    stageEl.innerHTML = '';
+    wheels = [];
+    for (let i=0;i<config.wheelCount;i++){
+      const wrap = document.createElement('div');
+      wrap.className = 'wheelWrap';
+
+      const pointer = document.createElement('div');
+      pointer.className = 'pointer';
+
+      const canvas = document.createElement('canvas');
+      canvas.className = 'wheelCanvas';
+
+      wrap.appendChild(pointer);
+      wrap.appendChild(canvas);
+      stageEl.appendChild(wrap);
+
+      const segs = (config.wheels[i] && config.wheels[i].segments) ? config.wheels[i].segments : cloneSegments((DEFAULT_WHEELS[i] || DEFAULT_WHEELS[0]).segments);
+      const st = makeWheelState(i, segs);
+      st.wrap = wrap;
+      st.canvas = canvas;
+      st.ctx = canvas.getContext('2d');
+
+      wrap.addEventListener('click', () => stopWheel(st));
+      wheels.push(st);
+    }
+    resizeCanvases();
+  }
+
+  // 원판 개수/화면 크기에 맞춰 최적의 열x행 배치와 크기를 계산
+  function resizeCanvases(){
+    const rect = stageEl.getBoundingClientRect();
+    const n = wheels.length || 1;
+    const availW = Math.max(100, (rect.width || window.innerWidth) * 0.94);
+    const availH = Math.max(100, (rect.height || window.innerHeight) * 0.90);
+    const gap = Math.min(availW, availH) * 0.02;
+
+    let best = { size:48, cols:n, rows:1 };
+    for (let cols=1; cols<=n; cols++){
+      const rows = Math.ceil(n/cols);
+      const w = (availW - gap*(cols-1)) / cols;
+      const h = (availH - gap*(rows-1)) / rows;
+      const size = Math.min(w,h);
+      if (size > best.size) best = { size, cols, rows };
+    }
+    const size = Math.max(46, Math.min(best.size, 340));
+
+    wheels.forEach(st => {
+      const c = st.canvas;
+      const dpr = window.devicePixelRatio || 1;
+      c.style.width = size + 'px';
+      c.style.height = size + 'px';
+      c.width = size * dpr;
+      c.height = size * dpr;
+      st.ctx = c.getContext('2d');
+      st.ctx.setTransform(dpr,0,0,dpr,0,0);
+    });
+  }
+  window.addEventListener('resize', resizeCanvases);
+  window.addEventListener('orientationchange', () => setTimeout(resizeCanvases, 200));
+
+  // ---------- 그리기 ----------
+  function drawWheel(st){
+    const ctx = st.ctx;
+    const c = st.canvas;
+    const w = parseFloat(c.style.width), h = parseFloat(c.style.height);
+    const cx = w/2, cy = h/2;
+    const radius = Math.min(cx, cy) - 5;
+    const segs = st.segments;
+    const n = segs.length;
+    const segAngle = (Math.PI*2) / n;
+    const fontSize = Math.max(8, Math.min(22, 28 - n * 1.8) * Math.min(1, w/150));
+
+    ctx.clearRect(0,0,w,h);
+
+    for (let i=0;i<n;i++){
+      const start = i*segAngle + st.angle;
+      const end = (i+1)*segAngle + st.angle;
+      const seg = segs[i];
+      ctx.beginPath();
+      ctx.moveTo(cx,cy);
+      ctx.arc(cx,cy,radius,start,end);
+      ctx.closePath();
+      ctx.fillStyle = seg.fail ? FAIL_COLOR : PALETTE[i % PALETTE.length];
+      ctx.fill();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 3.5;
+      ctx.stroke();
+
+      if (seg.fail){
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(cx,cy);
+        ctx.arc(cx,cy,radius,start,end);
+        ctx.closePath();
+        ctx.clip();
+        ctx.strokeStyle = 'rgba(229, 62, 62, 0.2)';
+        ctx.lineWidth = 3;
+        const step = radius/5;
+        for (let d=-radius; d<radius; d+=step){
+          ctx.beginPath();
+          ctx.moveTo(cx-radius+d, cy-radius);
+          ctx.lineTo(cx+radius+d, cy+radius);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+
+      const mid = (start+end)/2;
+      ctx.save();
+      ctx.translate(cx,cy);
+      ctx.rotate(mid);
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = seg.fail ? '#8A94A6' : '#2D3748';
+      ctx.font = `800 ${fontSize}px 'Jua', sans-serif`;
+      ctx.fillText(seg.text, radius - 10, 0);
+      ctx.restore();
+    }
+
+    ctx.beginPath();
+    ctx.arc(cx,cy, radius*0.11, 0, Math.PI*2);
+    ctx.fillStyle = '#ffffff';
+    ctx.fill();
+    ctx.strokeStyle = '#B19FFB';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+  }
+
+  // ---------- 애니메이션 루프 ----------
+  function easeOutCubic(t){ return 1 - Math.pow(1-t, 3); }
+
+  function tick(now){
+    wheels.forEach(st => {
+      if (st.spinning){
+        st.angle += st.speed;
+      } else if (st.stopping){
+        const t = Math.min(1, (now - st.animStart) / st.animDuration);
+        const eased = easeOutCubic(t);
+        st.angle = st.fromAngle + (st.toAngle - st.fromAngle) * eased;
+        if (t >= 1){
+          st.stopping = false;
+          st.stopped = true;
+          onWheelStopped();
+        }
+      }
+      drawWheel(st);
+    });
+    requestAnimationFrame(tick);
+  }
+
+  function onWheelStopped(){
+    if (wheels.length > 0 && wheels.every(st => st.stopped)){
+      setTimeout(evaluateResult, 350);
+    }
+  }
+
+  function computeStopAngle(currentAngle, segAngle, index, minExtraTurns){
+    const twoPi = Math.PI*2;
+    const margin = segAngle * 0.16;
+    const usable = Math.max(segAngle - margin*2, segAngle*0.2);
+    const offsetInSeg = margin + Math.random()*usable;
+    let target = -Math.PI/2 - (index*segAngle + offsetInSeg);
+    while (target < currentAngle) target += twoPi;
+    while (target < currentAngle + minExtraTurns*twoPi) target += twoPi;
+    return target;
+  }
+
+  function stopWheel(st){
+    if (!st.spinning || modalOpen) return;
+    const n = st.segments.length;
+    const segAngle = (Math.PI*2)/n;
+    const index = Math.floor(Math.random()*n);
+
+    st.spinning = false;
+    st.stopping = true;
+    st.stopped = false;
+    st.fromAngle = st.angle;
+    st.toAngle = computeStopAngle(st.angle, segAngle, index, 4 + Math.floor(Math.random()*2));
+    st.animStart = performance.now();
+    st.animDuration = 2600 + Math.random()*700;
+    st.targetIndex = index;
+  }
+
+  function resetWheels(){
+    wheels.forEach(st => {
+      st.spinning = true;
+      st.stopping = false;
+      st.stopped = false;
+      st.targetIndex = null;
+    });
+  }
+
+  // ================= 축하 이펙트 =================
+  const fx = { canvas:null, ctx:null, particles:[], running:false, lastTime:0 };
+
+  function initFx(){
+    fx.canvas = document.createElement('canvas');
+    fx.canvas.id = 'fxCanvas';
+    document.body.appendChild(fx.canvas);
+    resizeFx();
+    window.addEventListener('resize', resizeFx);
+  }
+  function resizeFx(){
+    const dpr = window.devicePixelRatio || 1;
+    fx.canvas.width = window.innerWidth * dpr;
+    fx.canvas.height = window.innerHeight * dpr;
+    fx.ctx = fx.canvas.getContext('2d');
+    fx.ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+
+  function fxLoop(now){
+    const dt = Math.min(40, now - fx.lastTime);
+    fx.lastTime = now;
+    const ctx = fx.ctx;
+    ctx.clearRect(0,0,window.innerWidth, window.innerHeight);
+    fx.particles.forEach(p => p.update(dt));
+    fx.particles = fx.particles.filter(p => p.life > 0);
+    fx.particles.forEach(p => p.draw(ctx));
+    if (fx.particles.length > 0){
+      requestAnimationFrame(fxLoop);
+    } else {
+      fx.running = false;
+      ctx.clearRect(0,0,window.innerWidth, window.innerHeight);
+    }
+  }
+  function ensureFxRunning(){
+    if (!fx.running){
+      fx.running = true;
+      fx.lastTime = performance.now();
+      requestAnimationFrame(fxLoop);
+    }
+  }
+
+  // 1) 컨페티
+  function makeConfettiParticle(x,y){
+    return {
+      x, y,
+      vx:(Math.random()-0.5)*5,
+      vy:-(Math.random()*7+5),
+      rot:Math.random()*Math.PI*2,
+      vr:(Math.random()-0.5)*0.4,
+      w:7+Math.random()*7,
+      h:11+Math.random()*7,
+      color: PALETTE[Math.floor(Math.random()*PALETTE.length)],
+      life:1.2,
+      update(dt){
+        const t = dt/16;
+        this.vy += 0.24*t;
+        this.x += this.vx*t;
+        this.y += this.vy*t;
+        this.rot += this.vr*t;
+        this.life -= 0.005*t;
+      },
+      draw(ctx){
+        ctx.save();
+        ctx.translate(this.x,this.y);
+        ctx.rotate(this.rot);
+        ctx.globalAlpha = Math.max(0,this.life);
+        ctx.fillStyle = this.color;
+        ctx.fillRect(-this.w/2,-this.h/2,this.w,this.h);
+        ctx.restore();
+      }
+    };
+  }
+  function launchConfetti(){
+    const w = window.innerWidth;
+    for (let i=0;i<140;i++){
+      fx.particles.push(makeConfettiParticle(Math.random()*w, -20 - Math.random()*120));
+    }
+    ensureFxRunning();
+  }
+
+  // 2) 폭죽
+  function makeSpark(x,y,angle,speed,color){
+    return {
+      x, y,
+      vx:Math.cos(angle)*speed,
+      vy:Math.sin(angle)*speed,
+      color,
+      size:2.5+Math.random()*2.5,
+      life:1.2,
+      update(dt){
+        const t = dt/16;
+        this.vy += 0.1*t;
+        this.vx *= 0.98;
+        this.vy *= 0.98;
+        this.x += this.vx*t;
+        this.y += this.vy*t;
+        this.life -= 0.015*t;
+      },
+      draw(ctx){
+        ctx.save();
+        ctx.globalAlpha = Math.max(0,this.life);
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x,this.y,this.size,0,Math.PI*2);
+        ctx.fill();
+        ctx.restore();
+      }
+    };
+  }
+  function burstAt(x,y){
+    const color = PALETTE[Math.floor(Math.random()*PALETTE.length)];
+    const count = 50;
+    for (let i=0;i<count;i++){
+      const angle = (Math.PI*2*i)/count + Math.random()*0.2;
+      const speed = 4+Math.random()*5;
+      fx.particles.push(makeSpark(x,y,angle,speed,color));
+    }
+    ensureFxRunning();
+  }
+  function launchFireworks(){
+    const w = window.innerWidth, h = window.innerHeight;
+    const bursts = 4 + Math.floor(Math.random()*2);
+    for (let i=0;i<bursts;i++){
+      setTimeout(() => {
+        burstAt(w*(0.18+Math.random()*0.64), h*(0.18+Math.random()*0.38));
+      }, i*200);
+    }
+  }
+
+  // 3) 별빛
+  function drawStarPath(ctx,size){
+    ctx.beginPath();
+    for (let i=0;i<5;i++){
+      const outerAngle = -Math.PI/2 + i*(Math.PI*2/5);
+      const innerAngle = outerAngle + Math.PI/5;
+      const ox = Math.cos(outerAngle)*size, oy = Math.sin(outerAngle)*size;
+      const ix = Math.cos(innerAngle)*size*0.45, iy = Math.sin(innerAngle)*size*0.45;
+      if (i===0) ctx.moveTo(ox,oy); else ctx.lineTo(ox,oy);
+      ctx.lineTo(ix,iy);
+    }
+    ctx.closePath();
+  }
+  function makeStar(x,y,angle,speed,size,color){
+    return {
+      x, y,
+      vx:Math.cos(angle)*speed,
+      vy:Math.sin(angle)*speed,
+      rot:Math.random()*Math.PI*2,
+      vr:(Math.random()-0.5)*0.25,
+      size, color, life:1.2,
+      update(dt){
+        const t = dt/16;
+        this.vx *= 0.95;
+        this.vy *= 0.95;
+        this.x += this.vx*t;
+        this.y += this.vy*t;
+        this.rot += this.vr*t;
+        this.life -= 0.01*t;
+      },
+      draw(ctx){
+        ctx.save();
+        ctx.translate(this.x,this.y);
+        ctx.rotate(this.rot);
+        ctx.globalAlpha = Math.max(0,this.life);
+        ctx.fillStyle = this.color;
+        drawStarPath(ctx,this.size);
+        ctx.fill();
+        ctx.restore();
+      }
+    };
+  }
+  function launchSparkleBurst(){
+    const w = window.innerWidth, h = window.innerHeight;
+    const cx = w/2, cy = h/2;
+    const colors = ['#F9E076','#ffffff','#98DDCA','#B19FFB','#F7CAC9'];
+    for (let i=0;i<65;i++){
+      const angle = Math.random()*Math.PI*2;
+      const speed = 2.5+Math.random()*5.5;
+      const size = 7+Math.random()*9;
+      const color = colors[Math.floor(Math.random()*colors.length)];
+      fx.particles.push(makeStar(cx,cy,angle,speed,size,color));
+    }
+    ensureFxRunning();
+  }
+
+  function triggerCelebration(){
+    // 모든 축하 효과를 동시에 실행하여 최대로 화려하게 함
+    launchConfetti();
+    launchFireworks();
+    launchSparkleBurst();
+    
+    // 추가 효과 딜레이 발생 (순차 폭죽 연출)
+    const w = window.innerWidth, h = window.innerHeight;
+    for (let i = 1; i <= 5; i++) {
+      setTimeout(() => {
+        if (modalOpen) {
+          burstAt(w * (0.15 + Math.random() * 0.7), h * (0.15 + Math.random() * 0.5));
+          if (i % 2 === 0) launchConfetti();
+        }
+      }, i * 300);
+    }
+  }
+
+  // ---------- 결과 판정 ----------
+  function evaluateResult(){
+    const results = wheels.map(st => st.segments[st.targetIndex]);
+
+    const resultModal = document.getElementById('resultModal');
+    const badge = document.getElementById('resultBadge');
+    const text = document.getElementById('resultText');
+    const resultEmoji = document.getElementById('resultEmoji');
+
+    const hasFail = results.some(r => r.fail);
+
+    if (hasFail){
+      resultModal.classList.remove('success');
+      resultModal.classList.add('fail');
+      badge.textContent = '실패';
+      if (resultEmoji) {
+        resultEmoji.textContent = '😢';
+        resultEmoji.style.animation = 'none';
+      }
+      const failTexts = results.filter(r => r.fail).map(r => r.text);
+      const uniqueFail = [...new Set(failTexts)];
+      text.textContent = uniqueFail.join(' / ');
+    } else {
+      resultModal.classList.remove('fail');
+      resultModal.classList.add('success');
+      badge.textContent = '성공';
+      if (resultEmoji) {
+        resultEmoji.textContent = '🎉';
+        resultEmoji.style.animation = 'bounceEmoji 1.5s ease-in-out infinite';
+      }
+      const allTexts = results.map(r => r.text);
+      text.textContent = allTexts.join(' '); // 띄어쓰기 한 칸 추가
+      triggerCelebration();
+    }
+
+    resultModal.classList.remove('hidden');
+    modalOpen = true;
+  }
+
+  document.getElementById('resultModal').addEventListener('click', () => {
+    document.getElementById('resultModal').classList.add('hidden');
+    modalOpen = false;
+    resetWheels();
+  });
+
+  // ---------- 설정 모달 ----------
+  const settingsModal = document.getElementById('settingsModal');
+  const wheelCountRange = document.getElementById('wheelCountRange');
+  const wheelCountValue = document.getElementById('wheelCountValue');
+  const wheelTabsEl = document.getElementById('wheelTabs');
+  const activeWheelLabel = document.getElementById('activeWheelLabel');
+  const countRange = document.getElementById('countRange');
+  const countValue = document.getElementById('countValue');
+  const segRows = document.getElementById('segRows');
+  const copyToAllBtn = document.getElementById('copyToAllBtn');
+
+  let draftWheels = [];
+  let draftWheelCount = 3;
+  let draftActiveIndex = 0;
+
+  function openSettings(){
+    modalOpen = true;
+    const norm = normalizeConfig(config);
+    draftWheelCount = norm.wheelCount;
+    draftWheels = norm.wheels.map(w => ({ segments: cloneSegments(w.segments) }));
+    draftActiveIndex = 0;
+
+    wheelCountRange.value = draftWheelCount;
+    wheelCountValue.textContent = draftWheelCount;
+    renderWheelTabs();
+    loadActiveWheelIntoEditor();
+    settingsModal.classList.remove('hidden');
+  }
+
+  function closeSettings(){
+    settingsModal.classList.add('hidden');
+    modalOpen = false;
+  }
+
+  function renderWheelTabs(){
+    wheelTabsEl.innerHTML = '';
+    for (let i=0;i<draftWheelCount;i++){
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'wheelTabBtn' + (i===draftActiveIndex ? ' active' : '');
+      btn.textContent = (i+1)+'번';
+      btn.addEventListener('click', () => {
+        draftActiveIndex = i;
+        renderWheelTabs();
+        loadActiveWheelIntoEditor();
+      });
+      wheelTabsEl.appendChild(btn);
+    }
+  }
+
+  function loadActiveWheelIntoEditor(){
+    activeWheelLabel.textContent = (draftActiveIndex+1)+'번 원판';
+    const segs = draftWheels[draftActiveIndex].segments;
+    countRange.value = segs.length;
+    countValue.textContent = segs.length;
+    renderSegRows();
+  }
+
+  function renderSegRows(){
+    const activeWheel = draftWheels[draftActiveIndex];
+    const n = parseInt(countRange.value, 10);
+    countValue.textContent = n;
+
+    while (activeWheel.segments.length < n){
+      activeWheel.segments.push({ text:'항목'+(activeWheel.segments.length+1), fail:false });
+    }
+    activeWheel.segments.length = n;
+
+    segRows.innerHTML = '';
+    activeWheel.segments.forEach((seg, i) => {
+      const row = document.createElement('div');
+      row.className = 'segRow';
+
+      const swatch = document.createElement('div');
+      swatch.className = 'swatch';
+      swatch.style.background = seg.fail ? FAIL_COLOR : PALETTE[i % PALETTE.length];
+
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.value = seg.text;
+      input.maxLength = 8;
+      input.placeholder = `${i+1}번 칸 내용`;
+      input.addEventListener('input', () => { seg.text = input.value; });
+
+      const failLabel = document.createElement('label');
+      failLabel.className = 'failLabel';
+      const failCheck = document.createElement('input');
+      failCheck.type = 'checkbox';
+      failCheck.checked = !!seg.fail;
+      failCheck.addEventListener('change', () => {
+        seg.fail = failCheck.checked;
+        swatch.style.background = failCheck.checked ? FAIL_COLOR : PALETTE[i % PALETTE.length];
+      });
+      failLabel.appendChild(failCheck);
+      failLabel.appendChild(document.createTextNode('실패칸'));
+
+      row.appendChild(swatch);
+      row.appendChild(input);
+      row.appendChild(failLabel);
+      segRows.appendChild(row);
+    });
+  }
+
+  wheelCountRange.addEventListener('input', () => {
+    draftWheelCount = parseInt(wheelCountRange.value, 10);
+    wheelCountValue.textContent = draftWheelCount;
+
+    while (draftWheels.length < draftWheelCount){
+      const template = draftWheels.length > 0 ? draftWheels[draftWheels.length-1] : { segments: cloneSegments(DEFAULT_SEGMENTS) };
+      draftWheels.push({ segments: cloneSegments(template.segments) });
+    }
+    draftWheels.length = draftWheelCount;
+    if (draftActiveIndex >= draftWheelCount) draftActiveIndex = draftWheelCount - 1;
+
+    renderWheelTabs();
+    loadActiveWheelIntoEditor();
+  });
+
+  countRange.addEventListener('input', renderSegRows);
+
+  copyToAllBtn.addEventListener('click', () => {
+    const src = cloneSegments(draftWheels[draftActiveIndex].segments);
+    draftWheels.forEach((w, i) => {
+      if (i !== draftActiveIndex) w.segments = cloneSegments(src);
+    });
+    const original = copyToAllBtn.textContent;
+    copyToAllBtn.textContent = '복사 완료!';
+    setTimeout(() => { copyToAllBtn.textContent = original; }, 900);
+  });
+
+  document.getElementById('settingsBtn').addEventListener('click', openSettings);
+  document.getElementById('cancelSettingsBtn').addEventListener('click', closeSettings);
+  document.getElementById('saveSettingsBtn').addEventListener('click', () => {
+    draftWheels.forEach(w => {
+      w.segments.forEach((seg,i) => {
+        if (!seg.text || !seg.text.trim()) seg.text = '항목'+(i+1);
+      });
+    });
+    config = normalizeConfig({
+      wheelCount: draftWheelCount,
+      wheels: draftWheels.map(w => ({ segments: cloneSegments(w.segments) }))
+    });
+    saveConfig();
+    closeSettings();
+    buildWheels();
+  });
+
+  // ---------- 초기화 ----------
+  async function init(){
+    await loadConfig();
+    initFx();
+    buildWheels();
+    requestAnimationFrame(tick);
+  }
+  init();
+
+})();
+</script>
+</body>
+</html>

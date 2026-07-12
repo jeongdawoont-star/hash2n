@@ -32,6 +32,15 @@ export const RECORDS = [
   // ▼ 여기에 새 기록을 붙여넣으세요 (최신 항목을 맨 위에) ▼
 
   {
+    title: "멀티 룰렛",
+    desc: "행사를 위해 만들었다.\n저녁 메뉴 고를 때도 요긴하다.",
+    tags: "class-tools, roulette, random, fun",
+    category: "class-tools",
+    link: "./vibe-apps/Multi-roulette.html",
+    image: "img/multi-roulette.png",
+  },
+
+  {
     title: "이미지 영상 제작기",
     desc: "사진의 비율과 영상의 비율을 고려하여 콜라주 배치 및 다양한 전환 효과를 가미한 동영상을 제작하는 도구다.\n여러 장의 이미지를 업로드해 순서를 배치하고, 숏폼(9:16)부터 가로형(16:9)까지 다양한 화면비에 맞추어 레이아웃과 켄번즈 줌 효과, 그리고 배경 블러 처리를 적용해 MP4 비디오로 추출한다.",
     tags: "video, image, transition, slideshow, ffmpeg",
