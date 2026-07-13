@@ -51,6 +51,10 @@
                 <label for="nickname-input">이름을 입력하세요 <b>(실명으로 하면 몰입이 커집니다)</b></label>
                 <input id="nickname-input" type="text" maxlength="8" placeholder="예: 박지호" autocomplete="off">
                 <p class="intro-privacy">🔒 입력한 이름은 어디에도 저장·전송되지 않고, 오직 이 화면 안에서 체험을 위해서만 쓰입니다.</p>
+                <label class="beginner-toggle">
+                    <input id="beginner-mode-check" type="checkbox" checked>
+                    <span>🔰 초보자 안내 모드 — 무엇을 눌러야 할지 화면에서 짚어드려요</span>
+                </label>
                 <div class="mode-pick">
                     <button id="btn-start" class="mode-btn full">
                         <span class="mode-icon">🎰</span>
@@ -144,11 +148,6 @@
                     <div class="live-badge vip">VIP</div>
                     <div class="game-card-bg bg-vip"><span class="gc-icon">👑</span><span class="gc-title">VIP 바카라</span></div>
                     <div class="game-card-foot" id="vip-foot">🔒 초대권 필요</div>
-                </div>
-                <div class="game-card wide" id="card-sports">
-                    <div class="live-badge live">LIVE</div>
-                    <div class="game-card-bg bg-sports"><span class="gc-icon">⚽</span><span class="gc-title">스포츠 토토</span></div>
-                    <div class="game-card-foot">축구·야구·농구·배구 실경기 배당 · 조합배팅 최대 3폴더</div>
                 </div>
             </div>
 
@@ -246,7 +245,6 @@
 </section>
 
 <script src="data.js"></script>
-<script src="sports-data.js"></script>
 <script src="app.js"></script>
 <script src="games.js"></script>
 <script src="debrief.js"></script>

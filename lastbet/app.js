@@ -86,6 +86,7 @@ function nameProblem(name) {
 const S = {
     nickname: "체험자",
     quick: false,            // 빠른 교육 모드(약 2분 압축 체험 → 도박검사)
+    beginnerMode: true,      // 초보자 안내 모드 — 하단 메뉴 가이드 투어 + 강조 표시
     phase: "INTRO",          // INTRO KAKAO SIGNUP TUTORIAL RISE VIP FALL LAST RUIN DEBRIEF
     balance: 0,
     debt: 0,
@@ -280,10 +281,16 @@ const UI = {
 
 /* ═══════════════ 잔액/부채 ═══════════════ */
 function setBalance(delta, { silent = false } = {}) {
+    const prevBalance = S.balance;
     S.balance = Math.max(0, S.balance + delta);
     if (S.balance > S.peak) { S.peak = S.balance; S.peakTime = Date.now(); }
     renderMoney();
     if (!silent) UI.moneyFly(delta > 0);
+    /* 잔액이 방금 0원이 됐을 때마다 — 충전 메뉴가 있다는 걸 떠올리는 속마음을 매번 띄운다 */
+    if (prevBalance > 0 && S.balance === 0 && S.flags.signupDone
+        && S.phase !== "RUIN" && S.phase !== "DEBRIEF") {
+        UI.toast(rand(DATA.brokeThoughts), { sound: false });
+    }
 }
 function addDebt(amount) {
     S.debt += amount;
@@ -966,6 +973,8 @@ const Director = {
         safeRequestFullscreen();
         S.nickname = nick;
         S.quick = !!quick;
+        const beginnerCheck = $("#beginner-mode-check");
+        S.beginnerMode = beginnerCheck ? beginnerCheck.checked : true;
         Sound.unlock();
         /* 교육용 배지는 인트로에서 고지했으므로, 체험 중에는 몰입을 위해 숨긴다 (리포트 하단에 재고지) */
         $("#edu-badge").classList.add("hidden");
@@ -1106,12 +1115,34 @@ const Director = {
             Chat.close();
             await UI.narrate(`3연승… 잔액이 <b>${fmtW(S.balance)}</b>이 됐다.<br>심장이 두근거린다. <b>나 이거 재능 있는 거 아니야?</b>`);
             UI.toast("🎮 슬롯·사다리가 모두 열렸습니다. 자유롭게 플레이하세요!", {});
+            await this.beginnerTour();
             /* 튜토리얼에서 금액을 올려 이미 30만을 넘겼다면 전광판 제안을 바로 진행 */
             if (S.balance >= CONFIG.BILLBOARD_AT && !S.flags.bragOffered) {
                 await wait(2200);
                 await this.offerBrag();
             }
         }
+    },
+
+    /* ── 초보자 안내 모드: 튜토리얼 종료 직후 하단 메뉴를 한 번씩 짚어주는 가이드 투어 ── */
+    async beginnerTour() {
+        if (!S.beginnerMode || S.flags.tourDone) return;
+        S.flags.tourDone = true;
+        await wait(600);
+        await this.ensureSiteView();
+        await UI.narrate("💡 처음이니까 화면 아래 메뉴들을 빠르게 짚어드릴게요.<br>화면을 탭하면 다음으로 넘어갑니다.");
+        const stops = [
+            [$("#nav-home"),  "🏠 <b>홈</b> — 눌러서 사이트 첫 화면으로 돌아올 수 있어요"],
+            [$("#nav-rank"),  "🏆 <b>전광판</b> — 다른 회원들의 오늘 수익이 여기 뜹니다"],
+            [$("#nav-play"),  "🎮 <b>게임</b> — 모든 게임 목록을 한 번에 볼 수 있어요"],
+            [$("#nav-chat"),  "✈️ <b>실장문의</b> — 정실장과의 대화·픽 안내는 여기서 확인해요"],
+            [$("#nav-money"), "💰 <b>충환전</b> — 충전·환전은 이 버튼 하나로 열립니다"],
+        ];
+        for (const [el, tip] of stops) {
+            if (!el) continue;
+            await UI.spotlight(el, tip, { autoClick: false });
+        }
+        UI.toast("🔰 안내는 여기까지! 이제부터 자유롭게 플레이해보세요", {});
     },
 
     /* ── 튜토리얼 중 실장 픽을 어기고 잃었을 때 — 질책 후 같은 픽 재전송 ── */
@@ -1866,7 +1897,6 @@ document.addEventListener("DOMContentLoaded", () => {
     $("#card-slot").addEventListener("click", () => { if (!needLogin()) Games.openSlot(); });
     $("#card-powerball").addEventListener("click", () => { if (!needLogin()) Games.openPowerball(); });
     $("#card-ladder").addEventListener("click", () => { if (!needLogin()) Games.openLadder(); });
-    $("#card-sports").addEventListener("click", () => { if (!needLogin()) Games.openSports(); });
     $("#card-vip").addEventListener("click", () => {
         if (needLogin()) return;
         if (!S.flags.vipUnlocked) {
@@ -1900,7 +1930,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 <button class="sheet-item" id="sh-slot">🎰<br>황금성 슬롯</button>
                 <button class="sheet-item" id="sh-pb">🎱<br>파워볼 홀짝</button>
                 <button class="sheet-item" id="sh-ladder">🔀<br>네임드 사다리</button>
-                <button class="sheet-item" id="sh-sports">⚽<br>스포츠 토토</button>
                 <button class="sheet-item" id="sh-vip">👑<br>VIP 바카라</button>
             </div>`,
             buttons: [{ label: "닫기", cls: "dark" }],
@@ -1909,7 +1938,6 @@ document.addEventListener("DOMContentLoaded", () => {
         $("#sh-slot").addEventListener("click", () => { $("#modal-layer").classList.add("hidden"); Games.openSlot(); });
         $("#sh-pb").addEventListener("click", () => { $("#modal-layer").classList.add("hidden"); Games.openPowerball(); });
         $("#sh-ladder").addEventListener("click", () => { $("#modal-layer").classList.add("hidden"); Games.openLadder(); });
-        $("#sh-sports").addEventListener("click", () => { $("#modal-layer").classList.add("hidden"); Games.openSports(); });
         $("#sh-vip").addEventListener("click", () => { $("#modal-layer").classList.add("hidden"); $("#card-vip").click(); });
     });
     $("#nav-chat").addEventListener("click", () => { if (!needLogin()) { Chat.open(); Director.chatIdlePing(); } });
