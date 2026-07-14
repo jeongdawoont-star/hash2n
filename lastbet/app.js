@@ -286,11 +286,8 @@ function setBalance(delta, { silent = false } = {}) {
     if (S.balance > S.peak) { S.peak = S.balance; S.peakTime = Date.now(); }
     renderMoney();
     if (!silent) UI.moneyFly(delta > 0);
-    /* 잔액이 방금 0원이 됐을 때마다 — 충전 메뉴가 있다는 걸 떠올리는 속마음을 매번 띄운다 */
-    if (prevBalance > 0 && S.balance === 0 && S.flags.signupDone
-        && S.phase !== "RUIN" && S.phase !== "DEBRIEF") {
-        UI.toast(rand(DATA.brokeThoughts), { sound: false });
-    }
+    /* 속마음(brokeThoughts)은 여기서 띄우지 않는다 — 올인 베팅 차감 순간에도 0원이 되는데,
+       결과가 나오기도 전에 '다 잃었다'는 생각이 스치면 어색하다. Engine.resolve(패배 확정)에서 처리 */
 }
 function addDebt(amount) {
     S.debt += amount;
@@ -386,6 +383,13 @@ const Engine = {
             S.streak = S.streak > 0 ? S.streak + 1 : 1;
         } else {
             S.streak = S.streak < 0 ? S.streak - 1 : -1;
+            /* 올인 패배로 잔액이 0원이 된 경우 — 결과 연출이 끝나고 한 박자 쉰 뒤 속마음이 스친다 */
+            if (S.balance <= 0 && S.flags.signupDone && !S.quick) {
+                setTimeout(() => {
+                    if (S.balance <= 0 && S.phase !== "RUIN" && S.phase !== "DEBRIEF" && !S.flags.deadEnd)
+                        UI.toast(rand(DATA.brokeThoughts), { sound: false });
+                }, 2600);
+            }
         }
         S.history.push({ t: Date.now(), game, amount, win, payout, balance: S.balance });
         setTimeout(() => Director.onBetResolved({ win, amount, payout, game, pick, missedPick }), 900);
@@ -922,6 +926,9 @@ const Director = {
        → 환전 시도(롤링 거부) → 4연패(복구픽) → 잔액 0(대출1→대출2→마지막 올인) */
     chatIdlePing() {
         if ($("#tg-choices").children.length) return; /* 선택지 대기 중이면 그대로 둠 */
+        if (S.phase === "RUIN" || S.phase === "DEBRIEF") return;
+        /* 잔액 0원으로 찾아온 회원에게 금액 목표 얘기는 어색하다 — 남은 자금줄에 맞춰 안내 */
+        if (S.balance <= 0 && S.flags.signupDone) { this.brokePing(); return; }
         let m = null;
         if (S.phase === "TUTORIAL") {
             m = "픽 드린 대로만 따라오시면 됩니다 🎯 지금은 그게 전부예요.";
@@ -948,6 +955,41 @@ const Director = {
         Chat.say([m], { openChat: false });
         /* "바로 연락드리겠습니다/잠시만 기다리세요"라고 했으면 실제로 몇 초 뒤 제안이 온다 */
         setTimeout(() => this.checkThresholds(), 4500);
+    },
+
+    /* ── 잔액 0원 상태로 실장문의를 열었을 때 — 남은 자금줄 순서대로 안내 ──
+       계좌이체 가능 → 충전 권유 / 통장 고갈 → 친구초대 권유 /
+       초대까지 소진 → 대출 체인(몰락기) 또는 이벤트머니·엔딩 흐름(onBroke) */
+    async brokePing() {
+        if (S.flags.brokeBusy || S.flags.brokePinging) return;
+        S.flags.brokePinging = true;
+        try {
+            if (!S.flags.cashDry) {
+                await Chat.say([
+                    "{nick}님, 잔액이 <b>0원</b>이시네요 😅 혹시 <b>충전</b>은 해보셨어요?",
+                    "메뉴의 [충전]에서 가상계좌로 입금하시면 바로 다시 배팅하실 수 있습니다. 흐름 끊기기 전에 얼른요! 👍",
+                ], { openChat: false });
+                await Chat.choice(["충전하러 가기"]);
+                Chat.close();
+                Site.openCharge("charge");
+            } else if (S.friends.length < 4) {
+                await Chat.say([
+                    "통장까지 다 쓰셨다고요? 😅 그럼 <b>친구 초대 이벤트</b>는 다 채우셨어요?",
+                    "친구 1명 가입할 때마다 <b>5만원</b> 즉시 지급, 최대 4명까지 됩니다. 공짜 돈부터 챙기셔야죠!",
+                ], { openChat: false });
+                await Chat.choice(["친구 초대하러 가기"]);
+                Chat.close();
+                Site.openInvite();
+            } else if (S.phase === "FALL") {
+                /* 충전·초대 다 소진 → 대출 권유 후 충전 메뉴로 */
+                await this.onCashDry();
+            } else {
+                /* 몰락기 전: 이벤트머니 지급 또는 (전부 고갈 시) 엔딩 흐름 */
+                await this.onBroke();
+            }
+        } finally {
+            S.flags.brokePinging = false;
+        }
     },
 
     /* ── 진행: 인트로 → 카톡 ── */
