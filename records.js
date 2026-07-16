@@ -32,6 +32,24 @@ export const RECORDS = [
   // ▼ 여기에 새 기록을 붙여넣으세요 (최신 항목을 맨 위에) ▼
 
   {
+    title: "수박깨기",
+    desc: "여름에 수박깨는 미니게임앱이다.\n눈감고 하면 진동으로 위치를 찾을 수 있고, 사운드플레이도 가능하다.",
+    tags: "game, summer, sound, vibration",
+    category: "games",
+    link: "./vibe-apps/watermelon_smash.html",
+    image: "img/watermelon_smash.png",
+  },
+
+  {
+    title: "모기사냥",
+    desc: "한국인은 모기를 잡아야 잠을 잘 수 있다.\n스마트폰으로 쉽게 모기를 잡는 게임 앱이다.",
+    tags: "game, mosquito, catch, clicker",
+    category: "games",
+    link: "./vibe-apps/mosquito-sniper.html",
+    image: "img/mosquito_hunt.png",
+  },
+
+  {
     title: "멀티 룰렛",
     desc: "행사를 위해 만들었다.\n저녁 메뉴 고를 때도 요긴하다.",
     tags: "class-tools, roulette, random, fun",
