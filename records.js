@@ -37,7 +37,7 @@ export const RECORDS = [
     tags: "game, summer, sound, vibration",
     category: "games",
     link: "./vibe-apps/watermelon_smash.html",
-    image: "img/watermelon_smash.png",
+    image: "img-re/watermelon_smash.avif",
   },
 
   {
@@ -46,7 +46,7 @@ export const RECORDS = [
     tags: "game, mosquito, catch, clicker",
     category: "games",
     link: "./vibe-apps/mosquito-sniper.html",
-    image: "img/mosquito_hunt.png",
+    image: "img-re/mosquito_hunt.avif",
   },
 
   {
