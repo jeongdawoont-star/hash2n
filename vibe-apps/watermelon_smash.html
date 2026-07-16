@@ -1060,6 +1060,8 @@ function buildFruitMesh(tier, radius, glowColor){
   return mesh;
 }
 
+let lastDropPos = null; // where the previous fruit landed — the next one keeps clear of it
+
 function spawnFruit(){
   clearParticles();
   const stage = stageOf(levelIndex), loop = loopOf(levelIndex);
@@ -1070,9 +1072,19 @@ function spawnFruit(){
   const mesh = buildFruitMesh(tier, radius, glowColor);
   if(glowColor) mesh.material.emissiveIntensity = Math.min(0.7, 0.2+0.12*loop);
 
-  const angle = (Math.random()-0.5)*Math.PI*0.9;
-  const dist = 1.6 + Math.random()*1.4;
-  mesh.position.set(Math.sin(angle)*dist, 8+Math.random()*2, -Math.cos(angle)*dist);
+  /* resample until we're far from the last drop; if all tries fail, keep the farthest */
+  const MIN_DROP_GAP = 2.0;
+  let px = 0, pz = 0, bestD = -1;
+  for(let i=0;i<40;i++){
+    const angle = (Math.random()-0.5)*Math.PI*0.9;
+    const dist = 1.6 + Math.random()*1.4;
+    const x = Math.sin(angle)*dist, z = -Math.cos(angle)*dist;
+    const d = lastDropPos ? Math.hypot(x-lastDropPos.x, z-lastDropPos.z) : Infinity;
+    if(d > bestD){ bestD = d; px = x; pz = z; }
+    if(d >= MIN_DROP_GAP) break;
+  }
+  lastDropPos = { x:px, z:pz };
+  mesh.position.set(px, 8+Math.random()*2, pz);
   scene.add(mesh);
 
   fruitMesh = mesh;
@@ -1310,7 +1322,7 @@ function updateDebris(dt){
 let shake = { t:0, dur:0, amp:0 };
 function cameraShake(amp,dur){ shake = { t:0, dur, amp }; }
 function updateShake(dt){
-  if(gameState==="replay") return; // replay drives its own camera
+  if(gameState==="replay" || gameState==="failreplay") return; // replays drive their own camera
   if(shake.t < shake.dur){
     shake.t += dt;
     const decay = 1 - shake.t/shake.dur;
@@ -1399,6 +1411,7 @@ function resolveHit(power, aimRatio){
    ========================================================= */
 function beginRun(){
   levelIndex = 0; swingCount = 0; score = 0; carryBonus = 0; timeLeft = 0; lastTickSec = 99;
+  lastDropPos = null;
   updateScoreHud(); updateTimerHud();
   refreshLadderHud();
   startCountdown();
@@ -1450,6 +1463,7 @@ function runVoiceCountdown(){
   step();
 }
 function quickNextRound(){
+  gameState = "countdown";
   const nextScreen = document.getElementById("next-screen");
   const badge = document.getElementById("next-badge");
   badge.textContent = LEVELS[stageOf(levelIndex)].emoji;
@@ -1457,13 +1471,8 @@ function quickNextRound(){
   badge.classList.remove("show"); void badge.offsetWidth; badge.classList.add("show");
   setTimeout(()=>{
     nextScreen.style.display = "none";
-    closeEyes(true); // quick blink between rounds
-    setTimeout(()=>{
-      spawnFruit(); gameState="falling";
-      document.getElementById("power-meter").classList.remove("hidden");
-      openEyes();
-      setTimeout(()=>gameState="playing", 300);
-    }, 420);
+    closeEyes(false);                    // full eyelid close, same as the run start
+    setTimeout(runVoiceCountdown, 1350); // 3-2-1 in the dark before every fruit
   }, 520);
 }
 
@@ -1575,6 +1584,110 @@ function finishReplay(){
 }
 
 /* =========================================================
+   FRUIT-POV FAIL REPLAY — the surviving fruit watches the
+   player swing at the wrong spot, then the results show.
+   ========================================================= */
+let failReplay = null;
+
+function enterFailReplay(onDone){
+  gameState = "failreplay";
+  clubPivot.visible = false;
+  document.getElementById("crosshair").style.display = "none";
+
+  const fp = fruitMesh.position.clone();
+  const back = new THREE.Vector3(-fp.x, 0, -fp.z).normalize(); // fruit → where the player stood
+  const perp = new THREE.Vector3(-back.z, 0, back.x);
+  const standDist = THREE.MathUtils.clamp(fruitState.radius*2.6 + 0.55, 0.6, 1.5);
+
+  /* the avatar plants itself a step off to the side, aimed at empty sand */
+  const side = Math.random() < 0.5 ? 1 : -1;
+  const avatarPos = fp.clone().addScaledVector(back, standDist*1.9).addScaledVector(perp, 0.5*side);
+  avatarPos.y = 0;
+  const toFruit = fp.clone().sub(avatarPos).setY(0).normalize();
+  const missDir = toFruit.clone().applyAxisAngle(new THREE.Vector3(0,1,0), 0.95*side);
+  const wrongSpot = avatarPos.clone().addScaledVector(missDir, standDist);
+  wrongSpot.y = 0;
+
+  avatar.visible = true;
+  avatar.position.copy(avatarPos);
+  avatar.lookAt(wrongSpot.x, 0, wrongSpot.z);
+  avatar.userData.armPivot.rotation.x = AVATAR_ARM_REST;
+
+  /* camera perches on the fruit itself, looking up at the player */
+  const camPos = fp.clone().addScaledVector(back, -fruitState.radius*0.8);
+  camPos.y = fp.y + fruitState.radius*0.9 + 0.16;
+
+  failReplay = {
+    t:0, dur:3.7, swingStart:1.15, swung:false, hit:false,
+    camPos, avatarPos, wrongSpot, missDir, baseRotY:avatar.rotation.y,
+    onDone, recStart:performance.now(), shakeUntil:0,
+    sandTier:{ juiceA:"#EAD5A0", juiceTexA:null }
+  };
+  document.getElementById("cctv-overlay").classList.add("show");
+  duckAudio(0.35, 0.4);
+}
+
+function updateFailReplay(dt){
+  if(!failReplay) return;
+  const r = failReplay;
+  r.t += dt;
+
+  const now = performance.now();
+  const jt = now*0.004;
+  camera.position.set(
+    r.camPos.x + Math.sin(jt*1.3)*0.012,
+    r.camPos.y + Math.cos(jt*1.7)*0.01,
+    r.camPos.z + Math.sin(jt*0.9)*0.012
+  );
+  if(now < r.shakeUntil){
+    camera.position.x += (Math.random()-0.5)*0.05;
+    camera.position.y += (Math.random()-0.5)*0.05;
+  }
+  camera.up.set(0,1,0);
+  camera.lookAt(r.avatarPos.x, 0.8, r.avatarPos.z);
+
+  /* avatar: windup bob, one big whiff into the sand, then a confused look around */
+  const ap = avatar.userData.armPivot;
+  if(r.t < r.swingStart){
+    ap.rotation.x = AVATAR_ARM_REST + Math.sin(r.t*3)*0.07;
+  } else {
+    const sp = Math.min(1, (r.t-r.swingStart)/0.22);
+    const e = 1 - Math.pow(1-sp, 3);
+    ap.rotation.x = AVATAR_ARM_REST + e*3.0;
+    if(!r.swung){ r.swung = true; playMissSwish(0.85); }
+    if(!r.hit && sp >= 0.8){
+      r.hit = true;
+      playThud();
+      spawnJuiceBurst(r.wrongSpot.clone().setY(0.05), r.sandTier, 0.22, 10, 0.4, r.missDir);
+      r.shakeUntil = now + 260;
+    }
+    if(r.t > r.swingStart + 0.9){
+      avatar.rotation.y = r.baseRotY + Math.sin((r.t - r.swingStart - 0.9)*3)*0.25;
+    }
+  }
+
+  const secs = Math.floor((now-r.recStart)/1000);
+  document.getElementById("cctv-time").textContent = "00:" + String(secs).padStart(2,"0");
+
+  if(!r.unducked && r.t >= r.dur-0.7){ r.unducked = true; duckAudio(1, 0.6); }
+  if(r.t >= r.dur) finishFailReplay();
+}
+
+function finishFailReplay(){
+  const onDone = failReplay && failReplay.onDone;
+  failReplay = null;
+  duckAudio(1, 0.2);
+  document.getElementById("cctv-overlay").classList.remove("show");
+  avatar.visible = false;
+  clubPivot.visible = true;
+  document.getElementById("crosshair").style.display = "block";
+  camera.position.set(0,1.6,0); camera.up.set(0,1,0);
+  applyLook();
+  gameState = "gameover";
+  if(onDone) onDone();
+}
+
+/* =========================================================
    GAME OVER
    ========================================================= */
 function gameOver(){
@@ -1598,14 +1711,21 @@ function gameOver(){
     refreshBestDisplay();
   }
 
-  setTimeout(()=>{
+  const showResult = ()=>{
     document.getElementById("result-emoji").textContent = isNew ? "👑" : "⏰";
     document.getElementById("result-score").textContent = score.toLocaleString();
     document.getElementById("result-fruit").textContent = reached + " LV." + level;
     document.getElementById("result-best").textContent = "👑 " + best.score.toLocaleString();
     document.getElementById("result-screen").classList.remove("hidden");
     if(isNew) playChime();
-  }, 750);
+  };
+
+  /* the fruit survived — replay the whiff from the fruit's point of view */
+  if(fruitMesh && fruitState && fruitState.landed && !fruitState.broken){
+    setTimeout(()=>enterFailReplay(showResult), 900);
+  } else {
+    setTimeout(showResult, 750);
+  }
 }
 
 /* =========================================================
@@ -1618,6 +1738,7 @@ function cleanupWorld(){
   fruitState = null;
   if(replay && replay.fruit){ scene.remove(replay.fruit); }
   replay = null; replayData = null;
+  failReplay = null;
   avatar.visible = false;
   document.getElementById("cctv-overlay").classList.remove("show");
   clubPivot.visible = true;
@@ -1699,6 +1820,7 @@ function animate(){
   updateClubSwingAnim(dt);
   updateShake(dt);
   if(gameState==="replay") updateReplay(dt);
+  if(gameState==="failreplay") updateFailReplay(dt);
   updateHaptics(now);
 
   /* squash & glow pulse on the live fruit */

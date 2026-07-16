@@ -3,11 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<!-- 이미 다크 테마임을 선언 → 브라우저(크롬/삼성인터넷) 야간모드가 색을 강제 반전(흰 원→검은 원)하는 것을 차단 -->
+<meta name="color-scheme" content="dark">
 <title>모기 사냥</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
   :root{
+    color-scheme: dark; /* 야간모드 강제 반전 방지 — 흰 원은 어떤 환경에서도 흰색 유지 */
     --bg: #070a10;
     --bg-2: #0d131c;
     --amber: #ffb200;
@@ -519,9 +522,20 @@ function showToast(msg){
   showToast._h = setTimeout(()=>t.classList.remove('show'), 2400);
 }
 
+// 모든 기능 버튼: 누르면 전체화면 진입 (iOS 사파리 등 미지원 환경에선 조용히 무시)
+function enterFullscreen(){
+  try{
+    const el = document.documentElement;
+    if(document.fullscreenElement || document.webkitFullscreenElement) return;
+    const p = (el.requestFullscreen || el.webkitRequestFullscreen).call(el);
+    if(p && p.catch) p.catch(()=>{});
+  }catch(e){}
+}
+
 function openScreen(id){
   document.getElementById(id).classList.add('active');
   currentScreen = id;
+  enterFullscreen();
   requestWake();
   if(id === 'trap') startTrap();
   if(id === 'stats') renderStats();
@@ -633,12 +647,31 @@ let trapInterval = null;
 let trapPhase = 'exhale'; // exhale(10s) -> rest(5s)
 let trapCount = 10;
 
+// 시스템 밝기 최대화: 웹 표준에는 밝기 제어 API가 없어 브라우저에선 안내만 하고,
+// 나중에 Capacitor 등으로 앱 패키징하면(screen-brightness 플러그인) 자동으로 동작함
+async function setMaxBrightness(on){
+  try{
+    const sb = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.ScreenBrightness;
+    if(sb){
+      await sb.setBrightness({ brightness: on ? 1 : -1 }); // -1 = 시스템 기본값 복원
+      return true;
+    }
+  }catch(e){}
+  return false;
+}
+
 function startTrap(){
   clearInterval(trapInterval);
   trapPhase = 'exhale';
   trapCount = 10;
   updateTrapUI();
   trapInterval = setInterval(tickTrap, 1000);
+  setMaxBrightness(true).then(ok=>{
+    if(!ok && !startTrap._hinted){
+      startTrap._hinted = true; // 세션당 1회만 안내
+      showToast('🔆 기기 밝기를 최대로 올리면 유인 효과가 더 좋아요');
+    }
+  });
 }
 function tickTrap(){
   trapCount--;
@@ -672,6 +705,7 @@ function updateTrapUI(){
 }
 function closeTrap(){
   clearInterval(trapInterval);
+  setMaxBrightness(false); // 밝기 원래대로 복원
   closeScreen('trap');
 }
 
