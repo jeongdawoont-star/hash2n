@@ -1665,11 +1665,14 @@ function enterReplay(){
   /* every replay draws a different cinematic angle, then slowly orbits —
      the 8-direction sprite turns with the camera. phi 0 = pure side view,
      +phi swings toward the fruit (avatar front), -phi behind the avatar */
+  /* NOTE: keep every phi path well away from ±90° (the player→fruit axis).
+     Near the axis the 45°-quantised sprite nose and the on-screen debris
+     end up on opposite sides and the avatar looks like it faces away. */
   const shots = [
-    { phi0:-0.21, sweep: 0.45, ym:1.0  },  // classic side two-shot
-    { phi0: 0.95, sweep:-0.50, ym:0.72 },  // low hero angle from the fruit side
+    { phi0:-0.21, sweep: 0.45, ym:1.0  },  // right-flank side two-shot
+    { phi0: 0.95, sweep:-0.50, ym:0.72 },  // low hero angle, sweeps back to the side
     { phi0:-2.18, sweep: 0.66, ym:1.15 },  // over-the-shoulder from behind
-    { phi0: 2.35, sweep:-0.50, ym:0.85 },  // far-side reverse angle
+    { phi0: 3.32, sweep:-0.42, ym:0.85 },  // left-flank reverse side
   ];
   const shot = shots[Math.floor(Math.random()*shots.length)];
 
@@ -1710,7 +1713,9 @@ function updateReplay(dt){
   camera.up.set(0,1,0);
   camera.lookAt(r.mid.x, r.mid.y, r.mid.z);
 
-  /* avatar: idle windup bob, then the swing that re-breaks the fruit */
+  /* avatar: always face the fruit (guards against any stale orientation),
+     idle windup bob, then the swing that re-breaks the fruit */
+  avatar.lookAt(replayData.origin.x, 0, replayData.origin.z);
   const ap = avatar.userData.armPivot;
   if(r.t < r.swingStart){
     ap.rotation.x = AVATAR_ARM_REST + Math.sin(r.t*3)*0.07;
