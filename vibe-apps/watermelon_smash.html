@@ -195,6 +195,7 @@
     <div id="best-fruit"></div>
   </div>
   <button id="title-start" aria-label="게임 시작"></button>
+  <div id="build-tag" style="position:absolute;bottom:8px;right:12px;font:11px monospace;color:#fff;opacity:0.55;text-shadow:0 1px 2px #0008;">build 7</div>
 </div>
 
 <!-- Countdown -->
@@ -675,7 +676,10 @@ scene.fog = new THREE.Fog(0xBDEBF5,40,160);
    LOOK CONTROLS
    ========================================================= */
 let yaw=0, pitch=0, useDeviceOrientation=false, deviceYawOffset=0, lastAlpha=null;
-function applyLook(){ camera.rotation.order="YXZ"; camera.rotation.y=yaw; camera.rotation.x=pitch; }
+/* replays own the camera: while locked, gyro/pointer look-events must NOT
+   stomp camera.rotation (they fire between frames and win the race) */
+let camLocked=false;
+function applyLook(){ if(camLocked) return; camera.rotation.order="YXZ"; camera.rotation.y=yaw; camera.rotation.x=pitch; }
 applyLook();
 
 const pointer = { active:false, lastX:0, lastY:0, lastT:0, path:[] };
@@ -1636,6 +1640,7 @@ let replayData = null;
 function enterReplay(){
   if(!replayData) { quickNextRound(); return; }
   gameState = "replay";
+  camLocked = true;
   clubPivot.visible = false;
   document.getElementById("crosshair").style.display = "none";
 
@@ -1662,19 +1667,37 @@ function enterReplay(){
   const camDist = THREE.MathUtils.clamp(standDist*1.1 + rd.radius*5 + 1.7, 2.2, 9);
   const camY = THREE.MathUtils.clamp(0.95 + rd.radius*1.2 + standDist*0.2, 1.0, 2.6);
 
-  /* every replay draws a different cinematic angle, then slowly orbits —
-     the 8-direction sprite turns with the camera. phi 0 = pure side view,
-     +phi swings toward the fruit (avatar front), -phi behind the avatar */
-  /* NOTE: keep every phi path well away from ±90° (the player→fruit axis).
-     Near the axis the 45°-quantised sprite nose and the on-screen debris
-     end up on opposite sides and the avatar looks like it faces away. */
+  /* two mirrored side two-shots only. Side profiles (sprite frames 2/6) are
+     the ONLY angles where this character art reads unambiguously — its 45°
+     views are drawn nearly frontal, so any camera near the swing axis makes
+     the avatar look like it faces the wrong way. Keep phi within ±0.15 of a
+     flank and the nose always visibly points at the fruit. */
   const shots = [
-    { phi0:-0.21, sweep: 0.45, ym:1.0  },  // right-flank side two-shot
-    { phi0: 0.95, sweep:-0.50, ym:0.72 },  // low hero angle, sweeps back to the side
-    { phi0:-2.18, sweep: 0.66, ym:1.15 },  // over-the-shoulder from behind
-    { phi0: 3.32, sweep:-0.42, ym:0.85 },  // left-flank reverse side
+    { phi0:-0.12, sweep: 0.24, ym:1.0 },  // right-flank two-shot
+    { phi0: 3.02, sweep: 0.24, ym:1.0 },  // left-flank two-shot (mirror)
   ];
-  const shot = shots[Math.floor(Math.random()*shots.length)];
+  let shot = shots[Math.floor(Math.random()*shots.length)];
+
+  /* palms / parasols / the flag can sit between a flank camera and the
+     action — raycast the view line and fall back to the mirrored flank */
+  const camPosFor = (s)=> new THREE.Vector3(
+    mid.x + (perp.x*Math.cos(s.phi0) + dir.x*Math.sin(s.phi0))*camDist,
+    camY*s.ym,
+    mid.z + (perp.z*Math.cos(s.phi0) + dir.z*Math.sin(s.phi0))*camDist);
+  const viewBlocked = (camPos)=>{
+    const rd2 = camPos.clone().sub(mid);
+    const far = rd2.length()*0.85;
+    const rc = new THREE.Raycaster(mid.clone(), rd2.normalize(), 0.4, far);
+    return rc.intersectObjects(scene.children, true).some(h=>{
+      let o = h.object;
+      while(o){ if(o===fruit || o===avatar || o===debrisGroup || o===juiceGroup) return false; o = o.parent; }
+      return true;
+    });
+  };
+  if(viewBlocked(camPosFor(shot))){
+    const other = shots[shot===shots[0] ? 1 : 0];
+    if(!viewBlocked(camPosFor(other))) shot = other;
+  }
 
   replay = {
     t:0, dur:3.1, swingStart:1.05, exploded:false,
@@ -1749,6 +1772,7 @@ function finishReplay(){
   clubPivot.visible = true;
   document.getElementById("crosshair").style.display = "block";
   camera.position.set(0,1.6,0); camera.up.set(0,1,0);
+  camLocked = false;
   applyLook();
   gameState = "next";
   quickNextRound();
@@ -1762,6 +1786,7 @@ let failReplay = null;
 
 function enterFailReplay(onDone){
   gameState = "failreplay";
+  camLocked = true;
   clubPivot.visible = false;
   document.getElementById("crosshair").style.display = "none";
 
@@ -1860,6 +1885,7 @@ function finishFailReplay(){
   clubPivot.visible = true;
   document.getElementById("crosshair").style.display = "block";
   camera.position.set(0,1.6,0); camera.up.set(0,1,0);
+  camLocked = false;
   applyLook();
   gameState = "gameover";
   if(onDone) onDone();
@@ -1931,6 +1957,7 @@ function cleanupWorld(){
   hitStopUntil = 0; slowMoUntil = 0;
   camera.position.set(0,1.6,0); camera.up.set(0,1,0);
   camera.fov = BASE_FOV; camera.updateProjectionMatrix();
+  camLocked = false;
   applyLook();
   gameState = "idle";
 }
