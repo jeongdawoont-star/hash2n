@@ -160,6 +160,7 @@
 <div id="canvas-wrap"></div>
 <div id="blackout"><div class="lid" id="lid-top"></div><div class="lid" id="lid-bottom"></div></div>
 <div id="hit-flash"></div>
+<div id="dbg-replay" style="position:fixed;top:64px;left:8px;z-index:60;font:12px monospace;color:#4f4;text-shadow:0 1px 2px #000;display:none;pointer-events:none;"></div>
 <div id="cctv-overlay">
   <div id="cctv-rec"><span id="cctv-dot"></span>REC</div>
   <div id="cctv-time">00:00</div>
@@ -195,7 +196,7 @@
     <div id="best-fruit"></div>
   </div>
   <button id="title-start" aria-label="게임 시작"></button>
-  <div id="build-tag" style="position:absolute;bottom:8px;right:12px;font:11px monospace;color:#fff;opacity:0.55;text-shadow:0 1px 2px #0008;">build 7</div>
+  <div id="build-tag" style="position:absolute;bottom:8px;right:12px;font:11px monospace;color:#fff;opacity:0.55;text-shadow:0 1px 2px #0008;">build 12</div>
 </div>
 
 <!-- Countdown -->
@@ -705,17 +706,36 @@ renderer.domElement.addEventListener("mousedown", e=>pointerDown(e.clientX,e.cli
 window.addEventListener("mousemove", e=>pointerMove(e.clientX,e.clientY));
 window.addEventListener("mouseup", pointerUp);
 
-/* device orientation (upright portrait): alpha grows CCW same as three.js yaw -> keep sign.
-   beta ~90 upright; beta>90 = phone tips back (camera up) -> look up, beta<90 (camera down) -> look down. */
+/* device orientation, gimbal-safe: the upright-portrait play posture sits
+   right on the beta≈90° euler singularity, where raw alpha JUMPS by up to
+   180° (the "view teleports sideways" bug). Build the full rotation as a
+   quaternion (stable everywhere) and extract a continuous look direction. */
+const _oE = new THREE.Euler();
+const _oQ = new THREE.Quaternion();
+const _oQ1 = new THREE.Quaternion(-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5)); // -90° about X
+const _oQS = new THREE.Quaternion();
+const _oZ = new THREE.Vector3(0,0,1);
+const _oF = new THREE.Vector3();
 function handleOrientation(e){
-  if(e.alpha===null||e.alpha===undefined) return;
+  if(e.alpha===null||e.alpha===undefined||e.beta===null||e.gamma===null) return;
   useDeviceOrientation = true;
-  const alpha = THREE.MathUtils.degToRad(e.alpha);
-  const beta = e.beta===null||e.beta===undefined ? 90 : e.beta;
-  if(lastAlpha===null){ deviceYawOffset = alpha; }
-  lastAlpha = alpha;
-  yaw = alpha - deviceYawOffset;
-  pitch = THREE.MathUtils.clamp(THREE.MathUtils.degToRad(beta-90), -1.15, 1.15);
+  _oE.set(THREE.MathUtils.degToRad(e.beta),
+          THREE.MathUtils.degToRad(e.alpha),
+          -THREE.MathUtils.degToRad(e.gamma), "YXZ");
+  _oQ.setFromEuler(_oE);
+  _oQ.multiply(_oQ1); // camera looks out of the back of the device
+  const so = (screen.orientation && typeof screen.orientation.angle === "number")
+    ? screen.orientation.angle : (window.orientation || 0);
+  _oQ.multiply(_oQS.setFromAxisAngle(_oZ, -THREE.MathUtils.degToRad(so)));
+  _oF.set(0,0,-1).applyQuaternion(_oQ);
+  const rawYaw = Math.atan2(-_oF.x, -_oF.z);
+  if(lastAlpha===null){ deviceYawOffset = rawYaw; }
+  lastAlpha = rawYaw;
+  let ny = rawYaw - deviceYawOffset;
+  while(ny - yaw >  Math.PI) ny -= 2*Math.PI; // stay continuous across the ±180° seam
+  while(ny - yaw < -Math.PI) ny += 2*Math.PI;
+  yaw = ny;
+  pitch = THREE.MathUtils.clamp(Math.asin(THREE.MathUtils.clamp(_oF.y,-1,1)), -1.15, 1.15);
   applyLook();
 }
 function recalibrateOrientation(){ lastAlpha=null; }
@@ -917,7 +937,9 @@ function buildAvatarSprite(){
   tex.magFilter = THREE.LinearFilter;
   tex.generateMipmaps = false;
   tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
-  tex.repeat.set(1/AVATAR_FRAMES, 1);
+  /* frame selection is done by rewriting the plane's UVs directly — some
+     mobile GPUs mangled the texture offset/repeat matrix (frames came out
+     halved-shifted => the avatar faced the wrong way on phones only) */
 
   const holder = new THREE.Group();
   const plane = new THREE.Mesh(
@@ -936,8 +958,15 @@ function buildAvatarSprite(){
   const armPivot = new THREE.Group(); // dummy — the replay drives its rotation.x
   g.add(armPivot);
   g.userData.armPivot = armPivot;
-  g.userData.sprite = { holder, tex, frame:-1, k:0, settle:0 };
+  g.userData.sprite = { holder, tex, uv:plane.geometry.attributes.uv, frame:-1, k:0, settle:0 };
   return g;
+}
+
+function setAvatarFrame(sp, frame){
+  const u0 = frame/AVATAR_FRAMES, u1 = (frame+1)/AVATAR_FRAMES;
+  sp.uv.setX(0, u0); sp.uv.setX(1, u1);   // top-left, top-right
+  sp.uv.setX(2, u0); sp.uv.setX(3, u1);   // bottom-left, bottom-right
+  sp.uv.needsUpdate = true;
 }
 
 const avatar = (typeof AVATAR_SHEET_B64 !== "undefined") ? buildAvatarSprite() : buildAvatar();
@@ -949,24 +978,40 @@ const AVATAR_ARM_REST = -2.3;
    camera angle, and turn the arm-pivot swing into a body lunge */
 const _av = { f:new THREE.Vector3(), toCam:new THREE.Vector3(), axis:new THREE.Vector3(),
               up:new THREE.Vector3(0,1,0), qYaw:new THREE.Quaternion(), qLean:new THREE.Quaternion() };
+const dbgReplay = document.getElementById("dbg-replay");
 function updateAvatarSprite(dt){
   const sp = avatar.userData.sprite;
-  if(!sp || !avatar.visible) return;
+  if(!sp || !avatar.visible){ if(dbgReplay.style.display!=="none") dbgReplay.style.display="none"; return; }
 
-  /* facing (+Z of the group, set by lookAt) and direction to camera, in XZ */
-  _av.f.set(0,0,1).applyQuaternion(avatar.quaternion); _av.f.y = 0; _av.f.normalize();
+  /* facing, in XZ. During the winning replay derive it STRAIGHT from the
+     geometry (fruit − avatar) so no rotation state can ever poison it. */
+  if(gameState==="replay" && replayData){
+    _av.f.copy(replayData.origin).sub(avatar.position);
+  } else {
+    _av.f.set(0,0,1).applyQuaternion(avatar.quaternion);
+  }
+  _av.f.y = 0; _av.f.normalize();
   _av.toCam.copy(camera.position).sub(avatar.position); _av.toCam.y = 0;
   if(_av.toCam.lengthSq() < 1e-6) return;
   _av.toCam.normalize();
 
-  /* signed angle facing→camera (CCW around +Y), in 45° frame units */
+  /* signed angle facing→camera, in 45° frame units. NEGATED: the source
+     turnaround's left/right is mirrored (its "RIGHT SIDE" art faces right
+     on screen), so the sheet columns run clockwise, not counter-clockwise —
+     confirmed on-device: with +a the muzzle pointed away from the fruit. */
   const s = _av.f.z*_av.toCam.x - _av.f.x*_av.toCam.z;
   const c = _av.f.x*_av.toCam.x + _av.f.z*_av.toCam.z;
-  const a = Math.atan2(s, c) / (Math.PI/4);
+  const a = -Math.atan2(s, c) / (Math.PI/4);
   let d = a - sp.k; d = ((d % 8) + 8) % 8; if(d > 4) d -= 8;
   if(Math.abs(d) > 0.62) sp.k = Math.round(a); // hysteresis against boundary flicker
   const frame = ((sp.k % 8) + 8) % 8;
-  if(frame !== sp.frame){ sp.frame = frame; sp.tex.offset.x = frame/AVATAR_FRAMES; }
+  if(frame !== sp.frame){ sp.frame = frame; setAvatarFrame(sp, frame); }
+
+  /* diagnostic readout — hidden unless the page is opened with #debug */
+  if(location.hash.indexOf("debug") !== -1){
+    dbgReplay.style.display = "block";
+    dbgReplay.textContent = "b12 F" + frame + " a" + a.toFixed(2) + " L" + (camLocked?1:0) + " " + gameState;
+  }
 
   /* swing: replay animates armPivot.rotation.x from AVATAR_ARM_REST (rest)
      to AVATAR_ARM_REST+3 (hit) — map it onto a lean + squash & stretch */
@@ -1667,42 +1712,80 @@ function enterReplay(){
   const camDist = THREE.MathUtils.clamp(standDist*1.1 + rd.radius*5 + 1.7, 2.2, 9);
   const camY = THREE.MathUtils.clamp(0.95 + rd.radius*1.2 + standDist*0.2, 1.0, 2.6);
 
-  /* two mirrored side two-shots only. Side profiles (sprite frames 2/6) are
-     the ONLY angles where this character art reads unambiguously — its 45°
-     views are drawn nearly frontal, so any camera near the swing axis makes
-     the avatar look like it faces the wrong way. Keep phi within ±0.15 of a
-     flank and the nose always visibly points at the fruit. */
+  /* five cinematic angles — every replay draws a different one, and the
+     8-direction sprite turns with the camera. phi 0 = right flank,
+     +phi sweeps toward the fruit (front), ±π = left flank. Paths keep a
+     ~40° margin from the swing axis so the on-screen fruit side and the
+     45°-quantised sprite nose can never contradict each other. */
   const shots = [
-    { phi0:-0.12, sweep: 0.24, ym:1.0 },  // right-flank two-shot
-    { phi0: 3.02, sweep: 0.24, ym:1.0 },  // left-flank two-shot (mirror)
+    { phi0:-0.12, sweep: 0.24, ym:1.0  },  // right-flank two-shot
+    { phi0: 3.02, sweep: 0.24, ym:1.0  },  // left-flank two-shot
+    { phi0:-2.18, sweep: 0.66, ym:1.15 },  // over-the-shoulder from behind
+    { phi0: 0.85, sweep:-0.45, ym:0.75 },  // low hero angle, front-right quarter
+    { phi0: 2.30, sweep: 0.45, ym:0.85 },  // front-left quarter, drifting to the flank
   ];
   let shot = shots[Math.floor(Math.random()*shots.length)];
 
   /* palms / parasols / the flag can sit between a flank camera and the
-     action — raycast the view line and fall back to the mirrored flank */
-  const camPosFor = (s)=> new THREE.Vector3(
-    mid.x + (perp.x*Math.cos(s.phi0) + dir.x*Math.sin(s.phi0))*camDist,
-    camY*s.ym,
-    mid.z + (perp.z*Math.cos(s.phi0) + dir.z*Math.sin(s.phi0))*camDist);
-  const viewBlocked = (camPos)=>{
-    const rd2 = camPos.clone().sub(mid);
-    const far = rd2.length()*0.85;
-    const rc = new THREE.Raycaster(mid.clone(), rd2.normalize(), 0.4, far);
+     action — sample the whole camera path (sweep + dolly + a little slack
+     sideways, thin poles slip between single rays) and fall back to the
+     mirrored flank if anything blocks the view */
+  /* "is the SUBJECT visible from here": cast camera→avatar-head, →avatar-body
+     and →fruit; any prop in between (parasol, palm, flag) blocks the shot */
+  const viewBlocked = (camPos, target)=>{
+    const rd2 = target.clone().sub(camPos);
+    const far = Math.max(0.3, rd2.length() - 0.25);
+    const rc = new THREE.Raycaster(camPos.clone(), rd2.normalize(), 0.05, far);
+    rc.camera = camera; // REQUIRED: raycasting a THREE.Sprite (fruit glow) throws without it
     return rc.intersectObjects(scene.children, true).some(h=>{
       let o = h.object;
       while(o){ if(o===fruit || o===avatar || o===debrisGroup || o===juiceGroup) return false; o = o.parent; }
       return true;
     });
   };
-  if(viewBlocked(camPosFor(shot))){
-    const other = shots[shot===shots[0] ? 1 : 0];
-    if(!viewBlocked(camPosFor(other))) shot = other;
-  }
+  const headA = avatarPos.clone().setY(1.0);
+  const bodyA = avatarPos.clone().setY(0.45);
+  /* palms/parasols right next to the lens split the frame even when the
+     subjects peek past them — treat "prop within 1.2m of the camera" as
+     blocked too, not just line-of-sight hits */
+  const propBoxes = scene.children
+    .filter(o => o.isGroup && o!==avatar && o!==debrisGroup && o!==juiceGroup)
+    .map(g => new THREE.Box3().setFromObject(g));
+  const shotBlocked = (s)=>{
+    for(const f of [0, 0.5, 1]){
+      const phi = s.phi0 + s.sweep*f;
+      const d2 = camDist*(1 - 0.1*Math.min(1, f*2)); // dolly-in over the shot
+      const p = new THREE.Vector3(
+        mid.x + (perp.x*Math.cos(phi) + dir.x*Math.sin(phi))*d2,
+        camY*s.ym,
+        mid.z + (perp.z*Math.cos(phi) + dir.z*Math.sin(phi))*d2);
+      if(propBoxes.some(b => b.distanceToPoint(p) < 1.0)) return true;
+      if(viewBlocked(p, headA) || viewBlocked(p, bodyA) || viewBlocked(p, fruitAnchor)) return true;
+    }
+    return false;
+  };
+  /* keep the random pick unless something blocks it — then try the other
+     angles in RANDOM order (all blocked: keep the original pick). Wrapped
+     so no exception here can ever brick the replay entry. */
+  const blk = [];
+  try{
+    const order = shots.map((_,i)=>i).filter(i=>i!==shots.indexOf(shot));
+    for(let i = order.length-1; i > 0; i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [order[i], order[j]] = [order[j], order[i]];
+    }
+    order.unshift(shots.indexOf(shot));
+    for(const idx of order){
+      const b = shotBlocked(shots[idx]);
+      blk.push(b);
+      if(!b){ shot = shots[idx]; break; }
+    }
+  }catch(err){ /* keep the random pick */ }
 
   replay = {
     t:0, dur:3.1, swingStart:1.05, exploded:false,
     fruit, mid, perp, dir:dir.clone(), camDist, camY:camY*shot.ym,
-    phi0:shot.phi0, sweep:shot.sweep,
+    phi0:shot.phi0, sweep:shot.sweep, blk,
     recStart: performance.now(), shakeUntil:0
   };
   document.getElementById("cctv-overlay").classList.add("show");
@@ -1710,7 +1793,7 @@ function enterReplay(){
 }
 
 function updateReplay(dt){
-  if(!replay) return;
+  if(!replay){ finishReplay(); return; } // self-heal if entry ever failed mid-way
   const r = replay;
   r.t += dt;
 
@@ -1831,7 +1914,7 @@ function enterFailReplay(onDone){
 }
 
 function updateFailReplay(dt){
-  if(!failReplay) return;
+  if(!failReplay){ finishFailReplay(); return; } // self-heal if entry ever failed mid-way
   const r = failReplay;
   r.t += dt;
 
