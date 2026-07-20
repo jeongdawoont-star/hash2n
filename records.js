@@ -42,7 +42,7 @@ export const RECORDS = [
 
   {
     title: "모기사냥",
-    desc: "한국인은 모기를 잡아야 잠을 잘 수 있다.\n스마트폰으로 쉽게 모기를 잡는 게임 앱이다.",
+    desc: "한국인은 모기를 잡아야 잠을 잘 수 있다.\n스마트폰으로 쉽게 모기를 잡는 게임 앱이다.\n앱인토스에 출시됐다. [바로가기](https://minion.toss.im/5W2f6ywp)",
     tags: "game, mosquito, catch, clicker",
     category: "games",
     link: "./vibe-apps/mosquito-sniper.html",
