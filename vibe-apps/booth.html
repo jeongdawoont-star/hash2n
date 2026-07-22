@@ -505,6 +505,7 @@
   let db;
   let stories = [];
   let currentIdx = -1;
+  let currentlyPlayingStoryId = null;
   let globalTimerInterval = null;
   let globalTimerRemain = 0;
   let storyTimeout = null;
@@ -526,6 +527,14 @@
 
   const TTS_CPS = 3.8;
   const FADE_RESERVE_MS = 2500;
+
+  function markCurrentStoryPlayed() {
+    const targetId = currentlyPlayingStoryId || (currentIdx >= 0 && stories[currentIdx] ? stories[currentIdx].id : null);
+    if (targetId) {
+      markStoryAsPlayed(targetId);
+      currentlyPlayingStoryId = null;
+    }
+  }
 
   window.ytPlayer = null;
   let ytReady = false;
@@ -568,9 +577,7 @@
     songTimeRemainMs = 0;
     
     // 현재 진행 중이던 사연 완료 처리
-    if (currentIdx >= 0 && stories[currentIdx]) {
-      markStoryAsPlayed(stories[currentIdx].id);
-    }
+    markCurrentStoryPlayed();
     
     ytFadeOut(() => {
       if (!hasEnded) playStory(currentIdx + 1);
@@ -617,9 +624,7 @@
           clearTimeout(ytPlaybackWatchdog);
           ytPlaybackWatchdog = null;
           // 현재 사연 완료 처리 후 다음으로 이동
-          if (currentIdx >= 0 && stories[currentIdx]) {
-            markStoryAsPlayed(stories[currentIdx].id);
-          }
+          markCurrentStoryPlayed();
           songTimeRemainMs = 0;
           playStory(currentIdx + 1);
         }
@@ -1017,9 +1022,8 @@
         songTimeRemainMs -= 1000;
         if (songTimeRemainMs <= 0) {
           songTimeRemainMs = 0;
-          if (!hasEnded && currentIdx >= 0 && stories[currentIdx]) {
-            const s = stories[currentIdx];
-            markStoryAsPlayed(s.id);
+          if (!hasEnded && currentIdx >= 0) {
+            markCurrentStoryPlayed();
             ytFadeOut(() => {
               if (!hasEnded) playStory(currentIdx + 1);
             });
@@ -1050,6 +1054,7 @@
     if (idx >= stories.length) { endBroadcast(); return; }
     currentIdx = idx;
     const s = stories[idx];
+    currentlyPlayingStoryId = s ? s.id : null;
 
     document.getElementById('storySender').textContent = storySenderLabel(s);
     document.getElementById('storySong').textContent = '🎵 ' + s.artist + ' — ' + s.songTitle;
@@ -1147,9 +1152,7 @@
     speechSynthesis.cancel();
     
     // 현재 스킵하는 사연 완료 처리
-    if (currentIdx >= 0 && stories[currentIdx]) {
-      markStoryAsPlayed(stories[currentIdx].id);
-    }
+    markCurrentStoryPlayed();
     
     ytFadeOut(() => playStory(currentIdx + 1));
   };
@@ -1174,9 +1177,7 @@
     if (window.speechSynthesis) speechSynthesis.cancel();
 
     // 현재 진행 중이던 사연 완료 처리
-    if (currentIdx >= 0 && stories[currentIdx]) {
-      markStoryAsPlayed(stories[currentIdx].id);
-    }
+    markCurrentStoryPlayed();
 
     const bcast = JSON.parse(localStorage.getItem('radioBroadcast') || '{}');
     const sessionName = bcast.sessionName || '우리 반 라디오';
