@@ -845,6 +845,14 @@
     return `${story.name}님의 사연${dateText ? ` (${dateText})` : ''}${suffix ? ` ${suffix}` : ''}`;
   }
 
+  function storySenderLabelHtml(story, suffix) {
+    const dateText = formatRequestDate(story.createdAt);
+    const datePart = dateText
+      ? ` <span style="font-size:0.55em;color:var(--muted);font-weight:normal;white-space:nowrap;">(${escapeHtml(dateText)})</span>`
+      : '';
+    return `${escapeHtml(story.name)}님의 사연${datePart}${suffix ? ` ${escapeHtml(suffix)}` : ''}`;
+  }
+
   function isEnglishTtsText(text) {
     const sample = String(text || '').replace(/https?:\/\/\S+/g, '');
     const latin = (sample.match(/[A-Za-z]/g) || []).length;
@@ -914,7 +922,7 @@
         now.innerHTML = `
           <div class="queue-badge"></div>
           <div class="queue-now-label">지금 재생 중</div>
-          <div class="queue-now-name">${escapeHtml(storySenderLabel(currentStory))}</div>
+          <div class="queue-now-name">${storySenderLabelHtml(currentStory)}</div>
           <div class="queue-now-song">${escapeHtml(currentStory.artist)} — ${escapeHtml(currentStory.songTitle)}</div>
         `;
       } else {
@@ -969,7 +977,7 @@
     currentIdx = idx;
     const s = stories[idx];
     
-    document.getElementById('storySender').textContent = storySenderLabel(s, '(테스트)');
+    document.getElementById('storySender').innerHTML = storySenderLabelHtml(s, '(테스트)');
     document.getElementById('storySong').textContent = '🎵 ' + s.artist + ' — ' + s.songTitle;
     buildStoryKaraoke(s.story);
     document.getElementById('currentNum').textContent = idx + 1;
@@ -1056,7 +1064,7 @@
     const s = stories[idx];
     currentlyPlayingStoryId = s ? s.id : null;
 
-    document.getElementById('storySender').textContent = storySenderLabel(s);
+    document.getElementById('storySender').innerHTML = storySenderLabelHtml(s);
     document.getElementById('storySong').textContent = '🎵 ' + s.artist + ' — ' + s.songTitle;
     buildStoryKaraoke(s.story);
     document.getElementById('currentNum').textContent = idx + 1;

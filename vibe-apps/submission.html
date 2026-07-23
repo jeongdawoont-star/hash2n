@@ -286,7 +286,7 @@
         </div>
         <div>
           <label>유튜브 링크</label>
-          <input id="ytUrl" type="url" placeholder="https://www.youtube.com/watch?v=...">
+          <input id="ytUrl" type="url" placeholder="https://www.youtube.com/watch?v=..." oninput="autoFetchMetaFromYtUrl()" onblur="autoFetchMetaFromYtUrl()">
           <div class="yt-hint">유튜브에서 곡을 검색한 뒤 주소창의 링크를 붙여넣어요. <a href="https://youtube.com" target="_blank">유튜브 열기 →</a></div>
         </div>
       </div>
@@ -308,7 +308,7 @@
 <!-- Firebase -->
 <script type="module">
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-  import { getFirestore, initializeFirestore, collection, addDoc, serverTimestamp, query, orderBy, getDocs, doc, getDoc }
+  import { getFirestore, initializeFirestore, collection, addDoc, serverTimestamp, query, orderBy, getDocs }
     from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
   let db;
@@ -325,12 +325,19 @@
   }
   applySharedConfig();
 
+  // 공개 Piped/Invidious 인스턴스는 수시로 죽거나 바뀌므로, 하드코딩 목록은 최소한의 비상용으로만 두고
+  // 페이지 로드 시 각 서비스의 공개 레지스트리에서 살아있는 인스턴스 목록을 새로 받아온다.
+  let activePipedInstances = [
+    'https://api.piped.private.coffee'
+  ];
+
   let activeInvidiousInstances = [
-    'https://yewtu.be',
+    'https://invidious.f5.si',
+    'https://inv.zoomerville.com',
+    'https://invidious.privacydev.net',
     'https://inv.nadeko.net',
+    'https://yewtu.be',
     'https://invidious.nerdvpn.de',
-    'https://inv.thepixora.com',
-    'https://invidious.flokinet.to',
     'https://inv.tux.im'
   ];
 
@@ -351,16 +358,36 @@
         }
       }
     } catch (e) {
-      console.warn('Failed to fetch invidious instances list, using default fallback list', e);
+      console.warn('Invidious 목록 업데이트 생략, 기본 인스턴스를 사용합니다.', e);
     }
   }
-
-  // Load instances on startup
   loadInvidiousInstances();
 
-  function ytVideoId(url) {
+  async function loadPipedInstances() {
     try {
-      const u = new URL(url);
+      const res = await fetch('https://piped-instances.kavin.rocks/');
+      if (res.ok) {
+        const data = await res.json();
+        const list = data
+          .filter(item => item.api_url && item.api_url.startsWith('https://') && (item.uptime_24h == null || item.uptime_24h > 80))
+          .map(item => item.api_url)
+          .filter(Boolean);
+        if (list.length > 0) {
+          activePipedInstances = [...new Set([...list, ...activePipedInstances])];
+        }
+      }
+    } catch (e) {
+      console.warn('Piped 목록 업데이트 생략, 기본 인스턴스를 사용합니다.', e);
+    }
+  }
+  loadPipedInstances();
+
+  function ytVideoId(url) {
+    if (!url) return '';
+    try {
+      const trimmed = url.trim();
+      if (/^[a-zA-Z0-9_-]{11}$/.test(trimmed)) return trimmed;
+      const u = new URL(trimmed.includes('://') ? trimmed : 'https://' + trimmed);
       if (u.hostname.includes('youtu.be')) return u.pathname.slice(1);
       if (u.pathname.includes('/shorts/') || u.pathname.includes('/embed/')) {
         return u.pathname.split('/').filter(Boolean).pop();
@@ -369,23 +396,69 @@
     } catch { return ''; }
   }
 
+  async function fetchVideoMetaNoembed(vid) {
+    try {
+      const target = `https://www.youtube.com/watch?v=${vid}`;
+      const res = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(target)}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.title) {
+          return { title: data.title, author: data.author_name || '' };
+        }
+      }
+    } catch (e) {}
+    return null;
+  }
+
+  window.autoFetchMetaFromYtUrl = async function() {
+    const ytUrl = document.getElementById('ytUrl').value.trim();
+    if (!ytUrl) return;
+    const vid = ytVideoId(ytUrl);
+    if (!vid) return;
+
+    const currentTitle = document.getElementById('songTitle').value.trim();
+    const currentArtist = document.getElementById('artist').value.trim();
+    if (currentTitle && currentArtist) return;
+
+    try {
+      const meta = await fetchVideoMetaNoembed(vid);
+      if (meta) {
+        const parsed = parseVideoTitle(meta.title, meta.author);
+        if (!currentTitle) document.getElementById('songTitle').value = parsed.song;
+        if (!currentArtist) document.getElementById('artist').value = parsed.artist;
+      }
+    } catch(e) {}
+  };
+
   window.searchYoutube = async function() {
     const query = document.getElementById('ytSearchQuery').value.trim();
     const suggestions = document.getElementById('searchSuggestions');
     if (!query) {
-      alert('검색어를 입력해 주세요.');
+      alert('검색어나 유튜브 링크를 입력해 주세요.');
       return;
     }
 
     suggestions.style.display = 'block';
     suggestions.innerHTML = '<div class="suggestion-loading"><span class="spinner"></span>검색 중...</div>';
 
+    // 0. 유튜브 URL 또는 Video ID 직입력 감지
+    const directVid = ytVideoId(query);
+    if (directVid && (query.includes('youtube') || query.includes('youtu.be') || directVid.length === 11)) {
+      try {
+        const info = await fetchVideoMetaNoembed(directVid);
+        if (info) {
+          selectSuggestion(info.title, info.author, directVid);
+          return;
+        }
+      } catch (e) {}
+    }
+
     // 1. YouTube Data API v3 시도 (Firebase API Key 사용)
     const cfg = JSON.parse(localStorage.getItem('radioFirebaseConfig') || '{}');
     if (cfg.apiKey) {
       try {
         const controller = new AbortController();
-        const id = setTimeout(() => controller.abort(), 4000); // 4 seconds timeout
+        const id = setTimeout(() => controller.abort(), 3000);
         const ytUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&videoEmbeddable=true&q=${encodeURIComponent(query)}&key=${cfg.apiKey}&maxResults=5`;
         const res = await fetch(ytUrl, { signal: controller.signal });
         clearTimeout(id);
@@ -400,21 +473,48 @@
             renderSuggestions(formattedVideos);
             return;
           }
-        } else {
-          const errData = await res.json().catch(() => ({}));
-          console.warn('YouTube API 호출 실패, Invidious로 대체합니다.', errData);
         }
       } catch (e) {
-        console.warn('YouTube API 에러, Invidious로 대체합니다.', e);
+        console.warn('YouTube Data API 호출 실패, 대체 파이프라인으로 전환합니다.', e);
       }
     }
 
-    // 2. Fallback: Invidious API 호출
+    // 2. Piped API 시도
+    for (let i = 0; i < activePipedInstances.length; i++) {
+      const base = activePipedInstances[i];
+      try {
+        const controller = new AbortController();
+        const id = setTimeout(() => controller.abort(), 2500);
+        const res = await fetch(`${base}/search?q=${encodeURIComponent(query)}&filter=videos`, {
+          signal: controller.signal
+        });
+        clearTimeout(id);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && Array.isArray(data.items) && data.items.length > 0) {
+            const formattedVideos = data.items.map(item => ({
+              videoId: (item.url || '').replace('/watch?v=', ''),
+              title: item.title,
+              author: item.uploaderName || ''
+            })).filter(v => v.videoId);
+            if (formattedVideos.length > 0) {
+              activePipedInstances.unshift(activePipedInstances.splice(i, 1)[0]);
+              renderSuggestions(formattedVideos);
+              return;
+            }
+          }
+        }
+      } catch (e) {
+        console.warn(`Piped instance ${base} failed:`, e);
+      }
+    }
+
+    // 3. Invidious API 시도
     for (let i = 0; i < activeInvidiousInstances.length; i++) {
       const base = activeInvidiousInstances[i];
       try {
         const controller = new AbortController();
-        const id = setTimeout(() => controller.abort(), 4000); // 4 seconds timeout
+        const id = setTimeout(() => controller.abort(), 2500);
         const res = await fetch(`${base}/api/v1/search?q=${encodeURIComponent(query)}&type=video`, {
           signal: controller.signal
         });
@@ -422,18 +522,37 @@
         if (res.ok) {
           const data = await res.json();
           if (Array.isArray(data) && data.length > 0) {
-            // Success! Move this instance to the front for subsequent queries
             activeInvidiousInstances.unshift(activeInvidiousInstances.splice(i, 1)[0]);
             renderSuggestions(data);
             return;
           }
         }
       } catch (e) {
-        console.warn(`Instance ${base} failed or timed out:`, e);
+        console.warn(`Invidious instance ${base} failed:`, e);
       }
     }
 
-    suggestions.innerHTML = '<div class="suggestion-error">❌ 검색 결과를 가져오지 못했습니다. 잠시 후 다시 시도해 주세요.</div>';
+    // 4. iTunes Music API Fallback (음원 기반 정보 제공)
+    try {
+      const controller = new AbortController();
+      const id = setTimeout(() => controller.abort(), 3000);
+      const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=song&limit=5&country=KR`, {
+        signal: controller.signal
+      });
+      clearTimeout(id);
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.results && data.results.length > 0) {
+          renderItunesSuggestions(data.results, query);
+          return;
+        }
+      }
+    } catch (e) {
+      console.warn('iTunes API fallback 에러:', e);
+    }
+
+    // 5. 모든 API 연결 원활하지 않을 때: 직접 유튜브 검색 버튼 제공
+    renderDirectSearchFallback(query);
   };
 
   function renderSuggestions(videos) {
@@ -457,6 +576,55 @@
       item.onclick = () => selectSuggestion(v.title, v.author, v.videoId);
       suggestions.appendChild(item);
     });
+  }
+
+  function renderItunesSuggestions(results, query) {
+    const suggestions = document.getElementById('searchSuggestions');
+    suggestions.innerHTML = '<div style="padding:6px 10px; font-size:11px; color:var(--muted); font-family:var(--round); border-bottom: 1px solid var(--cream2);">🎵 음원 검색 결과 (선택 시 곡 정보 자동입력)</div>';
+    
+    results.forEach(item => {
+      const el = document.createElement('div');
+      el.className = 'suggestion-item';
+      const thumb = item.artworkUrl100 || item.artworkUrl60 || '';
+      el.innerHTML = `
+        <img class="suggestion-thumb" src="${thumb}" alt="thumb" onerror="this.style.display='none'">
+        <div class="suggestion-info">
+          <div class="suggestion-title">${escapeHtml(item.trackName)}</div>
+          <div class="suggestion-artist">${escapeHtml(item.artistName)}</div>
+        </div>
+      `;
+      el.onclick = () => {
+        document.getElementById('songTitle').value = item.trackName;
+        document.getElementById('artist').value = item.artistName;
+        const searchYtUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(item.artistName + ' ' + item.trackName)}`;
+        window.open(searchYtUrl, '_blank');
+        suggestions.innerHTML = `
+          <div style="padding:12px; text-align:center; font-size:12px; color:var(--text); line-height:1.5;">
+            ✅ <b>${escapeHtml(item.trackName)}</b> 정보가 입력되었습니다!<br>
+            열린 유튜브 창에서 영상 링크를 복사하여 <b>[유튜브 링크]</b>에 붙여넣어 주세요.
+          </div>
+        `;
+      };
+      suggestions.appendChild(el);
+    });
+  }
+
+  function renderDirectSearchFallback(query) {
+    const suggestions = document.getElementById('searchSuggestions');
+    const ytSearchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
+    suggestions.innerHTML = `
+      <div style="padding: 14px 12px; text-align: center;">
+        <div style="font-size: 13px; color: var(--wood-dk); margin-bottom: 10px; font-family: var(--round); line-height: 1.4;">
+          💡 유튜브에서 <b>'${escapeHtml(query)}'</b> 곡 검색하기
+        </div>
+        <a href="${ytSearchUrl}" target="_blank" style="display: inline-block; background: var(--coral); color: white; padding: 8px 16px; border-radius: 12px; text-decoration: none; font-size: 13px; font-family: var(--round); box-shadow: 0 4px 0 var(--coral-dk); margin-bottom: 8px; transition: transform 0.15s;">
+          🔍 YouTube에서 직접 검색하기 ↗
+        </a>
+        <div style="font-size: 11px; color: var(--muted); margin-top: 6px; line-height: 1.4;">
+          검색 후 영상의 주소창 링크(URL)를 복사하여 아래 <b>[유튜브 링크]</b> 칸에 붙여넣으면 곡 정보가 자동으로 완성됩니다!
+        </div>
+      </div>
+    `;
   }
 
   function escapeHtml(str) {
@@ -609,21 +777,10 @@
     ]);
 
     try {
-      // 방송중(재생중)인지 확인
-      let isPlaying = false;
-      try {
-        const docSnap = await withTimeout(getDoc(doc(db, 'status', 'broadcast')), 5000);
-        if (docSnap.exists()) {
-          isPlaying = docSnap.data().isPlaying === true;
-        }
-      } catch (err) {
-        console.warn('방송 상태 확인 실패:', err);
-      }
-
       const order = await withTimeout(getNextOrder(), 15000);
       await withTimeout(addDoc(collection(db, 'stories'), {
         name, story, songTitle, artist, ytUrl,
-        order, played: isPlaying, createdAt: serverTimestamp()
+        order, played: false, createdAt: serverTimestamp()
       }), 15000);
 
       document.getElementById('mainForm').style.display = 'none';
