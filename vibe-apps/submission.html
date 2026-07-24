@@ -308,7 +308,7 @@
 <!-- Firebase -->
 <script type="module">
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-  import { getFirestore, initializeFirestore, collection, addDoc, serverTimestamp, query, orderBy, getDocs }
+  import { getFirestore, initializeFirestore, collection, doc, getDoc, runTransaction, serverTimestamp, query, orderBy, getDocs }
     from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
   let db;
@@ -703,11 +703,41 @@
     return true;
   }
 
-  async function getNextOrder() {
-    const q = query(collection(db, 'stories'), orderBy('order', 'desc'));
-    const snap = await getDocs(q);
-    if (snap.empty) return 1;
-    return snap.docs[0].data().order + 1;
+  // 여러 학생이 거의 동시에 제출해도 순서 번호가 겹치지 않도록 트랜잭션으로 원자적 증가시킨다.
+  // (기존 방식: 최댓값을 읽어서 +1 하는 방식은 동시 제출 시 같은 순서 번호가 부여될 수 있었음)
+  async function addStoryAtomic(data) {
+    const counterRef = doc(db, 'meta', 'storyOrderCounter');
+    const newDocRef = doc(collection(db, 'stories'));
+    const order = await runTransaction(db, async (tx) => {
+      const counterSnap = await tx.get(counterRef);
+      let base;
+      if (counterSnap.exists()) {
+        base = counterSnap.data().value;
+      } else {
+        // 카운터 문서가 아직 없는 첫 실행 시점: 기존 사연들의 최댓값에서 이어간다.
+        // (동시에 여러 명이 처음 제출하더라도 아래 tx.set(counterRef, ...)가
+        //  트랜잭션 충돌 검사 대상이라 자동 재시도되어 안전하다.)
+        const q = query(collection(db, 'stories'), orderBy('order', 'desc'));
+        const maxSnap = await getDocs(q);
+        base = maxSnap.empty ? 0 : maxSnap.docs[0].data().order;
+      }
+      const nextOrder = base + 1;
+      tx.set(counterRef, { value: nextOrder });
+      tx.set(newDocRef, { ...data, order: nextOrder, createdAt: serverTimestamp() });
+      return nextOrder;
+    });
+    return order;
+  }
+
+  // 방송이 이미 진행 중일 때 도착한 사연은 이번 방송 큐에 섞이지 않으므로,
+  // 관리 화면에서 기본적으로 '보류(체크 해제)' 상태로 보이게 한다.
+  async function isBroadcastLive() {
+    try {
+      const snap = await getDoc(doc(db, 'status', 'broadcast'));
+      return snap.exists() && snap.data().isPlaying === true;
+    } catch (e) {
+      return false;
+    }
   }
 
   window.submitStory = async function() {
@@ -777,10 +807,10 @@
     ]);
 
     try {
-      const order = await withTimeout(getNextOrder(), 15000);
-      await withTimeout(addDoc(collection(db, 'stories'), {
+      const live = await withTimeout(isBroadcastLive(), 15000);
+      const order = await withTimeout(addStoryAtomic({
         name, story, songTitle, artist, ytUrl,
-        order, played: false, createdAt: serverTimestamp()
+        played: false, hidden: live
       }), 15000);
 
       document.getElementById('mainForm').style.display = 'none';
