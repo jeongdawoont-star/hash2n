@@ -32,6 +32,15 @@ export const RECORDS = [
   // ▼ 여기에 새 기록을 붙여넣으세요 (최신 항목을 맨 위에) ▼
 
   {
+    title: "스윙 오버레이 · 골프 연습 도구",
+    desc: "프로 스윙 비디오와 내 실시간 웹캠/영상을 투명 오버레이로 겹쳐서 비교 분석하는 도구다.\n미세 위치/비율 조절, 프레임 단위 구간 트림 재생 및 스윙 루틴 저장을 지원한다.",
+    tags: "golf, swing, sports, video, overlay, analysis",
+    category: "class-tools",
+    link: "./vibe-apps/golf-swing-trainer.html",
+    image: "img/golf-swing-trainer.png",
+  },
+
+  {
     title: "수박깨기",
     desc: "여름에 수박깨는 미니게임앱이다.\n눈감고 하면 진동으로 위치를 찾을 수 있고, 사운드플레이도 가능하다.",
     tags: "game, summer, sound, vibration",

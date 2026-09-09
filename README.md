@@ -9,6 +9,7 @@
 주요 페이지
 
 - 활동 트래커: https://jeongdawoont-star.github.io/hash2n/score_tracker/
+- 스윙 오버레이 · 골프 연습 도구: https://jeongdawoont-star.github.io/hash2n/vibe-apps/golf-swing-trainer.html
 - 주간학습 및 알림장 자동화: https://jeongdawoont-star.github.io/hash2n/vibe-apps/weekly-notice-automation.html
 - 받아쓰기 Studio: https://jeongdawoont-star.github.io/hash2n/vibe-apps/dictation-studio.html
 - 사회 공개수업 대본: https://jeongdawoont-star.github.io/hash2n/vibe-apps/social-open-class-script.html
