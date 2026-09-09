@@ -28,13 +28,31 @@
   .titlebar .hint{font-size:10.5px;color:var(--text-dim);}
 
   .stage-wrap{position:relative;width:100%;border-radius:var(--radius);overflow:hidden;
-    background:#000;border:1px solid var(--line);}
-  .stage{position:relative;width:100%;aspect-ratio:9/16;max-height:38dvh;background:#050a07;
+    background:#000;border:1px solid var(--line);transition:all 0.2s ease;}
+  .stage{position:relative;width:100%;aspect-ratio:9/16;max-height:52dvh;background:#050a07;
     overflow:hidden;display:flex;align-items:center;justify-content:center;margin:0 auto;}
-  .stage.wide{aspect-ratio:16/9;max-height:32dvh;}
+  .stage.wide{aspect-ratio:16/9;max-height:42dvh;}
   .stage video.ref{width:100%;height:100%;object-fit:contain;background:#000;}
   .placeholder{color:var(--text-dim);font-size:12.5px;text-align:center;padding:16px;line-height:1.6;}
   .placeholder b{color:var(--sand);}
+
+  /* Entire screen / Fullscreen mode */
+  .stage-wrap.is-fullscreen {
+    position: fixed !important;
+    top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
+    width: 100vw !important; height: 100dvh !important; max-height: 100dvh !important;
+    z-index: 99999 !important; border-radius: 0 !important; border: none !important;
+    display: flex !important; flex-direction: column !important; background: #000 !important;
+  }
+  .stage-wrap.is-fullscreen .stage {
+    flex: 1 1 auto !important; height: 100% !important; max-height: 100% !important;
+    aspect-ratio: auto !important;
+  }
+  .stage-wrap.is-fullscreen .stage-toolbar {
+    background: rgba(14,23,18,0.95);
+    backdrop-filter: blur(10px);
+    padding: 10px 12px calc(env(safe-area-inset-bottom) + 8px);
+  }
 
   .overlay-box{position:absolute;top:0;left:0;touch-action:none;cursor:grab;
     border:1.5px dashed rgba(155,217,76,.55);border-radius:6px;}
@@ -183,6 +201,7 @@
         <button class="icon-btn" id="btnPlayPause"><span class="ic">▶</span>재생</button>
         <button class="icon-btn" id="btnLoop"><span class="ic">🔁</span>구간반복</button>
         <button class="icon-btn" id="btnMirror"><span class="ic">🪞</span>좌우반전</button>
+        <button class="icon-btn" id="btnFullscreen"><span class="ic">⛶</span>전체화면</button>
       </div>
     </div>
   </div>
@@ -364,6 +383,8 @@
   const btnPlayPause = document.getElementById('btnPlayPause');
   const btnLoop = document.getElementById('btnLoop');
   const btnMirror = document.getElementById('btnMirror');
+  const btnFullscreen = document.getElementById('btnFullscreen');
+  const stageWrap = document.querySelector('.stage-wrap');
   const startPracticeBtn = document.getElementById('startPracticeBtn');
 
   const presetName = document.getElementById('presetName');
@@ -478,7 +499,7 @@
       };
       generateThumbnails(val);
     } else {
-      alert('인스타그램/유튜브 링크는 브라우저에서 바로 열 수 없습니다.\n영상을 휴대폰에 저장한 뒤 "파일 선택"으로 불러와 주세요.');
+      alert('인스타그램/유튜브 링크는 브라우저에서 바로 열 수 없습니다.\\n영상을 휴대폰에 저장한 뒤 "파일 선택"으로 불러와 주세요.');
     }
   });
 
@@ -592,6 +613,29 @@
     mirrored = !mirrored;
     btnMirror.classList.toggle('active', mirrored);
     applyOverlayTransform();
+  });
+
+  // ================= Fullscreen =================
+  function toggleFullscreen(){
+    const isFS = stageWrap.classList.toggle('is-fullscreen');
+    btnFullscreen.classList.toggle('active', isFS);
+    if(isFS){
+      btnFullscreen.innerHTML = '<span class="ic">🗗</span>축소';
+      if(stageWrap.requestFullscreen){ stageWrap.requestFullscreen().catch(()=>{}); }
+    } else {
+      btnFullscreen.innerHTML = '<span class="ic">⛶</span>전체화면';
+      if(document.fullscreenElement && document.exitFullscreen){ document.exitFullscreen().catch(()=>{}); }
+    }
+    setTimeout(applyOverlayTransform, 100);
+  }
+  btnFullscreen.addEventListener('click', toggleFullscreen);
+  document.addEventListener('fullscreenchange', ()=>{
+    if(!document.fullscreenElement && stageWrap.classList.contains('is-fullscreen')){
+      stageWrap.classList.remove('is-fullscreen');
+      btnFullscreen.classList.remove('active');
+      btnFullscreen.innerHTML = '<span class="ic">⛶</span>전체화면';
+      setTimeout(applyOverlayTransform, 100);
+    }
   });
 
   // ================= Camera (robust error handling) =================
