@@ -32,6 +32,15 @@ export const RECORDS = [
   // ▼ 여기에 새 기록을 붙여넣으세요 (최신 항목을 맨 위에) ▼
 
   {
+    title: "영조를 설득하라",
+    desc: "조선 역사 속 임오화변(1762)을 소재로 한 설득 시뮬레이션이다.\n어린 세손이 되어 뒤주에 갇힌 아버지 사도세자를 살려달라고 영조를 설득해야 한다.\nGemini AI가 실시간으로 영조 역할과 채점·코칭·음성을 만들어준다. 무료 Gemini API 키만 있으면 바로 플레이 가능.",
+    tags: "history, joseon, persuasion, AI, gemini, simulation, korean-history",
+    category: "games",
+    link: "./vibe-apps/yeongjo-1762.html",
+    image: "img/yeongjo-1762.jpg",
+  },
+
+  {
     title: "스윙 오버레이 · 골프 연습 도구",
     desc: "프로 스윙 비디오와 내 실시간 웹캠/영상을 투명 오버레이로 겹쳐서 비교 분석하는 도구다.\n미세 위치/비율 조절, 프레임 단위 구간 트림 재생 및 스윙 루틴 저장을 지원한다.",
     tags: "golf, swing, sports, video, overlay, analysis",
