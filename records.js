@@ -37,7 +37,7 @@ export const RECORDS = [
     tags: "history, joseon, persuasion, AI, gemini, simulation, korean-history",
     category: "games",
     link: "./vibe-apps/yeongjo-1762.html",
-    image: "img/yeongjo-1762.jpg",
+    image: "img-re/yeongjo-1762.avif",
   },
 
   {
@@ -46,7 +46,7 @@ export const RECORDS = [
     tags: "golf, swing, sports, video, overlay, analysis",
     category: "class-tools",
     link: "./vibe-apps/golf-swing-trainer.html",
-    image: "img/golf-swing-trainer.png",
+    image: "img-re/golf-swing-trainer.avif",
   },
 
   {
