@@ -391,6 +391,11 @@
       height: 28% !important;
       min-height: 90px;
     }
+    /* 세로 공간이 너무 좁아지면 cover가 인물 상단(익선관)을 잘라내므로,
+       이 구간에서는 전체 프레임이 항상 보이도록 letterbox 처리 */
+    .stage-visual video, .stage-visual img {
+      object-fit: contain;
+    }
     .subtitle-bar {
       padding: 0.6em 0.9em;
     }
