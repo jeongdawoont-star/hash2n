@@ -41,9 +41,9 @@ export const RECORDS = [
   },
 
   {
-    title: "스윙 오버레이 · 골프 연습 도구",
-    desc: "프로 스윙 비디오와 내 실시간 웹캠/영상을 투명 오버레이로 겹쳐서 비교 분석하는 도구다.\n미세 위치/비율 조절, 프레임 단위 구간 트림 재생 및 스윙 루틴 저장을 지원한다.",
-    tags: "golf, swing, sports, video, overlay, analysis",
+    title: "영상 연습 오버레이 · 동작 연습 도구",
+    desc: "기준 영상과 내 웹캠을 오버레이 또는 좌우/상하 분할로 비교하는 동작 연습 도구다.\n유튜브·인스타 주소는 재생+확대만, 파일로 불러오면 구간반복·배속·루틴저장까지 지원해 골프·댄스 등에 두루 쓴다.",
+    tags: "video, overlay, split-screen, golf, dance, practice, analysis",
     category: "class-tools",
     link: "./vibe-apps/golf-swing-trainer.html",
     image: "img-re/golf-swing-trainer.avif",

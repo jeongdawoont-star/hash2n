@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>스윙 오버레이 · 골프 연습 도구</title>
+<title>영상 오버레이 · 동작 연습 도구</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Oswald:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -54,11 +54,41 @@
     padding: 10px 12px calc(env(safe-area-inset-bottom) + 8px);
   }
 
-  .overlay-box{position:absolute;top:0;left:0;touch-action:none;cursor:grab;
+  .overlay-box{position:absolute;top:0;left:0;touch-action:none;cursor:grab;z-index:10;
     border:1.5px dashed rgba(155,217,76,.55);border-radius:6px;}
   .overlay-box video{width:100%;height:100%;display:block;object-fit:cover;border-radius:5px;}
   .overlay-box .tag{position:absolute;top:-18px;left:0;font-size:9.5px;color:var(--fairway);
     font-family:'Oswald',sans-serif;letter-spacing:.04em;white-space:nowrap;}
+
+  /* Zoom / pan layer for the main video or embedded player */
+  .zoom-layer{position:absolute;inset:0;width:100%;height:100%;z-index:1;
+    transform-origin:center center;touch-action:none;}
+  #camVideo{width:100%;height:100%;display:block;object-fit:cover;}
+  .zoom-layer video, .zoom-layer iframe{width:100%;height:100%;display:block;border:none;
+    background:#000;object-fit:contain;}
+  .zoom-reset-btn{position:absolute;top:8px;right:8px;z-index:15;display:none;
+    align-items:center;gap:4px;background:rgba(14,23,18,.85);color:var(--fairway);
+    border:1px solid var(--fairway-dim);border-radius:20px;font-size:11px;
+    padding:6px 10px;font-family:'Oswald',sans-serif;}
+
+  /* Split screen (side-by-side / top-bottom) */
+  .split-container{position:absolute;inset:0;z-index:5;display:none;flex-direction:row;}
+  .split-container.active{display:flex;}
+  .split-container.split-y{flex-direction:column;}
+  .split-pane{position:relative;overflow:hidden;background:#050a07;min-width:0;min-height:0;}
+  .split-pane .zoom-layer{position:absolute;}
+  .split-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    text-align:center;font-size:11.5px;color:var(--text-dim);line-height:1.6;padding:10px;
+    z-index:2;background:#050a07;}
+  .split-divider{flex:0 0 6px;background:var(--line);position:relative;touch-action:none;
+    cursor:col-resize;}
+  .split-container.split-y .split-divider{cursor:row-resize;}
+  .split-handle{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+    width:26px;height:26px;border-radius:50%;background:var(--fairway);
+    display:flex;align-items:center;justify-content:center;font-size:12px;color:#0e1712;
+    box-shadow:0 0 0 3px rgba(14,23,18,.85);}
+
+  .card.disabled-embed{opacity:.4;pointer-events:none;}
 
   .stage-toolbar{display:flex;gap:5px;padding:6px;background:var(--bg-panel);
     border-top:1px solid var(--line);}
@@ -184,22 +214,34 @@
 
   <div class="stage-area">
     <div class="titlebar">
-      <h1>⛳ 스윙 오버레이</h1>
+      <h1>🎥 영상 연습 오버레이</h1>
       <span class="hint" id="fileStatus">영상 없음</span>
     </div>
     <div class="stage-wrap">
       <div class="stage" id="stage">
-        <div class="placeholder" id="placeholder">'영상' 탭에서<br><b>기준 스윙 영상</b>을 불러오면<br>여기에 표시됩니다</div>
-        <video class="ref" id="refVideo" playsinline webkit-playsinline muted style="display:none"></video>
+        <div class="placeholder" id="placeholder">'영상' 탭에서<br><b>기준 영상</b>을 불러오면<br>여기에 표시됩니다</div>
+        <div class="zoom-layer" id="zoomLayer">
+          <video class="ref" id="refVideo" playsinline webkit-playsinline muted style="display:none"></video>
+          <iframe class="embed-frame" id="embedFrame" style="display:none;" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+        </div>
+        <button class="zoom-reset-btn" id="zoomResetBtn"><span class="ic">↺</span>확대 초기화</button>
         <div class="overlay-box" id="overlayBox" style="display:none;">
           <div class="tag">내 카메라</div>
           <video id="camVideo" playsinline webkit-playsinline muted autoplay></video>
+        </div>
+        <div class="split-container" id="splitContainer">
+          <div class="split-pane" id="splitPaneA"></div>
+          <div class="split-divider" id="splitDivider"><span class="split-handle">⇔</span></div>
+          <div class="split-pane" id="splitPaneB">
+            <div class="split-empty" id="splitEmptyCam">'카메라' 탭에서<br>카메라를 켜면<br>여기에 표시됩니다</div>
+          </div>
         </div>
         <div class="countdown-overlay" id="countdown">3</div>
       </div>
       <div class="stage-toolbar">
         <button class="icon-btn" id="btnPlayPause"><span class="ic">▶</span>재생</button>
         <button class="icon-btn" id="btnLoop"><span class="ic">🔁</span>구간반복</button>
+        <button class="icon-btn" id="btnScreenMode"><span class="ic">🖼️</span>오버레이</button>
         <button class="icon-btn" id="btnMirror"><span class="ic">🪞</span>좌우반전</button>
         <button class="icon-btn" id="btnFullscreen"><span class="ic">⛶</span>전체화면</button>
       </div>
@@ -216,12 +258,13 @@
           <input type="text" id="urlInput" placeholder="영상 주소 붙여넣기">
           <button class="btn ghost small" id="urlLoadBtn">불러오기</button>
         </div>
-        <div class="note">인스타·유튜브는 저작권 보호 때문에 브라우저에서 직접 다운로드가 안 됩니다. 앱의 저장·공유 기능으로 휴대폰에 먼저 저장한 뒤, 아래 <b>파일 선택</b>으로 불러와 주세요. (mp4 직접 링크는 바로 재생됩니다)</div>
+        <div class="note">인스타·유튜브는 저작권 보호 때문에 다운로드는 안 되지만, 주소를 붙여넣으면 <b>재생 화면</b>이 바로 열려서 보고 싶은 부분을 확대·이동해서 볼 수 있어요. 구간반복·속도조절·녹화 같은 편집 기능까지 쓰려면, 휴대폰에 저장한 뒤 아래 <b>파일 선택</b>으로 불러와 주세요. (mp4 직접 링크는 모든 기능이 바로 됩니다)</div>
+        <div class="note" id="embedNote" style="display:none;">지금은 <b>재생 전용 화면</b>이에요. 화면을 두 손가락으로 오므리고 벌리면 확대, 한 손가락으로 드래그하면 이동, 더블탭하면 원래대로 돌아와요. 구간반복·속도조절·녹화는 이 모드에서 사용할 수 없어요.</div>
       </div>
       <div class="card">
         <h2>파일에서 불러오기</h2>
         <div class="file-drop">
-          📂 <label for="fileInput">파일 선택</label>으로<br>휴대폰에 저장된 스윙 영상 불러오기
+          📂 <label for="fileInput">파일 선택</label>으로<br>휴대폰에 저장된 연습 영상 불러오기
           <input type="file" id="fileInput" accept="video/*">
         </div>
         <div class="file-name" id="fileNameLabel"></div>
@@ -237,7 +280,7 @@
 
     <!-- TAB: 구간·속도 -->
     <section class="tab-panel" data-tab="trim">
-      <div class="card">
+      <div class="card" id="trimCard">
         <h2>구간 선택 · 반복</h2>
         <div class="row-label"><span>선택 구간</span><b id="trimLabel">0.0s – 0.0s</b></div>
         <div class="trim-track" id="trimTrack">
@@ -252,7 +295,7 @@
           <label class="switch"><input type="checkbox" id="loopToggle" checked><span class="knob"></span></label>
         </div>
       </div>
-      <div class="card">
+      <div class="card" id="speedCard">
         <h2>재생 속도</h2>
         <div class="row-label"><span>슬로우 모션 ↔ 배속</span><b id="speedLabel">1.00x</b></div>
         <input type="range" id="speedSlider" min="0.1" max="2" value="1" step="0.05">
@@ -282,26 +325,26 @@
           <div class="row-label"><span>크기</span><b id="scaleLabel">100%</b></div>
           <input type="range" id="scaleSlider" min="40" max="220" value="100" step="1">
         </div>
-        <div class="note">화면에서 <b>한 손가락</b>으로 드래그하면 위치 이동, <b>두 손가락</b>으로 오므리고 벌리면 크기 조절이 됩니다.</div>
+        <div class="note">화면에서 <b>한 손가락</b>으로 드래그하면 위치 이동, <b>두 손가락</b>으로 오므리고 벌리면 크기 조절이 됩니다. 위 스테이지 툴바의 <b>오버레이/좌우분할/상하분할</b> 버튼을 누르면 화면 겹치기 대신 나란히 비교하는 화면으로도 바꿀 수 있어요 — 분할 화면에서는 가운데 구분선을 드래그해서 비율을 조절하고, 더블탭하면 1:1로 돌아와요.</div>
       </div>
     </section>
 
     <!-- TAB: 연습·루틴 -->
     <section class="tab-panel" data-tab="practice">
       <div class="card">
-        <h2>스윙 따라하기 연습</h2>
+        <h2>동작 따라하기 연습</h2>
         <p style="font-size:12px;color:var(--text-dim);line-height:1.6;margin:0 0 10px;">
-          카운트다운 후 선택한 구간이 반복 재생됩니다. 오버레이에 맞춰 스윙을 따라해 보세요.
+          카운트다운 후 선택한 구간이 반복 재생됩니다. 오버레이 또는 분할화면에 맞춰 동작을 따라해 보세요.
         </p>
         <button class="btn primary" id="startPracticeBtn" style="width:100%;">3-2-1 카운트다운 후 시작</button>
       </div>
       <div class="card">
         <h2>연습 루틴 프리셋</h2>
         <p style="font-size:11.5px;color:var(--text-dim);line-height:1.6;margin:0 0 10px;">
-          현재 구간·속도·카메라 위치/크기·투명도 설정을 이름을 붙여 저장해두고 다음에 바로 불러올 수 있어요. (영상 파일 자체는 저장되지 않으니, 불러올 때 같은 영상을 다시 선택해 주세요)
+          현재 구간·속도·화면모드·카메라 위치/크기·투명도 설정을 이름을 붙여 저장해두고 다음에 바로 불러올 수 있어요. (영상 파일 자체는 저장되지 않으니, 불러올 때 같은 영상을 다시 선택해 주세요)
         </p>
         <div class="url-row" style="margin-bottom:12px;">
-          <input type="text" id="presetName" placeholder="루틴 이름 (예: 드라이버 백스윙)">
+          <input type="text" id="presetName" placeholder="루틴 이름 (예: 턴 동작 연습)">
           <button class="btn primary small" id="savePresetBtn">저장</button>
         </div>
         <div class="preset-list" id="presetList"></div>
@@ -355,6 +398,20 @@
   const countdownEl = document.getElementById('countdown');
   const fileStatus = document.getElementById('fileStatus');
 
+  const zoomLayer = document.getElementById('zoomLayer');
+  const embedFrame = document.getElementById('embedFrame');
+  const zoomResetBtn = document.getElementById('zoomResetBtn');
+  const embedNote = document.getElementById('embedNote');
+  const trimCard = document.getElementById('trimCard');
+  const speedCard = document.getElementById('speedCard');
+
+  const btnScreenMode = document.getElementById('btnScreenMode');
+  const splitContainer = document.getElementById('splitContainer');
+  const splitPaneA = document.getElementById('splitPaneA');
+  const splitPaneB = document.getElementById('splitPaneB');
+  const splitDivider = document.getElementById('splitDivider');
+  const splitEmptyCam = document.getElementById('splitEmptyCam');
+
   const urlInput = document.getElementById('urlInput');
   const urlLoadBtn = document.getElementById('urlLoadBtn');
   const fileInput = document.getElementById('fileInput');
@@ -401,9 +458,21 @@
   let mirrored = false;
   let camStream = null;
   let currentFileName = '';
+  let usingEmbed = false;
 
   // overlay position/size state (percent of stage)
   let ov = { xPct:70, yPct:75, scalePct:100 };
+
+  // screen mode: 'overlay' | 'split-x' (side by side) | 'split-y' (top/bottom)
+  const screenModes = ['overlay','split-x','split-y'];
+  const screenModeMeta = { overlay:['🖼️','오버레이'], 'split-x':['◫','좌우분할'], 'split-y':['⬓','상하분할'] };
+  let screenModeIdx = 0;
+  let screenMode = screenModes[0];
+  let splitPct = 50; // 1:1 default
+
+  // zoom/pan state, expressed as scale + percent-of-own-size translate
+  // (percent units keep the exact same crop when the stage changes size, e.g. entering fullscreen)
+  let zoom = { scale:1, tx:0, ty:0 };
 
   // ================= Overlay transform =================
   function applyOverlayTransform(){
@@ -421,6 +490,126 @@
     scaleLabel.textContent = Math.round(ov.scalePct)+'%';
   }
   window.addEventListener('resize', applyOverlayTransform);
+
+  // ================= Zoom / pan (pinch, drag, double-tap reset) =================
+  function applyZoom(){
+    zoomLayer.style.transform = `scale(${zoom.scale}) translate(${zoom.tx}%, ${zoom.ty}%)`;
+    zoomResetBtn.style.display = zoom.scale > 1.01 ? 'flex' : 'none';
+  }
+  function clampZoomPan(){
+    const maxOff = zoom.scale > 1 ? (zoom.scale-1)*50/zoom.scale : 0;
+    zoom.tx = Math.min(maxOff, Math.max(-maxOff, zoom.tx));
+    zoom.ty = Math.min(maxOff, Math.max(-maxOff, zoom.ty));
+  }
+  function resetZoom(){ zoom = {scale:1, tx:0, ty:0}; applyZoom(); }
+  zoomResetBtn.addEventListener('click', resetZoom);
+
+  const zoomPointers = new Map();
+  let zoomGesture = null;
+  let lastZoomTap = 0;
+  zoomLayer.addEventListener('pointerdown', e=>{
+    zoomLayer.setPointerCapture(e.pointerId);
+    zoomPointers.set(e.pointerId, {x:e.clientX, y:e.clientY});
+    if(zoomPointers.size === 1){
+      zoomGesture = { mode:'pan', startClient:{x:e.clientX,y:e.clientY}, startT:{x:zoom.tx,y:zoom.ty} };
+    } else if(zoomPointers.size === 2){
+      zoomGesture = { mode:'pinch', dist:distance(zoomPointers), scale:zoom.scale, startT:{x:zoom.tx,y:zoom.ty} };
+    }
+  });
+  zoomLayer.addEventListener('pointermove', e=>{
+    if(!zoomPointers.has(e.pointerId)) return;
+    zoomPointers.set(e.pointerId, {x:e.clientX, y:e.clientY});
+    const rect = zoomLayer.getBoundingClientRect();
+    if(zoomGesture && zoomGesture.mode==='pan' && zoomPointers.size===1){
+      if(zoom.scale <= 1.01) return;
+      const dx = e.clientX - zoomGesture.startClient.x;
+      const dy = e.clientY - zoomGesture.startClient.y;
+      zoom.tx = zoomGesture.startT.x + (dx/rect.width)*100/zoom.scale;
+      zoom.ty = zoomGesture.startT.y + (dy/rect.height)*100/zoom.scale;
+      clampZoomPan();
+      applyZoom();
+    } else if(zoomGesture && zoomGesture.mode==='pinch' && zoomPointers.size===2){
+      const newDist = distance(zoomPointers);
+      const factor = newDist / (zoomGesture.dist || 1);
+      zoom.scale = Math.min(4, Math.max(1, zoomGesture.scale * factor));
+      clampZoomPan();
+      applyZoom();
+    }
+  });
+  function endZoomPointer(e){
+    zoomPointers.delete(e.pointerId);
+    if(zoomPointers.size === 1){
+      const [,pt] = Array.from(zoomPointers.entries())[0];
+      zoomGesture = { mode:'pan', startClient:{x:pt.x,y:pt.y}, startT:{x:zoom.tx,y:zoom.ty} };
+    } else if(zoomPointers.size === 0){
+      zoomGesture = null;
+      const now = Date.now();
+      if(now - lastZoomTap < 300) resetZoom();
+      lastZoomTap = now;
+    }
+  }
+  zoomLayer.addEventListener('pointerup', endZoomPointer);
+  zoomLayer.addEventListener('pointercancel', endZoomPointer);
+
+  // ================= Screen mode: overlay vs split-screen =================
+  function layoutSplit(){
+    splitPaneA.style.flexBasis = splitPct+'%';
+    splitPaneB.style.flexBasis = (100-splitPct)+'%';
+  }
+  function applyScreenMode(){
+    if(screenMode === 'overlay'){
+      splitContainer.classList.remove('active','split-y');
+      stage.insertBefore(zoomLayer, overlayBox);
+      if(camVideo.parentElement !== overlayBox) overlayBox.appendChild(camVideo);
+      overlayBox.style.display = camStream ? 'block' : 'none';
+      applyOverlayTransform();
+    } else {
+      splitContainer.classList.add('active');
+      splitContainer.classList.toggle('split-y', screenMode === 'split-y');
+      splitPaneA.appendChild(zoomLayer);
+      if(camStream){
+        splitPaneB.insertBefore(camVideo, splitEmptyCam);
+        splitEmptyCam.style.display = 'none';
+      } else {
+        splitEmptyCam.style.display = 'flex';
+      }
+      overlayBox.style.display = 'none';
+      layoutSplit();
+    }
+  }
+  btnScreenMode.addEventListener('click', ()=>{
+    screenModeIdx = (screenModeIdx+1) % screenModes.length;
+    screenMode = screenModes[screenModeIdx];
+    const [ic,label] = screenModeMeta[screenMode];
+    btnScreenMode.innerHTML = `<span class="ic">${ic}</span>${label}`;
+    applyScreenMode();
+  });
+
+  function bindDivider(){
+    let lastDividerTap = 0;
+    splitDivider.addEventListener('pointerdown', e=>{
+      splitDivider.setPointerCapture(e.pointerId);
+      const rect = splitContainer.getBoundingClientRect();
+      function onMove(ev){
+        const pct = screenMode === 'split-y'
+          ? ((ev.clientY - rect.top) / rect.height) * 100
+          : ((ev.clientX - rect.left) / rect.width) * 100;
+        splitPct = Math.min(85, Math.max(15, pct));
+        layoutSplit();
+      }
+      function onUp(){
+        splitDivider.removeEventListener('pointermove', onMove);
+        splitDivider.removeEventListener('pointerup', onUp);
+        const now = Date.now();
+        if(now - lastDividerTap < 300){ splitPct = 50; layoutSplit(); }
+        lastDividerTap = now;
+      }
+      splitDivider.addEventListener('pointermove', onMove);
+      splitDivider.addEventListener('pointerup', onUp);
+    });
+    splitDivider.addEventListener('dblclick', ()=>{ splitPct = 50; layoutSplit(); });
+  }
+  bindDivider();
 
   // ================= Thumbnails =================
   function seekTo(video,t){
@@ -458,8 +647,45 @@
     }
   }
 
+  // ================= Embedded playback (YouTube / Instagram: stream-only, no download) =================
+  function youTubeId(url){
+    const m = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([\w-]{11})/);
+    return m ? m[1] : null;
+  }
+  function instagramEmbedSrc(url){
+    const m = url.match(/instagram\.com\/(p|reel|tv)\/([\w-]+)/);
+    return m ? `https://www.instagram.com/${m[1]}/${m[2]}/embed/captioned/` : null;
+  }
+  function setEmbedUIState(active){
+    trimCard.classList.toggle('disabled-embed', active);
+    speedCard.classList.toggle('disabled-embed', active);
+    embedNote.style.display = active ? 'block' : 'none';
+  }
+  function showEmbed(src, label){
+    refVideo.pause();
+    refVideo.removeAttribute('src'); refVideo.load();
+    refVideo.style.display = 'none';
+    usingEmbed = true;
+    duration = 0; inPoint = 0; outPoint = 0;
+    currentFileName = '';
+    embedFrame.src = src;
+    embedFrame.style.display = 'block';
+    placeholder.style.display = 'none';
+    fileStatus.textContent = label;
+    resetZoom();
+    setEmbedUIState(true);
+  }
+  function clearEmbed(){
+    if(!usingEmbed) return;
+    usingEmbed = false;
+    embedFrame.src = '';
+    embedFrame.style.display = 'none';
+    setEmbedUIState(false);
+  }
+
   // ================= Load video =================
   function loadVideoFile(file){
+    clearEmbed();
     const url = URL.createObjectURL(file);
     currentFileName = file.name;
     refVideo.src = url;
@@ -483,6 +709,7 @@
     const val = urlInput.value.trim();
     if(!val) return;
     if(/\.(mp4|webm|mov)(\?.*)?$/i.test(val)){
+      clearEmbed();
       refVideo.crossOrigin = 'anonymous';
       refVideo.src = val;
       refVideo.style.display = 'block';
@@ -498,8 +725,16 @@
         alert('이 주소는 직접 재생할 수 없어요. 파일 선택으로 불러와 주세요.');
       };
       generateThumbnails(val);
+      return;
+    }
+    const yid = youTubeId(val);
+    const igSrc = instagramEmbedSrc(val);
+    if(yid){
+      showEmbed(`https://www.youtube-nocookie.com/embed/${yid}?playsinline=1&modestbranding=1&rel=0`, '유튜브 (재생 전용)');
+    } else if(igSrc){
+      showEmbed(igSrc, '인스타그램 (재생 전용)');
     } else {
-      alert('인스타그램/유튜브 링크는 브라우저에서 바로 열 수 없습니다.\\n영상을 휴대폰에 저장한 뒤 "파일 선택"으로 불러와 주세요.');
+      alert('지원하지 않는 주소 형식이에요.\\n유튜브·인스타그램 링크는 재생 전용으로 열리고,\\nmp4 직접 링크나 "파일 선택"은 모든 기능을 쓸 수 있어요.');
     }
   });
 
@@ -675,7 +910,12 @@
       }
     }
     camVideo.srcObject = camStream;
-    overlayBox.style.display = 'block';
+    if(screenMode === 'overlay'){
+      overlayBox.style.display = 'block';
+    } else {
+      splitPaneB.insertBefore(camVideo, splitEmptyCam);
+      splitEmptyCam.style.display = 'none';
+    }
     camStartBtn.disabled = true;
     camStopBtn.disabled = false;
     camVideo.onloadedmetadata = applyOverlayTransform;
@@ -683,7 +923,11 @@
   camStartBtn.addEventListener('click', startCamera);
   camStopBtn.addEventListener('click', ()=>{
     if(camStream){ camStream.getTracks().forEach(t=>t.stop()); camStream=null; }
-    overlayBox.style.display = 'none';
+    if(screenMode === 'overlay'){
+      overlayBox.style.display = 'none';
+    } else {
+      splitEmptyCam.style.display = 'flex';
+    }
     camStartBtn.disabled = false;
     camStopBtn.disabled = true;
   });
@@ -757,6 +1001,7 @@
 
   // ================= Practice countdown =================
   startPracticeBtn.addEventListener('click', ()=>{
+    if(usingEmbed){ alert('유튜브/인스타그램 재생에서는 자동 구간반복 연습을 쓸 수 없어요. 화면을 확대해서 원하는 동작을 크게 보며 따라해 보세요.'); return; }
     if(!refVideo.src){ alert('먼저 기준 영상을 불러와 주세요.'); return; }
     document.querySelector('.tabbar button[data-tab="video"]'); // no-op ref
     let n = 3;
@@ -879,6 +1124,7 @@
   function stopCanvasLoop(){ if(rafId) cancelAnimationFrame(rafId); }
 
   recBtn.addEventListener('click', ()=>{
+    if(usingEmbed){ alert('유튜브/인스타그램 재생 화면은 저작권 보호로 녹화할 수 없어요. 카메라 화면만 녹화하려면 파일에서 불러온 영상으로 진행해 주세요.'); return; }
     if(!refVideo.src){ alert('먼저 기준 영상을 불러와 주세요.'); return; }
     if(!mediaRecorder || mediaRecorder.state === 'inactive'){
       startCanvasLoop();
@@ -932,6 +1178,7 @@
   // init
   layoutTrim();
   applyOverlayTransform();
+  applyScreenMode();
 })();
 </script>
 </body>
