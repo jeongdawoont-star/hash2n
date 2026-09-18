@@ -32,6 +32,15 @@ export const RECORDS = [
   // ▼ 여기에 새 기록을 붙여넣으세요 (최신 항목을 맨 위에) ▼
 
   {
+    title: "철학자 월드컵",
+    desc: "동서양 36명의 철학자들이 삶과 사회의 근본적 난제에 대해 벌이는 인공지능 배틀 시뮬레이션이다.\nAI(Gemini / Claude)가 각 철학자의 사상과 고유한 어조를 재현하여 난제에 대한 대립 토론을 진행하며 36강 토너먼트로 최종 승자를 가린다.",
+    tags: "philosophy, tournament, AI, gemini, claude, debate, education",
+    category: "games",
+    link: "./vibe-apps/philosopher-worldcup.html",
+    image: "img-re/philosopher-worldcup.avif",
+  },
+
+  {
     title: "영조를 설득하라",
     desc: "조선 역사 속 임오화변(1762)을 소재로 한 설득 시뮬레이션이다.\n어린 세손이 되어 뒤주에 갇힌 아버지 사도세자를 살려달라고 영조를 설득해야 한다.\nGemini AI가 실시간으로 영조 역할과 채점·코칭·음성을 만들어준다. 무료 Gemini API 키만 있으면 바로 플레이 가능.",
     tags: "history, joseon, persuasion, AI, gemini, simulation, korean-history",
