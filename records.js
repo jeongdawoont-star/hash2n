@@ -32,6 +32,15 @@ export const RECORDS = [
   // ▼ 여기에 새 기록을 붙여넣으세요 (최신 항목을 맨 위에) ▼
 
   {
+    title: "현대로 간 정약용을 키워라",
+    desc: "조선 시대 대표 실학자 다산 정약용 선생이 현대 사회로 타임슬립하여 펼쳐지는 육성 시뮬레이션 게임입니다.\n학업, 건강, 자금 관리, 현대 기술 습득 등 다양한 활동으로 정약용 선생을 현대의 훌륭한 인재로 키워보세요.",
+    tags: "history, simulation, pixel, game, dasan, jeongyagyong",
+    category: "games",
+    link: "./vibe-apps/dasan-game.html",
+    image: "img-re/dasan-game.avif",
+  },
+
+  {
     title: "철학자 월드컵",
     desc: "동서양 36명의 철학자들이 삶과 사회의 근본적 난제에 대해 벌이는 인공지능 배틀 시뮬레이션이다.\nAI(Gemini / Claude)가 각 철학자의 사상과 고유한 어조를 재현하여 난제에 대한 대립 토론을 진행하며 36강 토너먼트로 최종 승자를 가린다.",
     tags: "philosophy, tournament, AI, gemini, claude, debate, education",
