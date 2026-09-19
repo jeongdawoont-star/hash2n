@@ -71,6 +71,7 @@ html,body{
   outline:2px solid var(--paper-dark);
   outline-offset:-8px;
   filter:saturate(0.82) contrast(0.97);
+  transform-origin:center center;
 }
 #frame::after{
   content:'';
@@ -78,6 +79,18 @@ html,body{
   background:repeating-linear-gradient(0deg, rgba(0,0,0,0.45) 0 1px, transparent 1px 3px);
   mix-blend-mode:multiply; opacity:0.06;
 }
+
+/* ===== Toolbar (fullscreen / sound) ===== */
+#toolbar{ position:absolute; top:10px; right:10px; z-index:1000; display:flex; gap:8px; }
+.icon-btn{
+  width:38px; height:38px; display:flex; align-items:center; justify-content:center;
+  font-size:17px; line-height:1; cursor:pointer; border:2px solid var(--ink);
+  background:rgba(255,250,232,0.7); color:var(--ink); box-shadow:2px 2px 0 rgba(0,0,0,0.35);
+  border-radius:0; font-family:'Galmuri9', sans-serif;
+  transition:transform .06s steps(3), box-shadow .06s steps(3);
+}
+.icon-btn:active{ transform:translate(2px,2px); box-shadow:0 0 0 rgba(0,0,0,0.35); }
+.icon-btn.off{ opacity:0.5; }
 
 /* ===== Sidebar ===== */
 #sidebar{
@@ -380,6 +393,11 @@ p.lede{ font-family:'Galmuri11', sans-serif; color:var(--ink-soft); font-size:17
 <body>
 <div id="viewport"><div id="frame">
 
+  <div id="toolbar">
+    <button id="mute-btn" class="icon-btn" title="배경음악 끄기/켜기" aria-label="배경음악 켜기/끄기" onclick="Sound.toggleMusic()">🔊</button>
+    <button id="fullscreen-btn" class="icon-btn" title="전체화면" aria-label="전체화면 전환" onclick="UI.toggleFullscreen()">⛶</button>
+  </div>
+
   <!-- SIDEBAR -->
   <div id="sidebar">
     <div class="brand">현대로 간 정약용을 키워라</div>
@@ -478,7 +496,9 @@ const CHAPTERS = [
     {q:'채석장에서 캐낸 돌을 성 안까지 실어 날라야 한다. 바퀴 달린 이 수레는?', opts:['가마','유형거','배다리','물시계'], answer:1, stat:'건축'},
     {q:'밧줄을 도르래에 감아 물건을 위로 끌어올리는 이 장치는?', opts:['맷돌','활','녹로','쟁기'], answer:2, stat:'기술'},
     {q:'적을 감시하고 방어하기 위해 성벽에 세운 벽돌 망루의 이름은?', opts:['공심돈','초가정자','성문루','장독대'], answer:0, stat:'건축'},
-    {q:'정약용이 공사 비용과 기간을 줄이기 위해 도입한 방법은?', opts:['사람 수를 무조건 늘림','규격화된 벽돌·자재 표준화','공사를 두 배로 늘림','외국 기술자만 고용'], answer:1, stat:'행정'}
+    {q:'정약용이 공사 비용과 기간을 줄이기 위해 도입한 방법은?', opts:['사람 수를 무조건 늘림','규격화된 벽돌·자재 표준화','공사를 두 배로 늘림','외국 기술자만 고용'], answer:1, stat:'행정'},
+    {q:'정밀한 목판 지도 "대동여지도"를 제작하여 조선의 지도 제작 기술을 한 단계 끌어올린 인물은?', opts:['김정호','정약용','박지원','유형원'], answer:0, stat:'기술'},
+    {q:'"북학의"를 지어 청나라와의 통상, 수레와 선박 이용 확대를 주장한 실학자는?', opts:['박제가','이익','정약전','안정복'], answer:0, stat:'행정'}
   ],
   minigame:'brick',
   outro:'정약용은 화성 축조 현장에서 실력을 인정받았다. 어느덧 시간이 흘러, 그는 이제 직접 기계를 설계하는 발명가로 나서게 되었다.'
@@ -491,7 +511,9 @@ const CHAPTERS = [
     {q:'정조가 수원 화성으로 행차할 때, 한강을 건너기 위해 정약용이 설계한 것은?', opts:['배다리(주교)','돌다리','구름다리','나룻배 한 척'], answer:0, stat:'기술'},
     {q:'거중기가 적은 힘으로 무거운 물체를 들어올릴 수 있었던 핵심 원리는?', opts:['자석의 원리','증기의 원리','도르래(활차)의 원리','바람의 원리'], answer:2, stat:'기술'},
     {q:'거중기 도입으로 화성 축조에서 얻은 실질적 효과는?', opts:['공사비와 인력을 크게 절감','공사 기간이 두 배로 늘어남','성벽 높이가 낮아짐','돌 대신 나무만 사용'], answer:0, stat:'행정'},
-    {q:'정약용이 대표하는 실학(實學) 정신과 가장 가까운 태도는?', opts:['실생활에 도움되는 실용 지식 추구','옛 학문은 무조건 배척','신분에 따라 학문 기회를 차등','이론만 중시하고 실행은 무시'], answer:0, stat:'학력'}
+    {q:'정약용이 대표하는 실학(實學) 정신과 가장 가까운 태도는?', opts:['실생활에 도움되는 실용 지식 추구','옛 학문은 무조건 배척','신분에 따라 학문 기회를 차등','이론만 중시하고 실행은 무시'], answer:0, stat:'학력'},
+    {q:'혼천의를 직접 제작하고 "지구가 돈다"는 지전설(地轉說)을 주장한 실학자는?', opts:['홍대용','유득공','서유구','최한기'], answer:0, stat:'기술'},
+    {q:'"성호사설"이라는 방대한 백과사전식 저술을 남기고 성호학파를 이끈 실학자는?', opts:['이익','박제가','김정호','이덕무'], answer:0, stat:'학력'}
   ],
   minigame:'assembly',
   outro:'뛰어난 기술력으로 이름을 알린 정약용, 이번엔 고을 백성들의 목소리를 직접 듣는 행정가로 부임하게 된다.'
@@ -504,7 +526,9 @@ const CHAPTERS = [
     {q:'정약용이 "수령이 가장 두려워해야 할 것"이라 말한 대상은?', opts:['세금 미납 장부','백성의 원망과 눈물','상급 관리의 시찰','흉년의 날씨'], answer:1, stat:'판단'},
     {q:'목민심서에 따르면, 흉년이 들었을 때 목민관이 가장 먼저 해야 할 일은?', opts:['구휼(굶주린 백성 구제)','세금 추가 징수','관아 잔치 개최','성벽 보수 우선'], answer:0, stat:'행정'},
     {q:'정약용이 강하게 비판한 조선 후기 지방 행정의 병폐는?', opts:['삼정(전정·군정·환곡)의 문란','과도한 백성 복지','지나친 자치권 부여','관리들의 잦은 휴가'], answer:0, stat:'판단'},
-    {q:'목민심서의 정신을 오늘날 행정에 적용한다면 가장 가까운 가치는?', opts:['성과와 무관한 연공서열','투명하고 청렴한 공직 윤리','비공개 행정 원칙','지역 차별적 예산 배분'], answer:1, stat:'행정'}
+    {q:'목민심서의 정신을 오늘날 행정에 적용한다면 가장 가까운 가치는?', opts:['성과와 무관한 연공서열','투명하고 청렴한 공직 윤리','비공개 행정 원칙','지역 차별적 예산 배분'], answer:1, stat:'행정'},
+    {q:'"반계수록"을 지어 신분에 따라 토지를 고르게 나누자는 균전론을 주장한 초기 실학자는?', opts:['유형원','홍대용','정약전','유득공'], answer:0, stat:'행정'},
+    {q:'"양반전"을 지어 무능하고 부패한 양반 계층을 풍자·비판한 실학자는?', opts:['박지원','박제가','이덕무','서유구'], answer:0, stat:'행정'}
   ],
   minigame:'ladder',
   outro:'청렴한 행정으로 신망을 얻은 정약용은, 이번엔 억울한 사건을 가려내는 재판관으로 임명된다.'
@@ -517,7 +541,9 @@ const CHAPTERS = [
     {q:'정약용이 흠흠신서를 저술한 가장 큰 이유는?', opts:['세금을 더 걷기 위해','억울한 죽음과 오판을 막기 위해','과거 시험 대비용으로','포교 활동을 위해'], answer:1, stat:'판단'},
     {q:'정약용이 강조한 재판의 원칙으로 옳은 것은?', opts:['신분이 높으면 무조건 무죄','자백만 있으면 증거는 불필요','신중한 증거 조사와 정황 판단','빠른 판결이 증거보다 중요'], answer:2, stat:'판단'},
     {q:'"흠흠(欽欽)"이라는 이름에는 "삼가고 또 삼가라"는 뜻이 담겨있다. 어떤 자세를 강조하는가?', opts:['빠른 업무 처리 속도','사람의 생명을 다루는 일에 대한 신중함','형벌의 가혹함 강화','법전의 무조건 암기'], answer:1, stat:'학력'},
-    {q:'오늘날 흠흠신서의 정신과 가장 가까운 사법 원칙은?', opts:['유죄 추정의 원칙','여론에 따른 즉결 재판','무죄 추정과 신중한 증거주의','자백 만능주의'], answer:2, stat:'판단'}
+    {q:'오늘날 흠흠신서의 정신과 가장 가까운 사법 원칙은?', opts:['유죄 추정의 원칙','여론에 따른 즉결 재판','무죄 추정과 신중한 증거주의','자백 만능주의'], answer:2, stat:'판단'},
+    {q:'역사적 사실을 엄밀하게 고증하는 태도로 "동사강목"을 저술한 실학자는?', opts:['안정복','유득공','최한기','이익'], answer:0, stat:'판단'},
+    {q:'발해를 우리 역사의 일부로 체계적으로 정리한 역사서 "발해고"를 지은 실학자는?', opts:['유득공','안정복','서유구','홍대용'], answer:0, stat:'학력'}
   ],
   minigame:'gauge',
   outro:'공정한 판결로 이름을 떨친 정약용, 유배지 강진에서 붓을 들어 세상에 남길 책을 쓰기 시작한다.'
@@ -530,7 +556,9 @@ const CHAPTERS = [
     {q:'정약용이 평생 저술한 책은 약 몇 권으로 알려져 있는가?', opts:['약 5권','약 50권','약 500여 권','약 5000권'], answer:2, stat:'집필'},
     {q:'정약용을 포함한 조선 후기 실학자들의 공통된 학문 태도는?', opts:['실증적 자료와 현실 문제 중심 연구','공허한 이론 논쟁 중시','문벌만 따지는 학문 태도','외국 학문의 전면 배척'], answer:0, stat:'학력'},
     {q:'정약용의 호(號)는 무엇인가?', opts:['퇴계','율곡','다산(茶山)','연암'], answer:2, stat:'집필'},
-    {q:'"목민심서", "경세유표", "흠흠신서"를 함께 묶어 무엇이라 부르는가?', opts:['1표 2서','사서삼경','경국대전','조선왕조실록'], answer:0, stat:'집필'}
+    {q:'"목민심서", "경세유표", "흠흠신서"를 함께 묶어 무엇이라 부르는가?', opts:['1표 2서','사서삼경','경국대전','조선왕조실록'], answer:0, stat:'집필'},
+    {q:'청나라를 다녀온 기행문 "열하일기"를 지어 조선 사회를 날카롭게 풍자한 실학자는?', opts:['박지원','박제가','정약전','이익'], answer:0, stat:'집필'},
+    {q:'흑산도 유배 중 바다 생물을 관찰·정리한 "자산어보"를 지은, 정약용의 형은?', opts:['정약전','정약종','정학연','채제공'], answer:0, stat:'집필'}
   ],
   minigame:'typo',
   outro:'수많은 저서를 남긴 정약용은 이제 백성의 병을 고치고 세상의 이치를 탐구하는 과학자·의사의 길로 들어선다.'
@@ -543,7 +571,9 @@ const CHAPTERS = [
     {q:'정약용이 관심 가졌던 서양 의학 지식으로 알려진 것은?', opts:['항생제 제조법','종두법(천연두 예방) 관련 지식','마취 수술법','유전자 분석법'], answer:1, stat:'학력'},
     {q:'정약용은 어린 시절부터 어떤 분야에서 두각을 보였는가?', opts:['오직 무예만','시·그림·수학 등 다방면','오직 요리만','특별한 재능 없음'], answer:1, stat:'예술'},
     {q:'화성 인근 저수지·수리시설 설계와도 관련 깊은 정약용의 관심 분야는?', opts:['항해술','음악 이론','수리·토목 기술','천체 관측 전용'], answer:2, stat:'기술'},
-    {q:'정약용처럼 다방면에 재능이 있는 인물을 요즘 말로 무엇이라 부를까?', opts:['전문 바보','문외한','아마추어','르네상스형 인재'], answer:3, stat:'학력'}
+    {q:'정약용처럼 다방면에 재능이 있는 인물을 요즘 말로 무엇이라 부를까?', opts:['전문 바보','문외한','아마추어','르네상스형 인재'], answer:3, stat:'학력'},
+    {q:'서양 과학을 적극적으로 수용하여 "기학(氣學)"이라는 독자적 학문 체계를 세운 조선 후기 실학자는?', opts:['최한기','서유구','이덕무','유형원'], answer:0, stat:'학력'},
+    {q:'농업과 의식주 전반을 다룬 생활 백과사전 "임원경제지"를 저술한 실학자는?', opts:['서유구','최한기','박지원','김정호'], answer:0, stat:'기술'}
   ],
   minigame:'memory',
   outro:'수많은 도전을 거친 정약용. 이제 그가 쌓아온 모든 능력을 종합하여, 현대에 태어났다면 어떤 직업으로 성장했을지 결과를 확인한다.'
@@ -632,6 +662,202 @@ const JOB_LABELS=[
  {t:'일가를 이룬 정약용', s:'명실상부, 시대의 인물이 되었다'}
 ];
 
+/* ================= 사운드 (배경음악 + 효과음, Web Audio 합성) ================= */
+const Sound = {
+  ctx:null, master:null, musicGain:null, sfxGain:null,
+  musicOn:true, musicStarted:false, musicTimer:null,
+  NOTE:{ G3:196.00, A3:220.00, C4:261.63, D4:293.66, E4:329.63, G4:392.00, A4:440.00, C5:523.25 },
+  MELODY:[
+    {n:'A3',d:1.5},{n:'C4',d:1.0},{n:'D4',d:1.5},{n:'rest',d:0.7},
+    {n:'E4',d:1.2},{n:'D4',d:1.0},{n:'C4',d:1.5},{n:'A3',d:2.0},{n:'rest',d:0.9},
+    {n:'G3',d:1.3},{n:'A3',d:1.0},{n:'C4',d:1.8},{n:'rest',d:1.1},
+    {n:'D4',d:1.2},{n:'E4',d:1.0},{n:'G4',d:1.6},{n:'E4',d:1.2},{n:'rest',d:1.0}
+  ],
+
+  init(){
+    if(this.ctx) return;
+    try{
+      this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+      this.master = this.ctx.createGain(); this.master.gain.value = 1; this.master.connect(this.ctx.destination);
+      this.musicGain = this.ctx.createGain(); this.musicGain.gain.value = 0.05; this.musicGain.connect(this.master);
+      this.sfxGain = this.ctx.createGain(); this.sfxGain.gain.value = 0.5; this.sfxGain.connect(this.master);
+    }catch(e){}
+  },
+  resume(){ if(this.ctx && this.ctx.state==='suspended') this.ctx.resume(); },
+
+  toggleMusic(){
+    this.musicOn = !this.musicOn;
+    const btn=document.getElementById('mute-btn');
+    if(btn){ btn.textContent = this.musicOn ? '🔊' : '🔇'; btn.classList.toggle('off', !this.musicOn); }
+    if(this.musicOn) this.startMusic(); else this.stopMusic();
+  },
+  startMusic(){
+    this.init(); this.resume();
+    if(this.musicStarted || !this.musicOn) return;
+    this.musicStarted = true;
+    this.playBell();
+    this._loopMusic();
+  },
+  stopMusic(){ this.musicStarted = false; clearTimeout(this.musicTimer); },
+  _loopMusic(){
+    if(!this.musicOn) return;
+    let t=0;
+    this.MELODY.forEach(step=>{
+      if(step.n!=='rest'){
+        const at=t;
+        setTimeout(()=>{ if(this.musicOn) this._tone(this.NOTE[step.n], step.d*0.92, this.musicGain, 'sine', 0.9); }, at*1000);
+      }
+      t += step.d;
+    });
+    this.musicTimer = setTimeout(()=>this._loopMusic(), t*1000);
+  },
+  playBell(){
+    if(!this.ctx) return;
+    const t=this.ctx.currentTime;
+    const osc=this.ctx.createOscillator(), gain=this.ctx.createGain();
+    osc.type='sine'; osc.frequency.setValueAtTime(130.81,t);
+    gain.gain.setValueAtTime(0,t);
+    gain.gain.linearRampToValueAtTime(0.06,t+0.05);
+    gain.gain.exponentialRampToValueAtTime(0.0001,t+2.6);
+    osc.connect(gain); gain.connect(this.musicGain);
+    osc.start(t); osc.stop(t+2.7);
+  },
+  _tone(freq,dur,dest,type,peak){
+    if(!this.ctx) return;
+    const t=this.ctx.currentTime;
+    const osc=this.ctx.createOscillator(), osc2=this.ctx.createOscillator(), gain=this.ctx.createGain();
+    osc.type=type||'sine'; osc2.type=osc.type;
+    osc.frequency.value=freq; osc2.frequency.value=freq*1.004;
+    gain.gain.setValueAtTime(0,t);
+    gain.gain.linearRampToValueAtTime(peak==null?1:peak, t+0.18);
+    gain.gain.linearRampToValueAtTime(0, t+dur);
+    osc.connect(gain); osc2.connect(gain); gain.connect(dest);
+    osc.start(t); osc2.start(t);
+    osc.stop(t+dur+0.05); osc2.stop(t+dur+0.05);
+  },
+
+  click(){
+    this.init(); this.resume();
+    if(!this.ctx) return;
+    const t=this.ctx.currentTime;
+    const osc=this.ctx.createOscillator(), gain=this.ctx.createGain();
+    osc.type='square'; osc.frequency.setValueAtTime(880,t);
+    gain.gain.setValueAtTime(0.16,t);
+    gain.gain.exponentialRampToValueAtTime(0.001,t+0.06);
+    osc.connect(gain); gain.connect(this.sfxGain);
+    osc.start(t); osc.stop(t+0.07);
+  },
+  correct(){
+    this.init(); this.resume();
+    if(!this.ctx) return;
+    [523.25,659.25,783.99].forEach((f,i)=>{
+      const t=this.ctx.currentTime + i*0.09;
+      const osc=this.ctx.createOscillator(), gain=this.ctx.createGain();
+      osc.type='triangle'; osc.frequency.setValueAtTime(f,t);
+      gain.gain.setValueAtTime(0.22,t);
+      gain.gain.exponentialRampToValueAtTime(0.001,t+0.28);
+      osc.connect(gain); gain.connect(this.sfxGain);
+      osc.start(t); osc.stop(t+0.3);
+    });
+  },
+  wrong(){
+    this.init(); this.resume();
+    if(!this.ctx) return;
+    const t=this.ctx.currentTime;
+    const osc=this.ctx.createOscillator(), gain=this.ctx.createGain();
+    osc.type='sawtooth';
+    osc.frequency.setValueAtTime(220,t);
+    osc.frequency.exponentialRampToValueAtTime(90,t+0.28);
+    gain.gain.setValueAtTime(0.18,t);
+    gain.gain.exponentialRampToValueAtTime(0.001,t+0.3);
+    osc.connect(gain); gain.connect(this.sfxGain);
+    osc.start(t); osc.stop(t+0.32);
+  },
+  snap(){
+    this.init(); this.resume();
+    if(!this.ctx) return;
+    const t=this.ctx.currentTime;
+    const osc=this.ctx.createOscillator(), gain=this.ctx.createGain();
+    osc.type='triangle';
+    osc.frequency.setValueAtTime(320,t);
+    osc.frequency.exponentialRampToValueAtTime(80,t+0.1);
+    gain.gain.setValueAtTime(0.3,t);
+    gain.gain.exponentialRampToValueAtTime(0.001,t+0.1);
+    osc.connect(gain); gain.connect(this.sfxGain);
+    osc.start(t); osc.stop(t+0.11);
+  },
+  fanfare(){
+    this.init(); this.resume();
+    if(!this.ctx) return;
+    [523.25,659.25,783.99,1046.5].forEach((f,i)=>{
+      const t=this.ctx.currentTime + i*0.11;
+      const osc=this.ctx.createOscillator(), gain=this.ctx.createGain();
+      osc.type='triangle'; osc.frequency.setValueAtTime(f,t);
+      gain.gain.setValueAtTime(0.24,t);
+      gain.gain.exponentialRampToValueAtTime(0.001,t+0.35);
+      osc.connect(gain); gain.connect(this.sfxGain);
+      osc.start(t); osc.stop(t+0.37);
+    });
+  },
+  ending(){
+    this.init(); this.resume();
+    if(!this.ctx) return;
+    [523.25,659.25,783.99,1046.5,1318.5].forEach((f,i)=>{
+      const t=this.ctx.currentTime + i*0.14;
+      const osc=this.ctx.createOscillator(), gain=this.ctx.createGain();
+      osc.type='triangle'; osc.frequency.setValueAtTime(f,t);
+      gain.gain.setValueAtTime(0.26,t);
+      gain.gain.exponentialRampToValueAtTime(0.001,t+0.6);
+      osc.connect(gain); gain.connect(this.sfxGain);
+      osc.start(t); osc.stop(t+0.65);
+    });
+  }
+};
+
+/* ================= 전체화면 ================= */
+const UI = {
+  toggleFullscreen(){
+    const el = document.documentElement;
+    const isFS = document.fullscreenElement || document.webkitFullscreenElement;
+    if(!isFS){
+      const req = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
+      if(req) req.call(el);
+    } else {
+      const exit = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
+      if(exit) exit.call(document);
+    }
+  },
+  updateFullscreenBtn(){
+    const btn=document.getElementById('fullscreen-btn');
+    if(!btn) return;
+    const isFS = !!(document.fullscreenElement || document.webkitFullscreenElement);
+    btn.textContent = isFS ? '⤢' : '⛶';
+    btn.title = isFS ? '전체화면 종료' : '전체화면';
+  }
+};
+['fullscreenchange','webkitfullscreenchange'].forEach(ev => document.addEventListener(ev, ()=>UI.updateFullscreenBtn()));
+
+/* ================= 화면 크기에 맞춰 프레임 스케일 (태블릿/좁은 화면 대응) ================= */
+function fitFrame(){
+  const frame = document.getElementById('frame');
+  if(!frame) return;
+  const availW = window.innerWidth - 12;
+  const availH = window.innerHeight - 12;
+  const scale = Math.min(1, availW/1280, availH/720);
+  frame.style.transform = `scale(${scale})`;
+}
+window.addEventListener('resize', fitFrame);
+window.addEventListener('orientationchange', ()=>setTimeout(fitFrame, 250));
+
+/* 버튼 터치음 (공용 위젯) + 첫 사용자 조작 시 배경음악 시작 (오토플레이 정책 대응) */
+document.addEventListener('click', (e)=>{
+  if(e.target.closest('.btn, .icon-btn')) Sound.click();
+}, true);
+document.addEventListener('pointerdown', function firstTouch(){
+  Sound.startMusic();
+  document.removeEventListener('pointerdown', firstTouch);
+}, {once:true});
+
 /* ================= 게임 상태 & 컨트롤러 ================= */
 const Game = {
   stats:Object.fromEntries(STAT_KEYS.map(k=>[k,0])),
@@ -692,14 +918,16 @@ const Game = {
 
   startQuiz(){
     this.quizIdx=0; this.quizCorrectCount=0;
+    const c=CHAPTERS[this.chapterIdx];
+    const pool=[...c.quiz].sort(()=>Math.random()-0.5);
+    this.activeQuiz=pool.slice(0, Math.min(5, pool.length));
     this.showScreen('screen-quiz');
     this.renderQuizQuestion();
   },
 
   renderQuizQuestion(){
-    const c=CHAPTERS[this.chapterIdx];
-    const q=c.quiz[this.quizIdx];
-    document.getElementById('quiz-progress').textContent=`문제 ${this.quizIdx+1}/5`;
+    const q=this.activeQuiz[this.quizIdx];
+    document.getElementById('quiz-progress').textContent=`문제 ${this.quizIdx+1}/${this.activeQuiz.length}`;
     document.getElementById('quiz-question').textContent=q.q;
     const optsBox=document.getElementById('quiz-options');
     optsBox.innerHTML='';
@@ -731,7 +959,7 @@ const Game = {
   answerQuiz(choiceIdx){
     if(this.answered) return; this.answered=true;
     clearTimeout(this.timer);
-    const c=CHAPTERS[this.chapterIdx]; const q=c.quiz[this.quizIdx];
+    const q=this.activeQuiz[this.quizIdx];
     const elapsed=Date.now()-this.qStart;
     const correctIdx = this.currentShuffledAnswerIdx;
     const opts=document.querySelectorAll('.opt-btn');
@@ -744,13 +972,15 @@ const Game = {
       this.addStat(q.stat, statGain);
       this.addScore(gained);
       this.floatFeedback(fast?'정답! 빠름 +'+gained:'정답! +'+gained, '#294B3F');
+      Sound.correct();
     } else {
       if(choiceIdx>=0) opts[choiceIdx].classList.add('wrong');
       this.floatFeedback('아쉬워요..', '#7C2C2E');
+      Sound.wrong();
     }
     setTimeout(()=>{
       this.quizIdx++;
-      if(this.quizIdx<5) this.renderQuizQuestion();
+      if(this.quizIdx<this.activeQuiz.length) this.renderQuizQuestion();
       else this.showQuizResult();
     }, 950);
   },
@@ -774,6 +1004,7 @@ const Game = {
     const statLine = Object.entries(statGains).filter(([,v])=>v>0).map(([k,v])=>`${k} +${v}`).join(' · ');
     const mgBody=document.getElementById('mg-body');
     if(!mgBody) return;
+    Sound.fanfare();
     mgBody.insertAdjacentHTML('beforeend', `
       <div class="mg-result-card">
         <h2 class="mg-result-title">${emoji} ${title}</h2>
@@ -786,7 +1017,7 @@ const Game = {
   },
 
   showQuizResult(){
-    document.getElementById('quizresult-text').textContent = `5문제 중 ${this.quizCorrectCount}문제를 맞혔습니다. 이제 이번 장의 미니게임에 도전해 추가 능력치를 쌓아보세요.`;
+    document.getElementById('quizresult-text').textContent = `${this.activeQuiz.length}문제 중 ${this.quizCorrectCount}문제를 맞혔습니다. 이제 이번 장의 미니게임에 도전해 추가 능력치를 쌓아보세요.`;
     this.showScreen('screen-quizresult');
   },
 
@@ -846,6 +1077,7 @@ const Game = {
       ending = ENDINGS_STANDARD.low;
     }
 
+    Sound.ending();
     document.getElementById('ending-job').textContent = ending.job;
     document.getElementById('ending-reason').textContent = ending.reason + `  (최종 점수 ${this.score}점 · 능력치 합계 ${total})`;
     document.getElementById('ending-stats').innerHTML = STAT_KEYS.map(k => `<div class="mini-stat">${k} ${s[k]}</div>`).join('');
@@ -955,6 +1187,7 @@ brick:{
     const overlap = overlapRight - overlapLeft;
 
     if(overlap <= 8){
+      Sound.wrong();
       this.endGame();
       return;
     }
@@ -968,6 +1201,7 @@ brick:{
       finalWidth = this.curWidthPrev;
       this.perfectCombo++;
       Game.floatFeedback('PERFECT! 🎯', '#B89A5C');
+      Sound.correct();
       if(this.perfectCombo % 3 === 0){
         finalWidth = Math.min(220, finalWidth + 16);
         Game.floatFeedback('성벽 확장! 🧱', '#294B3F');
@@ -992,6 +1226,7 @@ brick:{
       ], { duration: 550, easing: 'ease-in' }).onfinish = () => debris.remove();
 
       Game.floatFeedback((this.layer + 1) + '층!', '#294B3F');
+      Sound.snap();
     }
 
     moving.removeAttribute('id');
@@ -1042,22 +1277,7 @@ assembly:{
   placed:{}, selectedPart:null, timer:null, animRaf:null, alive:true, TIME_LIMIT:25000,
   dragOffsetX:0, dragOffsetY:0,
 
-  playSnapSound(){
-    try {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(320, ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(80, ctx.currentTime + 0.1);
-      gain.gain.setValueAtTime(0.35, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.1);
-    } catch(e) {}
-  },
+  playSnapSound(){ Sound.snap(); },
 
   start(){
     this.placed = {}; this.selectedPart = null; this.alive = true;
@@ -1141,15 +1361,17 @@ assembly:{
 
     const area = document.getElementById('assembly-area');
     const rect = area.getBoundingClientRect();
-    
-    this.dragOffsetX = e.clientX - (rect.left + chip.x);
-    this.dragOffsetY = e.clientY - (rect.top + chip.y);
+    const scale0 = rect.width / area.offsetWidth;
+
+    this.dragOffsetX = (e.clientX - rect.left)/scale0 - chip.x;
+    this.dragOffsetY = (e.clientY - rect.top)/scale0 - chip.y;
 
     const onPointerMove = (moveEv) => {
       if(!chip.isDragging) return;
       const curRect = area.getBoundingClientRect();
-      chip.x = moveEv.clientX - curRect.left - this.dragOffsetX;
-      chip.y = moveEv.clientY - curRect.top - this.dragOffsetY;
+      const s = curRect.width / area.offsetWidth;
+      chip.x = (moveEv.clientX - curRect.left)/s - this.dragOffsetX;
+      chip.y = (moveEv.clientY - curRect.top)/s - this.dragOffsetY;
 
       this.checkSlotHover(chip.x + 40, chip.y + 20);
     };
@@ -1192,8 +1414,9 @@ assembly:{
     const area = document.getElementById('assembly-area');
     if(!area) return;
     const areaRect = area.getBoundingClientRect();
-    const absX = areaRect.left + centerX;
-    const absY = areaRect.top + centerY;
+    const scale = areaRect.width / area.offsetWidth;
+    const absX = areaRect.left + centerX*scale;
+    const absY = areaRect.top + centerY*scale;
 
     this.slots.forEach(s => {
       const slotEl = document.getElementById(`slot-${s.id}`);
@@ -1234,6 +1457,7 @@ assembly:{
       slotEl.classList.add('wrongflash');
       setTimeout(() => slotEl.classList.remove('wrongflash'), 450);
       Game.floatFeedback('위치가 맞지 않아요!', '#7C2C2E');
+      Sound.wrong();
     }
   },
 
@@ -1274,6 +1498,7 @@ assembly:{
     this.alive = false;
     cancelAnimationFrame(this.animRaf);
     Game.floatFeedback('시간 종료! 조립 결과를 확인합니다', '#7C2C2E');
+    Sound.wrong();
     this.finish();
   },
 
@@ -1413,14 +1638,16 @@ ladder:{
 
     const area = document.getElementById('word-tile-area');
     const rect = area.getBoundingClientRect();
-    this.dragOffsetX = e.clientX - (rect.left + tile.x);
-    this.dragOffsetY = e.clientY - (rect.top + tile.y);
+    const scale0 = rect.width / area.offsetWidth;
+    this.dragOffsetX = (e.clientX - rect.left)/scale0 - tile.x;
+    this.dragOffsetY = (e.clientY - rect.top)/scale0 - tile.y;
 
     const onMove = (mv) => {
       if(!tile.isDragging) return;
       const r = area.getBoundingClientRect();
-      tile.x = mv.clientX - r.left - this.dragOffsetX;
-      tile.y = mv.clientY - r.top - this.dragOffsetY;
+      const s = r.width / area.offsetWidth;
+      tile.x = (mv.clientX - r.left)/s - this.dragOffsetX;
+      tile.y = (mv.clientY - r.top)/s - this.dragOffsetY;
       this.renderTiles();
       this.checkSlotHover(mv.clientX, mv.clientY);
     };
@@ -1478,6 +1705,7 @@ ladder:{
       slotEl.classList.add('filled');
       slotEl.classList.remove('drag-over');
       this.renderTiles();
+      Sound.snap();
 
       const totalSlots = document.querySelectorAll('.word-slot').length;
       if(Object.keys(this.placed).length === totalSlots){
@@ -1487,6 +1715,7 @@ ladder:{
       slotEl.classList.add('wrongflash');
       setTimeout(() => slotEl.classList.remove('wrongflash'), 400);
       Game.floatFeedback('그 글자가 아니에요!', '#7C2C2E');
+      Sound.wrong();
       this.renderTiles();
     }
   },
@@ -1504,6 +1733,7 @@ ladder:{
       const timeBonus = Math.max(0, Math.floor((limitSec - elapsedSec) * 18));
       this.totalTimeBonus += timeBonus;
       Game.floatFeedback(`낱말 완성! 스피드 보너스 +${timeBonus}점 🎯`, '#294B3F');
+      Sound.correct();
     } else {
       const set = this.roundSets[this.round];
       set.word.split('').forEach((c,i) => {
@@ -1513,6 +1743,7 @@ ladder:{
         }
       });
       Game.floatFeedback('시간 초과! 낱말을 완성하지 못했어요 ❌', '#7C2C2E');
+      Sound.wrong();
     }
 
     this.round++;
@@ -1601,6 +1832,7 @@ gauge:{
       cancelAnimationFrame(this.raf);
       document.getElementById('gauge-btn').disabled=true;
       Game.floatFeedback('시간 초과! 판단이 지연되었습니다 ❌', '#7C2C2E');
+      Sound.wrong();
       this.idx++;
       setTimeout(() => this.nextCase(), 750);
     }, DURATION);
@@ -1623,6 +1855,7 @@ gauge:{
 
     document.getElementById('gauge-score').textContent=this.totalPoints * 20 + this.timeBonusTotal;
     Game.floatFeedback(diff===0?`정확한 판결! (스피드 보너스 +${speedBonus}점)`:diff===1?'아깝다!':'오판...', diff===0?'#294B3F':'#7C2C2E');
+    if(diff===0) Sound.correct(); else if(diff===1) Sound.click(); else Sound.wrong();
     this.idx++;
     setTimeout(()=>this.nextCase(), 750);
   }
@@ -1712,8 +1945,10 @@ typo:{
       const tBonus = Math.max(0, Math.floor((limitSec - elapsedSec) * 25));
       this.timeBonusTotal += tBonus;
       Game.floatFeedback(`찾았다! (스피드 보너스 +${tBonus}점) 🎯`, '#294B3F');
+      Sound.correct();
     } else {
       Game.floatFeedback('놓쳤어요 ❌', '#7C2C2E');
+      Sound.wrong();
       if(i>=0){ const w=document.querySelector(`.word[data-i="${i}"]`); if(w) w.classList.add('wrongpick'); }
     }
     this.idx++;
@@ -1761,6 +1996,7 @@ memory:{
     this.totalTimer = setTimeout(() => {
       this.lock = true;
       Game.floatFeedback('시간 종료! 짝맞추기 마감 ❌', '#7C2C2E');
+      Sound.wrong();
       setTimeout(() => {
         const bonus = Game.quizCorrectCount || 0;
         Game.showMinigameResult({
@@ -1794,6 +2030,7 @@ memory:{
     const el=document.querySelector(`.mcard[data-i="${i}"]`);
     if(el.classList.contains('matched') || this.flipped.some(f=>f.i===i)) return;
     el.classList.remove('back'); el.textContent=this.cards[i].label;
+    Sound.click();
     this.flipped.push({i, pid:this.cards[i].pid});
     if(this.flipped.length===2){
       this.lock=true;
@@ -1804,11 +2041,13 @@ memory:{
           document.querySelector(`.mcard[data-i="${b.i}"]`).classList.add('matched');
           this.matched++;
           document.getElementById('mem-found').textContent=this.matched;
+          Sound.correct();
         } else {
           [a.i,b.i].forEach(idx=>{
             const e=document.querySelector(`.mcard[data-i="${idx}"]`);
             e.classList.add('back'); e.textContent='?';
           });
+          Sound.wrong();
         }
         this.flipped=[]; this.lock=false;
         if(this.matched>=3){
@@ -1831,7 +2070,12 @@ memory:{
   }
 }
 };
-window.addEventListener('DOMContentLoaded', () => Game.renderSidebar());
+window.addEventListener('DOMContentLoaded', () => {
+  Game.renderSidebar();
+  fitFrame();
+  const canFS = document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen;
+  if(!canFS){ const b=document.getElementById('fullscreen-btn'); if(b) b.style.display='none'; }
+});
 </script>
 </body>
 </html>
