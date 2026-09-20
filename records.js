@@ -32,8 +32,8 @@ export const RECORDS = [
   // ▼ 여기에 새 기록을 붙여넣으세요 (최신 항목을 맨 위에) ▼
 
   {
-    title: "달려라 적토마 (적토마가 되었다)",
-    desc: "삼국지 전장을 질주하는 체감형 3D 모션 러닝 액션 게임입니다.\n웹캠 모션 인식(다인 플레이 고유 영역 분할 트래킹)과 4인 로컬 키보드(WASD / 방향키 / UHJK / 키패드 8456)를 지원하며,\n점프, 비기(秘技) 대점프, 숙이기, 좌우 기울기로 장애물과 적군을 돌파하고 관문을 통과해 보세요.",
+    title: "적토마가 되었다",
+    desc: "삼국지 전장을 질주하는 모션 러닝 액션 게임이다.\n제자리에서라도 좀 재밌게 몸풀기 하라고 만들었다.\n키보드 모드, 4인플레이도 지원된다.",
     tags: "game, threejs, mediapipe, motion, webcam, running, action, samgukji, redhare, multiplayer",
     category: "games",
     link: "./vibe-apps/jeoktoma.html",
