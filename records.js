@@ -32,6 +32,15 @@ export const RECORDS = [
   // ▼ 여기에 새 기록을 붙여넣으세요 (최신 항목을 맨 위에) ▼
 
   {
+    title: "달려라 적토마 (적토마가 되었다)",
+    desc: "삼국지 전장을 질주하는 체감형 3D 모션 러닝 액션 게임입니다.\n웹캠 모션 인식(다인 플레이 고유 영역 분할 트래킹)과 4인 로컬 키보드(WASD / 방향키 / UHJK / 키패드 8456)를 지원하며,\n점프, 비기(秘技) 대점프, 숙이기, 좌우 기울기로 장애물과 적군을 돌파하고 관문을 통과해 보세요.",
+    tags: "game, threejs, mediapipe, motion, webcam, running, action, samgukji, redhare, multiplayer",
+    category: "games",
+    link: "./vibe-apps/jeoktoma.html",
+    image: "img-re/jeoktoma.avif",
+  },
+
+  {
     title: "현대로 간 정약용을 키워라",
     desc: "조선 시대 대표 실학자 다산 정약용 선생이 현대 사회로 타임슬립하여 펼쳐지는 육성 시뮬레이션 게임입니다.\n학업, 건강, 자금 관리, 현대 기술 습득 등 다양한 활동으로 정약용 선생을 현대의 훌륭한 인재로 키워보세요.",
     tags: "history, simulation, pixel, game, dasan, jeongyagyong",

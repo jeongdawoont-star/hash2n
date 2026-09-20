@@ -1,0 +1,2109 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>적토마가 되었다</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#16110d; --paper:#efe3c8; --paper2:#cdbd98;
+  --red:#b3261e; --red2:#e0453a; --jade:#3fbf8a; --gold:#e0b354;
+  --disp:'Black Han Sans','Noto Sans KR','Malgun Gothic',sans-serif;
+  --ui:'Noto Sans KR','Malgun Gothic',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:#000;color:var(--paper);font-family:var(--ui)}
+#gl{position:fixed;inset:0;width:100%;height:100%;display:block}
+.hidden{display:none!important}
+button,select,input{font-family:inherit}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+
+/* ---------- HUD ---------- */
+.plate{background:rgba(22,17,13,.78);border:1px solid rgba(224,179,84,.3);border-left:5px solid var(--red);padding:8px 14px;backdrop-filter:blur(4px)}
+#stats{position:fixed;left:16px;top:16px}
+#stats .big{font-family:var(--disp);font-size:44px;line-height:1}
+#stats .big small{font-size:18px;margin-left:4px;color:var(--paper2)}
+#stats .row{display:flex;gap:12px;align-items:center;margin-top:6px;font-size:14px}
+.seal{background:var(--red);color:var(--paper);padding:2px 8px;border-radius:2px;font-weight:700}
+#gateBadge{background:var(--gold);color:var(--ink);padding:2px 8px;border-radius:2px;font-weight:900;font-size:13px}
+
+/* 플레이어별 개별 기력 바 컨테이너 */
+#hpwrap{position:fixed;left:50%;top:16px;transform:translateX(-50%);min-width:min(440px,50vw);max-width:90vw}
+#hpList{display:flex;gap:8px;width:100%}
+.player-hp{flex:1;min-width:70px;background:rgba(0,0,0,.45);border:1px solid rgba(224,179,84,.25);padding:4px 8px;border-radius:3px}
+.player-hp .hp-header{display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-bottom:3px}
+.player-hp .hp-header b{color:var(--c);font-family:var(--disp);font-size:14px}
+.player-hp .hp-header span{color:var(--paper2);font-size:11px}
+.player-hp .hp-track{height:8px;background:rgba(239,227,200,.15);overflow:hidden;border-radius:1px}
+.player-hp .hp-fill{height:100%;background:var(--c);transition:width .18s ease-out;box-shadow:0 0 6px var(--c)}
+.player-hp.hit{animation:hithurt .3s ease}
+.player-hp.dead{opacity:.38;filter:grayscale(.85);border-color:rgba(220,38,38,.5);background:rgba(30,10,10,.5)}
+.player-hp.dead .hp-header b{text-decoration:line-through;color:var(--red2)}
+.hp-key-guide{display:flex;align-items:center;gap:4px;margin-top:4px;font-size:10px;background:rgba(22,17,13,.75);padding:2px 5px;border-radius:2px;border:1px solid rgba(224,179,84,.25);white-space:nowrap;overflow:hidden}
+.hp-key-guide .k-badge{font-family:var(--disp);font-weight:700;font-size:11px;background:var(--c);color:#111;padding:1px 4px;border-radius:2px;line-height:1.2}
+.hp-key-guide .k-desc{color:var(--paper2);font-size:10px}
+
+#hint{position:fixed;left:50%;top:22%;transform:translateX(-50%);font-family:var(--disp);font-size:clamp(38px,7vw,90px);color:var(--paper);text-shadow:3px 3px 0 var(--red),-2px -2px 0 var(--ink);white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .1s}
+#hint.on{opacity:1}
+#hint.urgent{animation:pulse .24s infinite alternate}
+@keyframes pulse{to{transform:translateX(-50%) scale(1.09)}}
+
+#toast{position:fixed;left:50%;bottom:16%;transform:translateX(-50%);font-family:var(--disp);font-size:clamp(22px,3.2vw,36px);text-shadow:2px 2px 0 var(--ink);pointer-events:none;opacity:0;transition:opacity .15s;text-align:center;white-space:nowrap}
+#toast.show{opacity:1}
+#toast.good{color:var(--jade)} #toast.bad{color:var(--red2)} #toast.gate{color:var(--gold);text-shadow:3px 3px 0 var(--red),-2px -2px 0 var(--ink);font-size:clamp(26px,4vw,44px)}
+#flash{position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,rgba(179,38,30,0) 40%,rgba(179,38,30,.75) 100%);opacity:0}
+#goldFlash{position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,rgba(224,179,84,0) 30%,rgba(224,179,84,.65) 100%);opacity:0;transition:opacity .2s}
+#side{position:fixed;right:16px;bottom:16px;width:320px;max-width:44vw}
+#pip{width:100%;display:block;border:2px solid rgba(224,179,84,.45);background:#1b1510}
+#chips{display:flex;flex-direction:column;gap:4px;margin-top:6px}
+.chip{display:flex;align-items:center;gap:10px;background:rgba(22,17,13,.78);border-left:6px solid var(--c);padding:4px 10px;font-size:14px}
+.chip b{font-family:var(--disp);font-size:18px;color:var(--c);min-width:32px;font-weight:400}
+.chip span{flex:1;color:var(--paper2)}
+.chip em{font-style:normal;color:rgba(239,227,200,.25);font-size:13px}
+.chip em.on{color:var(--c);text-shadow:0 0 8px var(--c)}
+.chip.off{opacity:.4}
+body:not(.ingame) #stats, body:not(.ingame) #hpwrap{display:none}
+
+/* ---------- overlays ---------- */
+.overlay{position:fixed;inset:0;display:flex;align-items:center;padding:5vw;background:linear-gradient(90deg,rgba(22,17,13,.92),rgba(22,17,13,.4) 65%,rgba(22,17,13,0))}
+.panel{max-width:520px}
+h1{font-family:var(--disp);font-weight:400;font-size:clamp(54px,8.5vw,100px);line-height:1;letter-spacing:-.02em;color:var(--paper);text-shadow:4px 4px 0 var(--red)}
+h2{font-family:var(--disp);font-weight:400;font-size:clamp(34px,5vw,52px);line-height:1.1;text-shadow:3px 3px 0 var(--red)}
+.sub{margin-top:14px;font-size:17px;color:var(--paper2)}
+.rules{list-style:none;margin:10px 0 18px;border-top:1px solid rgba(224,179,84,.35)}
+.rules li{padding:8px 0;border-bottom:1px solid rgba(224,179,84,.2);font-size:15px;line-height:1.45}
+.rules b{color:var(--gold)}
+.btn-rules-toggle{
+  display:flex;align-items:center;justify-content:space-between;width:100%;
+  background:rgba(224,179,84,.08);border:1px solid rgba(224,179,84,.35);
+  color:var(--gold);padding:9px 14px;font-size:14px;font-weight:700;
+  cursor:pointer;border-radius:2px;margin:16px 0 6px;text-align:left;
+  transition:background .15s, border-color .15s;
+}
+.btn-rules-toggle:hover{background:rgba(224,179,84,.18);border-color:var(--gold)}
+.opts{display:flex;flex-wrap:wrap;gap:14px 22px;margin-bottom:20px;font-size:14px;color:var(--paper2)}
+.opts label{display:flex;flex-direction:column;gap:4px}
+.opts select{background:var(--ink);color:var(--paper);border:1px solid var(--paper2);padding:6px 8px;font-size:15px}
+.btns{display:flex;flex-wrap:wrap;gap:12px}
+button{cursor:pointer;border:1px solid var(--paper2);background:transparent;color:var(--paper);padding:12px 20px;font-size:16px;font-weight:700}
+button:hover{background:rgba(239,227,200,.12)}
+button.primary{background:var(--red);border-color:var(--red);color:#fff}
+button.primary:hover{background:var(--red2)}
+button:disabled{opacity:.4;cursor:not-allowed}
+.msg{margin-top:14px;font-size:14px;color:var(--gold);min-height:20px;line-height:1.5}
+#readyInfo{font-family:var(--disp);font-size:28px;margin:14px 0}
+.res{margin:18px 0;border-top:1px solid rgba(224,179,84,.35)}
+.res div{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid rgba(224,179,84,.2);font-size:16px}
+.res i{width:10px;height:26px;background:var(--c)}
+.res b{font-family:var(--disp);font-weight:400;font-size:22px;min-width:40px;color:var(--c)}
+.res span{color:var(--paper2)}
+.big2{font-family:var(--disp);font-size:54px;line-height:1;margin-top:14px}
+#loading{position:fixed;inset:0;background:var(--ink);display:flex;align-items:center;justify-content:center;font-family:var(--disp);font-size:32px}
+#cam{position:fixed;width:2px;height:2px;opacity:.01;pointer-events:none;left:0;top:0}
+@media (max-width:700px){#side{width:200px}.overlay{padding:24px}}
+</style>
+<script type="importmap">
+{"imports":{
+  "three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+}}
+</script>
+</head>
+<body>
+<canvas id="gl"></canvas>
+<video id="cam" playsinline muted autoplay></video>
+
+<div id="stats" class="plate">
+  <div class="big"><span id="sDist">0</span><small>m</small></div>
+  <div class="row">
+    <span>점수 <b id="sScore">0</b></span>
+    <span id="sCombo" class="seal">연속 0</span>
+    <span id="sSpeed" style="color:var(--gold);font-weight:700">0 km/h</span>
+    <span id="gateBadge">제1관문</span>
+  </div>
+</div>
+
+<div id="hpwrap" class="plate">
+  <div id="hpList"></div>
+</div>
+
+<div id="hint"></div>
+<div id="toast"></div>
+<div id="flash"></div>
+<div id="goldFlash"></div>
+<div id="side" class="hidden"><canvas id="pip" width="320" height="180"></canvas><div id="chips"></div></div>
+
+<div id="menu" class="overlay hidden">
+  <div class="panel">
+    <h1>적토마가<br>되었다</h1>
+    <p class="sub">다 같이 말을 타고 전장을 질주하는 3D 체감 액션 러닝</p>
+    <button id="btnToggleRules" type="button" class="btn-rules-toggle">
+      <span>📜 전장 수칙 및 조작법</span><b id="toggleArrow">열기 ▼</b>
+    </button>
+    <ul id="rulesList" class="rules hidden">
+      <li><b>자동 전력 질주:</b> 적토마가 자동으로 달리며, <b>거리가 멀어질수록 속도가 점점 빨라집니다!</b></li>
+      <li><b>옆 창병 공격:</b> 반드시 반대 방향으로 기울이기 (점프로 피할 수 없음!)</li>
+      <li><b>마주 오는 기병창:</b> 반드시 머리를 아래로 푹 숙이기 (점프하면 공중 피격!)</li>
+      <li><b>일반 해자 & 목책:</b> 위로 뛰어올라 점프하기 (↑)</li>
+      <li><b>🌊 거대 대해자:</b> 2배 넓은 해자는 오직 <b>비기 대점프(숙인 뒤 점프)</b>로만 돌파 가능!</li>
+      <li><b>★ 비기 대점프!</b> 숙였다가 번쩍 솟구치면 <b>초고속 대점프</b> 발동!</li>
+      <li><b>500m 단위 관문 돌파:</b> 관문 돌파 시 기력 +20% 회복 및 난이도 상승!</li>
+    </ul>
+    <div class="opts">
+      <label>출정 인원
+        <select id="optPlayers">
+          <option value="1" selected>1인 (1P 단독)</option>
+          <option value="2">2인 (1P, 2P)</option>
+          <option value="3">3인 (1P~3P)</option>
+          <option value="4">4인 (1P~4P)</option>
+        </select>
+      </label>
+      <label>난이도
+        <select id="optLevel"><option value="easy">쉬움</option><option value="normal" selected>보통</option><option value="hard">어려움</option></select>
+      </label>
+      <label>감도
+        <input id="optSens" type="range" min="0.6" max="1.6" step="0.1" value="1">
+      </label>
+    </div>
+    <div class="btns">
+      <button id="btnCam" class="primary">카메라로 출정</button>
+      <button id="btnKey">키보드로 시험 주행</button>
+    </div>
+    <p id="menuMsg" class="msg"></p>
+  </div>
+</div>
+
+<div id="ready" class="overlay hidden">
+  <div class="panel">
+    <h2>기준 자세 잡기</h2>
+    <p class="sub">화면의 고유 영역(1P 좌측, 2P 우측 등)에 맞춰 서 주세요. 트래킹이 섞이지 않고 정확하게 고정됩니다.</p>
+    <div id="readyInfo">인식된 사람 0명</div>
+    <div class="btns">
+      <button id="btnGo" class="primary" disabled>출정!</button>
+      <button id="btnRecal">기준 자세 다시 잡기</button>
+      <button id="btnBack1">처음으로</button>
+    </div>
+    <p class="msg">오른쪽 아래 화면에서 머리가 점선 상자 밖으로 나가면 동작으로 인식됩니다.</p>
+  </div>
+</div>
+
+<div id="result" class="overlay hidden">
+  <div class="panel">
+    <h2>전장에서 쓰러졌다</h2>
+    <div class="big2"><span id="rDist">0</span><small style="font-size:22px"> m</small></div>
+    <p class="sub">점수 <b id="rScore">0</b> · 최고 기록 <b id="rBest">0</b> m · 돌파 관문 <b id="rGate">1</b></p>
+    <div class="res" id="rList"></div>
+    <div class="btns">
+      <button id="btnAgain" class="primary">다시 출정</button>
+      <button id="btnBack2">처음으로</button>
+    </div>
+  </div>
+</div>
+
+<div id="loading">전장을 준비하는 중…</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+
+/* ================= 공통 유틸 ================= */
+const $ = id => document.getElementById(id);
+const clamp = (v,a,b) => Math.min(b, Math.max(a, v));
+const lerp = (a,b,t) => a + (b-a)*t;
+const rand = (a,b) => a + Math.random()*(b-a);
+const smooth = t => t*t*(3-2*t);
+
+const CFG = { maxPlayers:1, sens:1, level:'normal' };
+const LEVELS = {
+  easy:   { v0:12.0, vmax:26, gap:[2.8,3.8] },
+  normal: { v0:14.5, vmax:32, gap:[2.0,3.0] },
+  hard:   { v0:17.0, vmax:38, gap:[1.5,2.4] }
+};
+const TH = { lean:0.46, duck:0.40, jump:0.26 };
+const HOLD = 0.28;
+const SPAWN_T = 5.2;
+const PAL = ['#ffd23f','#3bceac','#ff6b5a','#5db7ff','#c77dff','#ff9f1c'];
+
+// 6종 장수별 액션 타입 (1P~6P)
+const WEAPON_ACTIONS = ['slash', 'thrust', 'dual_swords', 'fan', 'bow', 'spin'];
+const ACTION_NAMES = ['언월도 횡베기', '장창 쾌속찌르기', '쌍검 교차난무', '학선 바람도술', '명궁 전방사격', '풍차 연속회전'];
+
+let state = 'boot';
+let mode = null;
+const G = {
+  dist:0, score:0, combo:0, hp:100, speed:0, t:0, travel:0, spawnT:2.0,
+  shake:0, flash:0, goldFlash:0, lastTypes:[],
+  stage:1, nextMilestone:500
+};
+const players = [];
+let retired = [];
+let nextId = 1;
+const obstacles = [];
+const keys = { left:false, right:false, up:false, down:false };
+const assets = {};
+
+/* ================= 오디오 시스템 ================= */
+let actx = null;
+function unlockAudio(){ try{ actx = actx || new (window.AudioContext||window.webkitAudioContext)(); actx.resume(); }catch(e){} }
+function beep(f=440, d=0.12, type='sine', vol=0.06){
+  if(!actx) return;
+  try{
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.type = type; o.frequency.value = f; g.gain.value = vol;
+    o.connect(g); g.connect(actx.destination); o.start();
+    g.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime + d);
+    o.stop(actx.currentTime + d);
+  }catch(e){}
+}
+let lastHoofPhase = 0;
+function playHoofbeat(){
+  if(!actx || actx.state !== 'running') return;
+  try{
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.type = 'triangle';
+    o.frequency.setValueAtTime(80 + Math.random()*25, actx.currentTime);
+    o.frequency.exponentialRampToValueAtTime(32, actx.currentTime + 0.055);
+    g.gain.setValueAtTime(0.038, actx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime + 0.055);
+    o.connect(g); g.connect(actx.destination);
+    o.start(); o.stop(actx.currentTime + 0.06);
+  }catch(e){}
+}
+function playSuperJumpSound(){
+  if(!actx || actx.state !== 'running') return;
+  try{
+    const t0 = actx.currentTime;
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.type = 'triangle'; o.frequency.setValueAtTime(140, t0);
+    o.frequency.exponentialRampToValueAtTime(720, t0 + 0.32);
+    g.gain.setValueAtTime(0.12, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.42);
+    o.connect(g); g.connect(actx.destination); o.start(t0); o.stop(t0 + 0.44);
+
+    const o2 = actx.createOscillator(), g2 = actx.createGain();
+    o2.type = 'sine'; o2.frequency.setValueAtTime(523.25, t0);
+    o2.frequency.exponentialRampToValueAtTime(1046.5, t0 + 0.30);
+    g2.gain.setValueAtTime(0.09, t0); g2.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.44);
+    o2.connect(g2); g2.connect(actx.destination); o2.start(t0); o2.stop(t0 + 0.46);
+  }catch(e){}
+}
+function playGateFanfare(){
+  if(!actx || actx.state !== 'running') return;
+  try{
+    const t0 = actx.currentTime;
+    // 징소리 (웅장한 메탈릭 공진음)
+    const gong = actx.createOscillator(), gg = actx.createGain();
+    gong.type = 'sawtooth'; gong.frequency.setValueAtTime(220, t0);
+    gong.frequency.exponentialRampToValueAtTime(55, t0 + 1.2);
+    gg.gain.setValueAtTime(0.18, t0); gg.gain.exponentialRampToValueAtTime(0.0001, t0 + 1.4);
+    gong.connect(gg); gg.connect(actx.destination); gong.start(t0); gong.stop(t0 + 1.45);
+
+    // 승전 팡파레 화음
+    [330, 440, 554, 659].forEach((f, idx) => {
+      const o = actx.createOscillator(), g = actx.createGain();
+      const st = t0 + idx*0.09;
+      o.type = 'triangle'; o.frequency.setValueAtTime(f, st);
+      g.gain.setValueAtTime(0.1, st); g.gain.exponentialRampToValueAtTime(0.0001, st + 0.5);
+      o.connect(g); g.connect(actx.destination); o.start(st); o.stop(st + 0.52);
+    });
+  }catch(e){}
+}
+
+/* ================= 3D 도로 커브 함수 ================= */
+// Z축 거리에 따른 도로의 실시간 중심선 X 좌표 (완만한 S자 및 다이나믹 와인딩)
+function getRoadCurve(z, travel = 0){
+  const s = travel - z;
+  return Math.sin(s * 0.010) * 5.4 + Math.sin(s * 0.022) * 2.7;
+}
+function getRoadTangent(z, travel = 0){
+  const dz = 0.5;
+  const x0 = getRoadCurve(z - dz, travel);
+  const x1 = getRoadCurve(z + dz, travel);
+  return (x1 - x0) / (2 * dz); // dX / dZ
+}
+
+/* ================= Three.js 초기화 ================= */
+const canvas = $('gl');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, powerPreference:'high-performance' });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(0xe4bf94, 40, 145);
+const camera = new THREE.PerspectiveCamera(62, 1, 0.1, 240);
+function resize(){
+  renderer.setSize(innerWidth, innerHeight, false);
+  camera.aspect = innerWidth/innerHeight; camera.updateProjectionMatrix();
+}
+addEventListener('resize', resize); resize();
+
+function skyTexture(){
+  const c = document.createElement('canvas'); c.width = 4; c.height = 256;
+  const g = c.getContext('2d'); const gr = g.createLinearGradient(0,0,0,256);
+  gr.addColorStop(0,'#3d4f73'); gr.addColorStop(0.5,'#c98f6b'); gr.addColorStop(0.72,'#e4bf94'); gr.addColorStop(1,'#e4bf94');
+  g.fillStyle = gr; g.fillRect(0,0,4,256);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+}
+scene.background = skyTexture();
+
+const mat = (c,o={}) => new THREE.MeshStandardMaterial(Object.assign({ color:c, roughness:0.85, metalness:0.05, flatShading:true }, o));
+const vcMat = new THREE.MeshStandardMaterial({ vertexColors:true, roughness:0.85, metalness:0.05, flatShading:true });
+
+function M(x,y,z,rx=0,ry=0,rz=0,sx=1,sy=1,sz=1){
+  return new THREE.Matrix4().compose(new THREE.Vector3(x,y,z), new THREE.Quaternion().setFromEuler(new THREE.Euler(rx,ry,rz)), new THREE.Vector3(sx,sy,sz));
+}
+function colored(geo, hex, m){
+  const g = geo.clone(); if(m) g.applyMatrix4(m);
+  const c = new THREE.Color(hex), n = g.attributes.position.count, arr = new Float32Array(n*3);
+  for(let i=0;i<n;i++){ arr[i*3]=c.r; arr[i*3+1]=c.g; arr[i*3+2]=c.b; }
+  g.setAttribute('color', new THREE.BufferAttribute(arr,3));
+  return g;
+}
+
+/* ================= 보병 & 장창 모델 ================= */
+function soldierGeo(armor, withSpear){
+  const P = [];
+  P.push(colored(new THREE.BoxGeometry(0.28,1.0,0.3), 0x3a2f28, M(-0.18,0.5,0)));
+  P.push(colored(new THREE.BoxGeometry(0.28,1.0,0.3), 0x3a2f28, M(0.18,0.5,0)));
+  P.push(colored(new THREE.BoxGeometry(0.85,1.0,0.5), armor, M(0,1.5,0)));
+  P.push(colored(new THREE.BoxGeometry(0.92,0.14,0.55), 0x2a2018, M(0,1.03,0)));
+  P.push(colored(new THREE.BoxGeometry(0.22,0.8,0.24), armor, M(-0.56,1.55,0)));
+  P.push(colored(new THREE.BoxGeometry(0.22,0.8,0.24), armor, M(0.56,1.55,0)));
+  P.push(colored(new THREE.SphereGeometry(0.28,8,6), 0xd9a47a, M(0,2.28,0)));
+  P.push(colored(new THREE.ConeGeometry(0.34,0.42,8), 0x59524a, M(0,2.56,0)));
+  P.push(colored(new THREE.CylinderGeometry(0.33,0.33,0.1,8), 0x59524a, M(0,2.37,0)));
+  P.push(colored(new THREE.BoxGeometry(0.08,0.9,0.7), 0x8a3a2a, M(-0.72,1.5,-0.1)));
+  if(withSpear){
+    P.push(colored(new THREE.CylinderGeometry(0.05,0.05,3.6,5), 0x6b4a2b, M(0.72,1.8,0)));
+    P.push(colored(new THREE.ConeGeometry(0.12,0.4,5), 0xcfd4d8, M(0.72,3.75,0)));
+  }
+  return mergeGeometries(P);
+}
+const SOLDIER_GEO = soldierGeo(0x2f4f8f, true);
+const SOLDIER_GEO_NOSPEAR = soldierGeo(0x2f4f8f, false);
+function makeSoldierObject(noSpear){
+  if(assets.soldier) return assets.soldier.clone(true);
+  return new THREE.Mesh(noSpear ? SOLDIER_GEO_NOSPEAR : SOLDIER_GEO, vcMat);
+}
+function makeSpear(){
+  if(assets.spear) return assets.spear.clone(true);
+  const g = new THREE.Group();
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.06,4.2,6), mat(0x6b4a2b)); pole.rotation.z = Math.PI/2; g.add(pole);
+  const tip = new THREE.Mesh(new THREE.ConeGeometry(0.14,0.5,6), mat(0xcfd4d8,{metalness:0.6,roughness:0.3})); tip.rotation.z = -Math.PI/2; tip.position.x = 2.35; g.add(tip);
+  const tassel = new THREE.Mesh(new THREE.SphereGeometry(0.12,6,4), mat(0xb3261e)); tassel.position.x = 1.9; g.add(tassel);
+  return g;
+}
+function findLegs(root){
+  const names = ['Leg_FL','Leg_FR','Leg_BL','Leg_BR'], out = [];
+  names.forEach((n,i) => { const o = root.getObjectByName(n); if(o){ o.userData.ph = i*Math.PI/2; out.push(o); } });
+  return out;
+}
+
+/* ================= 무기 생성 헬퍼 (6종) ================= */
+function buildBlade(){
+  if(assets.blade) return assets.blade.clone(true);
+  const g = new THREE.Group();
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.07,0.07,4.2,8), mat(0x3a2a1c)); pole.rotation.z = Math.PI/2; g.add(pole);
+  const sh = new THREE.Shape();
+  sh.moveTo(1.2,0.04); sh.bezierCurveTo(1.25,0.55,1.85,0.95,2.6,1.0); sh.bezierCurveTo(2.45,0.65,2.4,0.3,2.35,0.04); sh.lineTo(1.2,0.04);
+  const eg = new THREE.ExtrudeGeometry(sh,{depth:0.06,bevelEnabled:false}); eg.translate(0,0,-0.03);
+  const blade = new THREE.Mesh(eg, mat(0x54d6a4,{metalness:0.6,roughness:0.3,emissive:0x0e4a3a})); g.add(blade);
+  const tip = new THREE.Mesh(new THREE.ConeGeometry(0.1,0.5,6), mat(0xcfd4d8,{metalness:0.6,roughness:0.3})); tip.rotation.z = -Math.PI/2; tip.position.x = 2.35; g.add(tip);
+  return g;
+}
+
+function buildProceduralDualSwords(){
+  if(assets.weapon_dual_swords) return assets.weapon_dual_swords.clone(true);
+  const g = new THREE.Group();
+  for(const sign of [-1, 1]){
+    const sw = new THREE.Group(); sw.position.x = sign * 0.45;
+    const blade = new THREE.Mesh(new THREE.BoxGeometry(0.1, 1.4, 0.03), mat(0xd4dfe6,{metalness:0.7,roughness:0.2})); blade.position.y = 0.7; sw.add(blade);
+    const guard = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.08, 0.08), mat(0xe0b354,{metalness:0.5})); sw.add(guard);
+    const grip = new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.04,0.4,8), mat(0x4a2418)); grip.position.y = -0.2; sw.add(grip);
+    g.add(sw);
+  }
+  return g;
+}
+
+function buildProceduralFan(){
+  if(assets.weapon_fan) return assets.weapon_fan.clone(true);
+  const g = new THREE.Group();
+  const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.045,0.045,0.8,8), mat(0x1d2b1f)); handle.position.y = 0.1; g.add(handle);
+  for(let i=0; i<7; i++){
+    const ang = (i/6 - 0.5) * 1.2;
+    const f = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.8, 0.02), mat(i%2===0 ? 0xf8f6f0 : 0xe0b354));
+    f.position.set(Math.sin(ang)*0.6, 0.5 + Math.cos(ang)*0.6, 0);
+    f.rotation.z = -ang;
+    g.add(f);
+  }
+  return g;
+}
+
+function buildProceduralBow(){
+  if(assets.weapon_bow) return assets.weapon_bow.clone(true);
+  const g = new THREE.Group();
+  const arc = new THREE.Mesh(new THREE.TorusGeometry(0.9, 0.04, 6, 16, Math.PI), mat(0x422818));
+  arc.rotation.z = -Math.PI/2; g.add(arc);
+  const string = new THREE.Mesh(new THREE.CylinderGeometry(0.01,0.01,1.8,6), mat(0xe0decb)); g.add(string);
+  const arrow = new THREE.Mesh(new THREE.CylinderGeometry(0.02,0.02,1.5,6), mat(0x7a5435));
+  arrow.rotation.z = Math.PI/2; arrow.position.x = 0.3; g.add(arrow);
+  return g;
+}
+
+/* ================= 장수 & 명마 6종 고유 테마 ================= */
+const HERO_THEMES = [
+  // 1P: 관우 - 타오르는 적갈색 적토마 & 비취빛 녹색 도포 & 황금 용 흉갑
+  {
+    horseBody:0xbd251b, horseMane:0x2a0d0a, saddle:0xe0b354,
+    robe:0x1f7a3a, robeD:0x175c2c, cape:0x8f1d18, sash:0xb3261e,
+    helmet:0xf0be42, armor:0xe0b354, title:'관우 (적토마)'
+  },
+  // 2P: 조운 - 눈부신 백은 백룡마 & 벽청색 비단 도포 & 백은 갑옷
+  {
+    horseBody:0xf0f4f8, horseMane:0xffffff, saddle:0x2563eb,
+    robe:0x2357a8, robeD:0x1b4080, cape:0x1d4ed8, sash:0x60a5fa,
+    helmet:0xe2e8f0, armor:0xd0d8e2, title:'조운 (백룡마)'
+  },
+  // 3P: 여포/장비 - 칠흑의 흑마(오추마) & 진홍빛 화염 도포 & 흑철 갑주
+  {
+    horseBody:0x181716, horseMane:0x0a0908, saddle:0x581c87,
+    robe:0xdc2626, robeD:0x991b1b, cape:0x7f1d1d, sash:0xf87171,
+    helmet:0x3f3f46, armor:0x27272a, title:'여포 (오추마)'
+  },
+  // 4P: 유비/제갈량 - 귀품 있는 황금 명마(적로) & 백색 학익 도포 & 비취 자색
+  {
+    horseBody:0xd97706, horseMane:0xfef3c7, saddle:0x059669,
+    robe:0xf8fafc, robeD:0x059669, cape:0x7c3aed, sash:0xf59e0b,
+    helmet:0xfbbf24, armor:0xdfb858, title:'유비 (적로마)'
+  },
+  // 5P: 황충 - 짙은 밤색 갈마 & 호박색 도포
+  {
+    horseBody:0x6f3816, horseMane:0x3e1f0a, saddle:0xb45309,
+    robe:0xd97706, robeD:0x92400e, cape:0xb91c1c, sash:0xfbbf24,
+    helmet:0xcd7f32, armor:0x92400e, title:'황충 (갈마)'
+  },
+  // 6P: 마초 - 서량의 푸른 흑회마(청총마) & 백은 사자갑주
+  {
+    horseBody:0x384252, horseMane:0x94a3b8, saddle:0x6d28d9,
+    robe:0xe2e8f0, robeD:0x4338ca, cape:0x6b21a8, sash:0xa855f7,
+    helmet:0xf59e0b, armor:0xcbd5e1, title:'마초 (청총마)'
+  }
+];
+
+/* ================= 말 & 장수 생성기 ================= */
+function buildHorse(thm){
+  const h = new THREE.Group(), legs = [];
+  const bodyM = mat(thm.horseBody), maneM = mat(thm.horseMane), saddleM = mat(thm.saddle);
+  const add = (geo, m, x,y,z, rx=0,ry=0,rz=0) => { const o = new THREE.Mesh(geo, m); o.position.set(x,y,z); o.rotation.set(rx,ry,rz); h.add(o); return o; };
+  add(new THREE.CapsuleGeometry(0.62,1.5,4,10), bodyM, 0,1.75,0, Math.PI/2,0,0);
+  add(new THREE.SphereGeometry(0.7,10,8), bodyM, 0,1.85,0.75);
+  add(new THREE.SphereGeometry(0.66,10,8), bodyM, 0,1.85,-0.8);
+  add(new THREE.BoxGeometry(0.5,1.15,0.55), bodyM, 0,2.55,-1.3, -0.55,0,0);
+  add(new THREE.BoxGeometry(0.16,1.1,0.4), maneM, 0,2.7,-1.15, -0.55,0,0);
+  add(new THREE.BoxGeometry(0.4,0.42,0.95), bodyM, 0,3.05,-1.9, 0.35,0,0);
+  add(new THREE.ConeGeometry(0.07,0.22,5), maneM, -0.15,3.38,-1.6);
+  add(new THREE.ConeGeometry(0.07,0.22,5), maneM, 0.15,3.38,-1.6);
+  // 안장
+  add(new THREE.BoxGeometry(0.8,0.18,0.95), saddleM, 0,2.15,0);
+  const tail = new THREE.Group(); tail.position.set(0,2.2,1.4);
+  const tb = new THREE.Mesh(new THREE.BoxGeometry(0.2,1.2,0.2), maneM); tb.position.y = -0.6; tail.add(tb); h.add(tail);
+  [[-0.38,-0.85,0],[0.38,-0.85,Math.PI*0.5],[-0.38,0.85,Math.PI],[0.38,0.85,Math.PI*1.5]].forEach(([x,z,ph]) => {
+    const p = new THREE.Group(); p.position.set(x,1.4,z); p.userData.ph = ph;
+    const leg = new THREE.Mesh(new THREE.BoxGeometry(0.24,1.3,0.26), bodyM); leg.position.y = -0.65;
+    const hoof = new THREE.Mesh(new THREE.BoxGeometry(0.28,0.16,0.3), mat(0x1a1410)); hoof.position.y = -1.3;
+    p.add(leg, hoof); h.add(p); legs.push(p);
+  });
+  return { group:h, legs, tail };
+}
+
+function buildGuanYu(thm){
+  const g = new THREE.Group(); g.position.set(0,2.3,0.1);
+  const robe = mat(thm.robe), robeD = mat(thm.robeD, { roughness:0.9 }), skin = mat(0xd9a47a), black = mat(0x14110f), accent = mat(thm.sash);
+  const add = (geo,m,x,y,z,rx=0,ry=0,rz=0) => { const o = new THREE.Mesh(geo,m); o.position.set(x,y,z); o.rotation.set(rx,ry,rz); g.add(o); return o; };
+  add(new THREE.BoxGeometry(0.95,1.15,0.55), robe, 0,0.65,0);
+  add(new THREE.CylinderGeometry(0.5,0.85,0.7,10), robeD, 0,0.05,0);
+  add(new THREE.BoxGeometry(1.3,0.24,0.62), robeD, 0,1.2,0);
+  add(new THREE.BoxGeometry(1.0,0.16,0.6), accent, 0,0.2,0);
+  const cape = add(new THREE.BoxGeometry(0.9,1.3,0.06), mat(thm.cape), 0,0.5,0.36, 0.25,0,0);
+  add(new THREE.SphereGeometry(0.32,10,8), skin, 0,1.6,0);
+  add(new THREE.SphereGeometry(0.34,10,8), black, 0,1.62,0.1);
+  add(new THREE.CylinderGeometry(0.3,0.34,0.3,8), robe, 0,1.92,0);
+  add(new THREE.SphereGeometry(0.09,6,5), mat(thm.helmet,{metalness:0.55,roughness:0.35}), 0,2.12,0);
+  const rib1 = add(new THREE.BoxGeometry(0.1,0.7,0.04), robe, -0.12,1.55,0.42);
+  const rib2 = add(new THREE.BoxGeometry(0.1,0.7,0.04), robe, 0.12,1.55,0.42);
+  add(new THREE.CylinderGeometry(0.11,0.11,1.1,8), robe, 0.62,1.75,0);
+  add(new THREE.SphereGeometry(0.14,8,6), skin, 0.62,2.35,0);
+  add(new THREE.BoxGeometry(0.2,0.2,0.9), robe, -0.55,0.95,-0.4);
+  g.userData = { cape, rib1, rib2 };
+  return g;
+}
+
+// 머리 위 3D 텍스트 라벨 스프라이트 (작고 아담하며 시인성 높은 크기)
+function makeLabelSprite(text, colorHex){
+  const c = document.createElement('canvas'); c.width = 128; c.height = 64;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = colorHex;
+  ctx.font = 'bold 30px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.shadowColor = '#000'; ctx.shadowBlur = 5; ctx.shadowOffsetX = 1.5; ctx.shadowOffsetY = 1.5;
+  ctx.fillText(text, 64, 32);
+  const tex = new THREE.CanvasTexture(c);
+  const sm = new THREE.SpriteMaterial({ map:tex, depthTest:false, transparent:true });
+  const sp = new THREE.Sprite(sm);
+  sp.scale.set(0.72, 0.36, 1); // 기존 1.5, 0.75에서 약 50% 축소
+  return sp;
+}
+
+// 단일 라이더(장수+말) 객체 빌드 함수
+function createRiderSquadUnit(idx, pColor){
+  const root = new THREE.Group();
+  const tiltUnit = new THREE.Group(); root.add(tiltUnit);
+
+  const thm = HERO_THEMES[idx % HERO_THEMES.length];
+
+  // 말 및 장수 절차적 본체 (각 테마 색상 적용)
+  const H = buildHorse(thm);
+  tiltUnit.add(H.group);
+
+  const guan = buildGuanYu(thm);
+  tiltUnit.add(guan);
+
+  // GLB 에셋 덮어쓰기 지원 시 각 플레이어 고유 색상으로 리틴팅!
+  let assetObj = null, assetLegs = [];
+  if(assets.hero){
+    H.group.visible = false; guan.visible = false;
+    assetObj = assets.hero.clone(true);
+    tiltUnit.add(assetObj);
+    assetLegs = findLegs(assetObj);
+
+    // [핵심] GLB 모델의 각 머티리얼을 고유하게 복제 후 플레이어 테마 색상으로 실시간 리틴팅
+    assetObj.traverse(child => {
+      if(child.isMesh && child.material){
+        child.material = child.material.clone();
+        const matName = (child.material.name || '').toLowerCase();
+        const objName = (child.name || '').toLowerCase();
+
+        // 말 몸통 및 다리
+        if(matName.includes('redharebody') || objName.includes('barrel') || objName.includes('chest') || objName.includes('rump') || objName.includes('neck') || objName.includes('head') || objName.includes('leg') || objName.includes('thigh') || objName.includes('shin')){
+          child.material.color.setHex(thm.horseBody);
+        }
+        // 말 갈기 및 꼬리
+        else if(matName.includes('redharemane') || objName.includes('mane') || objName.includes('tail') || objName.includes('ear')){
+          child.material.color.setHex(thm.horseMane);
+        }
+        // 안장
+        else if(matName.includes('saddle')){
+          child.material.color.setHex(thm.saddle);
+        }
+        // 장수 도포
+        else if(matName.includes('guanrobe') || objName.includes('robe') || objName.includes('torso') || objName.includes('arm')){
+          child.material.color.setHex(matName.includes('robed') ? thm.robeD : thm.robe);
+        }
+        // 망토
+        else if(matName.includes('guancape') || objName.includes('cape')){
+          child.material.color.setHex(thm.cape);
+        }
+        // 허리띠
+        else if(matName.includes('guansash') || objName.includes('sash') || objName.includes('belt')){
+          child.material.color.setHex(thm.sash);
+        }
+        // 투구 및 금장식
+        else if(matName.includes('herogold') || objName.includes('gold') || objName.includes('bridle') || objName.includes('helmet')){
+          child.material.color.setHex(thm.helmet);
+        }
+      }
+    });
+  }
+
+  // 무기 피벗 및 장수별 고유 무기 연결
+  const weaponPivot = new THREE.Group();
+  weaponPivot.position.set(0.62, 4.8, 0.1);
+  tiltUnit.add(weaponPivot);
+
+  const weaponHolder = new THREE.Group();
+  weaponPivot.add(weaponHolder);
+
+  const actionType = WEAPON_ACTIONS[idx % WEAPON_ACTIONS.length];
+  let weaponMesh = null;
+  if(actionType === 'slash' || actionType === 'spin'){
+    weaponMesh = buildBlade();
+  } else if(actionType === 'thrust'){
+    weaponMesh = makeSpear();
+  } else if(actionType === 'dual_swords'){
+    weaponMesh = buildProceduralDualSwords();
+  } else if(actionType === 'fan'){
+    weaponMesh = buildProceduralFan();
+  } else if(actionType === 'bow'){
+    weaponMesh = buildProceduralBow();
+  }
+  if(weaponMesh) weaponHolder.add(weaponMesh);
+
+  // 머리 위 역삼각형(▼) 마커 & 플레이어 라벨 (작고 세련된 크기, 머리 위 5.2m 높이로 배치하여 관통 방지)
+  const markerGroup = new THREE.Group();
+  markerGroup.position.set(0, 5.2, 0);
+  tiltUnit.add(markerGroup);
+
+  // 작고 정교한 역삼각형 콘 (반지름 0.12, 높이 0.25)
+  const coneGeo = new THREE.ConeGeometry(0.12, 0.25, 5);
+  coneGeo.rotateX(Math.PI); // 아래를 가리키는 역삼각형
+  const coneMat = new THREE.MeshBasicMaterial({ color:pColor, wireframe:false });
+  const markerCone = new THREE.Mesh(coneGeo, coneMat);
+  markerGroup.add(markerCone);
+
+  const sprite = makeLabelSprite(`${idx+1}P`, pColor);
+  sprite.position.y = 0.25; // 콘 바로 위
+  markerGroup.add(sprite);
+
+  // 그림자
+  const shadow = new THREE.Mesh(new THREE.CircleGeometry(1.4,16), new THREE.MeshBasicMaterial({ color:0x000000, transparent:true, opacity:0.3 }));
+  shadow.rotation.x = -Math.PI/2; shadow.position.y = 0.04; shadow.scale.set(0.85, 1.7, 1);
+  scene.add(shadow);
+
+  return {
+    root, tilt:tiltUnit, horse:H.group, legs:H.legs, tail:H.tail, guan,
+    asset:assetObj, assetLegs, weaponPivot, weaponHolder, actionType,
+    markerGroup, markerCone, shadow, idx,
+    baseOffsetX:0, baseOffsetZ:0
+  };
+}
+
+/* ================= 도로 & 월드 빌드 ================= */
+let roadMesh = null;
+let roadTex = null;
+const DECOR_L = 240;
+const decor = [];
+const squadUnits = [];
+
+function dirtTexture(){
+  const c = document.createElement('canvas'); c.width = 512; c.height = 512;
+  const g = c.getContext('2d');
+  // 고운 황톳길 베이스
+  g.fillStyle = '#9b7746'; g.fillRect(0,0,512,512);
+  // 자연스러운 흙먼지와 자갈 질감
+  for(let i=0;i<2500;i++){
+    const light = Math.random() > 0.5;
+    g.fillStyle = light ? 'rgba(235,210,165,0.18)' : 'rgba(70,45,20,0.22)';
+    const s = 1 + Math.random()*5;
+    g.fillRect(Math.random()*512, Math.random()*512, s, s*(0.6+Math.random()*0.8));
+  }
+  // 말발굽과 마차 바퀴 자국 (질주로 음영)
+  g.fillStyle = 'rgba(65,40,18,0.25)';
+  g.fillRect(110, 0, 36, 512);
+  g.fillRect(366, 0, 36, 512);
+  // 도로 양쪽 가장자리 짙은 흙둑 경계선
+  g.fillStyle = 'rgba(50,32,14,0.45)';
+  g.fillRect(0, 0, 24, 512);
+  g.fillRect(488, 0, 24, 512);
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = THREE.RepeatWrapping; t.wrapT = THREE.RepeatWrapping;
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+
+function buildWorld(){
+  scene.add(new THREE.HemisphereLight(0xffe9cc, 0x5a4a3a, 1.1));
+  const sun = new THREE.DirectionalLight(0xffd9a0, 1.65); sun.position.set(-14, 24, 15); scene.add(sun);
+
+  // 160 세그먼트 정밀 곡선 리본 도로 메쉬 구축 (Z축 18m부터 -242m까지 실시간 곡선 동기화)
+  roadTex = dirtTexture(); roadTex.repeat.set(1, 28);
+  const ROAD_SEGS = 160;
+  const ROAD_LEN = 260;
+  const positions = new Float32Array((ROAD_SEGS + 1) * 2 * 3);
+  const uvs = new Float32Array((ROAD_SEGS + 1) * 2 * 2);
+  const indices = [];
+
+  for(let i=0; i<=ROAD_SEGS; i++){
+    const v = i / ROAD_SEGS;
+    const wz = 18 - v * ROAD_LEN;
+    const cx = getRoadCurve(wz, 0);
+    const tan = getRoadTangent(wz, 0);
+    const nl = Math.hypot(1, tan);
+    const nx = 1 / nl;
+    const nz = -tan / nl;
+
+    positions[i*6]     = cx - 5.75 * nx;
+    positions[i*6 + 1] = 0.05;
+    positions[i*6 + 2] = wz - 5.75 * nz;
+
+    positions[i*6 + 3] = cx + 5.75 * nx;
+    positions[i*6 + 4] = 0.05;
+    positions[i*6 + 5] = wz + 5.75 * nz;
+
+    uvs[i*4] = 0; uvs[i*4 + 1] = v * 28;
+    uvs[i*4 + 2] = 1; uvs[i*4 + 3] = v * 28;
+
+    if(i < ROAD_SEGS){
+      const a = i * 2, b = i * 2 + 1, c = (i + 1) * 2, d = (i + 1) * 2 + 1;
+      indices.push(a, b, c);
+      indices.push(b, d, c);
+    }
+  }
+
+  const roadGeo = new THREE.BufferGeometry();
+  roadGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  roadGeo.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
+  roadGeo.setIndex(indices);
+  roadGeo.computeVertexNormals();
+
+  roadMesh = new THREE.Mesh(roadGeo, new THREE.MeshStandardMaterial({
+    map:roadTex, roughness:0.9, side:THREE.DoubleSide, polygonOffset:true, polygonOffsetFactor:-2, polygonOffsetUnits:-2
+  }));
+  roadMesh.frustumCulled = false; // 동적 리본 메쉬 절두체 컬링 차단하여 시야각 변화 시 실종 방지!
+  scene.add(roadMesh);
+
+  // 광활한 전장 필드
+  const field = new THREE.Mesh(new THREE.PlaneGeometry(800,800), new THREE.MeshStandardMaterial({ color:0x6b793f, roughness:1 }));
+  field.rotation.x = -Math.PI/2; field.position.set(0,-0.06,-100); scene.add(field);
+
+  // 원경 산맥
+  for(let i=-6;i<=6;i++){
+    const h = rand(20,36), r = rand(22,36);
+    const m = new THREE.Mesh(new THREE.ConeGeometry(r,h,5), new THREE.MeshStandardMaterial({ color:0x525e75, flatShading:true, roughness:1 }));
+    m.position.set(i*28 + rand(-6,6), h/2 - 2, -125 + rand(-6,6)); scene.add(m);
+  }
+
+  // 양옆 보병 & 군기 (도로 가장자리 5.75m 바깥 갓길에 질서정연하게 정렬)
+  const flagGeo = mergeGeometries([
+    colored(new THREE.CylinderGeometry(0.06,0.06,5.2,5), 0x4a3222, M(0,2.6,0)),
+    colored(new THREE.BoxGeometry(1.3,0.85,0.05), 0x2f4f8f, M(0.68,4.7,0)),
+    colored(new THREE.BoxGeometry(1.3,0.12,0.06), 0xe0b354, M(0.68,4.35,0))
+  ]);
+  const per = Math.floor(DECOR_L/5.2);
+  for(const side of [-1,1]){
+    // 보병 1열(7.4m), 2열(9.6m) - 도로(5.75m) 바깥에 여유 있게 정렬
+    for(const [x,ph] of [[7.4,0],[9.6,1.8]]){
+      for(let i=0;i<per;i++){
+        const w = new THREE.Group(); w.add(makeSoldierObject(false));
+        if(assets.soldier){ const sp = makeSpear(); sp.rotation.z = Math.PI/2; sp.position.set(0.6,2.0,0); w.add(sp); }
+        w.rotation.y = side < 0 ? -Math.PI/2 : Math.PI/2;
+        w.scale.setScalar(rand(0.92,1.08));
+        scene.add(w);
+        decor.push({ o:w, side, laneX:side*x, base:(i*5.2 + ph) % DECOR_L, ph:rand(0,6), kind:'s' });
+      }
+    }
+    // 군기(6.3m) - 도로 갓길 바로 바깥에 배치
+    for(let i=0;i<12;i++){
+      const f = new THREE.Mesh(flagGeo, vcMat);
+      f.rotation.y = side < 0 ? 0 : Math.PI;
+      scene.add(f);
+      decor.push({ o:f, side, laneX:side*6.3, base:(i*20) % DECOR_L, ph:rand(0,6), kind:'f' });
+    }
+  }
+
+  // 초기 1인 기수 생성
+  rebuildSquad([0]);
+}
+
+// 참가 플레이어 수에 따라 적토마 편대 재구성
+function rebuildSquad(indices){
+  // 기존 기수 제거
+  for(const sq of squadUnits){
+    scene.remove(sq.root);
+    scene.remove(sq.shadow);
+  }
+  squadUnits.length = 0;
+
+  const count = indices.length || 1;
+  indices.forEach((pIdx, slot) => {
+    const col = PAL[pIdx % PAL.length];
+    const unit = createRiderSquadUnit(pIdx, col);
+
+    // 편대 배치 위치 (X, Z 로컬 오프셋)
+    if(count === 1){
+      unit.baseOffsetX = 0; unit.baseOffsetZ = 0;
+    } else if(count === 2){
+      unit.baseOffsetX = (slot === 0 ? -1.6 : 1.6);
+      unit.baseOffsetZ = 0;
+    } else if(count === 3){
+      if(slot === 0){ unit.baseOffsetX = 0; unit.baseOffsetZ = -0.5; }
+      else if(slot === 1){ unit.baseOffsetX = -2.0; unit.baseOffsetZ = 0.8; }
+      else { unit.baseOffsetX = 2.0; unit.baseOffsetZ = 0.8; }
+    } else {
+      if(slot === 0){ unit.baseOffsetX = -1.6; unit.baseOffsetZ = -0.4; }
+      else if(slot === 1){ unit.baseOffsetX = 1.6; unit.baseOffsetZ = -0.4; }
+      else if(slot === 2){ unit.baseOffsetX = -1.0; unit.baseOffsetZ = 1.0; }
+      else { unit.baseOffsetX = 1.0; unit.baseOffsetZ = 1.0; }
+    }
+
+    scene.add(unit.root);
+    squadUnits.push(unit);
+  });
+}
+
+/* ================= 장애물 (해자: 수면 높이 상향 & 2종류 해자 시스템) ================= */
+function makeDitch(isWide = false){
+  const g = new THREE.Group();
+  const len = isWide ? 9.2 : 4.2; // 일반 해자(4.2m) vs 거대 해자(9.2m: 대점프 전용)
+  const roadW = 11.6;
+
+  // 1. 깊고 푸른 수면 (도로 y=0.05보다 확실히 높은 y=0.20로 올려 지면 겹침/실종 원천 차단)
+  const waterColor = isWide ? 0x0284c7 : 0x0ea5e9;
+  const waterMat = new THREE.MeshStandardMaterial({
+    color: waterColor,
+    roughness: 0.15,
+    metalness: 0.75,
+    transparent: true,
+    opacity: 0.94,
+    polygonOffset: true,
+    polygonOffsetFactor: -4,
+    polygonOffsetUnits: -4
+  });
+  const water = new THREE.Mesh(new THREE.BoxGeometry(roadW, 0.28, len), waterMat);
+  water.position.y = 0.20;
+  g.add(water);
+
+  // 2. 하얀 물결 림 & 파도 띠 (White Foam Rims) - 멀리서도 출렁이는 물빛이 선명하게 보이도록 강조
+  const foamMat = mat(0xe0f2fe, { roughness:0.4, metalness:0.1 });
+  const foams = [];
+  const foamZList = isWide ? [-3.2, -1.1, 1.1, 3.2] : [-1.2, 1.2];
+  for(const fz of foamZList){
+    const f = new THREE.Mesh(new THREE.BoxGeometry(roadW - 0.2, 0.05, 0.35), foamMat);
+    f.position.set(0, 0.35, fz);
+    g.add(f);
+    foams.push({ mesh:f, baseZ:fz, phase:rand(0, Math.PI*2) });
+  }
+
+  // 3. 묵직한 돌/목재 둑 (Stone/Wood Embankments) - 입구와 출구 경계를 확실히 세워 해자의 깊이감 연출
+  const bankMat = mat(isWide ? 0x3e2723 : 0x4a3b32, { roughness:0.85 });
+  const halfLen = len / 2;
+  for(const z of [-halfLen - 0.3, halfLen + 0.3]){
+    const bank = new THREE.Mesh(new THREE.BoxGeometry(roadW + 0.4, 0.52, 0.65), bankMat);
+    bank.position.set(0, 0.26, z);
+    g.add(bank);
+
+    // 둑 위 경계 기둥들
+    for(let i = -5; i <= 5; i += 2.5){
+      const post = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.3, 0.68), mat(0x271c19));
+      post.position.set(i, 0.55, z);
+      g.add(post);
+    }
+  }
+
+  // 4. 거대 해자(대점프 전용) 전용: 양옆 붉은 경고 깃발 & 위험 표지석
+  if(isWide){
+    for(const side of [-1, 1]){
+      const flagPole = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 4.2, 6), mat(0x3e2723));
+      flagPole.position.set(side * 5.6, 2.1, -halfLen - 0.2);
+      g.add(flagPole);
+
+      // 붉은 비기 경고 깃발
+      const banner = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.9, 0.04), mat(0xdc2626, { roughness:0.5 }));
+      banner.position.set(side * (5.6 - 0.6), 3.4, -halfLen - 0.2);
+      g.add(banner);
+
+      // 경고 표지석
+      const stone = new THREE.Mesh(new THREE.BoxGeometry(0.7, 1.2, 0.7), mat(0x78716c));
+      stone.position.set(side * 5.5, 0.6, -halfLen + 1.2);
+      g.add(stone);
+    }
+  }
+
+  return {
+    group: g,
+    anim(tta, t){
+      // 실시간 수면 물결 출렁임 애니메이션
+      water.position.y = 0.20 + Math.sin(t * 4.5) * 0.025;
+      foams.forEach(f => {
+        f.mesh.position.y = 0.35 + Math.sin(t * 5 + f.phase) * 0.02;
+        f.mesh.position.z = f.baseZ + Math.cos(t * 3.5 + f.phase) * 0.08;
+      });
+    }
+  };
+}
+
+function makeStake(){
+  const g = new THREE.Group();
+  if(assets.stake){ g.add(assets.stake.clone(true)); return { group:g, anim(){} }; }
+  const wood = mat(0x8a5a2b), tipM = mat(0xd8c9a0);
+  for(let x=-4.4;x<=4.5;x+=2.2){
+    for(const s of [1,-1]){
+      const log = new THREE.Mesh(new THREE.CylinderGeometry(0.11,0.13,2.5,6), wood); log.position.set(x,0.9,0); log.rotation.z = 0.7*s; g.add(log);
+      const t = new THREE.Mesh(new THREE.ConeGeometry(0.11,0.4,6), tipM);
+      t.position.set(x - Math.sin(0.7*s)*1.4*-1, 0.9 + Math.cos(0.7)*1.4, 0); t.rotation.z = 0.7*s; g.add(t);
+    }
+  }
+  const beam = new THREE.Mesh(new THREE.BoxGeometry(10.4,0.22,0.3), wood); beam.position.set(0,0.75,0); g.add(beam);
+  return { group:g, anim(){} };
+}
+
+function makeSpearSoldier(side){
+  const g = new THREE.Group();
+  const body = makeSoldierObject(true); body.rotation.y = side < 0 ? -Math.PI/2 : Math.PI/2; g.add(body);
+  const P = new THREE.Group(); P.position.y = 2.35; P.rotation.y = side < 0 ? 0 : Math.PI; g.add(P);
+  const S = new THREE.Group(); P.add(S); S.add(makeSpear());
+  const inward = -side;
+  return { group:g, anim(tta){
+    const ext = smooth(clamp((0.9 - tta)/0.8, 0, 1));
+    P.position.x = inward*(-0.2 + 1.8*ext);
+    S.rotation.z = 1.0 - 0.7*ext;
+    body.position.x = inward*0.5*ext;
+  }};
+}
+
+function makeCavalry(laneX){
+  const g = new THREE.Group();
+  const body = new THREE.Group(); g.add(body);
+  let legs = [];
+  if(assets.cavalry){ const a = assets.cavalry.clone(true); body.add(a); legs = findLegs(a); }
+  else {
+    const h = buildHorse(0x2b2622, 0x0d0b0a); body.add(h.group); legs = h.legs;
+    const s = makeSoldierObject(true); s.position.set(0,1.5,0.1); body.add(s);
+  }
+  body.rotation.y = Math.PI;
+  const sp = new THREE.Group(); sp.position.set(0,3.0,0); sp.rotation.y = laneX > 0 ? Math.PI : 0; g.add(sp);
+  const spear = makeSpear(); spear.position.x = 1.7; sp.add(spear);
+  return { group:g, anim(tta,t){
+    const ext = smooth(clamp((0.6 - tta)/0.6, 0, 1));
+    sp.rotation.z = -1.0 + 1.9*ext;
+    legs.forEach(p => p.rotation.x = Math.sin(t*14 + (p.userData.ph||0))*0.8);
+    body.position.y = Math.abs(Math.sin(t*7))*0.1;
+  }};
+}
+
+const TYPES = ['ditch', 'ditchWide', 'stake', 'spearL', 'spearR', 'cavalry'];
+const NEED  = { ditch:'jump', ditchWide:'superJump', stake:'jump', spearL:'right', spearR:'left', cavalry:'duck' };
+const HINT  = {
+  right:     ['➡', '오른쪽으로!'],
+  left:      ['⬅', '왼쪽으로!'],
+  duck:      ['⬇', '숙여라!'],
+  jump:      ['⬆', '점프!'],
+  superJump: ['💥', '비기 대점프! (숙인 뒤 점프!)']
+};
+
+function spawnObstaclePattern(){
+  // 500m마다 관문 난이도 적용: 스테이지가 올라갈수록 연속 장애물/복합 출현
+  const stage = G.stage;
+  const count = stage >= 3 && Math.random() < 0.45 ? 2 : 1;
+
+  for(let c = 0; c < count; c++){
+    let type, tries = 0;
+    do { type = TYPES[Math.floor(Math.random()*TYPES.length)]; tries++; }
+    while(tries < 10 && G.lastTypes.length >= 2 && G.lastTypes.slice(-2).every(t => t === type));
+    G.lastTypes.push(type);
+
+    let built, k = 1, laneX = 0;
+    if(type === 'ditch') built = makeDitch(false);
+    else if(type === 'ditchWide') built = makeDitch(true);
+    else if(type === 'stake') built = makeStake();
+    else if(type === 'spearL'){ built = makeSpearSoldier(-1); laneX = -3.6; }
+    else if(type === 'spearR'){ built = makeSpearSoldier(1); laneX = 3.6; }
+    else {
+      laneX = (Math.random() < 0.5 ? -1.6 : 1.6);
+      built = makeCavalry(laneX);
+      k = 1.65;
+    }
+    const vrel = Math.max(G.speed, 8) * k;
+    const spawnZ = -SPAWN_T * vrel - (c * 18);
+    built.group.position.z = spawnZ;
+    scene.add(built.group);
+    obstacles.push({
+      type, need:NEED[type], k, laneX, group:built.group, anim:built.anim,
+      opened:false, judged:false, participants:[], ok:new Set(), tta:9
+    });
+  }
+}
+
+function clearObstacles(){
+  for(const o of obstacles) scene.remove(o.group);
+  obstacles.length = 0;
+}
+
+/* ================= 키보드 다인 플레이(1P~4P) 매핑 테이블 ================= */
+const KEY_CONTROLS = [
+  // 1P: WASD
+  {
+    badge: '1P: WASD',
+    sub: 'W:점프 S:숙이기 A/D:좌우',
+    up:    ['w', 'W', 'KeyW'],
+    down:  ['s', 'S', 'KeyS'],
+    left:  ['a', 'A', 'KeyA'],
+    right: ['d', 'D', 'KeyD'],
+  },
+  // 2P: 방향키
+  {
+    badge: '2P: 방향키',
+    sub: '↑:점프 ↓:숙이기 ←/→:좌우',
+    up:    ['ArrowUp'],
+    down:  ['ArrowDown'],
+    left:  ['ArrowLeft'],
+    right: ['ArrowRight'],
+  },
+  // 3P: UHJK
+  {
+    badge: '3P: UHJK',
+    sub: 'U:점프 J:숙이기 H/K:좌우',
+    up:    ['u', 'U', 'KeyU'],
+    down:  ['j', 'J', 'KeyJ'],
+    left:  ['h', 'H', 'KeyH'],
+    right: ['k', 'K', 'KeyK'],
+  },
+  // 4P: 키패드 8456
+  {
+    badge: '4P: 키패드 8456',
+    sub: '8:점프 5:숙이기 4/6:좌우',
+    up:    ['8', 'Numpad8'],
+    down:  ['5', 'Numpad5'],
+    left:  ['4', 'Numpad4'],
+    right: ['6', 'Numpad6'],
+  }
+];
+
+/* ================= 플레이어 & 엄격한 동작 판정기 ================= */
+function makePlayer(d){
+  let idx = 0; while(players.some(p => p.idx === idx)) idx++;
+  return {
+    id:nextId++, idx, label:`${idx+1}P`, color:PAL[idx % PAL.length],
+    hp:100,
+    x:d.x, y:d.y, s:d.s, baseX:d.x, baseY:d.y, ready:false, cal:{n:0,x:0,y:0},
+    lastSeen:0, active:true, last:{left:-9,right:-9,duck:-9,jump:-9}, vis:{x:0,y:0}, dxn:0, dyn:0,
+    runEnergy:1.0, lastX:d.x, lastY:d.y,
+    superJumpUntil:0, duckReady:false, duckTime:-9,
+    // 플레이어별 독립 키보드 입력 상태 (1P~4P 다인 플레이 완벽 지원)
+    keys:{ left:false, right:false, up:false, down:false },
+    // 점프 물리 상태 머신 (체공 후 반드시 지면으로 자동 착지)
+    jumpState:{ active:false, isSuper:false, startT:0, duration:0.75, height:2.4 },
+    stats:{hit:0,miss:0}
+  };
+}
+
+// 점프 발동 함수 (지속시간 후 무조건 착지)
+function triggerJump(p, isSuper, now){
+  // 이미 점프 중이면 착지할 때까지 추가 점프 방지 (공중 부유 방지)
+  if(p.jumpState && p.jumpState.active && (now - p.jumpState.startT < p.jumpState.duration)) return;
+
+  const dur = isSuper ? 1.25 : 0.75;
+  const h = isSuper ? 3.6 : 2.4;
+  p.jumpState = { active:true, isSuper, startT:now, duration:dur, height:h };
+  p.last.jump = now;
+
+  if(isSuper){
+    p.superJumpUntil = now + dur;
+    playSuperJumpSound();
+    toast(`💥 ${p.label} 대점프 발동!! (SUPER JUMP)`, 'good', 1200);
+    G.flash = 0.5;
+    G.score += 200;
+  }
+}
+
+// 매 프레임 플레이어의 물리적 점프 높이 계산 (포물선 비행 후 지면 0m 완벽 착지)
+function getPlayerJumpY(p, now){
+  if(!p.jumpState || !p.jumpState.active) return 0;
+  const elapsed = now - p.jumpState.startT;
+  if(elapsed >= p.jumpState.duration){
+    p.jumpState.active = false;
+    p.superJumpUntil = 0;
+    return 0; // 지면으로 완전히 착지!
+  }
+  const progress = elapsed / p.jumpState.duration; // 0 to 1
+  return Math.sin(progress * Math.PI) * p.jumpState.height;
+}
+
+// 엄격한 상호 배타적 동작 검증 (공중에 떠 있는 동안에만 점프 회피 인정)
+function checkPlayerAction(p, need, now){
+  const isJumping = p.jumpState && p.jumpState.active && (now - p.jumpState.startT < p.jumpState.duration);
+  const isSuperJumping = isJumping && p.jumpState.isSuper;
+  const isDucking = p.vis.y < -0.38 || (now - p.last.duck < 0.25);
+  const isLeft = p.vis.x < -0.38 || (now - p.last.left < 0.25);
+  const isRight = p.vis.x > 0.38 || (now - p.last.right < 0.25);
+
+  if(need === 'superJump'){
+    // 거대 해자: 오직 [비기 대점프]로만 돌파 가능! (일반 점프는 체공/거리 부족으로 빠짐)
+    return isSuperJumping;
+  }
+  if(need === 'jump'){
+    // 일반 해자와 목책: 일반 점프 또는 대점프 체공 중이면 통과!
+    return isJumping;
+  }
+  if(need === 'duck'){
+    // 기병 돌격창: 점프 중이면 공중에서 창에 100% 직격 피격!
+    if(isJumping) return false;
+    return isDucking;
+  }
+  if(need === 'right'){
+    // 좌측 창병 공격: 점프로 피할 수 없음! 오른쪽으로 회피해야만 함.
+    if(isJumping) return false;
+    if(isLeft) return false;
+    return isRight;
+  }
+  if(need === 'left'){
+    // 우측 창병 공격: 점프로 피할 수 없음! 왼쪽으로 회피해야만 함.
+    if(isJumping) return false;
+    if(isRight) return false;
+    return isLeft;
+  }
+  return false;
+}
+
+let video = $('cam'), landmarker = null, lastVideoTime = -1, camReady = false;
+const offCanvas = document.createElement('canvas'); offCanvas.width = 320; offCanvas.height = 180;
+const offCtx = offCanvas.getContext('2d', { willReadFrequently: true });
+let isDetecting = false;
+
+async function startCamera(){
+  if(camReady) return;
+  const stream = await navigator.mediaDevices.getUserMedia({
+    video:{ width:{ideal:640,max:640}, height:{ideal:360,max:480}, frameRate:{ideal:30,max:30}, facingMode:'user' },
+    audio:false
+  });
+  video.srcObject = stream; await video.play();
+  const mp = await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs');
+  const fileset = await mp.FilesetResolver.forVisionTasks('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm');
+  const opts = delegate => ({
+    baseOptions:{ modelAssetPath:'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task', delegate },
+    runningMode:'VIDEO', numPoses:Math.min(CFG.maxPlayers, 4), minPoseDetectionConfidence:0.45, minPosePresenceConfidence:0.45, minTrackingConfidence:0.45
+  });
+  try{ landmarker = await mp.PoseLandmarker.createFromOptions(fileset, opts('GPU')); }
+  catch(e){ landmarker = await mp.PoseLandmarker.createFromOptions(fileset, opts('CPU')); }
+  const pip = $('pip'); pip.width = 320; pip.height = Math.round(320*video.videoHeight/video.videoWidth) || 180;
+  camReady = true;
+  startDetectionLoop();
+}
+
+function startDetectionLoop(){
+  function step(){
+    if(mode === 'camera' && camReady && landmarker && video.readyState >= 2 && video.videoWidth && !isDetecting){
+      if(video.currentTime !== lastVideoTime){
+        isDetecting = true;
+        lastVideoTime = video.currentTime;
+        try{
+          offCtx.drawImage(video, 0, 0, 320, 180);
+          const now = performance.now()/1000;
+          const res = landmarker.detectForVideo(offCanvas, performance.now());
+          const dets = [];
+          for(const lm of res.landmarks || []){
+            const nose = lm[0]; if(!nose || (nose.visibility !== undefined && nose.visibility < 0.35)) continue;
+            let s = 0.15; const a = lm[11], b = lm[12];
+            if(a && b && a.visibility > 0.35 && b.visibility > 0.35) s = clamp(Math.abs(a.x - b.x), 0.06, 0.45);
+            dets.push({ x:1 - nose.x, y:nose.y, s });
+          }
+          assign(dets, now);
+        }catch(e){}
+        isDetecting = false;
+      }
+    }
+    if('requestVideoFrameCallback' in video) video.requestVideoFrameCallback(step);
+    else setTimeout(step, 30);
+  }
+  if('requestVideoFrameCallback' in video) video.requestVideoFrameCallback(step);
+  else setTimeout(step, 30);
+}
+
+// 다인 플레이어별 고유 카메라 영역(Lane Zone) 계산 함수
+function getPlayerZone(idx, total = CFG.maxPlayers){
+  const n = Math.max(1, total);
+  const minX = idx / n;
+  const maxX = (idx + 1) / n;
+  const centerX = (idx + 0.5) / n;
+  return { minX, maxX, centerX, n };
+}
+
+function assign(dets, now){
+  if(state === 'playing'){
+    // [인게임]: 고유 영역(Lane Zone) 1:1 배타적 절대 매핑 (플레이어 스왑/플리핑 완전 박멸)
+    if(!players.length || !dets.length) return;
+
+    if(players.length === 1){
+      // 1인 플레이: 화면에서 1P 이전 위치와 가장 가까운 det 바인딩
+      let bestDet = dets[0], minDist = Infinity;
+      const p = players[0];
+      for(const d of dets){
+        const dist = Math.hypot(p.x - d.x, (p.y - d.y)*0.6);
+        if(dist < minDist){ minDist = dist; bestDet = d; }
+      }
+      applyDet(p, bestDet, now);
+      return;
+    }
+
+    // 다인 플레이: 각 플레이어는 자신의 고유 영역(Lane) 내 det만 배타적으로 수신
+    const total = players.length;
+    players.forEach((p, idx) => {
+      if(p.hp <= 0) return; // 전사한 플레이어는 스킵
+      const zone = getPlayerZone(idx, total);
+
+      // 1순위: 자기 영역 [minX, maxX] 안에 들어온 det 중 중심과 가장 가까운 사람
+      let inZoneDets = dets.filter(d => d.x >= zone.minX && d.x <= zone.maxX);
+      let targetDet = null;
+
+      if(inZoneDets.length > 0){
+        inZoneDets.sort((a,b) => Math.abs(a.x - zone.centerX) - Math.abs(b.x - zone.centerX));
+        targetDet = inZoneDets[0];
+      } else {
+        // 2순위: 약간 몸을 기울여 경계를 살짝 넘었을 경우(±0.12 허용 범위)
+        let nearDets = dets.filter(d => d.x >= zone.minX - 0.12 && d.x <= zone.maxX + 0.12);
+        if(nearDets.length > 0){
+          nearDets.sort((a,b) => Math.abs(a.x - zone.centerX) - Math.abs(b.x - zone.centerX));
+          targetDet = nearDets[0];
+        }
+      }
+
+      if(targetDet){
+        applyDet(p, targetDet, now);
+      }
+    });
+    return;
+  }
+
+  // [대기실 / 레디 상태]: 각 고유 영역별로 슬롯 초기화 및 캘리브레이션
+  const total = CFG.maxPlayers;
+  while(players.length < total){
+    const idx = players.length;
+    const zone = getPlayerZone(idx, total);
+    const p = makePlayer({ x: zone.centerX, y: 0.5, s: 0.2 });
+    p.idx = idx;
+    p.baseX = zone.centerX;
+    p.baseY = 0.5;
+    p.label = `${idx + 1}P`;
+    p.color = PAL[idx % PAL.length];
+    players.push(p);
+  }
+  while(players.length > total){
+    players.pop();
+  }
+
+  // 각 플레이어 고유 영역 안에 서 있는 사람을 해당 플레이어로 매핑
+  players.forEach((p, idx) => {
+    const zone = getPlayerZone(idx, total);
+    let inZone = dets.filter(d => d.x >= zone.minX - 0.06 && d.x <= zone.maxX + 0.06);
+    if(inZone.length > 0){
+      inZone.sort((a,b) => Math.abs(a.x - zone.centerX) - Math.abs(b.x - zone.centerX));
+      applyDet(p, inZone[0], now);
+    }
+  });
+
+  if(state === 'ready'){
+    rebuildSquad(readyPlayers().map(p => p.idx));
+  }
+}
+
+function applyDet(p, d, now){
+  p.lastSeen = now;
+  p.active = true;
+  const asp = video.videoHeight/video.videoWidth;
+  const mx = d.x - (p.lastX !== undefined ? p.lastX : d.x);
+  const my = d.y - (p.lastY !== undefined ? p.lastY : d.y);
+  p.lastX = d.x; p.lastY = d.y;
+
+  // 자동 주행: 언제나 전력 질주
+  p.runEnergy = 1.0;
+
+  p.x = lerp(p.x, d.x, 0.6); p.y = lerp(p.y, d.y, 0.6); p.s = lerp(p.s, d.s, 0.15);
+  
+  if(!p.ready){
+    if(state === 'playing'){
+      // 인게임 중이면 대기 없이 즉시 기준좌표 확정 및 레디
+      p.baseX = p.baseX || p.x;
+      p.baseY = p.baseY || p.y;
+      p.ready = true;
+    } else {
+      p.cal.n++; p.cal.x += p.x; p.cal.y += p.y;
+      if(p.cal.n >= 16){ p.baseX = p.cal.x/p.cal.n; p.baseY = p.cal.y/p.cal.n; p.ready = true; }
+      return;
+    }
+  }
+  const dxn = (p.x - p.baseX)/p.s, dyn = (p.y - p.baseY)*asp/p.s;
+  p.dxn = dxn; p.dyn = dyn;
+  const tl = TH.lean/CFG.sens, tj = TH.jump/CFG.sens, td = TH.duck/CFG.sens;
+  if(dxn > tl) p.last.right = now; else if(dxn < -tl) p.last.left = now;
+
+  // 숙이기 인식 및 대점프 충전
+  if(dyn > td){
+    p.last.duck = now;
+    p.duckReady = true;
+    p.duckTime = now;
+  }
+
+  // 숙였다가 점프하면 대점프 발동!
+  const canSuperJump = p.duckReady || (now - p.last.duck < 0.85);
+  if(dyn < -tj*0.75 && canSuperJump){
+    triggerJump(p, true, now);
+    p.duckReady = false;
+    p.last.duck = -99;
+  } else if(dyn < -tj){
+    triggerJump(p, false, now);
+  }
+
+  p.vis.x = clamp(dxn/(tl*1.2), -1, 1);
+  // 점프 체공은 getPlayerJumpY에서 물리적으로 처리하며, vis.y는 숙이기 모션에만 전념
+  p.vis.y = dyn > td*0.4 ? -clamp(dyn/td, 0, 1) : 0;
+  if(Math.abs(dxn) < 0.25 && Math.abs(dyn) < 0.2){ p.baseX += (p.x - p.baseX)*0.01; p.baseY += (p.y - p.baseY)*0.01; }
+}
+
+function keyboardPlayer(now){
+  players.forEach((p, idx) => {
+    if(p.hp <= 0) return; // 전사한 플레이어는 조작 중단
+    p.runEnergy = 1.0;
+    if(p.keys.left)  p.last.left  = now;
+    if(p.keys.right) p.last.right = now;
+    if(p.keys.down){
+      p.last.duck = now;
+      p.duckReady = true;
+      p.duckTime = now;
+    }
+    const tx = (p.keys.right ? 1 : 0) - (p.keys.left ? 1 : 0);
+    const ty = p.keys.down ? -1 : 0;
+    p.vis.x = lerp(p.vis.x, tx, 0.4);
+    p.vis.y = lerp(p.vis.y, ty, 0.5);
+  });
+}
+
+function updatePlayers(now, dt=0.016){
+  for(const p of players){
+    p.active = (mode === 'keyboard') ? true : (now - p.lastSeen < 1.5);
+    if(p.active) p.runEnergy = 1.0;
+  }
+  // 인게임 중에는 플레이어를 제거하지 않음 (로스터 고정)
+  if(state !== 'playing'){
+    for(let i = players.length-1; i >= 0; i--){
+      const p = players[i];
+      if(p.id !== 'kb' && now - p.lastSeen > 4){
+        if(p.stats.hit + p.stats.miss > 0) retired.push(p);
+        players.splice(i,1);
+        if(state === 'ready') rebuildSquad(readyPlayers().map(q => q.idx));
+      }
+    }
+  }
+}
+const readyPlayers = () => (state === 'playing' ? players : players.filter(p => p.active && p.ready));
+function recalibrate(){
+  for(const p of players){ if(p.id === 'kb') continue; p.ready = false; p.cal = {n:0,x:0,y:0}; }
+  toast('기준 자세를 다시 잡는 중…', '', 1200);
+}
+
+/* ================= 게임 진행 & 500m 관문 시스템 ================= */
+function startGame(){
+  clearObstacles();
+  Object.assign(G, {
+    dist:0, score:0, combo:0, hp:100, speed:0, t:0, travel:0, spawnT:2.0,
+    shake:0, flash:0, goldFlash:0, lastTypes:[],
+    stage:1, nextMilestone:500
+  });
+  retired = [];
+
+  // [핵심]: 처음 설정한 인원수(CFG.maxPlayers)로 정확히 플레이어 슬롯 고정!
+  // 대기실에서 초과 감지된 플레이어가 있으면 잘라내고, 부족하면 정확히 맞춰 생성
+  while(players.length > CFG.maxPlayers){
+    players.pop();
+  }
+  while(players.length < CFG.maxPlayers){
+    const idx = players.length;
+    const p = makePlayer({ x: 0.25 + idx * (0.5 / Math.max(1, CFG.maxPlayers - 1)), y: 0.5, s: 0.2 });
+    players.push(p);
+  }
+
+  players.forEach((p, idx) => {
+    p.idx = idx;
+    p.id = (mode === 'keyboard' && idx === 0) ? 'kb' : (idx + 1);
+    p.label = `${idx + 1}P`;
+    p.color = PAL[idx % PAL.length];
+    p.stats.hit = 0; p.stats.miss = 0; p.hp = 100;
+    p.ready = true; p.active = true;
+    p.baseX = p.baseX || p.x; p.baseY = p.baseY || p.y;
+    p.jumpState = { active:false, isSuper:false, startT:0, duration:0.75, height:2.4 };
+    p.superJumpUntil = 0; p.duckReady = false;
+  });
+
+  // 플레이어 편대 구축
+  rebuildSquad(players.map(p => p.idx));
+
+  state = 'playing';
+  document.body.classList.add('ingame');
+  for(const id of ['menu','ready','result']) $(id).classList.add('hidden');
+  $('side').classList.remove('hidden');
+  buildHpBars();
+  beep(220,0.25,'triangle',0.08); setTimeout(()=>beep(330,0.25,'triangle',0.08),150);
+}
+
+function endGame(){
+  state = 'over';
+  setTimeout(showResult, 900);
+}
+
+function showResult(){
+  if(state !== 'over') return;
+  const all = [...players, ...retired].filter(p => p.stats.hit + p.stats.miss > 0).sort((a,b) => b.stats.hit - a.stats.hit);
+  let best = 0; try{ best = +localStorage.getItem('jeoktoma-best') || 0; }catch(e){}
+  const d = Math.floor(G.dist); if(d > best){ best = d; try{ localStorage.setItem('jeoktoma-best', String(d)); }catch(e){} }
+  $('rDist').textContent = d; $('rScore').textContent = Math.floor(G.score + d); $('rBest').textContent = best;
+  $('rGate').textContent = `제${G.stage}관문 (${d >= 1500 ? '형주성' : (d >= 1000 ? '호로관' : (d >= 500 ? '사수관' : '전초전'))})`;
+  $('rList').innerHTML = all.map((p,i) => {
+    const n = p.stats.hit + p.stats.miss, acc = n ? Math.round(p.stats.hit/n*100) : 0;
+    return `<div style="--c:${p.color}"><i></i><b>${p.label}</b><span>회피 ${p.stats.hit} · 피격 ${p.stats.miss} · 잔여 기력 ${Math.round(p.hp)}% · 성공률 ${acc}%${i === 0 && all.length > 1 ? ' · 으뜸 기수' : ''}</span></div>`;
+  }).join('') || '<div style="--c:#cdbd98"><i></i><span>기록이 없어요</span></div>';
+  $('result').classList.remove('hidden');
+}
+
+function toMenu(){
+  state = 'menu'; mode = null; clearObstacles();
+  players.length = 0; retired = [];
+  document.body.classList.remove('ingame');
+  for(const id of ['ready','result']) $(id).classList.add('hidden');
+  $('side').classList.add('hidden'); $('menu').classList.remove('hidden');
+  $('menuMsg').textContent = '';
+}
+
+function judge(o, now){
+  o.judged = true;
+  const part = (o.participants && o.participants.length) ? o.participants : players.filter(p => p.hp > 0);
+  if(!part.length) return;
+  const fails = [];
+  for(const p of part){
+    const success = o.ok.has(p.id) || checkPlayerAction(p, o.need, now);
+    if(success){
+      p.stats.hit++;
+      // 회피 성공 시 기력 회복 없음 (오직 관문 돌파 시에만 회복)
+      G.score += 100*(1 + Math.min(G.combo,10)*0.1);
+    } else {
+      p.stats.miss++;
+      p.hp = Math.max(0, p.hp - 24);
+      fails.push(p);
+      const hpEl = $(`hp-${p.id}`);
+      if(hpEl){ hpEl.classList.remove('hit'); void hpEl.offsetWidth; hpEl.classList.add('hit'); }
+    }
+  }
+
+  // 전체 플레이어 평균 기력 계산
+  const totalHp = part.reduce((s, p) => s + p.hp, 0) / part.length;
+  G.hp = totalHp;
+
+  if(!fails.length){
+    G.combo++;
+    toast(part.length > 1 ? '전원 완벽 회피!' : '좋아!', 'good', 700);
+    beep(660,0.12,'triangle');
+  } else {
+    G.combo = 0; G.flash = 1; G.shake = 0.75;
+    const newlyDead = fails.filter(p => p.hp <= 0);
+    if(newlyDead.length){
+      toast(newlyDead.map(p => `<span style="color:${p.color}">💥 ${p.label} 전사! (말 이탈)</span>`).join(' '), 'bad', 1200);
+    } else {
+      toast(fails.map(p => `<span style="color:${p.color}">${p.label}</span>`).join(' ') + ' 피격! 기력 -24%', 'bad', 900);
+    }
+    beep(110,0.25,'sawtooth',0.09);
+    if(players.every(p => p.hp <= 0)){
+      G.hp = 0; endGame();
+    }
+  }
+}
+
+function updateGame(dt, now){
+  const L = LEVELS[CFG.level];
+
+  // [수정: 완전 자동 전력 질주 (Auto-Run) & 주행 지속성 보장]
+  // 플레이어가 카메라에서 잠시 빠지더라도 적토마는 절대 멈추지 않고 전력 질주를 지속합니다!
+  let target = 0;
+  if(state === 'playing'){
+    // 매 100m마다 0.75 m/s씩 꾸준히 가속 + 관문 돌파마다 2.0 m/s 추가 가속!
+    const distBonus = (G.dist / 100) * 0.75;
+    const stageBonus = (G.stage - 1) * 2.0;
+
+    // 대점프 중인 플레이어가 있으면 순간 부스트 속도(+4.5 m/s) 가속
+    const isAnySuper = players.some(p => p.superJumpUntil > now);
+    const superBoost = isAnySuper ? 4.5 : 0;
+
+    target = Math.min(L.v0 + distBonus + stageBonus + superBoost, L.vmax + (isAnySuper ? 5 : 0));
+  }
+  if(state === 'over') target = 0;
+
+  G.speed = lerp(G.speed, target, 1 - Math.exp(-dt*3.5));
+  G.travel += G.speed*dt;
+  if(state !== 'playing') return;
+
+  if(G.speed > 0.5){
+    G.t += dt; G.dist += G.speed*dt;
+
+    // 500m 단위 관문 돌파 이벤트
+    if(G.dist >= G.nextMilestone){
+      G.stage = Math.floor(G.dist / 500) + 1;
+      G.nextMilestone += 500;
+      const gateNames = ['사수관', '호로관', '형주성', '낙양성', '천하무쌍'];
+      const gName = gateNames[Math.min(G.stage - 2, gateNames.length - 1)];
+
+      // [핵심 규칙] 오직 관문을 깰 때만 기력 +20% 회복!
+      for(const p of players){
+        if(p.active && p.hp > 0){
+          p.hp = Math.min(100, p.hp + 20);
+        }
+      }
+
+      toast(`🏆 [제${G.stage}관문 ${gName} 돌파!!] 기력 +20% 회복!`, 'gate', 2400);
+      playGateFanfare();
+      G.goldFlash = 1.0;
+      G.score += 500;
+    }
+
+    // 장애물 스폰 타이머 (관문 단계가 오를수록 간격 단축)
+    const gapScale = Math.max(0.65, 1.0 - (G.stage - 1) * 0.12);
+    G.spawnT -= dt;
+    if(G.spawnT <= 0){
+      spawnObstaclePattern();
+      G.spawnT = rand(L.gap[0] * gapScale, L.gap[1] * gapScale);
+    }
+  }
+
+  // 장애물 이동 및 커브 트랙 좌표 연동
+  for(let i = obstacles.length-1; i >= 0; i--){
+    const o = obstacles[i];
+    const vrel = G.speed*o.k;
+    o.group.position.z += vrel*dt;
+
+    // 커브 도로의 X 중심선에 장애물의 고유 laneX 오프셋 합성
+    const curveX = getRoadCurve(o.group.position.z, G.travel);
+    const tan = getRoadTangent(o.group.position.z, G.travel);
+    const nl = Math.hypot(1, tan);
+    const nx = 1 / nl;
+    const nz = -tan / nl;
+
+    o.group.position.x = curveX + o.laneX * nx;
+    o.group.position.z += o.laneX * nz * 0.01;
+    o.group.rotation.y = -Math.atan(tan);
+
+    const d = -o.group.position.z;
+    o.tta = d/Math.max(vrel, 0.5);
+    o.anim(o.tta, G.t);
+
+    if(!o.opened && o.tta < 0.42){
+      o.opened = true;
+      const alive = players.filter(p => p.hp > 0);
+      o.participants = alive.length ? alive.slice() : players.slice();
+    }
+    if(o.opened && !o.judged){
+      for(const p of o.participants){
+        if(!o.ok.has(p.id) && checkPlayerAction(p, o.need, now)) o.ok.add(p.id);
+      }
+      if(o.tta < -0.12) judge(o, now);
+    }
+    if(o.group.position.z > 14){ scene.remove(o.group); obstacles.splice(i,1); }
+  }
+}
+
+/* ================= 3D 렌더링 & 비주얼 갱신 ================= */
+let phase = 0, sceneT = 0;
+
+function updateVisuals(dt, now){
+  sceneT += dt;
+  const act = readyPlayers();
+
+  // 커브 도로 정점 실시간 변형 (160 세그먼트 리본, 월드 Z 좌표와 100% 동기화)
+  if(roadMesh){
+    const pos = roadMesh.geometry.attributes.position;
+    const ROAD_SEGS = 160;
+    const ROAD_LEN = 260;
+    for(let i=0; i<=ROAD_SEGS; i++){
+      const wz = 18 - (i / ROAD_SEGS) * ROAD_LEN;
+      const cx = getRoadCurve(wz, G.travel);
+      const tan = getRoadTangent(wz, G.travel);
+      const nl = Math.hypot(1, tan);
+      const nx = 1 / nl;
+      const nz = -tan / nl;
+      pos.setXYZ(i*2,     cx - 5.75 * nx, 0.05, wz - 5.75 * nz);
+      pos.setXYZ(i*2 + 1, cx + 5.75 * nx, 0.05, wz + 5.75 * nz);
+    }
+    pos.needsUpdate = true;
+  }
+  roadTex.offset.y = (G.travel / 9.2857) % 1;
+
+  // 도로 양옆 보병 및 깃발 장식물: 플레이어를 향해 정면에서 후방으로 질주감 있게 스쳐 지나가도록 동기화
+  for(const d of decor){
+    const u = (d.base + G.travel) % DECOR_L;
+    const z = u - (DECOR_L - 18); // -222m에서 +18m로 플레이어를 향해 다가오며 지나감
+
+    const cx = getRoadCurve(z, G.travel);
+    const tan = getRoadTangent(z, G.travel);
+    const nl = Math.hypot(1, tan);
+    const nx = 1 / nl;
+    const nz = -tan / nl;
+
+    d.o.position.set(cx + d.laneX * nx, d.kind === 's' ? Math.abs(Math.sin(sceneT*2 + d.ph))*0.04 : 0, z + d.laneX * nz);
+    if(d.kind === 's'){
+      d.o.rotation.y = (d.side < 0 ? -Math.PI/2 : Math.PI/2) - Math.atan(tan);
+    } else if(d.kind === 'f'){
+      d.o.rotation.y = (d.side < 0 ? 0 : Math.PI) - Math.atan(tan);
+      d.o.rotation.z = Math.sin(sceneT*2.2 + d.ph)*0.03;
+    }
+  }
+
+  G.shake = Math.max(0, G.shake - dt*1.6);
+  G.flash = Math.max(0, G.flash - dt*2.2);
+  G.goldFlash = Math.max(0, G.goldFlash - dt*1.5);
+  const sh = G.shake;
+
+  // 도로 곡률에 따른 차체 뱅킹(기울기) 각도
+  const roadTan = getRoadTangent(0, G.travel);
+  const curveBanking = roadTan * 0.45;
+  const curveYaw = -Math.atan(roadTan);
+
+  const isMoving = G.speed > 0.45;
+  const legSpeed = isMoving ? G.speed : 0;
+  phase += dt * (isMoving ? legSpeed * 0.88 : 0);
+
+  // 각 참가 기수(플레이어)별 독립 자세/모션 및 고유 액션 렌더링
+  squadUnits.forEach((unit, i) => {
+    const p = players[i];
+    // [요구사항] 여럿 플레이 때 죽으면 그 말은 즉시 사라짐!
+    if(!p || p.hp <= 0){
+      unit.root.visible = false;
+      return;
+    }
+    unit.root.visible = true;
+
+    const vx = p.vis.x;
+    const vy = p.vis.y;
+    const duck = Math.max(0, -vy);
+    const isSuper = p.superJumpUntil > now;
+
+    // [핵심] 점프 높이는 물리 함수 getPlayerJumpY(p, now)로만 결정됨!
+    // 공중에 계속 떠 있을 수 없으며, 0.75초 후 무조건 지면(0m)으로 착지!
+    const jumpY = getPlayerJumpY(p, now);
+    const jumpNorm = jumpY / 2.5;
+
+    const roadCenterX = getRoadCurve(0, G.travel);
+    const nl = Math.hypot(1, roadTan);
+    const nx = 1 / nl;
+    const nz = -roadTan / nl;
+
+    const lateralOffset = unit.baseOffsetX + vx * 1.3;
+    const posX = roadCenterX + lateralOffset * nx;
+    const posZ = unit.baseOffsetZ + lateralOffset * nz;
+
+    unit.root.position.set(posX, jumpY, posZ);
+    unit.tilt.rotation.z = -vx*0.16 + curveBanking + (Math.random()-0.5)*sh*0.15;
+    unit.tilt.rotation.y = curveYaw;
+    unit.tilt.rotation.x = isSuper ? -0.1 : -duck*0.25;
+
+    // 말 애니메이션
+    const bob = isMoving ? Math.abs(Math.sin(phase + i))*0.07*(1 - Math.min(1, jumpNorm)) : Math.sin(sceneT*2.5)*0.012;
+    for(const leg of unit.legs) leg.rotation.x = isMoving ? Math.sin(phase + (leg.userData.ph||0))*0.75*(1 - Math.min(1, jumpNorm)*0.7) : Math.sin(leg.userData.ph||0)*0.03;
+    for(const leg of unit.assetLegs) leg.rotation.x = isMoving ? Math.sin(phase + (leg.userData.ph||0))*0.75*(1 - Math.min(1, jumpNorm)*0.7) : Math.sin(leg.userData.ph||0)*0.03;
+
+    unit.horse.position.y = Math.max(0, bob);
+    unit.horse.rotation.x = isSuper ? -0.12 : -duck*0.24;
+
+    // 장수 상체: 숙일 때 말 목 위로 낮게 엎드리는 유선형 포복 돌진
+    unit.guan.position.y = 2.3 + bob - duck*0.45;
+    unit.guan.position.z = 0.1 - duck*0.75;
+    unit.guan.rotation.x = isSuper ? -0.15 : -duck*0.7;
+
+    if(unit.asset){
+      unit.asset.position.y = Math.max(0, bob);
+      unit.asset.position.z = isSuper ? 0.2 : -duck*0.65;
+      unit.asset.rotation.x = isSuper ? -0.18 : -duck*0.24;
+      unit.asset.scale.set(1 + duck*0.06, 1 - duck*0.15, 1 + duck*0.18);
+    }
+
+    if(unit.tail) unit.tail.rotation.x = 0.45 + Math.sin(phase*1.3)*0.25 + duck*0.4;
+    if(unit.guan.userData.cape) unit.guan.userData.cape.rotation.x = 0.25 + Math.sin(phase*1.6)*0.12 + Math.min(G.speed/25, 0.5) + duck*0.5;
+
+    // 장수별 고유 무기 액션 (6종)
+    const actType = unit.actionType;
+    if(actType === 'slash'){
+      // 1P: 청룡언월도 크게 횡베기 휘두르기
+      const slashCycle = (sceneT * (isSuper ? 6.5 : 3.8)) % (Math.PI*2);
+      unit.weaponPivot.position.set(0.62, 4.8 + bob - duck*0.5, 0.1 - duck*0.6);
+      unit.weaponHolder.rotation.z = Math.sin(slashCycle) * 0.85 + 0.3;
+      unit.weaponHolder.rotation.y = Math.cos(slashCycle) * 1.4;
+    } else if(actType === 'thrust'){
+      // 2P: 은빛 장창 전방 번개 찌르기
+      const thrustCycle = Math.sin(sceneT * (isSuper ? 16 : 9));
+      unit.weaponPivot.position.set(0.55, 4.5 + bob - duck*0.4, 0.1 - duck*0.6 + Math.max(0, thrustCycle)*1.4);
+      unit.weaponHolder.rotation.set(0.1, 0, Math.PI/2 - 0.1);
+    } else if(actType === 'dual_swords'){
+      // 3P: 쌍검 X자 교차 난무
+      const dualCycle = sceneT * (isSuper ? 12 : 7);
+      unit.weaponPivot.position.set(0, 4.6 + bob - duck*0.5, 0.2 - duck*0.6);
+      unit.weaponHolder.rotation.z = Math.sin(dualCycle)*0.5;
+      unit.weaponHolder.rotation.x = Math.cos(dualCycle)*0.6;
+    } else if(actType === 'fan'){
+      // 4P: 학선 부채 바람 도술 (우아한 부채질)
+      const fanCycle = Math.sin(sceneT * (isSuper ? 14 : 7));
+      unit.weaponPivot.position.set(0.48, 4.7 + bob - duck*0.4, 0.15 - duck*0.5);
+      unit.weaponHolder.rotation.z = 0.3 + fanCycle*0.45;
+      unit.weaponHolder.rotation.y = fanCycle*0.5;
+    } else if(actType === 'bow'){
+      // 5P: 명궁 전방 조준 사격
+      const drawCycle = Math.sin(sceneT * 4.5);
+      unit.weaponPivot.position.set(0.2, 4.6 + bob - duck*0.4, 0.3 - duck*0.5);
+      unit.weaponHolder.rotation.set(0, -0.3 + drawCycle*0.1, 0.1);
+    } else {
+      // 6P: 언월도 풍차 회전
+      unit.weaponPivot.position.set(0.62, 4.8 + bob - duck*0.6, 0.1 - duck*0.6);
+      unit.weaponHolder.rotation.y -= dt * (isSuper ? 16.0 : 7.5);
+    }
+
+    // 머리 위 역삼각형(▼) 마커 회전 및 바운스 (투구 위 넉넉한 5.25m 높이 유지)
+    unit.markerGroup.rotation.y += dt * 3.2;
+    unit.markerGroup.position.y = 5.25 + Math.sin(sceneT*3.5 + i)*0.06 - duck*0.35;
+
+    // 그림자 (체공 시 점프 높이에 따라 크기 축소 및 투명도 감소)
+    unit.shadow.position.x = posX;
+    unit.shadow.position.z = posZ - duck*0.4;
+    const shadowScale = clamp(1 - jumpY*0.18, 0.4, 1.2);
+    unit.shadow.scale.set(0.85*shadowScale*(1 + duck*0.3), 1.7*shadowScale*(1 + duck*0.4), 1);
+    unit.shadow.material.opacity = clamp(0.32 - jumpY*0.06, 0.08, 0.32);
+  });
+
+  // 말발굽 소리
+  if(state === 'playing' && isMoving && G.speed > 2.0){
+    if(Math.sin(phase) * Math.sin(lastHoofPhase) < 0) playHoofbeat();
+  }
+  lastHoofPhase = phase;
+
+  // 카메라: 커브 도로의 중심을 유려하게 추종
+  const leadRoadX = getRoadCurve(-16, G.travel);
+  const camRoadX = getRoadCurve(8.5, G.travel);
+  const isAnySuper = act.some(p => p.superJumpUntil > now);
+  const avgJumpY = act.length ? act.reduce((s,p)=>s+Math.max(0, getPlayerJumpY(p, now)),0)/act.length : 0;
+  const avgDuck = act.length ? act.reduce((s,p)=>s+Math.max(0, -p.vis.y),0)/act.length : 0;
+
+  const camY = isAnySuper ? (7.0 + avgJumpY*0.4) : (5.6 + avgJumpY*0.65 - avgDuck*1.8);
+  const camZ = isAnySuper ? 10.0 : (8.4 - avgDuck*1.2);
+  camera.position.set(camRoadX + (Math.random()-0.5)*sh*0.5, camY + (Math.random()-0.5)*sh*0.4, camZ);
+  camera.lookAt(leadRoadX, isAnySuper ? (3.6 + avgJumpY*0.3) : (2.8 + avgJumpY*0.35 - avgDuck*1.2), -16);
+
+  // [속도감 극대화] 속도가 증가할수록 카메라 FOV를 62도에서 최대 76도까지 확장하여 시원한 광속 질주감 제공
+  const speedRatio = clamp((G.speed - 12) / 22, 0, 1);
+  camera.fov = lerp(62, 76, speedRatio);
+  camera.updateProjectionMatrix();
+
+  $('flash').style.opacity = G.flash;
+  $('goldFlash').style.opacity = G.goldFlash;
+}
+
+/* ================= 플레이어 개별 기력(HP) HUD 구축 및 갱신 ================= */
+function buildHpBars(){
+  const wrap = $('hpList');
+  wrap.innerHTML = '';
+  const list = players.length ? players : [{ id:'1', label:'1P', color:PAL[0], hp:100, idx:0 }];
+  list.forEach((p, idx) => {
+    const el = document.createElement('div');
+    el.className = 'player-hp' + (p.hp <= 0 ? ' dead' : '');
+    el.id = `hp-${p.id}`;
+    el.style.setProperty('--c', p.color);
+    const val = clamp(Math.round(p.hp), 0, 100);
+
+    // [요구사항] 키보드 모드 시 체력바 밑에 해당 플레이어의 조작키 표시
+    let keyGuideHtml = '';
+    if(mode === 'keyboard'){
+      const ctrl = KEY_CONTROLS[idx % KEY_CONTROLS.length];
+      const is1PAlone = (list.length === 1 && idx === 0);
+      const badgeText = is1PAlone ? 'WASD / ↑↓←→' : ctrl.badge;
+      const subText = is1PAlone ? 'W/↑:점프 S/↓:숙이기 A/D:좌우' : ctrl.sub;
+      keyGuideHtml = `
+        <div class="hp-key-guide">
+          <span class="k-badge">${badgeText}</span>
+          <span class="k-desc">${subText}</span>
+        </div>
+      `;
+    }
+
+    el.innerHTML = `
+      <div class="hp-header">
+        <b>${p.label}</b>
+        <span id="hptxt-${p.id}">${val <= 0 ? '전사' : val + '%'}</span>
+      </div>
+      <div class="hp-track">
+        <div class="hp-fill" id="hpfill-${p.id}" style="width:${val}%"></div>
+      </div>
+      ${keyGuideHtml}
+    `;
+    wrap.appendChild(el);
+  });
+}
+
+let toastTimer = 0;
+function toast(html, cls, ms=1000){
+  const t = $('toast'); t.innerHTML = html; t.className = 'show ' + (cls || '');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.className = '', ms);
+}
+
+let lastHud = 0;
+function updateHud(now){
+  if(state === 'playing' || state === 'over'){
+    $('sDist').textContent = Math.floor(G.dist);
+    $('sScore').textContent = Math.floor(G.score + G.dist);
+    $('sCombo').textContent = '연속 ' + G.combo;
+    $('sSpeed').textContent = Math.round(G.speed * 3.6) + ' km/h';
+    $('gateBadge').textContent = `제${G.stage}관문`;
+
+    // 플레이어별 개별 기력 바 갱신 (누락되거나 개수가 다르면 자동 재구축)
+    const wrap = $('hpList');
+    if(wrap.children.length !== players.length || players.some(p => !$(`hpfill-${p.id}`))){
+      buildHpBars();
+    }
+    for(const p of players){
+      const fill = $(`hpfill-${p.id}`);
+      const txt = $(`hptxt-${p.id}`);
+      const hpEl = $(`hp-${p.id}`);
+      if(fill && txt){
+        const val = clamp(Math.round(p.hp), 0, 100);
+        fill.style.width = val + '%';
+        txt.textContent = val <= 0 ? '전사' : val + '%';
+        if(hpEl){
+          if(val <= 0) hpEl.classList.add('dead');
+          else hpEl.classList.remove('dead');
+        }
+      }
+    }
+  }
+
+  $('chips').innerHTML = players.map(p => {
+    const a = k => (p.hp > 0 && checkPlayerAction(p, k, now)) ? 'on' : '';
+    const n = p.stats.hit + p.stats.miss;
+    const info = (p.hp <= 0) ? '전사 (이탈)' : (p.ready ? (state === 'playing' || state === 'over' ? `생존 ${Math.round(p.hp)}% · ${p.stats.hit}/${n}` : '준비 완료') : '인식 중…');
+    return `<div class="chip ${(p.active && p.hp > 0)?'':'off'}" style="--c:${p.color}"><b>${p.label}</b><span>${info}</span><em class="${a('left')}">◀</em><em class="${a('right')}">▶</em><em class="${a('jump')}">▲</em><em class="${a('duck')}">▼</em></div>`;
+  }).join('');
+
+  if(state === 'ready'){
+    const n = players.filter(p => p.active).length;
+    $('readyInfo').textContent = `설정 인원 ${CFG.maxPlayers}명 · 인식 ${n}명`;
+    $('btnGo').disabled = (n < 1);
+  }
+
+  // 힌트 출력 (장애물 힌트 우선, 사람이 잠시 빠져도 적토마는 정상 질주)
+  const h = $('hint');
+  let nearest = null;
+  if(state === 'playing'){
+    for(const o of obstacles){
+      if(!o.judged && o.tta > -0.1 && o.tta < 3.4 && (!nearest || o.tta < nearest.tta)) nearest = o;
+    }
+  }
+  if(nearest){
+    const [ar, tx] = HINT[nearest.need];
+    h.textContent = `${ar} ${tx}`; h.className = 'on' + (nearest.tta < 1.4 ? ' urgent' : '');
+  } else if(state === 'playing' && mode === 'camera' && !players.some(p => p.active)){
+    h.textContent = '카메라 앞에 서 주세요 (질주 중)'; h.className = 'on';
+  } else {
+    h.className = '';
+  }
+}
+
+/* ================= 카메라 PIP 화면 ================= */
+const pipCtx = $('pip').getContext('2d');
+let lastPip = 0;
+function drawPip(now){
+  if(state === 'menu' || state === 'boot') return;
+  if(now - lastPip < 0.042) return;
+  lastPip = now;
+  const pip = $('pip'), W = pip.width, Hh = pip.height;
+  pipCtx.clearRect(0,0,W,Hh);
+  if(mode === 'camera' && video.readyState >= 2){
+    pipCtx.save(); pipCtx.translate(W,0); pipCtx.scale(-1,1); pipCtx.drawImage(video,0,0,W,Hh); pipCtx.restore();
+    pipCtx.fillStyle = 'rgba(22,17,13,.25)'; pipCtx.fillRect(0,0,W,Hh);
+  } else {
+    pipCtx.fillStyle = '#1b1510'; pipCtx.fillRect(0,0,W,Hh);
+    pipCtx.fillStyle = '#cdbd98'; pipCtx.font = '15px sans-serif'; pipCtx.textAlign = 'center';
+    pipCtx.fillText('키보드: ← → 기울이기 · ↑/Space 점프 · ↓ 숙이기 (↓ 후 ↑ 대점프)', W/2, Hh/2);
+  }
+  if(mode !== 'camera' || !video.videoWidth) return;
+  const asp = video.videoHeight/video.videoWidth;
+
+  // [다인 모드 전용]: PIP 화면에 각 플레이어의 고유 영역(Lane Zone) 분할선 및 영역 명패 표시
+  if(CFG.maxPlayers > 1){
+    const total = CFG.maxPlayers;
+    for(let i = 0; i < total; i++){
+      const zone = getPlayerZone(i, total);
+      const x0 = zone.minX * W, x1 = zone.maxX * W;
+      const col = PAL[i % PAL.length];
+      const p = players[i];
+      const isHere = p && p.active && p.hp > 0;
+
+      // 영역 구분 수직 점선
+      if(i > 0){
+        pipCtx.strokeStyle = 'rgba(224,179,84,0.45)';
+        pipCtx.setLineDash([4, 4]);
+        pipCtx.lineWidth = 1.5;
+        pipCtx.beginPath();
+        pipCtx.moveTo(x0, 0);
+        pipCtx.lineTo(x0, Hh);
+        pipCtx.stroke();
+        pipCtx.setLineDash([]);
+      }
+
+      // 상단 고유 영역 뱃지 명패
+      pipCtx.fillStyle = isHere ? col : 'rgba(80,80,80,0.4)';
+      pipCtx.fillRect(x0 + 3, 3, (x1 - x0) - 6, 19);
+      pipCtx.fillStyle = isHere ? '#111' : '#cdbd98';
+      pipCtx.font = 'bold 11px sans-serif';
+      pipCtx.textAlign = 'center';
+      pipCtx.fillText(`${i+1}P 영역` + (isHere ? ' ✓' : ''), (x0 + x1)/2, 17);
+    }
+  }
+
+  for(const p of players){
+    if(!p.active || p.hp <= 0) continue;
+    const px = p.x*W, py = p.y*Hh;
+    pipCtx.strokeStyle = p.color; pipCtx.fillStyle = p.color; pipCtx.lineWidth = 2;
+    if(p.ready){
+      const tl = TH.lean/CFG.sens, tj = TH.jump/CFG.sens, td = TH.duck/CFG.sens;
+      const x0 = (p.baseX - tl*p.s)*W, x1 = (p.baseX + tl*p.s)*W;
+      const y0 = (p.baseY - tj*p.s/asp)*Hh, y1 = (p.baseY + td*p.s/asp)*Hh;
+      pipCtx.setLineDash([6,5]); pipCtx.strokeRect(x0, y0, x1-x0, y1-y0); pipCtx.setLineDash([]);
+    }
+    pipCtx.beginPath(); pipCtx.arc(px, py, p.ready ? 8 : 5, 0, Math.PI*2); pipCtx.fill();
+    if(p.ready){
+      const eng = p.runEnergy || 0;
+      const isSuper = p.superJumpUntil > now;
+      const isDuckReady = p.duckReady || (now - p.last.duck < 0.85);
+      pipCtx.beginPath();
+      pipCtx.arc(px, py, 15, -Math.PI/2, -Math.PI/2 + Math.PI*2 * eng);
+      pipCtx.strokeStyle = isSuper ? '#ffd23f' : (isDuckReady ? '#e0b354' : (eng > 0.25 ? '#3fbf8a' : '#e0453a'));
+      pipCtx.lineWidth = 3.5; pipCtx.stroke();
+    }
+    pipCtx.font = 'bold 14px sans-serif'; pipCtx.textAlign = 'center';
+    let tag = ' …';
+    if(p.ready){
+      const isSuper = p.superJumpUntil > now;
+      const isDuckReady = p.duckReady || (now - p.last.duck < 0.85);
+      if(isSuper) tag = ' 💥대점프!';
+      else if(isDuckReady) tag = ' ⚡대점프 장전!';
+      else tag = ' 🐎질주';
+    }
+    pipCtx.fillText(p.label + tag, px, py - 16);
+  }
+}
+
+/* ================= 입력 / 버튼 바인딩 ================= */
+function readOpts(){
+  CFG.maxPlayers = parseInt($('optPlayers').value, 10) || 1;
+  CFG.level = $('optLevel').value;
+  CFG.sens = +$('optSens').value;
+}
+$('btnCam').onclick = async () => {
+  unlockAudio(); readOpts();
+  $('menuMsg').textContent = '카메라와 AI 모델을 준비하는 중… (처음엔 몇 초 걸려요)';
+  $('btnCam').disabled = true;
+  try{
+    await startCamera();
+    mode = 'camera'; players.length = 0; state = 'ready';
+    $('menu').classList.add('hidden'); $('ready').classList.remove('hidden'); $('side').classList.remove('hidden');
+  }catch(e){
+    $('menuMsg').textContent = '카메라를 시작하지 못했어요: ' + (e && e.message ? e.message : e);
+  }
+  $('btnCam').disabled = false;
+};
+$('btnKey').onclick = () => {
+  unlockAudio(); readOpts();
+  mode = 'keyboard'; players.length = 0;
+  // 키보드 모드 시 설정한 최대 인원만큼 플레이어 생성하여 다인 편대 시험 주행 지원
+  for(let i=0; i<CFG.maxPlayers; i++){
+    const p = makePlayer({ x:0.3 + i*0.14, y:0.4, s:0.2 });
+    if(i === 0) p.id = 'kb';
+    p.ready = true; p.lastSeen = Infinity; p.hp = 100;
+    players.push(p);
+  }
+  startGame();
+};
+$('btnToggleRules').onclick = () => {
+  const r = $('rulesList');
+  const isHidden = r.classList.toggle('hidden');
+  $('toggleArrow').textContent = isHidden ? '열기 ▼' : '접기 ▲';
+};
+$('btnGo').onclick = () => { unlockAudio(); startGame(); };
+$('btnRecal').onclick = recalibrate;
+$('btnBack1').onclick = toMenu;
+$('btnBack2').onclick = toMenu;
+$('btnAgain').onclick = () => startGame();
+
+addEventListener('keydown', e => {
+  if(e.repeat) return; // OS 키 자동 반복 완전 무시: 1회 누를 때 단 1번만 격발
+  const k = e.key;
+  const code = e.code;
+  const now = performance.now()/1000;
+
+  if(mode === 'keyboard' && (state === 'playing' || state === 'ready')){
+    const is1PAlone = (players.length <= 1);
+
+    players.forEach((p, idx) => {
+      if(p.hp <= 0) return; // 전사한 플레이어 조작 차단
+      const ctrl = KEY_CONTROLS[idx % KEY_CONTROLS.length];
+      if(!ctrl) return;
+
+      // 1인 단독 플레이일 때는 WASD, 방향키, Spacebar 모두 1P 조작으로 지원
+      const isUp = ctrl.up.includes(k) || ctrl.up.includes(code) || (is1PAlone && idx === 0 && (k === ' ' || k === 'ArrowUp' || code === 'Space'));
+      const isDown = ctrl.down.includes(k) || ctrl.down.includes(code) || (is1PAlone && idx === 0 && (k === 'ArrowDown'));
+      const isLeft = ctrl.left.includes(k) || ctrl.left.includes(code) || (is1PAlone && idx === 0 && (k === 'ArrowLeft'));
+      const isRight = ctrl.right.includes(k) || ctrl.right.includes(code) || (is1PAlone && idx === 0 && (k === 'ArrowRight'));
+
+      if(isUp){
+        e.preventDefault();
+        if(!p.keys.up){
+          p.keys.up = true;
+          if(!p.jumpState || !p.jumpState.active){
+            const canSuper = p.duckReady || (now - p.last.duck < 0.85);
+            triggerJump(p, canSuper, now);
+            p.duckReady = false;
+            p.last.duck = -99;
+          }
+        }
+      }
+      if(isDown){ e.preventDefault(); p.keys.down = true; }
+      if(isLeft){ e.preventDefault(); p.keys.left = true; }
+      if(isRight){ e.preventDefault(); p.keys.right = true; }
+    });
+  }
+  if(k === 'Enter' && state === 'ready' && !$('btnGo').disabled) startGame();
+  if((k === 'c' || k === 'C') && mode === 'camera') recalibrate();
+});
+
+addEventListener('keyup', e => {
+  const k = e.key;
+  const code = e.code;
+  if(mode === 'keyboard'){
+    const is1PAlone = (players.length <= 1);
+    players.forEach((p, idx) => {
+      const ctrl = KEY_CONTROLS[idx % KEY_CONTROLS.length];
+      if(!ctrl) return;
+
+      const isUp = ctrl.up.includes(k) || ctrl.up.includes(code) || (is1PAlone && idx === 0 && (k === ' ' || k === 'ArrowUp' || code === 'Space'));
+      const isDown = ctrl.down.includes(k) || ctrl.down.includes(code) || (is1PAlone && idx === 0 && (k === 'ArrowDown'));
+      const isLeft = ctrl.left.includes(k) || ctrl.left.includes(code) || (is1PAlone && idx === 0 && (k === 'ArrowLeft'));
+      const isRight = ctrl.right.includes(k) || ctrl.right.includes(code) || (is1PAlone && idx === 0 && (k === 'ArrowRight'));
+
+      if(isUp) p.keys.up = false;
+      if(isDown) p.keys.down = false;
+      if(isLeft) p.keys.left = false;
+      if(isRight) p.keys.right = false;
+    });
+  }
+});
+
+/* ================= 3D 에셋 로딩 ================= */
+async function loadAssets(){
+  if(!location.protocol.startsWith('http')) return;
+  const loader = new GLTFLoader();
+  const list = {
+    hero:true, blade:false, soldier:true, spear:false, cavalry:true, ditch:false, stake:false,
+    weapon_dual_swords:false, weapon_fan:false, weapon_bow:false
+  };
+  await Promise.all(Object.entries(list).map(([k, front]) => new Promise(res => {
+    loader.load(`assets/${k}.glb`, g => {
+      const w = new THREE.Group(); g.scene.rotation.y = front ? Math.PI : 0; w.add(g.scene);
+      assets[k] = w; res();
+    }, undefined, () => res());
+  })));
+}
+
+let last = performance.now();
+function loop(){
+  requestAnimationFrame(loop);
+  const t = performance.now(), dt = Math.min((t - last)/1000, 0.05); last = t;
+  const now = t/1000;
+  if(mode === 'keyboard') keyboardPlayer(now);
+  updatePlayers(now, dt);
+  updateGame(dt, now);
+  updateVisuals(dt, now);
+  if(now - lastHud > 0.08){ updateHud(now); lastHud = now; }
+  drawPip(now);
+  renderer.render(scene, camera);
+}
+
+(async function boot(){
+  await Promise.race([loadAssets(), new Promise(r => setTimeout(r, 3500))]);
+  buildWorld();
+  $('loading').classList.add('hidden');
+  state = 'menu'; $('menu').classList.remove('hidden');
+  loop();
+})();
+</script>
+</body>
+</html>
