@@ -1917,43 +1917,90 @@ body {
 .icon { width: 1em; height: 1em; display: inline-block; vertical-align: middle; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .icon.filled { fill: currentColor; stroke: none; }
 
-/* 인쇄 전용 스타일 - 190×270mm 프레임에 5mm 작은 모눈(38×54), 점선, 글자는 2x2(네 칸)를 차지 */
+/* 화면에서는 실제 인쇄 마운트 영역 완전 숨김 */
+#print-mount-point { display: none; }
+
+/* 인쇄 전용 스타일 - A4 1장 전면 100% 완벽 출력 (모달 부모 영향 완전 차단) */
+@page {
+  size: A4 portrait;
+  margin: 0;
+}
 @media print {
-  body * { visibility: hidden; }
-  #print-area, #print-area * { visibility: visible; }
-  .print-modal-overlay, .print-modal-content, .grid-paper-preview-wrap {
-    overflow: visible !important;
-    position: static !important;
-    max-height: none !important;
-    border: none !important;
-    box-shadow: none !important;
-    background: transparent !important;
-    padding: 0 !important;
+  html, body {
     margin: 0 !important;
-  }
-  #print-area {
-    position: fixed !important;
-    inset: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
     width: 210mm !important;
     height: 297mm !important;
-    padding: 5mm 10mm 12.5mm !important;
-    overflow: visible !important;
-    background-color: #ffffff !important;
+    overflow: hidden !important;
   }
-  #print-area .pp-source { font-size: 7.5pt !important; margin-bottom: 1.5mm !important; }
-  #print-area .pp-grid-frame { border-width: 0.8pt !important; }
-  #print-area .pp-cell { border-right-width: 0.5pt !important; border-bottom-width: 0.5pt !important; }
-  #print-area.size-1 .pp-char { font-size: 20pt !important; }
-  #print-area.size-2 .pp-char { font-size: 22pt !important; }
-  #print-area.size-3 .pp-char { font-size: 24pt !important; }
-  #print-area.size-4 .pp-char { font-size: 26pt !important; }
-  #print-area.size-5 .pp-char { font-size: 28pt !important; }
-  #print-area .pp-meta { font-size: 7.5pt !important; margin-top: 1.5mm !important; }
-  @page { size: A4 portrait; margin: 0; }
+  body * {
+    visibility: hidden !important;
+  }
+  body > *:not(#print-mount-point) {
+    display: none !important;
+  }
+  #print-mount-point, #print-mount-point * {
+    visibility: visible !important;
+  }
+  #print-mount-point {
+    display: flex !important;
+    flex-direction: column !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 210mm !important;
+    height: 297mm !important;
+    box-sizing: border-box !important;
+    padding: 6mm 10mm 8mm !important;
+    background: #ffffff !important;
+    overflow: hidden !important;
+  }
+  #print-mount-point .pp-source {
+    font-size: 7.5pt !important;
+    color: #64748B !important;
+    text-align: right !important;
+    margin-bottom: 2mm !important;
+    font-family: 'Pretendard Variable', 'Pretendard', sans-serif !important;
+  }
+  #print-mount-point .pp-grid-frame {
+    width: 190mm !important;
+    height: 270mm !important;
+    border: 0.8pt solid #64748B !important;
+    display: grid !important;
+    box-sizing: border-box !important;
+    background: #ffffff !important;
+  }
+  #print-mount-point .pp-cell {
+    border-right: 0.5pt dotted #94A3B8 !important;
+    border-bottom: 0.5pt dotted #94A3B8 !important;
+    box-sizing: border-box !important;
+  }
+  #print-mount-point .pp-char {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-family: 'Gowun Batang', serif !important;
+    font-weight: 700 !important;
+    color: #0F172A !important;
+  }
+  #print-mount-point.size-1 .pp-char { font-size: 20pt !important; }
+  #print-mount-point.size-2 .pp-char { font-size: 22pt !important; }
+  #print-mount-point.size-3 .pp-char { font-size: 24pt !important; }
+  #print-mount-point.size-4 .pp-char { font-size: 26pt !important; }
+  #print-mount-point.size-5 .pp-char { font-size: 28pt !important; }
+  #print-mount-point .pp-meta {
+    text-align: center !important;
+    font-size: 7.5pt !important;
+    color: #94A3B8 !important;
+    margin-top: 2mm !important;
+    font-family: 'Pretendard Variable', 'Pretendard', sans-serif !important;
+  }
 }
 </style>
-</head>
 <body>
+<!-- A4 단독 전면 인쇄 마운트 영역 (화면에서는 완전 숨김, 인쇄 시 100% 독립 렌더링) -->
+<div id="print-mount-point"></div>
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
 <defs>
 <symbol id="i-pencil" viewBox="0 0 24 24"><path d="M3 21l3.6-.9c.5-.1.9-.4 1.3-.7L20.4 7c.8-.8.8-2 0-2.8l-.6-.6c-.8-.8-2-.8-2.8 0L4.5 15.9c-.3.3-.6.8-.7 1.2L3 21z"/><path d="M15 5.5L18.5 9"/></symbol>
@@ -6270,7 +6317,15 @@ function updatePrintPreview() {
 
   const printArea = document.getElementById('print-area');
   printArea.className = 'size-' + sizeLevel;
-  printArea.innerHTML = buildPrintAreaHTML(withQuote);
+  const areaHTML = buildPrintAreaHTML(withQuote);
+  printArea.innerHTML = areaHTML;
+
+  // 인쇄 전용 마운트 포인트(A4 전면 1장) 동기화
+  const mount = document.getElementById('print-mount-point');
+  if (mount) {
+    mount.className = 'size-' + sizeLevel;
+    mount.innerHTML = areaHTML;
+  }
 }
 
 function openPrintModal() {
@@ -6287,6 +6342,12 @@ function closePrintModal() {
 }
 
 function doPrintGridPaper() {
+  const mount = document.getElementById('print-mount-point');
+  const printArea = document.getElementById('print-area');
+  if (mount && printArea) {
+    mount.className = printArea.className;
+    mount.innerHTML = printArea.innerHTML;
+  }
   window.print();
 }
 
