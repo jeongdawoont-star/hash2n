@@ -999,10 +999,10 @@ body {
 /* 4-A. 세부 단계별 서브탭 */
 .sub-steps-bar {
   display: flex;
-  gap: 6px;
+  gap: 8px;
   overflow-x: auto;
   margin-bottom: 12px;
-  padding-bottom: 4px;
+  padding: 2px 2px 8px 2px;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
   cursor: grab;
@@ -1010,12 +1010,12 @@ body {
 .sub-steps-bar::-webkit-scrollbar { display: none; }
 
 .sub-step-btn {
-  flex: 1;
-  min-width: 80px;
-  padding: 8px 12px;
+  flex: 0 0 auto;
+  min-width: auto;
+  padding: 7px 14px;
   background: var(--bg-card);
   border: 1.5px solid var(--border);
-  border-radius: 14px;
+  border-radius: 20px;
   font-family: 'Pretendard Variable', 'Pretendard', sans-serif;
   font-weight: 700;
   font-size: 12px;
@@ -2158,7 +2158,8 @@ body {
       <!-- 상단 카테고리 칩 -->
       <div class="guide-chips-bar">
         <button class="guide-chip active" onclick="switchGuideSection('grid')"><svg class="icon"><use href="#i-ruler"/></svg> 5mm 모눈 조형법</button>
-        <button class="guide-chip" onclick="switchGuideSection('shape')"><svg class="icon"><use href="#i-cert"/></svg> 한글 4대 자형 조형틀</button>
+        <button class="guide-chip" onclick="switchGuideSection('shape')"><svg class="icon"><use href="#i-cert"/></svg> 한글 5대 자형 조형틀</button>
+        <button class="guide-chip" onclick="switchGuideSection('seogonghak')"><svg class="icon"><use href="#i-flag"/></svg> 문장의 지반 & 단어 설계</button>
         <button class="guide-chip" onclick="switchGuideSection('posture')"><svg class="icon"><use href="#i-pencil"/></svg> 바른 연필잡기·각도</button>
         <button class="guide-chip" onclick="switchGuideSection('mastery')"><svg class="icon"><use href="#i-star"/></svg> 실전 5대 명품 비결</button>
         <button class="guide-chip" onclick="switchGuideSection('criteria')"><svg class="icon"><use href="#i-target"/></svg> 6대 평가기준 공략</button>
@@ -2330,26 +2331,27 @@ body {
       </div>
 
       <!-- ----------------------------------------------------
-           섹션: 한글 4대 자형 조형틀 (마름모꼴·사각형꼴·세모꼴·오각형꼴)
+           섹션: 한글 5대 자형 조형틀 (서공학 마름모·직사각형·세모·오각형·4:5황금비)
       ------------------------------------------------------ -->
       <div id="guide-sec-shape" class="guide-section">
         
         <!-- 세부 단계 선택 버튼 (스크롤링 방지) -->
         <div class="sub-steps-bar" id="shape-sub-steps">
-          <button class="sub-step-btn active" id="btn-shape-1" onclick="switchShapeStep(1)">1. 마름모꼴 (다이아몬드)</button>
-          <button class="sub-step-btn" id="btn-shape-2" onclick="switchShapeStep(2)">2. 직사각형꼴 (2층 네모)</button>
+          <button class="sub-step-btn active" id="btn-shape-1" onclick="switchShapeStep(1)">1. 마름모 (다이아몬드)</button>
+          <button class="sub-step-btn" id="btn-shape-2" onclick="switchShapeStep(2)">2. 직사각형 (6:4 2층)</button>
           <button class="sub-step-btn" id="btn-shape-3" onclick="switchShapeStep(3)">3. 세모꼴 (피라미드)</button>
-          <button class="sub-step-btn" id="btn-shape-4" onclick="switchShapeStep(4)">4. 오각형꼴 (포근한 집)</button>
+          <button class="sub-step-btn" id="btn-shape-4" onclick="switchShapeStep(4)">4. 오각형 (포근한 집)</button>
+          <button class="sub-step-btn" id="btn-shape-5" onclick="switchShapeStep(5)">5. 황금비 (ㅠ받침 5자)</button>
         </div>
 
-        <!-- 1단계: 마름모꼴 (세로모임 민글자) -->
+        <!-- 1단계: 마름모꼴 (세로모임 민글자 & 가로모임 받침) -->
         <div id="shape-step-1" class="sub-step-pane active">
           <div class="visual-card">
             <div class="visual-card-title">
-              <span><svg class="icon"><use href="#i-cert"/></svg> 1. 마름모꼴 (세로모임 민글자)</span>
-              <span class="visual-badge" style="background:#E7F6F3;color:#29786F;">다이아몬드 조형틀</span>
+              <span><svg class="icon"><use href="#i-cert"/></svg> 1. 마름모꼴 (다이아몬드 조형틀)</span>
+              <span class="visual-badge" style="background:#E7F6F3;color:#29786F;">서공학 다이아몬드</span>
             </div>
-            <div class="visual-tagline">"가, 나, 다, 라, 하"처럼 받침 없는 세로모임은 마름모틀에 쏙!</div>
+            <div class="visual-tagline">"가, 나, 다, 하" & "구, 무, 몽, 존"처럼 상하좌우 대칭은 마름모틀에 쏙!</div>
 
             <div class="svg-diagram-wrap">
               <svg viewBox="0 0 420 220" xmlns="http://www.w3.org/2000/svg">
@@ -2364,42 +2366,47 @@ body {
                 <circle cx="295" cy="110" r="4.5" fill="#4FB0A5"/>
                 <circle cx="210" cy="195" r="4.5" fill="#4FB0A5"/>
                 <circle cx="125" cy="110" r="4.5" fill="#4FB0A5"/>
-                <!-- 대표 글자 '하': 마름모 공간을 균형 있게 꽉 채움 -->
-                <text x="162" y="102" font-family="'Gowun Batang', serif" font-size="88" font-weight="700" fill="#1e293b" text-anchor="middle">ㅎ</text>
-                <text x="245" y="160" font-family="'Gowun Batang', serif" font-size="144" font-weight="700" fill="#2563eb" text-anchor="middle">ㅏ</text>
+                <!-- 온전한 완성 글자 '하' (완전한 폰트 글리프 적용) -->
+                <text x="210" y="150" font-family="'Gowun Batang', serif" font-size="126" font-weight="700" fill="#0f172a" text-anchor="middle">하</text>
                 <!-- 지시 라벨 -->
                 <rect x="12" y="32" width="88" height="26" rx="6" fill="#4FB0A5"/>
                 <text x="56" y="49" font-family="Pretendard, sans-serif" font-size="11" font-weight="800" fill="#ffffff" text-anchor="middle">상단 뻗기 꼭짓점</text>
-                <line x1="100" y1="45" x2="195" y2="30" stroke="#4FB0A5" stroke-width="1.5" stroke-dasharray="2,2"/>
+                <line x1="100" y1="45" x2="205" y2="28" stroke="#4FB0A5" stroke-width="1.5" stroke-dasharray="2,2"/>
                 <rect x="320" y="98" width="88" height="26" rx="6" fill="#2563eb"/>
                 <text x="364" y="115" font-family="Pretendard, sans-serif" font-size="11" font-weight="800" fill="#ffffff" text-anchor="middle">세로 기둥선 축</text>
-                <line x1="320" y1="110" x2="278" y2="110" stroke="#2563eb" stroke-width="1.5" stroke-dasharray="2,2"/>
+                <line x1="320" y1="110" x2="285" y2="110" stroke="#2563eb" stroke-width="1.5" stroke-dasharray="2,2"/>
                 <rect x="12" y="165" width="88" height="26" rx="6" fill="#334155"/>
                 <text x="56" y="182" font-family="Pretendard, sans-serif" font-size="11" font-weight="800" fill="#ffffff" text-anchor="middle">하단 착지 꼭짓점</text>
-                <line x1="100" y1="178" x2="200" y2="188" stroke="#334155" stroke-width="1.5" stroke-dasharray="2,2"/>
+                <line x1="100" y1="178" x2="205" y2="192" stroke="#334155" stroke-width="1.5" stroke-dasharray="2,2"/>
               </svg>
+            </div>
+
+            <!-- 서공학 실전 참고 다이어그램 카드 -->
+            <div style="margin:12px 0;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px;text-align:center;">
+              <div style="font-size:11.5px;font-weight:800;color:#0f766e;margin-bottom:6px;">[서공학 원리 자료] 가로축 모음 다이아몬드 구도 ('구·무' 및 받침글자 '몽·존')</div>
+              <img src="images/seogonghak_diamond_gumu.png" alt="서공학 다이아몬드 구도 구,무,뉴,슈" style="max-width:100%;height:auto;border-radius:6px;border:1px solid #cbd5e1;">
             </div>
 
             <div class="pointer-list">
               <div class="pointer-item">
                 <span class="pointer-pin"><svg class="icon"><use href="#i-cert"/></svg></span>
-                <div class="pointer-txt"><strong>세로모음 민글자는 마름모꼴:</strong> '가, 나, 다, 라, 마, 바, 사, 하' 등은 네모를 꽉 채우려 하지 말고, <span class="highlight">위아래와 좌우 꼭짓점이 다이아몬드를 이루도록</span> 쓰면 글씨가 매우 날렵하고 수려해집니다.</div>
+                <div class="pointer-txt"><strong>마름모 구도의 핵심:</strong> 네모를 꽉 채우려 하지 말고, <span class="highlight">상하좌우 4대 꼭짓점이 다이아몬드를 이루도록</span> 쓰면 글씨가 날렵하고 수려해집니다.</div>
               </div>
               <div class="pointer-item">
                 <span class="pointer-pin"><svg class="icon"><use href="#i-ruler"/></svg></span>
-                <div class="pointer-txt"><strong>세로 모음의 상하 관통:</strong> 모음 'ㅏ, ㅓ, ㅣ'의 세로 기둥선이 상하 꼭짓점을 든든히 지키고, 초성 자음은 마름모의 왼쪽 날개 중심에 쏙 안착시켜 주세요.</div>
+                <div class="pointer-txt"><strong>받침 글자의 다이아몬드 닫기:</strong> '몽, 존'처럼 받침이 올 때도 받침을 가로로 납작하게 [2형]으로 처리하여 마름모 하단 꼭짓점을 안정적으로 닫아주세요.</div>
               </div>
             </div>
 
             <div class="step-nav-footer">
               <button class="step-nav-btn" disabled>◀ 이전</button>
-              <div class="step-dots"><span class="step-dot active"></span><span class="step-dot"></span><span class="step-dot"></span><span class="step-dot"></span></div>
+              <div class="step-dots"><span class="step-dot active"></span><span class="step-dot"></span><span class="step-dot"></span><span class="step-dot"></span><span class="step-dot"></span></div>
               <button class="step-nav-btn" onclick="switchShapeStep(2)">2단계 (직사각형꼴) ▶</button>
             </div>
           </div>
         </div>
 
-        <!-- 2단계: 직사각형꼴 (받침 있는 글자) -->
+        <!-- 2단계: 직사각형꼴 (받침 있는 2층·3층 글자) -->
         <div id="shape-step-2" class="sub-step-pane">
           <div class="visual-card">
             <div class="visual-card-title">
@@ -2409,29 +2416,35 @@ body {
             <div class="visual-tagline">"달, 밥, 봄, 국, 꽃"처럼 받침이 있는 글자는 듬직한 직사각형 2층 집!</div>
 
             <div class="svg-diagram-wrap">
-              <svg viewBox="0 0 420 210" xmlns="http://www.w3.org/2000/svg">
-                <rect x="115" y="15" width="190" height="180" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" rx="8"/>
+              <svg viewBox="0 0 420 220" xmlns="http://www.w3.org/2000/svg">
+                <rect x="115" y="15" width="190" height="190" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" rx="8"/>
                 <!-- 1층(위) 직사각형 프레임 (초·중성 60%) -->
-                <rect x="128" y="22" width="164" height="96" fill="#eff6ff" stroke="#3b82f6" stroke-width="2" stroke-dasharray="4,3" rx="6"/>
+                <rect x="125" y="22" width="170" height="100" fill="#eff6ff" stroke="#3b82f6" stroke-width="2" stroke-dasharray="4,3" rx="6"/>
                 <!-- 2층(아래) 직사각형 프레임 (받침 40%) -->
-                <rect x="128" y="124" width="164" height="62" fill="#fef3c7" stroke="#f59e0b" stroke-width="2" stroke-dasharray="4,3" rx="6"/>
-                <!-- 윗집 '다' : 당당하고 큼직하게 안착 -->
-                <text x="210" y="96" font-family="'Gowun Batang', serif" font-size="82" font-weight="700" fill="#1e40af" text-anchor="middle">다</text>
-                <!-- 아랫집 'ㄹ' : 든든한 주춧돌 받침대 -->
-                <text x="210" y="170" font-family="'Gowun Batang', serif" font-size="64" font-weight="700" fill="#b45309" text-anchor="middle">ㄹ</text>
-                <!-- 중앙 수직 기준축 -->
-                <line x1="210" y1="18" x2="210" y2="188" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="3,3"/>
+                <rect x="125" y="126" width="170" height="70" fill="#fef3c7" stroke="#f59e0b" stroke-width="2" stroke-dasharray="4,3" rx="6"/>
+                <!-- 6:4 황금 분할 경계선 -->
+                <line x1="125" y1="124" x2="295" y2="124" stroke="#059669" stroke-width="2.5" stroke-dasharray="4,2"/>
+                <!-- 중앙 수직 중심축 -->
+                <line x1="210" y1="18" x2="210" y2="200" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="3,3"/>
+                <!-- 온전한 완성 글자 '달' (완전한 폰트 글리프 적용) -->
+                <text x="210" y="152" font-family="'Gowun Batang', serif" font-size="124" font-weight="700" fill="#0f172a" text-anchor="middle">달</text>
                 <!-- 라벨 -->
                 <rect x="10" y="55" width="102" height="26" rx="6" fill="#2563eb"/>
                 <text x="61" y="72" font-family="Pretendard, sans-serif" font-size="11" font-weight="800" fill="#ffffff" text-anchor="middle">윗집 60% (초·중성)</text>
-                <line x1="112" y1="68" x2="128" y2="68" stroke="#2563eb" stroke-width="1.5"/>
-                <rect x="10" y="142" width="102" height="26" rx="6" fill="#d97706"/>
-                <text x="61" y="159" font-family="Pretendard, sans-serif" font-size="11" font-weight="800" fill="#ffffff" text-anchor="middle">아랫집 40% (받침)</text>
-                <line x1="112" y1="155" x2="128" y2="155" stroke="#d97706" stroke-width="1.5"/>
-                <rect x="312" y="105" width="98" height="26" rx="6" fill="#059669"/>
-                <text x="361" y="122" font-family="Pretendard, sans-serif" font-size="11" font-weight="800" fill="#ffffff" text-anchor="middle">6:4 황금 분할선</text>
-                <line x1="312" y1="118" x2="292" y2="118" stroke="#059669" stroke-width="1.5"/>
+                <line x1="112" y1="68" x2="125" y2="68" stroke="#2563eb" stroke-width="1.5"/>
+                <rect x="10" y="150" width="102" height="26" rx="6" fill="#d97706"/>
+                <text x="61" y="167" font-family="Pretendard, sans-serif" font-size="11" font-weight="800" fill="#ffffff" text-anchor="middle">아랫집 40% (받침)</text>
+                <line x1="112" y1="163" x2="125" y2="163" stroke="#d97706" stroke-width="1.5"/>
+                <rect x="312" y="112" width="98" height="26" rx="6" fill="#059669"/>
+                <text x="361" y="129" font-family="Pretendard, sans-serif" font-size="11" font-weight="800" fill="#ffffff" text-anchor="middle">6:4 황금 분할선</text>
+                <line x1="312" y1="124" x2="295" y2="124" stroke="#059669" stroke-width="1.5"/>
               </svg>
+            </div>
+
+            <!-- 서공학 실전 참고 다이어그램 카드 -->
+            <div style="margin:12px 0;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px;text-align:center;">
+              <div style="font-size:11.5px;font-weight:800;color:#1e40af;margin-bottom:6px;">[서공학 원리 자료] 받침 글자의 1:1 대칭 및 하단 마감 ('몽, 존, 틀, 푯')</div>
+              <img src="images/seogonghak_diamond_batchim.png" alt="서공학 받침 다이아몬드 구도 몽,존,틀,푯" style="max-width:100%;height:auto;border-radius:6px;border:1px solid #cbd5e1;">
             </div>
 
             <div class="pointer-list">
@@ -2447,7 +2460,7 @@ body {
 
             <div class="step-nav-footer">
               <button class="step-nav-btn" onclick="switchShapeStep(1)">◀ 1단계</button>
-              <div class="step-dots"><span class="step-dot"></span><span class="step-dot active"></span><span class="step-dot"></span><span class="step-dot"></span></div>
+              <div class="step-dots"><span class="step-dot"></span><span class="step-dot active"></span><span class="step-dot"></span><span class="step-dot"></span><span class="step-dot"></span></div>
               <button class="step-nav-btn" onclick="switchShapeStep(3)">3단계 (세모꼴) ▶</button>
             </div>
           </div>
@@ -2463,24 +2476,31 @@ body {
             <div class="visual-tagline">"고, 노, 도, 모, 소, 오"처럼 가로모임은 피라미드처럼 아래를 넓게!</div>
 
             <div class="svg-diagram-wrap">
-              <svg viewBox="0 0 420 210" xmlns="http://www.w3.org/2000/svg">
-                <rect x="110" y="15" width="200" height="180" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" rx="8"/>
+              <svg viewBox="0 0 420 220" xmlns="http://www.w3.org/2000/svg">
+                <rect x="110" y="15" width="200" height="190" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" rx="8"/>
                 <!-- 피라미드 삼각형 가이드 -->
-                <polygon points="210,26 296,178 124,178" fill="#FFF6E3" stroke="#f59e0b" stroke-width="2.5" stroke-dasharray="5,3"/>
+                <polygon points="210,26 298,180 122,180" fill="#FFF6E3" stroke="#f59e0b" stroke-width="2.5" stroke-dasharray="5,3"/>
                 <circle cx="210" cy="26" r="4.5" fill="#f59e0b"/>
-                <circle cx="124" cy="178" r="4.5" fill="#f59e0b"/>
-                <circle cx="296" cy="178" r="4.5" fill="#f59e0b"/>
-                <!-- 글자 '소': ㅅ은 상단 꼭짓점을 채우고, ㅗ는 넓은 밑변을 꽉 채움 -->
-                <text x="210" y="80" font-family="'Gowun Batang', serif" font-size="88" font-weight="700" fill="#1e293b" text-anchor="middle">ㅅ</text>
-                <text x="210" y="174" font-family="'Gowun Batang', serif" font-size="124" font-weight="700" fill="#d97706" text-anchor="middle">ㅗ</text>
+                <circle cx="122" cy="180" r="4.5" fill="#f59e0b"/>
+                <circle cx="298" cy="180" r="4.5" fill="#f59e0b"/>
+                <!-- 수직 중심축 -->
+                <line x1="210" y1="20" x2="210" y2="190" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="3,3"/>
+                <!-- 온전한 완성 글자 '소' (완전한 폰트 글리프 적용) -->
+                <text x="210" y="146" font-family="'Gowun Batang', serif" font-size="124" font-weight="700" fill="#0f172a" text-anchor="middle">소</text>
                 <!-- 지시 라벨 -->
                 <rect x="12" y="45" width="88" height="26" rx="6" fill="#334155"/>
                 <text x="56" y="62" font-family="Pretendard, sans-serif" font-size="11" font-weight="800" fill="#ffffff" text-anchor="middle">단단한 상단 초성</text>
-                <line x1="100" y1="58" x2="185" y2="58" stroke="#334155" stroke-width="1.5" stroke-dasharray="2,2"/>
+                <line x1="100" y1="58" x2="195" y2="40" stroke="#334155" stroke-width="1.5" stroke-dasharray="2,2"/>
                 <rect x="315" y="152" width="94" height="26" rx="6" fill="#d97706"/>
                 <text x="362" y="169" font-family="Pretendard, sans-serif" font-size="11" font-weight="800" fill="#ffffff" text-anchor="middle">넓고 든든한 밑변 ↔</text>
-                <line x1="315" y1="165" x2="280" y2="165" stroke="#d97706" stroke-width="1.5"/>
+                <line x1="315" y1="165" x2="288" y2="165" stroke="#d97706" stroke-width="1.5"/>
               </svg>
+            </div>
+
+            <!-- 서공학 실전 참고 다이어그램 카드 -->
+            <div style="margin:12px 0;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px;text-align:center;">
+              <div style="font-size:11.5px;font-weight:800;color:#b45309;margin-bottom:6px;">[서공학 원리 자료] 가로축 황금 삼각 구도 교과서 ('오·요' & '교·표')</div>
+              <img src="images/seogonghak_triangle_oye.png" alt="서공학 황금 삼각 구도 오,요" style="max-width:100%;height:auto;border-radius:6px;border:1px solid #cbd5e1;">
             </div>
 
             <div class="pointer-list">
@@ -2490,13 +2510,13 @@ body {
               </div>
               <div class="pointer-item">
                 <span class="pointer-pin"><svg class="icon"><use href="#i-target"/></svg></span>
-                <div class="pointer-txt"><strong>흔들리지 않는 주춧돌:</strong> 가로선이 초성보다 짧으면 글씨가 위태롭게 넘어져요. 바닥을 든든하게 받쳐주는 느낌으로 활짝 열어주세요.</div>
+                <div class="pointer-txt"><strong>설계된 여백(액션):</strong> 초성과 모음 사이의 적절한 공간이 살아있어야 글씨가 숨을 쉽니다. 가로획은 수평 기초공사처럼 단 1도도 기울지 않아야 합니다.</div>
               </div>
             </div>
 
             <div class="step-nav-footer">
               <button class="step-nav-btn" onclick="switchShapeStep(2)">◀ 2단계</button>
-              <div class="step-dots"><span class="step-dot"></span><span class="step-dot"></span><span class="step-dot active"></span><span class="step-dot"></span></div>
+              <div class="step-dots"><span class="step-dot"></span><span class="step-dot"></span><span class="step-dot active"></span><span class="step-dot"></span><span class="step-dot"></span></div>
               <button class="step-nav-btn" onclick="switchShapeStep(4)">4단계 (오각형꼴) ▶</button>
             </div>
           </div>
@@ -2512,24 +2532,24 @@ body {
             <div class="visual-tagline">"와, 왜, 위, 의, 화"처럼 복합모임은 모음이 자음을 포근히 감싸요!</div>
 
             <div class="svg-diagram-wrap">
-              <svg viewBox="0 0 420 210" xmlns="http://www.w3.org/2000/svg">
-                <rect x="110" y="15" width="200" height="180" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" rx="8"/>
-                <!-- 대칭 오각형(집 모양) 가이드: 지붕(210, 24), 처마(124, 72 / 296, 72), 바닥(124, 182 / 296, 182) -->
-                <polygon points="210,24 296,72 296,182 124,182 124,72" fill="#F3E8FF" stroke="#9333ea" stroke-width="2.5" stroke-dasharray="5,3"/>
-                <!-- 글자 '화': 모음(ㅗ, ㅏ)이 자음(ㅎ)을 포근하게 감싸는 구조 -->
-                <!-- ㅎ: 지붕 안쪽에 쏙 들어간 초성 (지붕 밖으로 나가지 않음, y=100) -->
-                <text x="166" y="98" font-family="'Gowun Batang', serif" font-size="58" font-weight="700" fill="#1e293b" text-anchor="middle">ㅎ</text>
-                <!-- ㅗ: ㅎ 아래를 받쳐주는 가로 모음 (y=154) -->
-                <text x="168" y="154" font-family="'Gowun Batang', serif" font-size="80" font-weight="700" fill="#7e22ce" text-anchor="middle">ㅗ</text>
-                <!-- ㅏ: 오른쪽 벽면을 든든히 지키는 세로 기둥 모음 (y=164) -->
-                <text x="250" y="164" font-family="'Gowun Batang', serif" font-size="124" font-weight="700" fill="#2563eb" text-anchor="middle">ㅏ</text>
+              <svg viewBox="0 0 420 220" xmlns="http://www.w3.org/2000/svg">
+                <rect x="110" y="15" width="200" height="190" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" rx="8"/>
+                <!-- 대칭 오각형(집 모양) 가이드: 지붕(210, 16), 처마 좌(120, 68), 처마 우(300, 68), 바닥 좌(120, 188), 바닥 우(300, 188) -->
+                <polygon points="210,16 300,68 300,188 120,188 120,68" fill="#F3E8FF" stroke="#9333ea" stroke-width="2.5" stroke-dasharray="5,3"/>
+                <circle cx="210" cy="16" r="4" fill="#9333ea"/>
+                <circle cx="120" cy="68" r="4" fill="#9333ea"/>
+                <circle cx="300" cy="68" r="4" fill="#9333ea"/>
+                <circle cx="120" cy="188" r="4" fill="#9333ea"/>
+                <circle cx="300" cy="188" r="4" fill="#9333ea"/>
+                <!-- 온전한 완성 글자 '화' (완전한 폰트 글리프 적용) -->
+                <text x="210" y="152" font-family="'Gowun Batang', serif" font-size="112" font-weight="700" fill="#0f172a" text-anchor="middle">화</text>
                 <!-- 지시 라벨 -->
                 <rect x="12" y="45" width="88" height="26" rx="6" fill="#7e22ce"/>
                 <text x="56" y="62" font-family="Pretendard, sans-serif" font-size="11" font-weight="800" fill="#ffffff" text-anchor="middle">품에 안긴 자음</text>
-                <line x1="100" y1="58" x2="145" y2="78" stroke="#7e22ce" stroke-width="1.5" stroke-dasharray="2,2"/>
+                <line x1="100" y1="58" x2="170" y2="92" stroke="#7e22ce" stroke-width="1.5" stroke-dasharray="2,2"/>
                 <rect x="315" y="115" width="94" height="26" rx="6" fill="#2563eb"/>
                 <text x="362" y="132" font-family="Pretendard, sans-serif" font-size="11" font-weight="800" fill="#ffffff" text-anchor="middle">외곽 울타리 모음</text>
-                <line x1="315" y1="128" x2="280" y2="128" stroke="#2563eb" stroke-width="1.5"/>
+                <line x1="315" y1="128" x2="272" y2="128" stroke="#2563eb" stroke-width="1.5"/>
               </svg>
             </div>
 
@@ -2546,8 +2566,62 @@ body {
 
             <div class="step-nav-footer">
               <button class="step-nav-btn" onclick="switchShapeStep(3)">◀ 3단계</button>
-              <div class="step-dots"><span class="step-dot"></span><span class="step-dot"></span><span class="step-dot"></span><span class="step-dot active"></span></div>
-              <button class="step-nav-btn" onclick="switchGuideSection('posture')">바른 연필잡기 ▶</button>
+              <div class="step-dots"><span class="step-dot"></span><span class="step-dot"></span><span class="step-dot"></span><span class="step-dot active"></span><span class="step-dot"></span></div>
+              <button class="step-nav-btn" onclick="switchShapeStep(5)">5단계 (4:5 황금비) ▶</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5단계: 4:5 황금비 구도 (ㅠ받침 5자 예외 & 겹받침 글자) -->
+        <div id="shape-step-5" class="sub-step-pane">
+          <div class="visual-card">
+            <div class="visual-card-title">
+              <span><svg class="icon"><use href="#i-cert"/></svg> 5. 4:5 황금비 직사각형틀 (ㅠ받침 5자 & 겹받침)</span>
+              <span class="visual-badge" style="background:#DCFCE7;color:#15803D;">서공학 황금비</span>
+            </div>
+            <div class="visual-tagline">"윤, 율, 육, 윷, 융" 5자의 수직내림 절대법칙 & 쌍자음·겹받침 "흙, 끊"!</div>
+
+            <div class="svg-diagram-wrap">
+              <svg viewBox="0 0 420 220" xmlns="http://www.w3.org/2000/svg">
+                <!-- 4:5 황금비율 직사각형 프레임 (가로 160, 세로 190) -->
+                <rect x="130" y="15" width="160" height="190" fill="#ffffff" stroke="#16a34a" stroke-width="2.5" rx="8"/>
+                <line x1="210" y1="15" x2="210" y2="205" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="3,3"/>
+                <!-- 대표 글자 '윤' (완전한 폰트 글리프) -->
+                <text x="210" y="150" font-family="'Gowun Batang', serif" font-size="124" font-weight="700" fill="#0f172a" text-anchor="middle">윤</text>
+                <!-- 지시 라벨 -->
+                <rect x="10" y="42" width="112" height="26" rx="6" fill="#16a34a"/>
+                <text x="66" y="59" font-family="Pretendard, sans-serif" font-size="11" font-weight="800" fill="#ffffff" text-anchor="middle">4:5 황금비 직사각형</text>
+                <line x1="122" y1="55" x2="130" y2="55" stroke="#16a34a" stroke-width="1.5"/>
+                <rect x="302" y="85" width="108" height="26" rx="6" fill="#2563eb"/>
+                <text x="356" y="102" font-family="Pretendard, sans-serif" font-size="11" font-weight="800" fill="#ffffff" text-anchor="middle">ㅠ 두 획은 '수직' 내림</text>
+                <line x1="302" y1="98" x2="242" y2="98" stroke="#2563eb" stroke-width="1.5"/>
+                <rect x="10" y="150" width="112" height="26" rx="6" fill="#d97706"/>
+                <text x="66" y="167" font-family="Pretendard, sans-serif" font-size="11" font-weight="800" fill="#ffffff" text-anchor="middle">납작한 받침 하단 마감</text>
+                <line x1="122" y1="163" x2="152" y2="163" stroke="#d97706" stroke-width="1.5"/>
+              </svg>
+            </div>
+
+            <!-- 서공학 실전 참고 다이어그램 카드 -->
+            <div style="margin:12px 0;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px;text-align:center;">
+              <div style="font-size:11.5px;font-weight:800;color:#15803d;margin-bottom:6px;">[서공학 원리 자료] 한글 11,172자 중 단 5자 ㅠ받침 ('윤·흉') & 황금비 전환 ('흙·끊')</div>
+              <img src="images/seogonghak_special_5char.png" alt="서공학 ㅠ받침 예외 윤,흉 및 흙,끊" style="max-width:100%;height:auto;border-radius:6px;border:1px solid #cbd5e1;">
+            </div>
+
+            <div class="pointer-list">
+              <div class="pointer-item">
+                <span class="pointer-pin"><svg class="icon"><use href="#i-cert"/></svg></span>
+                <div class="pointer-txt"><strong>한글 11,172자 중 단 5자의 절대 예외:</strong> '윤, 율, 육, 윷, 융'은 'ㅠ'의 두 내림획을 벌리지 말고 <span class="highlight">반드시 수직에 가깝게 내려야</span> 받침이 들어갈 안정된 폭이 확보됩니다.</div>
+              </div>
+              <div class="pointer-item">
+                <span class="pointer-pin"><svg class="icon"><use href="#i-scale"/></svg></span>
+                <div class="pointer-txt"><strong>마름모에서 4:5 직사각형으로 전환:</strong> 쌍자음(뚝, 끊)이나 겹받침(흙, 슭)이 등장하면 마름모에 억지로 구겨 넣지 말고 가로 4, 세로 5의 <span class="highlight">황금 비율 직사각형 구도</span>로 전환하여 하중을 분산합니다.</div>
+              </div>
+            </div>
+
+            <div class="step-nav-footer">
+              <button class="step-nav-btn" onclick="switchShapeStep(4)">◀ 4단계</button>
+              <div class="step-dots"><span class="step-dot"></span><span class="step-dot"></span><span class="step-dot"></span><span class="step-dot"></span><span class="step-dot active"></span></div>
+              <button class="step-nav-btn" onclick="switchGuideSection('seogonghak')">문장 지반·단어 설계 ▶</button>
             </div>
           </div>
         </div>
@@ -2555,6 +2629,7 @@ body {
       </div>
 
       <!-- ----------------------------------------------------
+           섹션 2: 바른 연필잡기<!-- ----------------------------------------------------
            섹션 2: 바른 연필잡기 & 각도 (비주얼 인포그래픽 - 2단계 버튼)
       ------------------------------------------------------ -->
       <div id="guide-sec-posture" class="guide-section">
@@ -3222,6 +3297,353 @@ body {
 
       </div>
 
+      <!-- ----------------------------------------------------
+           섹션: 서공학 문장의 지반 & 단어 설계 (주영훈 서공학 원리)
+      ------------------------------------------------------ -->
+      <div id="guide-sec-seogonghak" class="guide-section">
+        
+        <!-- 세부 단계 선택 버튼 -->
+        <div class="sub-steps-bar" id="seogonghak-sub-steps">
+          <button class="sub-step-btn active" id="btn-seogonghak-1" onclick="switchSeogonghakStep(1)">1. 문장의 지반 (기준선)</button>
+          <button class="sub-step-btn" id="btn-seogonghak-2" onclick="switchSeogonghakStep(2)">2. 2자 단어 조화</button>
+          <button class="sub-step-btn" id="btn-seogonghak-3" onclick="switchSeogonghakStep(3)">3. 3자 단어 리듬</button>
+          <button class="sub-step-btn" id="btn-seogonghak-4" onclick="switchSeogonghakStep(4)">4. 4자 사자성어</button>
+          <button class="sub-step-btn" id="btn-seogonghak-5" onclick="switchSeogonghakStep(5)">5. 겹받침 공간확장</button>
+        </div>
+
+        <!-- 1단계: 문장의 지반, 기준선 법칙 -->
+        <div id="seogonghak-step-1" class="sub-step-pane active">
+          <div class="visual-card">
+            <div class="visual-card-title">
+              <span><svg class="icon"><use href="#i-flag"/></svg> 1. 문장의 지반, 기준선 법칙 (Baseline Axis)</span>
+              <span class="visual-badge" style="background:#E0E7FF;color:#3730A3;">서공학 중력의 법칙</span>
+            </div>
+            <div class="visual-tagline">"기준선은 중력이다!" 모든 글자의 발이 닿는 보이지 않는 수평 지반</div>
+
+            <div class="svg-diagram-wrap">
+              <svg viewBox="0 0 420 220" xmlns="http://www.w3.org/2000/svg">
+                <!-- 바탕 모눈 가이드 -->
+                <rect x="20" y="15" width="380" height="190" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" rx="8"/>
+                <line x1="20" y1="65" x2="400" y2="65" stroke="#f1f5f9" stroke-width="1"/>
+                <line x1="20" y1="115" x2="400" y2="115" stroke="#f1f5f9" stroke-width="1"/>
+                
+                <!-- 상단: 잘못된 파도형 글씨 (오르락내리락) -->
+                <path d="M 45 75 Q 85 45 130 85 T 220 55 T 310 85 T 375 60" fill="none" stroke="#ef4444" stroke-width="2" stroke-dasharray="4,3"/>
+                <rect x="30" y="24" width="76" height="22" rx="4" fill="#fee2e2"/>
+                <text x="68" y="39" font-family="Pretendard, sans-serif" font-size="10" font-weight="800" fill="#b91c1c" text-anchor="middle">✕ 파도치는 글씨</text>
+                
+                <!-- 하단: 바른 수평 기준선 안착 (단단한 지반) -->
+                <!-- 수평 기준선 (y=165) -->
+                <line x1="30" y1="165" x2="390" y2="165" stroke="#2563eb" stroke-width="3"/>
+                <rect x="30" y="172" width="112" height="24" rx="5" fill="#eff6ff" stroke="#93c5fd" stroke-width="1"/>
+                <text x="86" y="188" font-family="Pretendard, sans-serif" font-size="11" font-weight="800" fill="#1d4ed8" text-anchor="middle">✔ 보이지 않는 기준선</text>
+
+                <!-- 글자들 착지: 빨, 갛, 게, 피, 어, 난 -->
+                <text x="60" y="158" font-family="'Gowun Batang', serif" font-size="34" font-weight="700" fill="#0f172a" text-anchor="middle">빨</text>
+                <text x="120" y="158" font-family="'Gowun Batang', serif" font-size="34" font-weight="700" fill="#0f172a" text-anchor="middle">갛</text>
+                <text x="180" y="158" font-family="'Gowun Batang', serif" font-size="34" font-weight="700" fill="#0f172a" text-anchor="middle">게</text>
+                <text x="240" y="158" font-family="'Gowun Batang', serif" font-size="34" font-weight="700" fill="#0f172a" text-anchor="middle">피</text>
+                <text x="300" y="158" font-family="'Gowun Batang', serif" font-size="34" font-weight="700" fill="#0f172a" text-anchor="middle">어</text>
+                <text x="360" y="158" font-family="'Gowun Batang', serif" font-size="34" font-weight="700" fill="#0f172a" text-anchor="middle">난</text>
+
+                <!-- 착지점 강조 도트들 -->
+                <circle cx="60" cy="165" r="3.5" fill="#2563eb"/>
+                <circle cx="120" cy="165" r="3.5" fill="#2563eb"/>
+                <circle cx="180" cy="165" r="3.5" fill="#2563eb"/>
+                <circle cx="240" cy="165" r="3.5" fill="#2563eb"/>
+                <circle cx="300" cy="165" r="3.5" fill="#2563eb"/>
+                <circle cx="360" cy="165" r="3.5" fill="#2563eb"/>
+
+                <!-- 지시 배너 -->
+                <rect x="255" y="105" width="135" height="26" rx="6" fill="#1e40af"/>
+                <text x="322" y="122" font-family="Pretendard, sans-serif" font-size="11" font-weight="800" fill="#ffffff" text-anchor="middle">모든 글자 하단 착지선 일치</text>
+                <line x1="255" y1="118" x2="200" y2="140" stroke="#1e40af" stroke-width="1.5" stroke-dasharray="2,2"/>
+              </svg>
+            </div>
+
+            <!-- 서공학 실전 참고 다이어그램 카드 -->
+            <div style="margin:12px 0;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px;text-align:center;">
+              <div style="font-size:11.5px;font-weight:800;color:#3730a3;margin-bottom:6px;">[서공학 원리 자료] 문장의 지반, 기준선 실전 진단 ('빨갛게 피어난')</div>
+              <img src="images/seogonghak_baseline.png" alt="서공학 기준선 실전 분석" style="max-width:100%;height:auto;border-radius:6px;border:1px solid #cbd5e1;">
+            </div>
+
+            <div class="pointer-list">
+              <div class="pointer-item">
+                <span class="pointer-pin"><svg class="icon"><use href="#i-cert"/></svg></span>
+                <div class="pointer-txt"><strong>기준선은 중력입니다:</strong> 한 글자씩 떼어보면 예쁜데 문장으로 쓰면 무너지는 이유는 <span class="highlight">글자들이 제각각 다른 높이에서 착지하기 때문</span>입니다.</div>
+              </div>
+              <div class="pointer-item">
+                <span class="pointer-pin"><svg class="icon"><use href="#i-scale"/></svg></span>
+                <div class="pointer-txt"><strong>파도형 패턴 극복:</strong> 받침 있는 글자는 아래로 처지고 받침 없는 글자는 위로 뜨기 쉽습니다. 모든 글자의 바닥이 보이지 않는 수평선에 일제히 닿도록 의식하세요.</div>
+              </div>
+            </div>
+
+            <div class="step-nav-footer">
+              <button class="step-nav-btn" disabled>◀ 이전</button>
+              <div class="step-dots"><span class="step-dot active"></span><span class="step-dot"></span><span class="step-dot"></span><span class="step-dot"></span><span class="step-dot"></span></div>
+              <button class="step-nav-btn" onclick="switchSeogonghakStep(2)">2단계 (2자 단어) ▶</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2단계: 2자 단어 조화 -->
+        <div id="seogonghak-step-2" class="sub-step-pane">
+          <div class="visual-card">
+            <div class="visual-card-title">
+              <span><svg class="icon"><use href="#i-flag"/></svg> 2. 2자 단어, 가로축과 세로축의 첫 만남</span>
+              <span class="visual-badge" style="background:#FEF3C7;color:#B45309;">배려와 균형</span>
+            </div>
+            <div class="visual-tagline">"한 글자는 구조의 문제, 두 글자는 관계의 문제!" (예: '희망', '국수', '도리')</div>
+
+            <div class="svg-diagram-wrap">
+              <svg viewBox="0 0 420 220" xmlns="http://www.w3.org/2000/svg">
+                <!-- 2칸 모눈 프레임 -->
+                <rect x="70" y="25" width="130" height="150" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" rx="8"/>
+                <rect x="220" y="25" width="130" height="150" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" rx="8"/>
+                <line x1="40" y1="155" x2="380" y2="155" stroke="#2563eb" stroke-width="2.5"/>
+                
+                <!-- 1자: '희' (세로축 1형 - 첫 자음 겸손하고 작게) -->
+                <text x="135" y="132" font-family="'Gowun Batang', serif" font-size="82" font-weight="700" fill="#0f172a" text-anchor="middle">희</text>
+                <!-- 2자: '망' (가로축 받침 2형 - 마름모 균형) -->
+                <text x="285" y="132" font-family="'Gowun Batang', serif" font-size="82" font-weight="700" fill="#0f172a" text-anchor="middle">망</text>
+
+                <!-- 지시선: 첫 자음 축소 -->
+                <circle cx="120" cy="74" r="22" fill="none" stroke="#dc2626" stroke-width="2" stroke-dasharray="3,3"/>
+                <rect x="10" y="45" width="95" height="24" rx="5" fill="#dc2626"/>
+                <text x="57" y="61" font-family="Pretendard, sans-serif" font-size="10.5" font-weight="800" fill="#ffffff" text-anchor="middle">첫 초성 의도적 축소</text>
+                <line x1="105" y1="57" x2="118" y2="68" stroke="#dc2626" stroke-width="1.5"/>
+
+                <!-- 지시선: 1:1 대등 비율 -->
+                <line x1="70" y1="15" x2="200" y2="15" stroke="#16a34a" stroke-width="2"/>
+                <line x1="220" y1="15" x2="350" y2="15" stroke="#16a34a" stroke-width="2"/>
+                <rect x="160" y="5" width="100" height="22" rx="4" fill="#16a34a"/>
+                <text x="210" y="20" font-family="Pretendard, sans-serif" font-size="11" font-weight="800" fill="#ffffff" text-anchor="middle">크기 비율 1 : 1</text>
+
+                <!-- 지시선: 자간 절반 이하 -->
+                <line x1="200" y1="100" x2="220" y2="100" stroke="#d97706" stroke-width="2.5"/>
+                <rect x="145" y="180" width="130" height="24" rx="5" fill="#d97706"/>
+                <text x="210" y="196" font-family="Pretendard, sans-serif" font-size="10.5" font-weight="800" fill="#ffffff" text-anchor="middle">글자 간격 &lt; 폭의 50%</text>
+              </svg>
+            </div>
+
+            <!-- 서공학 실전 참고 다이어그램 카드 -->
+            <div style="margin:12px 0;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px;text-align:center;">
+              <div style="font-size:11.5px;font-weight:800;color:#b45309;margin-bottom:6px;">[서공학 원리 자료] 2자 단어 가로축과 세로축의 첫 만남 ('의망')</div>
+              <img src="images/seogonghak_word_2char.png" alt="서공학 2자 단어 의망" style="max-width:100%;height:auto;border-radius:6px;border:1px solid #cbd5e1;">
+            </div>
+
+            <div class="pointer-list">
+              <div class="pointer-item">
+                <span class="pointer-pin"><svg class="icon"><use href="#i-cert"/></svg></span>
+                <div class="pointer-txt"><strong>첫 자음은 겸손하게:</strong> 첫 글자의 첫 자음(초성)이 너무 크면 단어 무게 중심이 앞으로 쏠립니다. <span class="highlight">의도적으로 첫 초성을 아담하게 써야</span> 단어 흐름이 부드럽습니다.</div>
+              </div>
+              <div class="pointer-item">
+                <span class="pointer-pin"><svg class="icon"><use href="#i-scale"/></svg></span>
+                <div class="pointer-txt"><strong>1:1 배려의 균형:</strong> 두 글자는 서로를 지탱하는 관계입니다. 어느 한 글자가 튀지 않고 1:1 대등한 크기로 수평 기준선을 공유해야 합니다.</div>
+              </div>
+            </div>
+
+            <div class="step-nav-footer">
+              <button class="step-nav-btn" onclick="switchSeogonghakStep(1)">◀ 1단계</button>
+              <div class="step-dots"><span class="step-dot"></span><span class="step-dot active"></span><span class="step-dot"></span><span class="step-dot"></span><span class="step-dot"></span></div>
+              <button class="step-nav-btn" onclick="switchSeogonghakStep(3)">3단계 (3자 단어) ▶</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3단계: 3자 단어 리듬 -->
+        <div id="seogonghak-step-3" class="sub-step-pane">
+          <div class="visual-card">
+            <div class="visual-card-title">
+              <span><svg class="icon"><use href="#i-flag"/></svg> 3. 3자 단어, 흐름과 가교를 설계하다</span>
+              <span class="visual-badge" style="background:#FEE2E2;color:#DC2626;">왈츠의 리듬</span>
+            </div>
+            <div class="visual-tagline">"가운데 글자는 앞과 뒤를 잇는 다리이자 평균값!" (예: '초콜릿', '웨스트', '짜장면')</div>
+
+            <div class="svg-diagram-wrap">
+              <svg viewBox="0 0 420 220" xmlns="http://www.w3.org/2000/svg">
+                <!-- 3칸 프레임: 초 · 콜 · 릿 -->
+                <rect x="35" y="30" width="105" height="135" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" rx="6"/>
+                <rect x="155" y="30" width="110" height="135" fill="#eff6ff" stroke="#3b82f6" stroke-width="2" stroke-dasharray="4,3" rx="6"/>
+                <rect x="280" y="30" width="105" height="135" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" rx="6"/>
+                <line x1="20" y1="150" x2="400" y2="150" stroke="#2563eb" stroke-width="2.5"/>
+
+                <text x="87" y="122" font-family="'Gowun Batang', serif" font-size="70" font-weight="700" fill="#0f172a" text-anchor="middle">초</text>
+                <text x="210" y="122" font-family="'Gowun Batang', serif" font-size="70" font-weight="700" fill="#1e40af" text-anchor="middle">콜</text>
+                <text x="332" y="122" font-family="'Gowun Batang', serif" font-size="70" font-weight="700" fill="#0f172a" text-anchor="middle">릿</text>
+
+                <!-- 수평 흐름 다리 화살표 -->
+                <path d="M 90 45 L 210 45 L 330 45" fill="none" stroke="#16a34a" stroke-width="2.5"/>
+                <circle cx="90" cy="45" r="4" fill="#16a34a"/>
+                <circle cx="210" cy="45" r="4" fill="#16a34a"/>
+                <circle cx="330" cy="45" r="4" fill="#16a34a"/>
+                
+                <rect x="135" y="8" width="150" height="24" rx="5" fill="#16a34a"/>
+                <text x="210" y="24" font-family="Pretendard, sans-serif" font-size="11" font-weight="800" fill="#ffffff" text-anchor="middle">세 글자 수평 흐름 일치</text>
+
+                <!-- 가운데 글자 다리 역할 뱃지 -->
+                <rect x="140" y="178" width="140" height="26" rx="6" fill="#2563eb"/>
+                <text x="210" y="195" font-family="Pretendard, sans-serif" font-size="11" font-weight="800" fill="#ffffff" text-anchor="middle">가운데 글자 = 크기 평균값</text>
+              </svg>
+            </div>
+
+            <!-- 서공학 실전 참고 다이어그램 카드 -->
+            <div style="margin:12px 0;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px;text-align:center;">
+              <div style="font-size:11.5px;font-weight:800;color:#dc2626;margin-bottom:6px;">[서공학 원리 자료] 3자 단어 흐름 설계 ('초콜릿' & '웨스트')</div>
+              <img src="images/seogonghak_word_3char.png" alt="서공학 3자 단어 초콜릿" style="max-width:100%;height:auto;border-radius:6px;border:1px solid #cbd5e1;">
+            </div>
+
+            <div class="pointer-list">
+              <div class="pointer-item">
+                <span class="pointer-pin"><svg class="icon"><use href="#i-cert"/></svg></span>
+                <div class="pointer-txt"><strong>가운데 글자는 연결 다리:</strong> 가운데 글자가 너무 크면 중심이 뚱뚱해지고, 너무 작으면 단어가 두 조각으로 분리됩니다. <span class="highlight">양쪽 글자의 평균 크기에 수렴</span>해야 단어가 하나로 흐릅니다.</div>
+              </div>
+              <div class="pointer-item">
+                <span class="pointer-pin"><svg class="icon"><use href="#i-ruler"/></svg></span>
+                <div class="pointer-txt"><strong>단축의 법칙:</strong> 글자 수가 늘어날수록 각 글자의 절대 크기를 조금씩 줄이고, 전체 단어의 너비를 일정 범위 안에 통제하여 단정한 리듬을 만듭니다.</div>
+              </div>
+            </div>
+
+            <div class="step-nav-footer">
+              <button class="step-nav-btn" onclick="switchSeogonghakStep(2)">◀ 2단계</button>
+              <div class="step-dots"><span class="step-dot"></span><span class="step-dot"></span><span class="step-dot active"></span><span class="step-dot"></span><span class="step-dot"></span></div>
+              <button class="step-nav-btn" onclick="switchSeogonghakStep(4)">4단계 (4자 사자성어) ▶</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4단계: 4자 사자성어 -->
+        <div id="seogonghak-step-4" class="sub-step-pane">
+          <div class="visual-card">
+            <div class="visual-card-title">
+              <span><svg class="icon"><use href="#i-flag"/></svg> 4. 4자 단어(사자성어), 2+2 대칭과 완결</span>
+              <span class="visual-badge" style="background:#F3E8FF;color:#6B21A8;">균형의 완성</span>
+            </div>
+            <div class="visual-tagline">"앞 2자 + 뒤 2자의 대칭 대응 & 마지막 글자의 완벽한 수평 마감!"</div>
+
+            <div class="svg-diagram-wrap">
+              <svg viewBox="0 0 420 220" xmlns="http://www.w3.org/2000/svg">
+                <!-- 4칸 모눈: 결 · 초 · 보 · 은 -->
+                <rect x="25" y="40" width="80" height="110" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" rx="5"/>
+                <rect x="115" y="40" width="80" height="110" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" rx="5"/>
+                <rect x="215" y="40" width="80" height="110" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" rx="5"/>
+                <rect x="305" y="40" width="80" height="110" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" rx="5"/>
+                
+                <!-- 공통 수평 기준선 (y=135) -->
+                <line x1="15" y1="135" x2="400" y2="135" stroke="#2563eb" stroke-width="2.5"/>
+
+                <text x="65" y="115" font-family="'Gowun Batang', serif" font-size="52" font-weight="700" fill="#0f172a" text-anchor="middle">결</text>
+                <text x="155" y="115" font-family="'Gowun Batang', serif" font-size="52" font-weight="700" fill="#0f172a" text-anchor="middle">초</text>
+                <text x="255" y="115" font-family="'Gowun Batang', serif" font-size="52" font-weight="700" fill="#0f172a" text-anchor="middle">보</text>
+                <text x="345" y="115" font-family="'Gowun Batang', serif" font-size="52" font-weight="700" fill="#1e40af" text-anchor="middle">은</text>
+
+                <!-- 2+2 대칭 브래킷 -->
+                <path d="M 30 25 L 105 25 L 110 18 L 115 25 L 190 25" fill="none" stroke="#7e22ce" stroke-width="2"/>
+                <text x="110" y="14" font-family="Pretendard, sans-serif" font-size="10.5" font-weight="800" fill="#7e22ce" text-anchor="middle">앞쪽 쌍 (결초)</text>
+
+                <path d="M 220 25 L 295 25 L 300 18 L 305 25 L 380 25" fill="none" stroke="#7e22ce" stroke-width="2"/>
+                <text x="300" y="14" font-family="Pretendard, sans-serif" font-size="10.5" font-weight="800" fill="#7e22ce" text-anchor="middle">뒤쪽 쌍 (보은)</text>
+
+                <!-- 마지막 글자 마감 강조 -->
+                <circle cx="345" cy="135" r="5" fill="#dc2626"/>
+                <rect x="250" y="175" width="145" height="26" rx="6" fill="#dc2626"/>
+                <text x="322" y="192" font-family="Pretendard, sans-serif" font-size="11" font-weight="800" fill="#ffffff" text-anchor="middle">마지막 글자로 기준선 완결!</text>
+                <line x1="322" y1="175" x2="345" y2="142" stroke="#dc2626" stroke-width="1.5"/>
+              </svg>
+            </div>
+
+            <!-- 서공학 실전 참고 다이어그램 카드 -->
+            <div style="margin:12px 0;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px;text-align:center;">
+              <div style="font-size:11.5px;font-weight:800;color:#6b21a8;margin-bottom:6px;">[서공학 원리 자료] 4자 단어(사자성어) 균형의 완성 ('결초보은' & '조삼모사')</div>
+              <img src="images/seogonghak_word_4char.png" alt="서공학 사자성어 결초보은" style="max-width:100%;height:auto;border-radius:6px;border:1px solid #cbd5e1;">
+            </div>
+
+            <div class="pointer-list">
+              <div class="pointer-item">
+                <span class="pointer-pin"><svg class="icon"><use href="#i-cert"/></svg></span>
+                <div class="pointer-txt"><strong>2+2 대칭 원리:</strong> 네 글자는 앞의 두 글자와 뒤의 두 글자가 서로 시각적으로 대응해야 합니다. 두 쌍의 너비와 간격이 균등할 때 안정감이 극대화됩니다.</div>
+              </div>
+              <div class="pointer-item">
+                <span class="pointer-pin"><svg class="icon"><use href="#i-star"/></svg></span>
+                <div class="pointer-txt"><strong>마지막 글자의 선언:</strong> 건축에서 마지막 벽돌이 건물의 완성을 선언하듯, 4자 단어의 마지막 글자는 전체 수평 기준선의 끝점을 정확히 안착시켜 마감해야 합니다.</div>
+              </div>
+            </div>
+
+            <div class="step-nav-footer">
+              <button class="step-nav-btn" onclick="switchSeogonghakStep(3)">◀ 3단계</button>
+              <div class="step-dots"><span class="step-dot"></span><span class="step-dot"></span><span class="step-dot"></span><span class="step-dot active"></span><span class="step-dot"></span></div>
+              <button class="step-nav-btn" onclick="switchSeogonghakStep(5)">5단계 (겹받침 공간확장) ▶</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5단계: 겹받침 공간 확장 -->
+        <div id="seogonghak-step-5" class="sub-step-pane">
+          <div class="visual-card">
+            <div class="visual-card-title">
+              <span><svg class="icon"><use href="#i-flag"/></svg> 5. 겹받침이 만드는 '공간 확장의 미학'</span>
+              <span class="visual-badge" style="background:#ECFDF5;color:#047857;">지하 3층 설계</span>
+            </div>
+            <div class="visual-tagline">"건물 지하 3층을 파듯, 상단 간격을 올려 하중 분산!" (예: '닭', '삶', '찮', '값')</div>
+
+            <div class="svg-diagram-wrap">
+              <svg viewBox="0 0 420 220" xmlns="http://www.w3.org/2000/svg">
+                <!-- 모눈 프레임 -->
+                <rect x="110" y="15" width="200" height="190" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" rx="8"/>
+                
+                <!-- 상단 공간 확보 영역 -->
+                <rect x="120" y="24" width="180" height="95" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="4,3" rx="6"/>
+                <!-- 하단 겹받침 공간 확장 영역 -->
+                <rect x="120" y="125" width="180" height="70" fill="#ecfdf5" stroke="#10b981" stroke-width="2" stroke-dasharray="4,3" rx="6"/>
+                
+                <!-- 대표 글자 '닭' (완전한 폰트 글리프 적용) -->
+                <text x="210" y="152" font-family="'Gowun Batang', serif" font-size="124" font-weight="700" fill="#0f172a" text-anchor="middle">닭</text>
+
+                <!-- b라인 모음 세로선 기준 마감선 -->
+                <line x1="262" y1="20" x2="262" y2="200" stroke="#ef4444" stroke-width="2" stroke-dasharray="3,3"/>
+                
+                <!-- 지시 라벨들 -->
+                <rect x="10" y="45" width="98" height="26" rx="5" fill="#2563eb"/>
+                <text x="59" y="62" font-family="Pretendard, sans-serif" font-size="11" font-weight="800" fill="#ffffff" text-anchor="middle">상단 하중 분산 ↑</text>
+                <line x1="108" y1="58" x2="120" y2="58" stroke="#2563eb" stroke-width="1.5"/>
+
+                <rect x="305" y="70" width="105" height="26" rx="5" fill="#ef4444"/>
+                <text x="357" y="87" font-family="Pretendard, sans-serif" font-size="11" font-weight="800" fill="#ffffff" text-anchor="middle">b라인(모음선) 마감</text>
+                <line x1="305" y1="83" x2="262" y2="83" stroke="#ef4444" stroke-width="1.5"/>
+
+                <rect x="10" y="145" width="98" height="26" rx="5" fill="#059669"/>
+                <text x="59" y="162" font-family="Pretendard, sans-serif" font-size="11" font-weight="800" fill="#ffffff" text-anchor="middle">겹받침 1:1 안착</text>
+                <line x1="108" y1="158" x2="140" y2="158" stroke="#059669" stroke-width="1.5"/>
+              </svg>
+            </div>
+
+            <!-- 서공학 실전 참고 다이어그램 카드 -->
+            <div style="margin:12px 0;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px;text-align:center;">
+              <div style="font-size:11.5px;font-weight:800;color:#047857;margin-bottom:6px;">[서공학 원리 자료] 겹받침 공간 확장 설계 ('찮' & '핥')</div>
+              <img src="images/seogonghak_double_batchim.png" alt="서공학 겹받침 공간확장 찮,핥" style="max-width:100%;height:auto;border-radius:6px;border:1px solid #cbd5e1;">
+            </div>
+
+            <div class="pointer-list">
+              <div class="pointer-item">
+                <span class="pointer-pin"><svg class="icon"><use href="#i-cert"/></svg></span>
+                <div class="pointer-txt"><strong>지하 3층 주차장 원리:</strong> 지하가 깊어질수록 기초가 넓어야 하듯, 겹받침이 오면 <span class="highlight">모음 세로선을 짧게 끊어 하단에 두 자음이 들어갈 공간을 확보</span>해야 상부의 하중을 견딥니다.</div>
+              </div>
+              <div class="pointer-item">
+                <span class="pointer-pin"><svg class="icon"><use href="#i-ruler"/></svg></span>
+                <div class="pointer-txt"><strong>b라인 마감선 준수:</strong> 겹받침의 두 자음은 초성보다 작게 쓰며, 마지막 획의 끝은 반드시 모음 세로선(b라인)과 일치하는 지점에서 딱 멈추어야 조형이 흐트러지지 않습니다.</div>
+              </div>
+            </div>
+
+            <div class="step-nav-footer">
+              <button class="step-nav-btn" onclick="switchSeogonghakStep(4)">◀ 4단계</button>
+              <div class="step-dots"><span class="step-dot"></span><span class="step-dot"></span><span class="step-dot"></span><span class="step-dot"></span><span class="step-dot active"></span></div>
+              <button class="step-nav-btn" onclick="switchGuideSection('posture')">바른 연필잡기 ▶</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
     </div>
 
     <!-- 탭: 동기부여 (에피소드 선택 탭 & 정통 4컷 웹툰 만화) -->
@@ -3232,6 +3654,7 @@ body {
         <button class="motivation-chip active" id="chip-ep-jobs" onclick="switchMotivationEpisode('jobs')"><svg class="icon"><use href="#i-star"/></svg> 1화. 스티브 잡스와 폰트</button>
         <button class="motivation-chip" id="chip-ep-author" onclick="switchMotivationEpisode('author')"><svg class="icon"><use href="#i-book"/></svg> 2화. 작가의 고뇌와 필사</button>
         <button class="motivation-chip" id="chip-ep-mind" onclick="switchMotivationEpisode('mind')"><svg class="icon"><use href="#i-heart"/></svg> 3화. 마음을 비추는 거울</button>
+        <button class="motivation-chip" id="chip-ep-architecture" onclick="switchMotivationEpisode('architecture')"><svg class="icon"><use href="#i-flag"/></svg> 4화. 손끝의 작은 건축</button>
       </div>
 
       <!-- 에피소드 1: 스티브 잡스 -->
@@ -3337,6 +3760,89 @@ body {
           <!-- 에피소드 네비게이션 푸터 -->
           <div class="step-nav-footer">
             <button class="step-nav-btn" onclick="switchMotivationEpisode('author')">◀ 2화. 작가의 영혼</button>
+            <button class="step-nav-btn" onclick="switchMotivationEpisode('architecture')">4화. 손끝의 건축 ▶</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 에피소드 4: 손끝으로 짓는 가장 작은 건축 (서공학의 기적) -->
+      <div id="ep-architecture" class="comic-episode">
+        <div class="comic-episode-box">
+          <div class="comic-ep-header">
+            <div class="comic-ep-title"><svg class="icon"><use href="#i-flag"/></svg>4화. 손끝으로 짓는 가장 작은 건축 (서공학의 기적)</div>
+            <div class="comic-ep-subrow">
+              <span class="visual-badge" style="background:#fef3c7;color:#b45309;">지반과 기둥</span>
+              <button class="step-nav-btn" style="padding:4px 10px;font-size:11.5px;flex-shrink:0;" onclick="openComicModal('images/만화4.png', '4화. 손끝으로 짓는 가장 작은 건축')"><svg class="icon"><use href="#i-search"/></svg> 크게 보기</button>
+            </div>
+          </div>
+          <div class="comic-ep-desc">
+            건물도 지반이 튼튼해야 무너지지 않듯, 글씨도 기준선과 중심축이 사람의 품격을 세웁니다!
+          </div>
+
+          <!-- 실제 4컷 만화 이미지 뷰어 (만화4.png가 폴더에 들어오면 즉시 자동 노출) -->
+          <div id="ep4-img-container" class="comic-webtoon-container" style="display:none;" onclick="openComicModal('images/만화4.png', '4화. 손끝으로 짓는 가장 작은 건축')">
+            <img src="images/만화4.png" class="comic-full-webtoon-img" alt="4화 손끝으로 짓는 가장 작은 건축 4컷 만화" onload="document.getElementById('ep4-img-container').style.display='block';" onerror="document.getElementById('ep4-img-container').style.display='none';">
+            <div class="comic-zoom-badge"><svg class="icon"><use href="#i-search"/></svg> 터치하면 크게 볼 수 있어요!</div>
+          </div>
+
+          <!-- 4컷 만화 제작 스토리보드 (콘티 안내 카드) -->
+          <div id="ep4-conte-guide" style="margin:16px 0;background:#ffffff;border:2px dashed #6366f1;border-radius:14px;padding:18px;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+              <span style="background:#6366f1;color:#ffffff;font-size:11px;font-weight:900;padding:3px 8px;border-radius:6px;">4컷 만화 콘티</span>
+              <span style="font-size:14px;font-weight:900;color:#1e293b;">준이와 서공학 선생님의 '손끝 건축' 이야기</span>
+            </div>
+            
+            <div style="display:grid;grid-template-columns:1fr;gap:12px;">
+              <!-- 1컷 -->
+              <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px;">
+                <div style="font-size:12px;font-weight:800;color:#4f46e5;margin-bottom:4px;">[1컷 : 흔들리는 피사의 사탑]</div>
+                <div style="font-size:12px;color:#334155;line-height:1.5;">
+                  <strong>장면:</strong> 준이가 공책에 글씨를 쓰는데 글씨들이 위아래로 파도치고 건물이 비스듬히 기우뚱 기울어져 있다.<br>
+                  <strong>대사(준이):</strong> "휴... 한 글자씩 볼 땐 예쁜데, 문장만 쓰면 왜 피사의 사탑처럼 와르르 무너질 것 같지?" (효과음: 비틀비틀~)
+                </div>
+              </div>
+
+              <!-- 2컷 -->
+              <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px;">
+                <div style="font-size:12px;font-weight:800;color:#059669;margin-bottom:4px;">[2컷 : 피라미드와 지반의 비밀]</div>
+                <div style="font-size:12px;color:#334155;line-height:1.5;">
+                  <strong>장면:</strong> 서공학 건축가 선생님이 등장해 웅장한 피라미드 도면을 펼치며 설명한다.<br>
+                  <strong>대사(선생님):</strong> "준이야, 피라미드가 수천 년을 버틴 비결이 뭘까? 돌이 단단해서가 아니야. 바로 '넓은 바닥 지반(기준선)'과 '흔들리지 않는 삼각 중심축' 덕분이란다!"
+                </div>
+              </div>
+
+              <!-- 3컷 -->
+              <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px;">
+                <div style="font-size:12px;font-weight:800;color:#d97706;margin-bottom:4px;">[3컷 : 글씨는 손끝으로 짓는 건축]</div>
+                <div style="font-size:12px;color:#334155;line-height:1.5;">
+                  <strong>장면:</strong> 준이의 눈이 번쩍! 선생님이 준이의 연필 쥔 손을 바르게 지도해 준다.<br>
+                  <strong>대사(선생님):</strong> "글씨도 똑같아! 모든 글자가 발을 딛는 '보이지 않는 수평 기준선'을 긋고, 초성과 모음 사이에 숨 쉴 공간(액션)을 주면 멋진 집이 완성되지!"
+                </div>
+              </div>
+
+              <!-- 4컷 -->
+              <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px;">
+                <div style="font-size:12px;font-weight:800;color:#e11d48;margin-bottom:4px;">[4컷 : 당당하게 일어선 품격]</div>
+                <div style="font-size:12px;color:#334155;line-height:1.5;">
+                  <strong>장면:</strong> 준이가 반듯한 기준선 위에 정성껏 쓴 문장이 황금빛 궁궐처럼 우뚝 서 있고 준이가 환하게 웃는다.<br>
+                  <strong>대사(준이):</strong> "와아! 글씨가 발을 딛고 우뚝 서니까, 내 마음까지 단단한 건물이 된 것 같아요!"<br>
+                  <strong>나레이션:</strong> "글씨는 손끝으로 짓는 가장 작은 건축물. 바른 기준선이 평생 흔들리지 않는 나를 만듭니다."
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 감동 한 줄 & 교훈 -->
+          <div class="comic-takeaway-card">
+            <div class="comic-takeaway-title"><svg class="icon"><use href="#i-sparkle"/></svg> 글씨는 손끝으로 짓는 가장 작은 건축물!</div>
+            <div class="comic-takeaway-text">
+              지반이 평평해야 백 년을 가는 건물이 서듯, 글씨도 기준선과 중심축이 반듯해야 사람의 품격이 우뚝 섭니다. 오늘도 손끝으로 아름다운 생각을 건축해 보세요!
+            </div>
+          </div>
+
+          <!-- 에피소드 네비게이션 푸터 -->
+          <div class="step-nav-footer">
+            <button class="step-nav-btn" onclick="switchMotivationEpisode('mind')">◀ 3화. 마음을 비추는 거울</button>
             <button class="step-nav-btn" disabled>마지막 화 ▶</button>
           </div>
         </div>
@@ -3737,11 +4243,21 @@ function switchGridStep(stepNum) {
   }
 }
 
-// 한글 4대 자형 조형틀 서브스텝 전환
+// 한글 5대 자형 조형틀 서브스텝 전환
 function switchShapeStep(stepNum) {
-  for (let i = 1; i <= 4; i++) {
+  for (let i = 1; i <= 5; i++) {
     const pane = document.getElementById('shape-step-' + i);
     const btn = document.getElementById('btn-shape-' + i);
+    if (pane) pane.classList.toggle('active', i === stepNum);
+    if (btn) btn.classList.toggle('active', i === stepNum);
+  }
+}
+
+// 서공학 문장지반 및 단어설계 서브스텝 전환
+function switchSeogonghakStep(stepNum) {
+  for (let i = 1; i <= 5; i++) {
+    const pane = document.getElementById('seogonghak-step-' + i);
+    const btn = document.getElementById('btn-seogonghak-' + i);
     if (pane) pane.classList.toggle('active', i === stepNum);
     if (btn) btn.classList.toggle('active', i === stepNum);
   }
