@@ -32,6 +32,15 @@ export const RECORDS = [
   // ▼ 여기에 새 기록을 붙여넣으세요 (최신 항목을 맨 위에) ▼
 
   {
+    title: "필사의 노력",
+    desc: "바른 글씨와 필사를 위한 손글씨 정밀 진단 및 맞춤 인증서 발급 도구다.\n글씨를 분석하여 6대 핵심 지표 점수와 실제 쓴 손글씨가 담긴 인증서를 발급한다.\n\n도움: 정세훈 선생님",
+    tags: "handwriting, calligraphy, education, ai, ocr, certificate, class-tools",
+    category: "class-tools",
+    link: "./vibe-apps/필사의노력.html",
+    image: "img-re/pilsa.avif",
+  },
+
+  {
     title: "적토마가 되었다",
     desc: "삼국지 전장을 질주하는 모션 러닝 액션 게임이다.\n제자리에서라도 좀 재밌게 몸풀기 하라고 만들었다.\n키보드 모드, 4인플레이도 지원된다.",
     tags: "game, threejs, mediapipe, motion, webcam, running, action, samgukji, redhare, multiplayer",
