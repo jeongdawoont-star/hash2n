@@ -32,6 +32,15 @@ export const RECORDS = [
   // ▼ 여기에 새 기록을 붙여넣으세요 (최신 항목을 맨 위에) ▼
 
   {
+    title: "학급 매체 수업",
+    desc: "5학년 매체 단원\n수업을 위해 제작했다.\n메일, 메시지, 게시판을\n학급에서 실제로 체험한다.",
+    tags: "media, education, elementary, email, message, board, classroom, class-tools",
+    category: "class-tools",
+    link: "./vibe-apps/class-media-lab.html",
+    image: "img-re/class-media-lab.avif",
+  },
+
+  {
     title: "필사의 노력",
     desc: "바른 글씨와 필사를 위한 손글씨 정밀 진단 및 맞춤 인증서 발급 도구다.\n글씨를 분석하여 6대 핵심 지표 점수와 실제 쓴 손글씨가 담긴 인증서를 발급한다.\n\n도움: 정세훈 선생님",
     tags: "handwriting, calligraphy, education, ai, ocr, certificate, class-tools",

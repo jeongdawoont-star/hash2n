@@ -1,0 +1,2116 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>우리반 매체수업</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Gowun+Dodum&display=swap" rel="stylesheet">
+<!-- Firebase SDK (v10.12.2 compat) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<!-- QRCode.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  :root{
+    --bg:#F3F6FC; --card:#FFFFFF; --card-soft:#FAFBFE;
+    --ink:#33475B; --ink-soft:#8492A6;
+    --line:#E6ECF4;
+    --mail:#DCEAFB; --mail-ink:#3A6EA5; --mail-dark:#2C5C90;
+    --msg:#D8F5E3; --msg-ink:#2FAE6A; --msg-dark:#238C55;
+    --web:#DAEBFC; --web-ink:#3E86D6; --web-dark:#2C6BB0;
+    --stat:#EBE1FC; --stat-ink:#8B6FD9; --stat-dark:#7457C2;
+    --primary:#FF8A73; --primary-dark:#F26B50;
+    --danger:#EF6F63; --danger-dark:#D9564A;
+    --gold:#F5B93F;
+    --chat-bg:#FFF8DC; --chat-panel:#FFFDF3;
+    --notebook:#FBF3E2; --notebook-card:#FFFCF5; --notebook-ink:#8A6A3F;
+    --radius:20px;
+    --shadow: 0 6px 20px rgba(51,71,91,0.08);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg);
+    color:var(--ink); font-family:'Gowun Dodum', sans-serif;
+    min-height:100vh; display:flex; justify-content:center;
+    padding:20px 16px 60px;
+  }
+  .app{ width:100%; max-width:520px; transition:max-width .2s ease; }
+  /* 와이드 모드 (컴퓨터실 모니터 지원) */
+  @media(min-width: 900px){
+    .app.wide-view{ max-width:760px; }
+  }
+
+  h1,h2,h3,h4{ font-family:'Gowun Dodum', sans-serif; margin:0 0 4px 0; font-weight:700; color:var(--ink); }
+  h1{ font-size:25px; letter-spacing:-0.2px; }
+  h2{ font-size:19px; } h3{ font-size:16px; } h4{ font-size:14.5px; }
+  p{ margin:0; line-height:1.55; }
+  .muted{ color:var(--ink-soft); font-size:13.5px; }
+  .top{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; gap:10px; }
+  .badge-mark{
+    width:46px; height:46px; border-radius:16px; display:flex; align-items:center; justify-content:center;
+    color:var(--primary-dark); background:#FFE7E1;
+    font-size:13px; flex-shrink:0; text-align:center; line-height:1.1; font-weight:bold;
+  }
+  .card{
+    background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+    padding:18px 20px; margin-bottom:14px; box-shadow:var(--shadow);
+    position:relative;
+  }
+  label{ display:block; font-size:13px; color:var(--ink-soft); margin:14px 0 6px; font-weight:600; }
+  label:first-of-type{ margin-top:0; }
+  input[type=text], input[type=password], textarea, select{
+    width:100%; border:1.5px solid var(--line); background:var(--card-soft); border-radius:14px;
+    padding:11px 14px; font-family:'Gowun Dodum', sans-serif; font-size:15px; color:var(--ink); outline:none;
+    transition:border-color .15s;
+  }
+  input:focus, textarea:focus, select:focus{ border-color:var(--primary); background:#fff; }
+  textarea{ resize:vertical; min-height:110px; line-height:1.6; }
+  .pin-input{ letter-spacing:8px; font-size:20px; text-align:center; font-family:monospace; }
+  .code-input{ letter-spacing:3px; font-size:18px; text-align:center; text-transform:uppercase; font-weight:bold; }
+  .autocomplete{ position:relative; }
+  .suggestions{
+    position:absolute; z-index:20; left:0; right:0; top:calc(100% + 4px);
+    background:#fff; border:1.5px solid var(--line); border-radius:14px;
+    max-height:180px; overflow-y:auto; box-shadow:0 8px 20px rgba(51,71,91,0.12);
+  }
+  .suggestions div{ padding:10px 14px; cursor:pointer; font-size:14.5px; border-bottom:1px solid var(--line); }
+  .suggestions div:last-child{ border-bottom:none; }
+  .suggestions div:hover{ background:#FFF1EC; color:var(--primary-dark); font-weight:bold; }
+
+  button{
+    font-family:'Gowun Dodum', sans-serif; font-size:15px; border:none; border-radius:16px;
+    padding:12px 16px; cursor:pointer; width:100%; margin-top:14px; transition:background .15s, transform .05s;
+  }
+  button:active{ transform:scale(0.99); }
+  .btn-primary{ background:var(--primary); color:#fff; font-weight:600; }
+  .btn-primary:hover{ background:var(--primary-dark); }
+  .btn-chat{ background:var(--msg-ink); color:#fff; font-weight:600; }
+  .btn-chat:hover{ background:var(--msg-dark); }
+  .btn-web{ background:var(--web-ink); color:#fff; font-weight:600; }
+  .btn-web:hover{ background:var(--web-dark); }
+  .btn-secondary{ background:#EEF2F8; color:var(--ink); border:none; }
+  .btn-secondary:hover{ background:var(--line); }
+  .btn-sage{ background:var(--msg-dark); color:#fff; font-weight:600; }
+  .btn-sage:hover{ background:#1F7A49; }
+  .btn-ghost{ background:transparent; color:var(--ink-soft); width:auto; margin-top:0; padding:8px 10px; font-size:13.5px; text-decoration:underline; }
+  .btn-ghost:hover{ color:var(--ink); }
+  .btn-sm{ padding:6px 10px; font-size:12.5px; width:auto; margin-top:0; border-radius:10px; }
+  .btn-outline-danger{ background:transparent; border:1.5px solid var(--danger); color:var(--danger); }
+  .btn-outline-danger:hover{ background:var(--danger); color:#fff; }
+  .btn-row{ display:flex; gap:10px; }
+  .btn-row button{ margin-top:14px; }
+  .error{ color:var(--danger-dark); font-size:13.5px; margin-top:8px; font-weight:600; }
+  .success{ color:var(--msg-dark); font-size:13.5px; margin-top:8px; font-weight:600; }
+
+  /* 헤더 툴바 */
+  .top-toolbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; gap:8px; }
+  .top-toolbar-left, .top-toolbar-right{ display:flex; align-items:center; gap:8px; }
+  .tool-chip{
+    display:inline-flex; align-items:center; gap:5px; padding:6px 12px; font-size:12.5px;
+    background:#EEF2F8; border:none; border-radius:20px;
+    color:var(--ink); text-decoration:none; cursor:pointer; font-family:'Gowun Dodum', sans-serif;
+  }
+  .tool-chip:hover{ background:var(--line); }
+  .tool-chip.active{ background:var(--ink); color:#fff; }
+  .tool-chip.edu{ background:#FFF3D6; color:#A87400; font-weight:bold; }
+  .tool-chip.share{ background:var(--web); color:var(--web-dark); font-weight:bold; }
+
+  /* 통계 그리드 */
+  .stat-grid{ display:flex; gap:8px; margin-top:6px; flex-wrap:wrap; }
+  .stat-box{ flex:1; min-width:68px; text-align:center; border-radius:14px; padding:12px 4px; background:var(--stat); }
+  .stat-box .num{ font-size:21px; color:var(--stat-dark); font-weight:bold; }
+  .stat-box .lbl{ font-size:11.5px; color:var(--ink-soft); margin-top:2px; }
+
+  /* 내비게이션 바 */
+  .nav{ display:flex; gap:6px; margin-bottom:16px; flex-wrap:wrap; }
+  .nav button{ width:auto; margin-top:0; padding:9px 14px; font-size:13px; background:#EEF2F8; color:var(--ink); border:none; border-radius:14px; }
+  .nav button.active{ background:var(--primary); color:#fff; font-weight:bold; }
+
+  /* 테이블 */
+  table{ width:100%; border-collapse:collapse; font-size:13px; }
+  th,td{ text-align:left; padding:8px 6px; border-bottom:1px solid var(--line); vertical-align:middle; }
+  th{ color:var(--ink-soft); font-weight:600; background:transparent; }
+  .badge{ display:inline-block; font-size:11px; padding:3px 9px; border-radius:20px; background:#EEF2F8; color:var(--ink-soft); }
+  .badge.open{ background:#DFF5E7; color:var(--msg-dark); font-weight:bold; }
+  .badge.round{ background:var(--stat); color:var(--stat-dark); font-weight:bold; }
+  .badge.locked{ background:#FDE4E1; color:var(--danger-dark); font-weight:bold; }
+  .link-btn{ background:none; border:none; color:var(--ink-soft); text-decoration:underline; width:auto; padding:0; margin:0; font-size:12.5px; cursor:pointer; }
+  .empty{ text-align:center; padding:28px 10px; color:var(--ink-soft); font-size:14px; }
+  hr.dashed{ border:none; border-top:1px solid var(--line); margin:14px 0; }
+  .letter-view{ background:var(--card-soft); border-radius:14px; padding:16px; white-space:pre-wrap; line-height:1.7; font-size:15px; margin-top:10px; }
+  textarea::placeholder, input::placeholder{ color:#AFBBCB; }
+
+  /* 메인 화면 (제공해주신 컨셉 이미지를 실제 배경으로 사용) */
+  .hub-image-wrap{
+    position:relative; width:100%; border-radius:var(--radius); overflow:hidden;
+    margin-bottom:14px; box-shadow:var(--shadow); line-height:0;
+  }
+  .hub-bg-img{ display:block; width:100%; height:auto; }
+  .hub-cloud-title{
+    position:absolute; left:26%; top:6%; width:44%; height:22%;
+    display:flex; align-items:center; justify-content:center; text-align:center;
+    font-weight:700; color:#2E5B4C; font-size:clamp(13px, 3.6vw, 19px);
+    padding:0 4%; pointer-events:none;
+  }
+  .hub-hotspot{
+    position:absolute; cursor:pointer; display:flex; align-items:center;
+    border-radius:14px; transition:background .15s;
+  }
+  .hub-hotspot:hover, .hub-hotspot:active{ background:rgba(255,255,255,0.25); }
+  .hub-hotspot-title{
+    font-weight:700; font-size:clamp(11px, 2.9vw, 15.5px); line-height:1.25;
+    padding-left:40%; width:100%;
+  }
+  .hub-hotspot-desc{
+    display:block; font-weight:400; font-size:clamp(9px, 2.1vw, 11.5px); margin-top:2px; opacity:0.85;
+  }
+
+  /* 전자우편 편지함 목록 */
+  .envelope-card{
+    background:var(--card); border:none;
+    border-radius:var(--radius); padding:16px 18px; margin-bottom:12px; position:relative; cursor:pointer;
+    box-shadow:var(--shadow); transition:transform .15s;
+  }
+  .envelope-card:active{ transform:scale(0.98); }
+  .envelope-flap{ display:none; }
+  .envelope-row{ display:flex; justify-content:space-between; align-items:center; gap:10px; }
+
+  /* 휴대전화 메시지 */
+  .chat-box-wrap{
+    display:flex; flex-direction:column; height:380px; border:none;
+    border-radius:var(--radius); background:var(--chat-panel); overflow:hidden; box-shadow:var(--shadow);
+  }
+  .chat-thread{
+    flex:1; overflow-y:auto; padding:14px; display:flex; flex-direction:column; gap:9px;
+    background:var(--chat-bg);
+  }
+  .bubble-row{ display:flex; align-items:flex-end; gap:6px; }
+  .bubble-row.me{ justify-content:flex-end; }
+  .avatar-circle{
+    width:28px; height:28px; border-radius:50%; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    color:#fff; font-size:13px; font-weight:bold;
+  }
+  .bubble-col{ display:flex; flex-direction:column; max-width:78%; }
+  .bubble-name{ font-size:11px; color:var(--ink-soft); margin:0 0 3px 2px; }
+  .bubble{
+    padding:10px 14px; border-radius:18px; font-size:14.5px; line-height:1.5;
+    border:1.5px solid transparent; background:#fff; word-break:break-word;
+  }
+  .bubble-row.me .bubble{ border-color:var(--primary); border-bottom-right-radius:4px; }
+  .bubble-row.you .bubble{ border-color:var(--web-ink); border-bottom-left-radius:4px; }
+  .bubble .meta{ font-size:10.5px; color:var(--ink-soft); margin-top:4px; text-align:right; }
+  .chat-compose{ display:flex; gap:8px; align-items:flex-end; padding:10px; background:#fff; border-top:1px solid var(--line); }
+  .chat-compose textarea{ min-height:44px; height:44px; padding:10px 12px; }
+  .chat-compose button{ width:auto; margin-top:0; padding:10px 18px; height:44px; flex-shrink:0; white-space:nowrap; display:flex; align-items:center; justify-content:center; }
+  .thread-list-item{
+    display:flex; justify-content:space-between; align-items:center; gap:10px;
+    border:none; border-radius:16px; padding:12px 14px; margin-bottom:10px;
+    background:var(--card); cursor:pointer; transition:background .15s; box-shadow:var(--shadow);
+  }
+  .thread-list-item:hover{ background:#F7FAFF; }
+
+  /* 학급 누리집 */
+  .post-card{ border:none; border-radius:var(--radius); padding:16px; margin-bottom:14px; background:var(--notebook-card); box-shadow:var(--shadow); }
+  .post-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+  .post-author{ font-weight:700; color:var(--web-dark); font-size:15px; }
+  .post-time{ font-size:11.5px; color:var(--ink-soft); }
+  .post-content{ font-size:14.5px; line-height:1.6; white-space:pre-wrap; margin-bottom:10px; word-break:break-word; }
+  .post-actions{ display:flex; gap:12px; align-items:center; }
+  .like-btn{ width:auto; margin-top:0; padding:6px 12px; font-size:13px; background:#F3F6FC; border:none; color:var(--ink); border-radius:20px; }
+  .like-btn.liked{ background:#FDE4E1; color:var(--danger-dark); font-weight:bold; }
+  .comment-toggle{ width:auto; margin-top:0; padding:6px 10px; font-size:13px; background:none; border:none; color:var(--ink-soft); text-decoration:underline; }
+  .comment-box{ margin-top:12px; padding-top:12px; border-top:1px solid var(--line); }
+  .comment-node{ padding:9px 0; border-bottom:1px solid var(--line); }
+  .comment-head{ display:flex; align-items:flex-start; gap:8px; }
+  .comment-bubble{ flex:1; min-width:0; background:var(--notebook); border-radius:14px; padding:8px 12px; }
+  .comment-author-line{ font-size:12.5px; margin-bottom:2px; }
+  .comment-author-line b{ color:var(--web-dark); }
+  .reply-arrow{ color:var(--ink-soft); }
+  .comment-text{ font-size:13.5px; line-height:1.5; word-break:break-word; }
+  .comment-actions{ display:flex; gap:4px; align-items:center; margin:4px 0 0 36px; }
+  .comment-like-btn{
+    width:auto; margin:0; padding:2px 9px; font-size:12px; border-radius:14px;
+    background:#F3F6FC; border:none; color:var(--ink-soft);
+  }
+  .comment-like-btn.liked{ background:#FDE4E1; color:var(--danger-dark); font-weight:bold; }
+  .comment-reply-btn{ width:auto; margin:0; padding:2px 8px; font-size:12px; background:none; border:none; color:var(--ink-soft); text-decoration:underline; }
+  .comment-compose{ display:flex; gap:6px; margin-top:10px; }
+  .comment-compose input{ flex:1; }
+  .comment-compose button{ width:auto; margin-top:0; padding:9px 14px; font-size:13px; flex-shrink:0; white-space:nowrap; }
+
+  /* 전자우편 쓰기 화면 */
+  .mail-client{ background:#fff; border:none; border-radius:var(--radius); overflow:hidden; margin-bottom:14px; box-shadow:var(--shadow); }
+  .mail-tabtop{ display:flex; justify-content:space-between; align-items:center; background:var(--mail); padding:12px 16px; font-size:13.5px; font-weight:bold; color:var(--mail-dark); }
+  .mail-tabtop-x{ color:var(--mail-dark); opacity:0.6; cursor:default; }
+  .mail-action-row{ display:flex; gap:8px; padding:12px 16px; border-bottom:1px solid var(--line); flex-wrap:wrap; }
+  .mail-btn{ width:auto; margin:0; padding:8px 14px; font-size:12.5px; border-radius:12px; }
+  .mail-btn-send{ background:var(--mail-ink); color:#fff; font-weight:bold; }
+  .mail-btn-send:hover{ background:var(--mail-dark); }
+  .mail-btn-mock{ background:#F3F6FC; color:var(--ink-soft); border:none; }
+  .mail-btn-mock:hover{ background:var(--line); }
+  .mail-fields{ padding:4px 16px; }
+  .mail-field-row{ display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid var(--line); }
+  .mail-field-row:last-child{ border-bottom:none; }
+  .mail-field-label{ width:76px; flex-shrink:0; font-size:12.5px; color:var(--ink-soft); font-weight:600; }
+  .mail-field-row input, .mail-field-row .autocomplete{ flex:1; }
+  .mail-field-row input{ border:none; padding:4px 2px; background:transparent; border-radius:0; }
+  .mail-field-row input:disabled{ color:var(--ink); -webkit-text-fill-color:var(--ink); opacity:1; }
+  .mail-rte-toolbar{ display:flex; gap:5px; padding:9px 16px; background:var(--card-soft); border-top:1px solid var(--line); border-bottom:1px solid var(--line); flex-wrap:wrap; }
+  .mail-rte-btn{ width:auto; margin:0; padding:6px 10px; font-size:12px; background:#fff; border:1px solid var(--line); color:var(--ink); border-radius:8px; }
+  .mail-body{ border:none; border-radius:0; min-height:160px; padding:16px; background:#fff; }
+  .mail-body:focus{ background:#fff; }
+  .mail-attach{ border-top:1px solid var(--line); padding:12px 16px 16px; }
+  .mail-attach-head{ display:flex; justify-content:space-between; align-items:center; font-size:12.5px; font-weight:bold; color:var(--ink-soft); margin-bottom:6px; }
+  .mail-attach-item{ display:flex; justify-content:space-between; align-items:center; font-size:12.5px; padding:7px 0; border-bottom:1px solid var(--line); color:var(--ink); }
+  .mail-attach-actions button{ font-size:13px; }
+
+  /* 모달 오버레이 */
+  .modal-overlay{
+    position:fixed; top:0; left:0; right:0; bottom:0; z-index:100;
+    background:rgba(51,71,91,0.45); backdrop-filter:blur(3px);
+    display:flex; justify-content:center; align-items:center; padding:16px;
+  }
+  .modal{
+    background:#fff; border-radius:24px; border:none;
+    box-shadow:0 16px 40px rgba(51,71,91,0.22); width:100%; max-width:540px;
+    max-height:90vh; overflow-y:auto; padding:24px; position:relative;
+  }
+  .modal-x{
+    position:absolute; top:16px; right:16px; background:none; border:none;
+    font-size:20px; color:var(--ink-soft); cursor:pointer; width:auto; margin:0; padding:4px 8px;
+  }
+  .modal h2{ font-size:20px; margin-bottom:8px; color:var(--ink); }
+  .step-box{ display:flex; gap:12px; margin:12px 0; align-items:flex-start; }
+  .step-num{
+    width:24px; height:24px; border-radius:50%; background:var(--primary);
+    color:#fff; display:flex; align-items:center; justify-content:center;
+    font-size:12px; font-weight:bold; flex-shrink:0; margin-top:2px;
+  }
+  .step-tx{ font-size:13.5px; line-height:1.55; color:var(--ink); }
+  .tip-box{
+    background:#FFF6E0; border:none; border-radius:14px;
+    padding:12px 14px; font-size:13px; color:#8A6100; margin:12px 0; line-height:1.5;
+  }
+
+  /* 토스트 */
+  .toast{
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+    background:var(--ink); color:#fff; padding:10px 20px; border-radius:30px;
+    font-size:14px; z-index:200; box-shadow:0 6px 18px rgba(0,0,0,0.25);
+    opacity:0; pointer-events:none; transition:opacity .2s;
+  }
+  .toast.show{ opacity:1; }
+
+  /* 아코디언 */
+  .accordion-head{
+    display:flex; justify-content:space-between; align-items:center;
+    cursor:pointer; padding:10px 0; user-select:none;
+  }
+  .accordion-content{ display:block; }
+  .accordion-content.collapsed{ display:none; }
+
+  .qr-center{ display:flex; flex-direction:column; align-items:center; justify-content:center; margin:16px 0; }
+  .qr-box{ background:#fff; padding:14px; border-radius:16px; border:none; box-shadow:var(--shadow); }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+
+<!-- 토스트 알림 엘리먼트 -->
+<div class="toast" id="toast"></div>
+
+<!-- 모달 마운트 컨테이너 -->
+<div id="modalMount"></div>
+
+<script>
+// =====================================================================
+// 1) FIREBASE 설정 (이 우리반 매체수업 전용 프로젝트에 고정 연결됨)
+// =====================================================================
+let embeddedConfig = {
+  apiKey: "AIzaSyBuln5OhkDppv3RXD3rcyUXLmI08Y1avrU",
+  authDomain: "media-68dbb.firebaseapp.com",
+  projectId: "media-68dbb",
+  storageBucket: "media-68dbb.firebasestorage.app",
+  messagingSenderId: "246934905390",
+  appId: "1:246934905390:web:0466d6fb6dd8c5629575bf"
+};
+
+// 📌 [선생님 전용] 기본 학급 코드 사전 지정 (선택 사항)
+//   선생님이 여기에 "0501"처럼 따옴표 안에 적어두시면 학생들이 코드를 입력할 필요 없이 바로 입장할 수 있어요!
+let embeddedClassCode = "";
+
+// 관리자 모드 여부: 주소 끝에 ?teacher=1 이 붙어 있을 때만 선생님 화면으로 들어감
+const isTeacherMode = new URLSearchParams(location.search).get('teacher') === '1';
+
+// 공유 링크(#s=payload) 해석 — 학급 코드를 자동으로 채워줌
+function parseSharedPayload() {
+  const m = location.hash.match(/[#&]s=([^&]+)/);
+  if (!m) return null;
+  try {
+    const jsonStr = decodeURIComponent(escape(atob(decodeURIComponent(m[1]))));
+    const data = JSON.parse(jsonStr);
+    if (data.classCode) {
+      localStorage.setItem('mediaLabDefaultClassCode', data.classCode);
+      localStorage.setItem('mediaLabLastClassCode', data.classCode);
+    }
+    return data;
+  } catch (e) {
+    console.warn('공유 링크 해석 실패:', e);
+    return null;
+  }
+}
+const sharedData = parseSharedPayload();
+
+let db = null;
+let firebaseInitialized = false;
+
+function initFirebase(cfg) {
+  try {
+    if (firebase.apps.length === 0) {
+      firebase.initializeApp(cfg);
+    }
+    db = firebase.firestore();
+    firebaseInitialized = true;
+    return true;
+  } catch (e) {
+    console.error("Firebase 초기화 에러:", e);
+    return false;
+  }
+}
+
+initFirebase(embeddedConfig);
+
+// =====================================================================
+// 2) 전역 상태 및 Draft(입력 보존)
+// =====================================================================
+let classCode = sharedData?.classCode
+             || (embeddedClassCode ? embeddedClassCode.trim() : null)
+             || localStorage.getItem('mediaLabDefaultClassCode')
+             || localStorage.getItem('mediaLabLastClassCode')
+             || null;
+let classDocRef = null;
+let classData = { roster: [], teacherPin: null, letterOpenPolicy: 'self' };
+let classExists = null; // null=확인 전, true/false=학급 문서 존재 여부
+let mailsAll = [];
+let messagesAll = [];
+let postsAll = [];
+let commentsForOpenPost = [];
+let roundMail = { active:false, pairs:{}, roundNumber:0, completed:[] };
+let roundMessage = { active:false, pairs:{}, roundNumber:0, completed:[] };
+
+const unsub = { class:null, mails:null, messages:null, posts:null, comments:null, roundMail:null, roundMessage:null };
+
+// 실시간 동기화 중 타자 치던 글이 날아가지 않도록 보존하는 drafts
+const drafts = {
+  mailTo: '',
+  mailSubject: '',
+  mailBody: '',
+  chatInput: '',
+  feedPost: '',
+  commentInput: ''
+};
+
+let state = {
+  screen: isTeacherMode ? 'teacher-entry' : (classCode ? 'student-login' : 'join'),
+  joinCodeError: '',
+  currentUser: null,
+  teacherIn: false,
+  error: '',
+  module: null,          // 'mail' | 'message' | 'feed'
+  composeTo: '',
+  isRandomCompose: false,
+  viewMailId: null,
+  chatPartner: null,
+  chatIsRandom: false,
+  openPostId: null,
+  teacherTab: 'roster',  // 'roster' | 'stats' | 'rounds' | 'monitor' | 'reveal'
+  teacherRevealTarget: '',
+  replyToCommentId: null,
+  wideView: false
+};
+
+// classCode를 이미 알고 있으면(초대 링크·저장된 기본코드 등) 화면을 그리기 전에 바로 구독 시작
+if (firebaseInitialized && classCode) {
+  subscribeClass(classCode);
+}
+
+// =====================================================================
+// 3) 유틸리티 함수
+// =====================================================================
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  if(!t) return;
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+function normalize(s){ return (s||'').trim(); }
+function findRosterName(input){
+  const t = normalize(input).toLowerCase();
+  return (classData.roster||[]).find(n => n.toLowerCase() === t) || null;
+}
+function shuffleArr(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function generateDerangement(names){
+  if(names.length<2) return {};
+  let perm, tries=0;
+  do{
+    perm = shuffleArr(names.slice());
+    tries++;
+  } while(perm.some((v,i)=>v===names[i]) && tries<300);
+  perm.forEach((v,i)=>{ if(v===names[i]){ const j=(i+1)%perm.length; [perm[i],perm[j]]=[perm[j],perm[i]]; } });
+  const pairs={};
+  names.forEach((n,i)=> pairs[n]=perm[i]);
+  return pairs;
+}
+
+function mailSent(name){ return mailsAll.filter(l=>l.from===name).length; }
+function mailReceived(name){ return mailsAll.filter(l=>l.to===name).length; }
+function msgSent(name){ return messagesAll.filter(l=>l.from===name).length; }
+function msgReceived(name){ return messagesAll.filter(l=>l.to===name).length; }
+function postCount(name){ return postsAll.filter(p=>p.author===name).length; }
+
+function threadPartners(name){
+  const set = new Set();
+  messagesAll.forEach(m=>{
+    if(m.from===name) set.add(m.to);
+    if(m.to===name) set.add(m.from);
+  });
+  return [...set];
+}
+function threadMessages(a,b){
+  return messagesAll.filter(m=> (m.from===a&&m.to===b)||(m.from===b&&m.to===a)).sort((x,y)=>x.ts-y.ts);
+}
+function lastMessageTs(a,b){
+  const ms = threadMessages(a,b);
+  return ms.length? ms[ms.length-1].ts : 0;
+}
+function timeStr(ts){ return new Date(ts).toLocaleString('ko-KR'); }
+function dateStr(ts){ return new Date(ts).toLocaleDateString('ko-KR'); }
+
+// =====================================================================
+// 4) Firestore 구독
+// =====================================================================
+function clearSubscriptions(){
+  Object.keys(unsub).forEach(k=>{ if(unsub[k]) { unsub[k](); unsub[k]=null; } });
+}
+
+function subscribeClass(code){
+  if(!db) return;
+  clearSubscriptions();
+  classCode = code;
+  localStorage.setItem('mediaLabLastClassCode', code);
+  classDocRef = db.collection('classes').doc(code);
+
+  unsub.class = classDocRef.onSnapshot(doc=>{
+    classExists = doc.exists;
+    if(doc.exists){
+      classData = Object.assign({roster:[],teacherPin:null,letterOpenPolicy:'self'}, doc.data());
+    } else {
+      classData = {roster:[],teacherPin:null,letterOpenPolicy:'self'};
+    }
+    render();
+  });
+  unsub.mails = classDocRef.collection('mails').onSnapshot(snap=>{
+    mailsAll = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    render();
+  });
+  unsub.messages = classDocRef.collection('messages').onSnapshot(snap=>{
+    messagesAll = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    renderChatThreadIfActive();
+    render();
+  });
+  unsub.posts = classDocRef.collection('posts').onSnapshot(snap=>{
+    postsAll = snap.docs.map(d=>({id:d.id, ...d.data()})).sort((a,b)=>b.ts-a.ts);
+    render();
+  });
+  unsub.roundMail = classDocRef.collection('rounds').doc('mail').onSnapshot(doc=>{
+    roundMail = doc.exists ? doc.data() : {active:false, pairs:{}, roundNumber:0, completed:[]};
+    render();
+  });
+  unsub.roundMessage = classDocRef.collection('rounds').doc('message').onSnapshot(doc=>{
+    roundMessage = doc.exists ? doc.data() : {active:false, pairs:{}, roundNumber:0, completed:[]};
+    render();
+  });
+}
+
+function subscribeComments(postId){
+  if(unsub.comments) unsub.comments();
+  if(!postId){ commentsForOpenPost = []; return; }
+  unsub.comments = classDocRef.collection('comments').where('postId','==',postId).onSnapshot(snap=>{
+    commentsForOpenPost = snap.docs.map(d=>({id:d.id, ...d.data()})).sort((a,b)=>a.ts-b.ts);
+    render();
+  });
+}
+
+// =====================================================================
+// 5) 쓰기 동작 (Firestore)
+// =====================================================================
+async function createClass(code, roster, teacherPin){
+  await db.collection('classes').doc(code).set({
+    roster, teacherPin, letterOpenPolicy: 'self', createdAt: Date.now()
+  });
+}
+async function saveRoster(newRoster){
+  await classDocRef.update({ roster:newRoster });
+}
+async function setTeacherPin(pin){
+  await classDocRef.update({ teacherPin: pin });
+}
+async function setLetterOpenPolicy(policy){
+  await classDocRef.update({ letterOpenPolicy: policy });
+}
+async function resetAllContent(){
+  const batch = db.batch();
+  mailsAll.forEach(l=> batch.delete(classDocRef.collection('mails').doc(l.id)));
+  messagesAll.forEach(l=> batch.delete(classDocRef.collection('messages').doc(l.id)));
+  postsAll.forEach(p=> batch.delete(classDocRef.collection('posts').doc(p.id)));
+  batch.set(classDocRef.collection('rounds').doc('mail'), {active:false,pairs:{},roundNumber:0,completed:[]});
+  batch.set(classDocRef.collection('rounds').doc('message'), {active:false,pairs:{},roundNumber:0,completed:[]});
+  await batch.commit();
+}
+
+async function startRandomRound(type){
+  const pairs = generateDerangement(classData.roster);
+  const current = type==='mail' ? roundMail : roundMessage;
+  await classDocRef.collection('rounds').doc(type).set({
+    active:true, pairs, roundNumber:(current.roundNumber||0)+1, completed:[]
+  });
+}
+async function endRound(type){
+  await classDocRef.collection('rounds').doc(type).update({ active:false });
+}
+
+async function sendMail(from,to,subject,body,isRandom){
+  await classDocRef.collection('mails').add({
+    from, to, subject, body, ts: Date.now(), revealed:false, selfOpened:false,
+    round: isRandom ? roundMail.roundNumber : null
+  });
+  if(isRandom){
+    await classDocRef.collection('rounds').doc('mail').update({
+      completed: firebase.firestore.FieldValue.arrayUnion(from)
+    });
+  }
+}
+async function openMail(id){
+  await classDocRef.collection('mails').doc(id).update({ selfOpened:true });
+}
+async function revealAllMail(){
+  const batch = db.batch();
+  mailsAll.filter(l=>!l.revealed).forEach(l=> batch.update(classDocRef.collection('mails').doc(l.id), {revealed:true}));
+  await batch.commit();
+}
+async function unrevealAllMail(){
+  const batch = db.batch();
+  mailsAll.filter(l=>l.revealed).forEach(l=> batch.update(classDocRef.collection('mails').doc(l.id), {revealed:false}));
+  await batch.commit();
+}
+async function revealStudentMail(name, value){
+  const batch = db.batch();
+  mailsAll.filter(l=>l.to===name).forEach(l=> batch.update(classDocRef.collection('mails').doc(l.id), {revealed:value}));
+  await batch.commit();
+}
+async function deleteMail(id){
+  await classDocRef.collection('mails').doc(id).delete();
+}
+
+async function sendMessage(from,to,text,isRandom){
+  await classDocRef.collection('messages').add({ from, to, text, ts: Date.now(), round: isRandom?roundMessage.roundNumber:null });
+  if(isRandom){
+    await classDocRef.collection('rounds').doc('message').update({
+      completed: firebase.firestore.FieldValue.arrayUnion(from)
+    });
+  }
+}
+async function deleteMessage(id){
+  await classDocRef.collection('messages').doc(id).delete();
+}
+
+async function createPost(author, content){
+  await classDocRef.collection('posts').add({ author, content, ts: Date.now(), likes: [] });
+}
+async function deletePost(id){
+  await classDocRef.collection('posts').doc(id).delete();
+}
+async function toggleLike(postId, name){
+  const post = postsAll.find(p=>p.id===postId);
+  if(!post) return;
+  const has = (post.likes||[]).includes(name);
+  await classDocRef.collection('posts').doc(postId).update({
+    likes: has ? firebase.firestore.FieldValue.arrayRemove(name) : firebase.firestore.FieldValue.arrayUnion(name)
+  });
+}
+async function addComment(postId, author, content, parentId){
+  await classDocRef.collection('comments').add({ postId, author, content, ts: Date.now(), parentId: parentId||null, likes: [] });
+}
+async function deleteComment(id){
+  await classDocRef.collection('comments').doc(id).delete();
+  // 이 댓글에 달린 답글도 함께 정리
+  const children = commentsForOpenPost.filter(c=>c.parentId===id);
+  await Promise.all(children.map(c=> classDocRef.collection('comments').doc(c.id).delete()));
+}
+async function toggleCommentLike(commentId, name){
+  const c = commentsForOpenPost.find(x=>x.id===commentId);
+  if(!c) return;
+  const has = (c.likes||[]).includes(name);
+  await classDocRef.collection('comments').doc(commentId).update({
+    likes: has ? firebase.firestore.FieldValue.arrayRemove(name) : firebase.firestore.FieldValue.arrayUnion(name)
+  });
+}
+
+// =====================================================================
+// 6) 렌더링 헬퍼 & UI 엘리먼트
+// =====================================================================
+function el(tag, opts={}, children=[]){
+  const e = document.createElement(tag);
+  if(opts.class) e.className = opts.class;
+  if(opts.text!==undefined) e.textContent = opts.text;
+  if(opts.html!==undefined) e.innerHTML = opts.html;
+  if(opts.attrs) Object.entries(opts.attrs).forEach(([k,v])=>e.setAttribute(k,v));
+  if(opts.on) Object.entries(opts.on).forEach(([ev,fn])=>e.addEventListener(ev,fn));
+  (children||[]).forEach(c=> c && e.appendChild(c));
+  return e;
+}
+
+function topToolbar(opts={}) {
+  const bar = el('div',{class:'top-toolbar'});
+  const left = el('div',{class:'top-toolbar-left'});
+  const right = el('div',{class:'top-toolbar-right'});
+
+  // 국어 교육 도움말 버튼
+  const eduBtn = el('button',{class:'tool-chip edu', text:'💡 국어 매체 팁', on:{click:()=> openEduHelpModal(state.module)}});
+  left.appendChild(eduBtn);
+
+  // 초대 링크 & QR 버튼 (선생님 화면에서 학급 코드가 있을 때만 — 학생에게는 노출 안 함)
+  if(classCode && !state.currentUser) {
+    const shareBtn = el('button',{class:'tool-chip share', text:'📲 초대 QR/링크', on:{click:()=> openShareModal()}});
+    left.appendChild(shareBtn);
+  }
+
+  // 화면 너비 토글 (컴퓨터실 편의)
+  const wideBtn = el('button',{class:'tool-chip'+(state.wideView?' active':''), text: state.wideView ? '📱 모바일뷰' : '🖥️ 넓게보기', on:{click:()=>{
+    state.wideView = !state.wideView;
+    document.getElementById('app').classList.toggle('wide-view', state.wideView);
+    render();
+  }}});
+  right.appendChild(wideBtn);
+
+  bar.appendChild(left);
+  bar.appendChild(right);
+  return bar;
+}
+
+function header(title, subtitle, mark){
+  const wrap = el('div',{});
+  wrap.appendChild(topToolbar());
+  const top = el('div',{class:'top'});
+  top.appendChild(el('div',{},[
+    el('h1',{text:title}),
+    subtitle ? el('p',{class:'muted', text:subtitle}) : null
+  ]));
+  top.appendChild(el('div',{class:'badge-mark', text: mark || '매체'}));
+  wrap.appendChild(top);
+  return wrap;
+}
+
+function backBtn(label, screen, extra){
+  return el('button',{class:'btn-ghost', text:'← '+label, on:{click:()=>{ state.error=''; state.screen=screen; if(extra) extra(); render(); }}});
+}
+
+function autocompleteInput(placeholder, pool, onPick, prefill){
+  const wrap = el('div',{class:'autocomplete'});
+  const input = el('input',{attrs:{type:'text', placeholder, autocomplete:'off'}});
+  if(prefill) input.value = prefill;
+  const sugg = el('div',{class:'suggestions'}); sugg.style.display='none';
+  wrap.appendChild(input); wrap.appendChild(sugg);
+  input.addEventListener('input', ()=>{
+    const q = input.value.trim().toLowerCase();
+    sugg.innerHTML='';
+    if(!q){ sugg.style.display='none'; return; }
+    const matches = pool.filter(n=>n.toLowerCase().includes(q)).slice(0,6);
+    if(matches.length===0){ sugg.style.display='none'; return; }
+    matches.forEach(n=> sugg.appendChild(el('div',{text:n, on:{click:()=>{
+      input.value=n; sugg.style.display='none'; onPick && onPick(n);
+    }}})));
+    sugg.style.display='block';
+  });
+  document.addEventListener('click', (e)=>{ if(!wrap.contains(e.target)) sugg.style.display='none'; });
+  return { wrap, input };
+}
+
+// =====================================================================
+// 7) 국어 교육 팁 & 초대 링크/QR 모달
+// =====================================================================
+function openEduHelpModal(modKey) {
+  const mount = document.getElementById('modalMount');
+  mount.innerHTML = '';
+  const overlay = el('div',{class:'modal-overlay', on:{click:(e)=>{ if(e.target===overlay) mount.innerHTML=''; }}});
+  const modal = el('div',{class:'modal'});
+  modal.appendChild(el('button',{class:'modal-x', text:'✕', on:{click:()=> mount.innerHTML=''}}));
+
+  let title = "📖 국어 2학기 매체 언어 예절 가이드";
+  let contentHtml = "";
+
+  if(modKey === 'mail') {
+    title = "📧 전자우편(이메일) 예절 가이드";
+    contentHtml = `
+      <div class="tip-box">
+        <b>[매체 특성: 정중함과 격식]</b><br>
+        전자우편은 시간적 여유를 두고 정중하게 생각을 전달하는 매체예요.
+      </div>
+      <div class="step-box"><div class="step-num">1</div><div class="step-tx"><b>명확한 제목 달기:</b> 내용을 한눈에 알 수 있도록 용건을 담은 제목을 써요.</div></div>
+      <div class="step-box"><div class="step-num">2</div><div class="step-tx"><b>첫인사 & 받는 이:</b> '○○에게', '○○님, 안녕하세요'로 다정하고 예의 있게 시작해요.</div></div>
+      <div class="step-box"><div class="step-num">3</div><div class="step-tx"><b>본문 작성:</b> 전하고 싶은 말을 문맥에 맞추어 또박또박 격식체(~합니다/~해요)로 써요.</div></div>
+      <div class="step-box"><div class="step-num">4</div><div class="step-tx"><b>끝인사 & 보낸 이:</b> '건강 조심해', '2026년 ○월 ○일 ○○ 올림'으로 마무리해요.</div></div>
+    `;
+  } else if(modKey === 'message') {
+    title = "💬 휴대전화 메시지 예절 가이드";
+    contentHtml = `
+      <div class="tip-box">
+        <b>[매체 특성: 즉각성과 일상성]</b><br>
+        실시간으로 빠르게 대화를 주고받지만, 얼굴이 보이지 않으므로 더욱 상대방을 존중해야 해요.
+      </div>
+      <div class="step-box"><div class="step-num">1</div><div class="step-tx"><b>비속어·과도한 줄임말 자제:</b> 친구가 오해하거나 기분 상하지 않도록 바른 말을 써요.</div></div>
+      <div class="step-box"><div class="step-num">2</div><div class="step-tx"><b>알맞은 시간대 지키기:</b> 너무 늦은 밤이나 이른 아침에는 긴급한 용건이 아니면 피해요.</div></div>
+      <div class="step-box"><div class="step-num">3</div><div class="step-tx"><b>답장 배려하기:</b> 상대방이 답장을 늦게 하더라도 재촉하지 않고 기다려줘요.</div></div>
+    `;
+  } else if(modKey === 'feed') {
+    title = "🌐 학급 누리집(게시판) 예절 가이드";
+    contentHtml = `
+      <div class="tip-box">
+        <b>[매체 특성: 공개성과 다수 소통]</b><br>
+        우리 반 모든 친구와 선생님이 함께 보는 열린 공간이에요.
+      </div>
+      <div class="step-box"><div class="step-num">1</div><div class="step-tx"><b>선플(칭찬과 응원 댓글) 달기:</b> 친구의 생각과 글을 존중하고 긍정적인 댓글을 남겨요.</div></div>
+      <div class="step-box"><div class="step-num">2</div><div class="step-tx"><b>개인정보 보호:</b> 집 주소, 전화번호, 친구의 비밀을 함부로 올리지 않아요.</div></div>
+      <div class="step-box"><div class="step-num">3</div><div class="step-tx"><b>디지털 시민성:</b> 거짓 정보나 장난 글을 피하고 모두에게 유익한 나눔을 실천해요.</div></div>
+    `;
+  } else {
+    contentHtml = `
+      <div class="tip-box">
+        <b>[국어 2학기 매체 소통의 핵심]</b><br>
+        소통하는 상대와 매체의 특성에 따라 알맞은 표현과 태도를 선택하는 능력을 길러요!
+      </div>
+      <p style="font-size:14px; margin-top:8px;">
+        📧 <b>전자우편</b>: 격식 있는 어조, 완성된 편지 구조<br>
+        💬 <b>휴대전화 메시지</b>: 친근하고 즉각적인 대화, 고운 말 배려<br>
+        🌐 <b>학급 누리집</b>: 모두와 공유하는 게시판, 선플과 디지털 에티켓
+      </p>
+    `;
+  }
+
+  modal.appendChild(el('h2',{text:title}));
+  const bodyEl = el('div',{html:contentHtml});
+  modal.appendChild(bodyEl);
+  modal.appendChild(el('button',{class:'btn-primary', text:'알겠어요! 닫기', on:{click:()=> mount.innerHTML=''}}));
+  overlay.appendChild(modal);
+  mount.appendChild(overlay);
+}
+
+// 학생 초대 링크 및 QR 모달
+function openShareModal() {
+  const mount = document.getElementById('modalMount');
+  mount.innerHTML = '';
+  const overlay = el('div',{class:'modal-overlay', on:{click:(e)=>{ if(e.target===overlay) mount.innerHTML=''; }}});
+  const modal = el('div',{class:'modal'});
+  modal.appendChild(el('button',{class:'modal-x', text:'✕', on:{click:()=> mount.innerHTML=''}}));
+
+  modal.appendChild(el('h2',{text:'📲 학생 접속 링크 & QR 코드'}));
+  modal.appendChild(el('p',{class:'muted', text:'학생들이 아래 QR을 스캔하거나 링크로 접속하면 학급 코드가 자동으로 채워져 바로 이름을 고를 수 있어요. 이 링크에는 선생님 화면 메뉴가 전혀 보이지 않아요.'}));
+
+  // 페이로드 인코딩 (학급 코드만 담음)
+  const payload = btoa(unescape(encodeURIComponent(JSON.stringify({ classCode: classCode }))));
+  const shareUrl = location.origin + location.pathname + '#s=' + encodeURIComponent(payload);
+
+  const qrCenter = el('div',{class:'qr-center'});
+  const qrBox = el('div',{class:'qr-box', attrs:{id:'qrContainer'}});
+  qrCenter.appendChild(qrBox);
+  modal.appendChild(qrCenter);
+
+  // QR 생성 (QRCode.js)
+  setTimeout(()=>{
+    qrBox.innerHTML = '';
+    if(window.QRCode) {
+      new QRCode(qrBox, { text: shareUrl, width: 170, height: 170, correctLevel: QRCode.CorrectLevel.M });
+    }
+  }, 50);
+
+  const linkRow = el('div',{attrs:{style:'margin-top:14px;'}});
+  const linkInput = el('input',{attrs:{type:'text', readonly:'readonly', value:shareUrl}});
+  linkRow.appendChild(linkInput);
+  modal.appendChild(linkRow);
+
+  const btnRow = el('div',{class:'btn-row'});
+  const copyBtn = el('button',{class:'btn-primary', text:'📋 학생 접속 링크 복사', on:{click: async ()=>{
+    try{
+      await navigator.clipboard.writeText(shareUrl);
+      copyBtn.textContent = '✅ 복사 완료!';
+      setTimeout(()=> copyBtn.textContent='📋 학생 접속 링크 복사', 2000);
+      showToast('초대 링크가 클립보드에 복사되었어요');
+    }catch(e){
+      linkInput.select();
+      showToast('링크를 직접 복사해 주세요');
+    }
+  }}});
+  btnRow.appendChild(copyBtn);
+
+  const dlBtn = el('button',{class:'btn-secondary', text:'💾 QR 이미지 다운로드', on:{click:()=>{
+    const canvas = qrBox.querySelector('canvas');
+    const img = qrBox.querySelector('img');
+    const dataUrl = canvas ? canvas.toDataURL('image/png') : (img ? img.src : null);
+    if(dataUrl){
+      const a = document.createElement('a');
+      a.download = `우리반매체수업_${classCode || '초대'}.png`;
+      a.href = dataUrl;
+      a.click();
+    } else {
+      alert('QR 코드를 생성하는 중입니다.');
+    }
+  }}});
+  btnRow.appendChild(dlBtn);
+  modal.appendChild(btnRow);
+
+  modal.appendChild(el('hr',{class:'dashed'}));
+  modal.appendChild(el('h4',{text:'🔐 내 선생님(관리자) 링크'}));
+  modal.appendChild(el('p',{class:'muted', text:'이 링크는 선생님만 보관하세요. 학생에게는 절대 공유하지 마세요.'}));
+  const teacherUrl = location.origin + location.pathname + '?teacher=1';
+  const teacherLinkInput = el('input',{attrs:{type:'text', readonly:'readonly', value:teacherUrl}});
+  modal.appendChild(teacherLinkInput);
+  modal.appendChild(el('button',{class:'btn-secondary', text:'📋 관리자 링크 복사', on:{click: async ()=>{
+    try{ await navigator.clipboard.writeText(teacherUrl); showToast('관리자 링크가 복사되었어요'); }
+    catch(e){ teacherLinkInput.select(); showToast('링크를 직접 복사해 주세요'); }
+  }}}));
+
+  overlay.appendChild(modal);
+  mount.appendChild(overlay);
+}
+
+// 선생님 전용 기본 학급 코드 단독 설정 팝업
+function openSetDefaultClassModal() {
+  const mount = document.getElementById('modalMount');
+  mount.innerHTML = '';
+  const overlay = el('div',{class:'modal-overlay', on:{click:(e)=>{ if(e.target===overlay) mount.innerHTML=''; }}});
+  const modal = el('div',{class:'modal', attrs:{style:'max-width:440px;'}});
+  modal.appendChild(el('button',{class:'modal-x', text:'✕', on:{click:()=> mount.innerHTML=''}}));
+
+  modal.appendChild(el('h2',{text:'📌 기본 학급 코드 설정'}));
+  modal.appendChild(el('p',{class:'muted', text:'컴퓨터실 학생 기기에 미리 코드를 저장해두면, 학생들이 번거롭게 코드를 묻거나 입력할 필요가 없어요.'}));
+
+  modal.appendChild(el('label',{text:'우리 반 학급 코드 (예: 0501)'}));
+  const codeInp = el('input',{class:'code-input', attrs:{type:'text', placeholder:'예: 0501', value: localStorage.getItem('mediaLabDefaultClassCode')||classCode||''}});
+  modal.appendChild(codeInp);
+
+  const btnRow = el('div',{class:'btn-row'});
+  btnRow.appendChild(el('button',{class:'btn-primary', text:'저장하기', on:{click:()=>{
+    const val = normalize(codeInp.value);
+    if(!val){ alert('학급 코드를 입력해 주세요.'); return; }
+    localStorage.setItem('mediaLabDefaultClassCode', val);
+    classCode = val;
+    mount.innerHTML = '';
+    showToast('기본 학급 코드가 "'+val+'"(으)로 설정되었어요');
+    render();
+  }}}));
+  btnRow.appendChild(el('button',{class:'btn-secondary', text:'설정 해제', on:{click:()=>{
+    localStorage.removeItem('mediaLabDefaultClassCode');
+    classCode = null;
+    mount.innerHTML = '';
+    showToast('기본 학급 코드 설정이 해제되었어요');
+    render();
+  }}}));
+  modal.appendChild(btnRow);
+
+  overlay.appendChild(modal);
+  mount.appendChild(overlay);
+}
+
+// =====================================================================
+// 8) 화면별 렌더링 라우터
+// =====================================================================
+function render(){
+  const app = document.getElementById('app');
+  app.className = 'app' + (state.wideView ? ' wide-view' : '');
+  app.innerHTML = '';
+
+  if(!firebaseInitialized) {
+    renderConfigError(app);
+    return;
+  }
+
+  const screens = {
+    'config-error': renderConfigError,
+    join: renderJoin,
+    'teacher-entry': renderTeacherEntry,
+    'class-setup': renderClassSetup,
+    'student-login': renderStudentLogin,
+    'student-hub': renderStudentHub,
+    'mail-home': renderMailHome,
+    'mail-compose': renderMailCompose,
+    'mail-inbox': renderMailInbox,
+    'mail-outbox': renderMailOutbox,
+    'mail-view': renderMailView,
+    'msg-home': renderMsgHome,
+    'msg-thread': renderMsgThread,
+    feed: renderFeed,
+    'teacher-login': renderTeacherLogin,
+    teacher: renderTeacher
+  };
+  (screens[state.screen] || (isTeacherMode ? renderTeacherEntry : renderJoin))(app);
+  syncHistory();
+}
+
+// =====================================================================
+// 8-B) 브라우저 뒤로가기 처리
+//   화면(state.screen)이 바뀔 때마다 기록을 하나씩 쌓아서, 뒤로가기를 누르면
+//   앱 밖으로 나가는 대신 이전 화면으로 돌아오게 한다. 더 쌓인 기록이 없는
+//   상태(맨 처음 화면)에서 뒤로가기를 누르면 정말 나갈지 확인 팝업을 띄운다.
+// =====================================================================
+let lastHistoryScreen = null;
+function syncHistory(){
+  const snapshot = JSON.stringify(state);
+  if(state.screen !== lastHistoryScreen){
+    history.pushState({ appState: snapshot }, '', location.href);
+    lastHistoryScreen = state.screen;
+  } else {
+    history.replaceState({ appState: snapshot }, '', location.href);
+  }
+}
+window.addEventListener('popstate', (e)=>{
+  if(e.state && e.state.appState){
+    try{
+      Object.assign(state, JSON.parse(e.state.appState));
+      lastHistoryScreen = state.screen;
+      render();
+      return;
+    }catch(err){ /* 복원 실패 시 아래 나가기 확인으로 진행 */ }
+  }
+  // 앱 안에 더 돌아갈 화면이 없음 — 정말 페이지를 나갈 것인지 확인
+  const leave = confirm('지금 화면을 나가시겠어요? 작성 중이던 내용이 사라질 수 있어요.');
+  if(!leave){
+    history.pushState({ appState: JSON.stringify(state) }, '', location.href);
+  }
+});
+
+// ---------------------------------------------------------------------
+// [화면 1] 연결 오류 안내 화면 (평소에는 나오지 않음)
+// ---------------------------------------------------------------------
+function renderConfigError(app){
+  const card = el('div',{class:'card'});
+  card.appendChild(el('h3',{text:'⚠️ 연결 오류'}));
+  card.appendChild(el('p',{class:'muted', text:'페이지 연결 중 문제가 발생했어요. 새로고침해도 계속되면 선생님께 문의해 주세요.'}));
+  card.appendChild(el('button',{class:'btn-primary', text:'새로고침', on:{click:()=> location.reload()}}));
+  app.appendChild(card);
+}
+
+// Firestore 통신 타임아웃 헬퍼 (무한 로딩 방지)
+async function fetchClassWithTimeout(code, timeoutMs = 15000){
+  const timeoutPromise = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error('TIMEOUT')), timeoutMs)
+  );
+  return await Promise.race([
+    db.collection('classes').doc(code).get(),
+    timeoutPromise
+  ]);
+}
+
+// ---------------------------------------------------------------------
+// [화면 2] 학급 코드 입력 및 입장 화면 (학생 전용 — 관리자 메뉴 없음)
+// ---------------------------------------------------------------------
+function renderJoin(app){
+  app.appendChild(header('우리반 매체수업', '전자우편 · 메시지 · 학급 누리집', '학생용'));
+
+  const savedDefault = localStorage.getItem('mediaLabDefaultClassCode') || embeddedClassCode || '';
+  const currentInitialCode = classCode || savedDefault || '';
+
+  const studentCard = el('div',{class:'card'});
+  studentCard.appendChild(el('h2',{text:'🎒 학생 입장하기'}));
+  if(savedDefault){
+    studentCard.appendChild(el('span',{class:'badge open', text:'📌 기본 학급 설정됨: '+savedDefault, attrs:{style:'margin-bottom:8px;'}}));
+  }
+  studentCard.appendChild(el('label',{text:'우리 반 학급 코드'}));
+  const codeInput = el('input',{class:'code-input', attrs:{type:'text', placeholder:'예: 0501', value: currentInitialCode}});
+  studentCard.appendChild(codeInput);
+  studentCard.appendChild(el('p',{class:'muted', text:'선생님이 알려주신 학급 코드를 입력하세요.'}));
+
+  const err = el('div',{class:'error'});
+  studentCard.appendChild(err);
+
+  studentCard.appendChild(el('button',{class:'btn-primary', text:'학생으로 입장하기 ➔', on:{click: async ()=>{
+    const code = normalize(codeInput.value);
+    if(!code){ err.textContent='학급 코드를 입력해 주세요.'; return; }
+    err.innerHTML = '<span style="color:var(--envelope-dark);">연결 확인 중...</span>';
+
+    try{
+      const snap = await fetchClassWithTimeout(code);
+      if(snap.exists){
+        subscribeClass(code);
+        state.screen = 'student-login'; // 학생은 곧바로 이름 선택 화면으로 이동!
+        state.error = '';
+        render();
+      } else {
+        err.innerHTML = '⚠️ "<b>' + code + '</b>" 학급이 아직 개설되지 않았습니다.<br>선생님께 학급 코드가 맞는지 확인해 주세요.';
+      }
+    }catch(e){
+      console.error(e);
+      if(e.message === 'TIMEOUT'){
+        err.textContent = '⚠️ 서버 연결이 지연되고 있어요. 잠시 후 다시 시도해 주세요.';
+      } else {
+        err.textContent = '연결 오류: ' + (e.message || '잠시 후 다시 시도해 주세요.');
+      }
+    }
+  }}}));
+  app.appendChild(studentCard);
+
+  app.appendChild(el('button',{class:'btn-ghost', text:'선생님이신가요? 관리자 화면으로', on:{click:()=>{
+    location.href = location.pathname + '?teacher=1';
+  }}}));
+}
+
+// ---------------------------------------------------------------------
+// [화면 2-B] 선생님 관리자 접속 화면 (주소에 ?teacher=1 이 있어야만 보임)
+// ---------------------------------------------------------------------
+function renderTeacherEntry(app){
+  app.appendChild(header('선생님 관리자 접속', '학급 코드로 로그인하거나 새 학급을 만드세요', '관리자'));
+
+  const savedDefault = localStorage.getItem('mediaLabDefaultClassCode') || embeddedClassCode || '';
+  const currentInitialCode = classCode || savedDefault || '';
+
+  const card = el('div',{class:'card'});
+  card.appendChild(el('label',{text:'우리 반 학급 코드'}));
+  const codeInput = el('input',{class:'code-input', attrs:{type:'text', placeholder:'예: 0501', value: currentInitialCode}});
+  card.appendChild(codeInput);
+
+  const err = el('div',{class:'error'});
+  card.appendChild(err);
+
+  card.appendChild(el('button',{class:'btn-primary', text:'🔐 선생님 로그인', on:{click: async ()=>{
+    const code = normalize(codeInput.value) || savedDefault;
+    if(!code){ err.textContent='먼저 학급 코드를 입력해 주세요.'; return; }
+    err.innerHTML = '<span style="color:var(--envelope-dark);">연결 확인 중...</span>';
+    try{
+      const snap = await fetchClassWithTimeout(code);
+      if(snap.exists){
+        subscribeClass(code);
+        state.screen = 'teacher-login';
+        state.error = '';
+        render();
+      } else {
+        err.innerHTML = '⚠️ "<b>' + code + '</b>" 학급이 아직 개설되지 않았습니다. 아래 [✨ 새 학급 만들기]를 눌러주세요.';
+      }
+    }catch(e){
+      console.error(e);
+      err.textContent = e.message === 'TIMEOUT' ? '⚠️ 서버 연결이 지연되고 있어요. 잠시 후 다시 시도해 주세요.' : ('연결 오류: ' + (e.message||''));
+    }
+  }}}));
+  app.appendChild(card);
+
+  const newClassCard = el('div',{class:'card'});
+  newClassCard.appendChild(el('h3',{text:'아직 학급을 만들지 않았다면'}));
+  newClassCard.appendChild(el('p',{class:'muted', text:'명단과 관리자 비밀번호를 등록해 새 학급을 개설해요.'}));
+  newClassCard.appendChild(el('button',{class:'btn-secondary', text:'✨ 새 학급 만들기 (명단 & 코드 등록)', on:{click:()=>{
+    classCode = normalize(codeInput.value) || savedDefault || '0501';
+    state.screen = 'class-setup';
+    render();
+  }}}));
+  newClassCard.appendChild(el('button',{class:'btn-secondary', text:'📌 이 기기 기본 학급 코드 고정', on:{click:()=> openSetDefaultClassModal()}}));
+  app.appendChild(newClassCard);
+
+  app.appendChild(el('button',{class:'btn-ghost', text:'← 학생 화면으로 돌아가기', on:{click:()=>{
+    location.href = location.pathname + location.hash;
+  }}}));
+}
+
+// ---------------------------------------------------------------------
+// [화면 3] 새 학급 개설 (코드 지정, 명단 및 관리자 비밀번호)
+// ---------------------------------------------------------------------
+function renderClassSetup(app){
+  app.appendChild(header('새 학급 만들기', '선생님 전용 개설 화면'));
+  const card = el('div',{class:'card'});
+
+  card.appendChild(el('label',{text:'사용할 학급 코드 (영문·숫자·한글 자유 입력)'}));
+  const codeInp = el('input',{class:'code-input', attrs:{type:'text', placeholder:'예: 0501 또는 6-1', value: classCode || '0501'}});
+  card.appendChild(codeInp);
+  card.appendChild(el('p',{class:'muted', text:'학생들이 접속할 때 입력하게 되는 쉬운 코드를 정해주세요.'}));
+
+  card.appendChild(el('label',{text:'학급 명단 (줄바꿈 또는 쉼표 구분)'}));
+  const roster = el('textarea',{attrs:{placeholder:'예)\n김하늘\n이도윤\n박서연\n정우진'}});
+  card.appendChild(roster);
+
+  card.appendChild(el('label',{text:'명단 파일 업로드 (.txt / .csv, 선택)'}));
+  const fileInput = el('input',{attrs:{type:'file', accept:'.txt,.csv'}});
+  fileInput.addEventListener('change', (e)=>{
+    const f=e.target.files[0]; if(!f) return;
+    const r = new FileReader();
+    r.onload=()=>{ roster.value = r.result; };
+    r.readAsText(f,'utf-8');
+  });
+  card.appendChild(fileInput);
+
+  card.appendChild(el('label',{text:'선생님 관리자 비밀번호 (숫자 4자리)'}));
+  const pin = el('input',{class:'pin-input', attrs:{type:'password', inputmode:'numeric', maxlength:'4', placeholder:'••••'}});
+  card.appendChild(pin);
+
+  const err = el('p',{class:'error'});
+  card.appendChild(err);
+
+  card.appendChild(el('button',{class:'btn-primary', text:'학급 만들고 수업 시작하기 🚀', on:{click: async ()=>{
+    const targetCode = normalize(codeInp.value);
+    if(!targetCode){ err.textContent='학급 코드를 입력해 주세요.'; return; }
+    const names = [...new Set(roster.value.split(/[\n,]/).map(s=>s.trim()).filter(Boolean))];
+    if(names.length<2){ err.textContent='학생을 2명 이상 입력해 주세요.'; return; }
+    if(!/^\d{4}$/.test(pin.value)){ err.textContent='선생님 비밀번호는 숫자 4자리로 입력해 주세요.'; return; }
+    err.textContent = '학급 생성 중...';
+    try{
+      await createClass(targetCode, names, pin.value);
+      classCode = targetCode;
+      localStorage.setItem('mediaLabDefaultClassCode', targetCode);
+      subscribeClass(targetCode);
+      showToast('"'+targetCode+'" 학급이 개설되었어요!');
+      state.teacherIn = true;
+      state.teacherTab = 'roster';
+      state.screen = 'teacher';
+      render();
+    }catch(e){
+      console.error(e);
+      err.textContent='저장 실패: ' + e.message;
+    }
+  }}}));
+  app.appendChild(card);
+  app.appendChild(el('button',{class:'btn-ghost', text:'← 관리자 접속 화면으로', on:{click:()=>{ state.screen='teacher-entry'; render(); }}}));
+}
+
+// ---------------------------------------------------------------------
+// [화면 5] 학생 로그인 화면 (이름만 선택하면 바로 입장 — 비밀번호 없음)
+// ---------------------------------------------------------------------
+function renderStudentLogin(app){
+  app.appendChild(header('학생 입장', classCode ? '학급 코드: '+classCode : '', '학생용'));
+  app.appendChild(backBtn('다른 학급 코드 입력', 'join', ()=>{ clearSubscriptions(); classCode=null; }));
+
+  if(classExists === false){
+    const errCard = el('div',{class:'card'});
+    errCard.appendChild(el('p',{class:'error', text:'⚠️ "'+classCode+'" 학급을 찾을 수 없어요. 선생님께 학급 코드를 다시 확인해 주세요.'}));
+    app.appendChild(errCard);
+    return;
+  }
+
+  const card = el('div',{class:'card'});
+  card.appendChild(el('label',{text:'내 이름'}));
+  const { wrap, input: nameInput } = autocompleteInput('명단에 있는 내 이름을 입력하세요', classData.roster||[], ()=>{ enterBtn.click(); });
+  card.appendChild(wrap);
+  card.appendChild(el('p',{class:'muted', text:'이름을 고르면 바로 입장해요. 비밀번호는 필요 없어요.'}));
+
+  const err = el('p',{class:'error'});
+  card.appendChild(err);
+
+  const enterBtn = el('button',{class:'btn-primary', text:'들어가기', on:{click:()=>{
+    const name = findRosterName(nameInput.value);
+    if(!name){ err.textContent='명단에 없는 이름이에요. 이름을 확인해 주세요.'; return; }
+    state.currentUser = name;
+    state.screen = 'student-hub';
+    render();
+  }}});
+  card.appendChild(enterBtn);
+  app.appendChild(card);
+}
+
+// ---------------------------------------------------------------------
+// [화면 6] 학생 허브 화면 (3대 매체 선택 & 내 통계)
+// ---------------------------------------------------------------------
+function renderStudentHub(app){
+  const name = state.currentUser;
+  app.appendChild(header(name+' 님의 우리반 매체수업'));
+  app.appendChild(el('button',{class:'btn-ghost', text:'로그아웃', on:{click:()=>{ state.currentUser=null; state.screen='student-login'; render(); }}}));
+
+  const wrap = el('div',{class:'hub-image-wrap'});
+  wrap.appendChild(el('img',{class:'hub-bg-img', attrs:{src:'hub-bg.png', alt:'우리반 매체수업'}}));
+  wrap.appendChild(el('div',{class:'hub-cloud-title', text:'우리반 매체수업'}));
+
+  const hotspots = [
+    { title:'전자우편', desc:'격식을 갖춘 편지 쓰기', screen:'mail-home', module:'mail', color:'#8A5A1F', left:'15%', top:'30.5%', width:'34%', height:'26%' },
+    { title:'휴대전화 메시지', desc:'친근한 실시간 대화', screen:'msg-home', module:'message', color:'#1F7A46', left:'51%', top:'30.5%', width:'34%', height:'26%' },
+    { title:'학급 누리집', desc:'게시판에 글·댓글 남기기', screen:'feed', module:'feed', color:'#2C6BB0', left:'15%', top:'59%', width:'34%', height:'26%' },
+    { title:'나의 기록', desc:'내가 남긴 활동 모아보기', screen:null, module:null, color:'#7457C2', left:'51%', top:'59%', width:'34%', height:'26%' }
+  ];
+  hotspots.forEach(h=>{
+    wrap.appendChild(el('div',{class:'hub-hotspot', attrs:{style:'left:'+h.left+'; top:'+h.top+'; width:'+h.width+'; height:'+h.height+';'}, on:{click:()=>{
+      if(h.screen){ state.module=h.module; state.screen=h.screen; render(); }
+      else { document.getElementById('myStatCard')?.scrollIntoView({behavior:'smooth', block:'start'}); }
+    }}},[
+      el('span',{class:'hub-hotspot-title', attrs:{style:'color:'+h.color+';'}},[
+        document.createTextNode(h.title),
+        el('span',{class:'hub-hotspot-desc', text:h.desc})
+      ])
+    ]));
+  });
+  app.appendChild(wrap);
+
+  const stat = el('div',{class:'card', attrs:{id:'myStatCard'}});
+  stat.appendChild(el('h3',{text:'📊 나의 활동 통계'}));
+  stat.appendChild(el('div',{class:'stat-grid'},[
+    el('div',{class:'stat-box'},[ el('div',{class:'num',text:String(mailSent(name))}), el('div',{class:'lbl',text:'우편 보냄'}) ]),
+    el('div',{class:'stat-box'},[ el('div',{class:'num',text:String(mailReceived(name))}), el('div',{class:'lbl',text:'우편 받음'}) ]),
+    el('div',{class:'stat-box'},[ el('div',{class:'num',text:String(msgSent(name))}), el('div',{class:'lbl',text:'메시지 보냄'}) ]),
+    el('div',{class:'stat-box'},[ el('div',{class:'num',text:String(msgReceived(name))}), el('div',{class:'lbl',text:'메시지 받음'}) ]),
+    el('div',{class:'stat-box'},[ el('div',{class:'num',text:String(postCount(name))}), el('div',{class:'lbl',text:'누리집 글'}) ])
+  ]));
+  app.appendChild(stat);
+}
+
+// ---------------------------------------------------------------------
+// [화면 7] 전자우편 모듈 (홈, 작성, 받은함, 보낸함, 상세뷰)
+// ---------------------------------------------------------------------
+function renderMailHome(app){
+  const name = state.currentUser;
+  state.module = 'mail';
+  app.appendChild(header('전자우편', '격식을 갖춘 편지 쓰기', '우편'));
+  app.appendChild(backBtn('매체수업 허브', 'student-hub'));
+
+  // 랜덤 라운드 활성화 시
+  if(roundMail.active){
+    const partner = roundMail.pairs[name];
+    const done = (roundMail.completed||[]).includes(name);
+    const rc = el('div',{class:'card'});
+    rc.appendChild(el('span',{class:'badge round', text:'🎲 제'+roundMail.roundNumber+'회 랜덤 라운드 진행 중'}));
+    if(partner){
+      rc.appendChild(el('h3',{text:'이번 라운드 내 짝: '+partner, attrs:{style:'margin-top:10px;'}}));
+      if(done){
+        rc.appendChild(el('p',{class:'success', text:'✅ 이번 라운드 편지를 성공적으로 보냈어요. 짝의 답장도 기다려보세요!'}));
+      } else {
+        rc.appendChild(el('p',{class:'muted', text:'소외되는 친구 없이 모두가 편지를 받도록 배정되었어요.'}));
+        rc.appendChild(el('button',{class:'btn-primary', text:partner+' 님에게 편지 쓰기', on:{click:()=>{
+          state.composeTo = partner; state.isRandomCompose = true; state.screen='mail-compose'; render();
+        }}}));
+      }
+    } else {
+      rc.appendChild(el('p',{class:'muted', text:'명단 변동으로 배정 상대가 없습니다. 선생님께 확인을 요청하세요.'}));
+    }
+    app.appendChild(rc);
+  }
+
+  app.appendChild(el('div',{class:'card'},[
+    el('h3',{text:'자유롭게 편지 주고받기'}),
+    el('button',{class:'btn-primary', text:'✏️ 편지 쓰기 (직접 선택)', on:{click:()=>{ state.composeTo=''; state.isRandomCompose=false; state.screen='mail-compose'; render(); }}}),
+    el('button',{class:'btn-secondary', text:'📥 받은 편지함 ('+mailReceived(name)+'통)', on:{click:()=>{ state.screen='mail-inbox'; render(); }}}),
+    el('button',{class:'btn-secondary', text:'📤 보낸 편지함 ('+mailSent(name)+'통)', on:{click:()=>{ state.screen='mail-outbox'; render(); }}})
+  ]));
+}
+
+function renderMailCompose(app){
+  const name = state.currentUser;
+  app.appendChild(header('편지 쓰기', '전자우편'));
+  app.appendChild(backBtn('전자우편 홈', 'mail-home'));
+
+  const client = el('div',{class:'mail-client'});
+
+  // 상단 탭 바 (교과서 화면 재현용 목업)
+  client.appendChild(el('div',{class:'mail-tabtop'},[
+    el('span',{class:'mail-tabtop-title', html:'✉️ 전자 우편 쓰기'}),
+    el('span',{class:'mail-tabtop-x', text:'✕'})
+  ]));
+
+  // 보내기 / 예약 / 임시저장 / 미리보기 버튼 줄
+  const actionRow = el('div',{class:'mail-action-row'});
+  const sendBtn = el('button',{class:'mail-btn mail-btn-send', text:'📨 보내기'});
+  actionRow.appendChild(sendBtn);
+  ['⏰ 예약','💾 임시저장','👁️ 미리보기'].forEach(label=>{
+    actionRow.appendChild(el('button',{class:'mail-btn mail-btn-mock', text:label, on:{click:(e)=>{
+      e.preventDefault();
+      showToast('이 버튼은 예시 화면이에요. 실제로는 "보내기"만 동작해요.');
+    }}}));
+  });
+  client.appendChild(actionRow);
+
+  const fields = el('div',{class:'mail-fields'});
+
+  let toValue = state.isRandomCompose ? state.composeTo : (drafts.mailTo || state.composeTo);
+
+  const toRow = el('div',{class:'mail-field-row'});
+  toRow.appendChild(el('span',{class:'mail-field-label', text:'받는 사람'}));
+  if(state.isRandomCompose){
+    toRow.appendChild(el('input',{attrs:{type:'text', disabled:'disabled', value: state.composeTo + ' (랜덤 라운드 짝)'}}));
+  } else {
+    const auto = autocompleteInput('받는 친구 이름', (classData.roster||[]).filter(n=>n!==name), (n)=>{
+      toValue = n; drafts.mailTo = n; subjInput.focus();
+    }, toValue);
+    auto.input.addEventListener('input', ()=>{ toValue = auto.input.value; drafts.mailTo = auto.input.value; });
+    toRow.appendChild(auto.wrap);
+  }
+  fields.appendChild(toRow);
+
+  fields.appendChild(el('div',{class:'mail-field-row'},[
+    el('span',{class:'mail-field-label', text:'보내는 사람'}),
+    el('input',{attrs:{type:'text', disabled:'disabled', value:name}})
+  ]));
+
+  const subjInput = el('input',{attrs:{type:'text', placeholder:'용건이 드러나게 제목을 써보세요', value: drafts.mailSubject}});
+  subjInput.addEventListener('input', ()=> drafts.mailSubject = subjInput.value);
+  fields.appendChild(el('div',{class:'mail-field-row'},[
+    el('span',{class:'mail-field-label', text:'제목'}),
+    subjInput
+  ]));
+
+  fields.appendChild(el('div',{class:'mail-field-row'},[
+    el('span',{class:'mail-field-label', text:'보낸 날짜'}),
+    el('input',{attrs:{type:'text', disabled:'disabled', value: dateStr(Date.now())}})
+  ]));
+
+  client.appendChild(fields);
+
+  // 서식 도구모음 (교과서 화면 재현용 목업 — 실제 서식 변경은 없음)
+  const rte = el('div',{class:'mail-rte-toolbar'});
+  ['명조 ▾','14 ▾','B','I','U','≡','1.','🔗','🖼️'].forEach(label=>{
+    rte.appendChild(el('button',{class:'mail-rte-btn', text:label, on:{click:(e)=>{ e.preventDefault(); }}}));
+  });
+  client.appendChild(rte);
+
+  const bodyInput = el('textarea',{class:'mail-body', attrs:{placeholder:'격식을 갖추어 인사, 나누고 싶은 이야기, 끝인사를 작성해 보세요.'}});
+  bodyInput.value = drafts.mailBody;
+  bodyInput.addEventListener('input', ()=> drafts.mailBody = bodyInput.value);
+  client.appendChild(bodyInput);
+
+  // 자료 첨부 (교과서 화면 재현용 목업)
+  const attachBox = el('div',{class:'mail-attach'});
+  attachBox.appendChild(el('div',{class:'mail-attach-head'},[
+    el('span',{text:'📁 자료 첨부'}),
+    el('button',{class:'mail-btn mail-btn-mock', attrs:{style:'width:auto; margin:0; padding:4px 10px; font-size:12px;'}, text:'+ 파일 추가', on:{click:(e)=>{
+      e.preventDefault();
+      showToast('이 버튼은 예시 화면이에요.');
+    }}})
+  ]));
+  [['📄','편지에 어울리는 그림.hwp'], ['🖼️','우리반_사진.png']].forEach(([icon, fname])=>{
+    attachBox.appendChild(el('div',{class:'mail-attach-item'},[
+      el('span',{text: icon+' '+fname}),
+      el('span',{class:'mail-attach-actions'},[
+        el('button',{class:'link-btn', text:'⬇', on:{click:(e)=>{ e.preventDefault(); showToast('예시 파일이라 다운로드는 안 돼요.'); }}}),
+        el('button',{class:'link-btn', text:'✕', attrs:{style:'margin-left:8px; color:var(--danger);'}, on:{click:(e)=>{ e.preventDefault(); }}})
+      ])
+    ]));
+  });
+  client.appendChild(attachBox);
+
+  const err = el('p',{class:'error'});
+  client.appendChild(err);
+  app.appendChild(client);
+
+  sendBtn.addEventListener('click', async (e)=>{
+    e.preventDefault();
+    const to = findRosterName(state.isRandomCompose ? state.composeTo : toValue);
+    if(!to){ err.textContent='명단에 있는 친구 이름을 정확히 선택해 주세요.'; return; }
+    if(to===name){ err.textContent='나 자신에게는 보낼 수 없어요.'; return; }
+    if(!normalize(subjInput.value)){ err.textContent='제목을 입력해 주세요.'; return; }
+    if(!normalize(bodyInput.value)){ err.textContent='편지 내용을 입력해 주세요.'; return; }
+    err.textContent='전송 중...';
+    try{
+      await sendMail(name, to, subjInput.value, bodyInput.value, state.isRandomCompose);
+      drafts.mailSubject = '';
+      drafts.mailBody = '';
+      drafts.mailTo = '';
+      showToast('편지가 성공적으로 전송되었어요!');
+      state.screen='mail-home'; render();
+    }catch(e2){ console.error(e2); err.textContent='전송 실패. 다시 시도해 주세요.'; }
+  });
+}
+
+function renderMailInbox(app){
+  const name = state.currentUser;
+  app.appendChild(header('받은 편지함'));
+  app.appendChild(backBtn('전자우편 홈', 'mail-home'));
+  const mine = mailsAll.filter(l=>l.to===name).sort((a,b)=>b.ts-a.ts);
+  if(mine.length===0){ app.appendChild(el('div',{class:'empty', text:'아직 도착한 편지가 없어요.'})); return; }
+
+  const policy = classData.letterOpenPolicy || 'self';
+
+  mine.forEach(l=>{
+    const canRead = (policy === 'teacher') ? l.revealed : (l.revealed || l.selfOpened);
+    const card = el('div',{class:'envelope-card', on:{click: async ()=>{
+      if(!canRead){
+        if(policy === 'teacher'){
+          alert('🔒 선생님이 공개 승인을 하신 뒤에 열어볼 수 있는 편지입니다.');
+          return;
+        }
+        if(!confirm('지금 이 편지를 열어볼까요? 한 번 개봉하면 계속 볼 수 있어요.')) return;
+        try{ await openMail(l.id); }catch(e){}
+      }
+      state.viewMailId = l.id; state.screen='mail-view'; render();
+    }}});
+    card.appendChild(el('div',{class:'envelope-flap'}));
+
+    let statusBadgeText = '열람 가능';
+    let badgeClass = 'badge open';
+    if(!canRead) {
+      if(policy === 'teacher') { statusBadgeText = '선생님 공개 대기 🔒'; badgeClass = 'badge locked'; }
+      else { statusBadgeText = '눌러서 열어보기 ✉️'; badgeClass = 'badge'; }
+    }
+
+    const titleText = canRead ? (l.from+' 님에게서 온 편지') : '봉인된 편지';
+    const roundBadge = l.round ? el('span',{class:'badge round', text:'🎲 '+l.round+'회차', attrs:{style:'margin-left:6px;'}}) : null;
+
+    const row = el('div',{class:'envelope-row'},[
+      el('div',{},[
+        el('div',{style:'display:flex; align-items:center;'},[ el('h3',{text:titleText}), roundBadge ]),
+        el('p',{class:'muted', text:dateStr(l.ts)})
+      ]),
+      el('span',{class:badgeClass, text:statusBadgeText})
+    ]);
+    card.appendChild(row);
+    app.appendChild(card);
+  });
+}
+
+function renderMailOutbox(app){
+  const name = state.currentUser;
+  app.appendChild(header('보낸 편지함'));
+  app.appendChild(backBtn('전자우편 홈', 'mail-home'));
+  const mine = mailsAll.filter(l=>l.from===name).sort((a,b)=>b.ts-a.ts);
+  if(mine.length===0){ app.appendChild(el('div',{class:'empty', text:'아직 보낸 편지가 없어요.'})); return; }
+
+  mine.forEach(l=>{
+    const canRead = l.revealed || l.selfOpened;
+    const card = el('div',{class:'envelope-card', on:{click:()=>{ state.viewMailId=l.id; state.screen='mail-view'; render(); }}});
+    card.appendChild(el('div',{class:'envelope-flap'}));
+    const roundBadge = l.round ? el('span',{class:'badge round', text:'🎲 '+l.round+'회차', attrs:{style:'margin-left:6px;'}}) : null;
+
+    card.appendChild(el('div',{class:'envelope-row'},[
+      el('div',{},[
+        el('div',{style:'display:flex; align-items:center;'},[ el('h3',{text:l.to+' 님에게 보낸 편지'}), roundBadge ]),
+        el('p',{class:'muted', text:dateStr(l.ts)})
+      ]),
+      el('span',{class:'badge'+(canRead?' open':''), text: canRead?'상대가 열어봤어요':'아직 미개봉'})
+    ]));
+    app.appendChild(card);
+  });
+}
+
+function renderMailView(app){
+  const l = mailsAll.find(x=>x.id===state.viewMailId);
+  app.appendChild(header('편지 열람'));
+  const backTo = l && l.from===state.currentUser ? 'mail-outbox' : 'mail-inbox';
+  app.appendChild(backBtn('편지함으로 돌아가기', backTo));
+  if(!l){ app.appendChild(el('div',{class:'empty', text:'편지를 찾을 수 없습니다.'})); return; }
+
+  const card = el('div',{class:'card'});
+  card.appendChild(el('h2',{text:l.subject||'(제목 없음)'}));
+  card.appendChild(el('p',{class:'muted', text:l.from+' → '+l.to+' · '+timeStr(l.ts)}));
+  if(l.round){
+    card.appendChild(el('span',{class:'badge round', text:'🎲 제'+l.round+'회 랜덤 배정 편지', attrs:{style:'margin-top:6px;'}}));
+  }
+  card.appendChild(el('div',{class:'letter-view', text:l.body}));
+  app.appendChild(card);
+}
+
+// ---------------------------------------------------------------------
+// [화면 8] 휴대전화 메시지 모듈 (홈 & 스레드)
+// ---------------------------------------------------------------------
+function renderMsgHome(app){
+  const name = state.currentUser;
+  state.module = 'message';
+  app.appendChild(header('휴대전화 메시지', '실시간 대화', '메시지'));
+  app.appendChild(backBtn('매체수업 허브', 'student-hub'));
+
+  if(roundMessage.active){
+    const partner = roundMessage.pairs[name];
+    const done = (roundMessage.completed||[]).includes(name);
+    const rc = el('div',{class:'card'});
+    rc.appendChild(el('span',{class:'badge round', text:'🎲 제'+roundMessage.roundNumber+'회 랜덤 라운드 진행 중'}));
+    if(partner){
+      rc.appendChild(el('h3',{text:'이번 라운드 내 대화 짝: '+partner, attrs:{style:'margin-top:10px;'}}));
+      rc.appendChild(el('button',{class:'btn-chat', text: done ? (partner+' 님과 대화 이어하기') : (partner+' 님에게 메시지 보내기'), on:{click:()=>{
+        state.chatPartner = partner; state.chatIsRandom = true; state.screen='msg-thread'; render();
+      }}}));
+    } else {
+      rc.appendChild(el('p',{class:'muted', text:'명단 변동으로 배정 상대가 없습니다. 선생님께 확인을 요청하세요.'}));
+    }
+    app.appendChild(rc);
+  }
+
+  const newCard = el('div',{class:'card'});
+  newCard.appendChild(el('h3',{text:'새로운 친구와 대화 시작'}));
+  const auto = autocompleteInput('대화할 친구 이름', (classData.roster||[]).filter(n=>n!==name), (n)=>{
+    state.chatPartner = n; state.chatIsRandom=false; state.screen='msg-thread'; render();
+  });
+  newCard.appendChild(auto.wrap);
+  app.appendChild(newCard);
+
+  const partners = threadPartners(name).sort((a,b)=> lastMessageTs(name,b)-lastMessageTs(name,a));
+  if(partners.length>0){
+    app.appendChild(el('h3',{text:'💬 내 대화 목록', attrs:{style:'margin:10px 0 10px 2px;'}}));
+    partners.forEach(p=>{
+      const ms = threadMessages(name,p);
+      const last = ms[ms.length-1];
+      app.appendChild(el('div',{class:'thread-list-item', on:{click:()=>{ state.chatPartner=p; state.chatIsRandom=false; state.screen='msg-thread'; render(); }}},[
+        el('div',{},[ el('h3',{text:p}), el('p',{class:'muted', text: last ? ((last.from===name?'나: ':'')+last.text.slice(0,25)) : ''}) ]),
+        el('span',{class:'muted', text: last? dateStr(last.ts):''})
+      ]));
+    });
+  }
+}
+
+function renderMsgThread(app){
+  const name = state.currentUser;
+  const partner = state.chatPartner;
+  state.module = 'message';
+  app.appendChild(header(partner+' 님과의 대화', '휴대전화 메시지', '메시지'));
+  app.appendChild(backBtn('메시지 목록', 'msg-home'));
+
+  const wrap = el('div',{class:'chat-box-wrap'});
+  const thread = el('div',{class:'chat-thread', attrs:{id:'chatThreadArea'}});
+
+  const msgs = threadMessages(name, partner);
+  if(msgs.length===0){
+    thread.appendChild(el('p',{class:'empty', text:'아직 대화가 없어요. 먼저 인사를 건네보세요! 😊'}));
+  }
+  msgs.forEach(m=> thread.appendChild(chatBubbleRow(m, name)));
+  wrap.appendChild(thread);
+
+  const composeRow = el('div',{class:'chat-compose'});
+  const input = el('textarea',{attrs:{placeholder:'메시지를 입력하세요...', rows:'1', id:'chatTextarea'}});
+  input.value = drafts.chatInput;
+  input.addEventListener('input', ()=> drafts.chatInput = input.value);
+  input.addEventListener('keydown', (e)=>{
+    if(e.key==='Enter' && !e.shiftKey){
+      e.preventDefault();
+      sendChatAction();
+    }
+  });
+
+  const sendBtn = el('button',{class:'btn-chat', text:'전송', on:{click: sendChatAction}});
+  composeRow.appendChild(input);
+  composeRow.appendChild(sendBtn);
+  wrap.appendChild(composeRow);
+
+  app.appendChild(wrap);
+
+  async function sendChatAction(){
+    const text = normalize(input.value);
+    if(!text) return;
+    input.value = '';
+    drafts.chatInput = '';
+    try{
+      await sendMessage(name, partner, text, state.chatIsRandom);
+    }catch(e){
+      console.error(e);
+      showToast('전송 실패. 다시 시도해 주세요.');
+    }
+  }
+
+  // 하단 스크롤 자동 이동
+  setTimeout(()=>{
+    thread.scrollTop = thread.scrollHeight;
+  }, 40);
+}
+
+// 아바타 & 말풍선 렌더링 헬퍼 (이름 첫 글자로 만든 원형 아바타 — 교과서 화면 재현용)
+function avatarColor(name){
+  const colors = ['#C89666','#6E8F71','#4C6B9A','#A63D40','#8A6FB0','#3E7C6B','#B38728'];
+  let h = 0;
+  for(let i=0;i<name.length;i++) h = (h*31 + name.charCodeAt(i)) >>> 0;
+  return colors[h % colors.length];
+}
+function avatarEl(name){
+  return el('div',{class:'avatar-circle', text:(name||'?').charAt(0), attrs:{style:'background:'+avatarColor(name||'')+';'}});
+}
+function chatBubbleRow(m, name){
+  const mine = m.from===name;
+  const timeText = new Date(m.ts).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});
+  return el('div',{class:'bubble-row '+(mine?'me':'you')},[
+    !mine ? avatarEl(m.from) : null,
+    el('div',{class:'bubble-col'},[
+      !mine ? el('div',{class:'bubble-name', text:m.from}) : null,
+      el('div',{class:'bubble'},[
+        el('div',{text:m.text}),
+        el('div',{class:'meta', text:timeText})
+      ])
+    ]),
+    mine ? avatarEl(m.from) : null
+  ]);
+}
+
+// 실시간 메시지 수신 시 스레드만 갱신 (입력창 깜빡임/초기화 방지)
+function renderChatThreadIfActive(){
+  if(state.screen !== 'msg-thread') return;
+  const thread = document.getElementById('chatThreadArea');
+  if(!thread) return;
+  const name = state.currentUser;
+  const partner = state.chatPartner;
+  const msgs = threadMessages(name, partner);
+
+  thread.innerHTML = '';
+  if(msgs.length===0){
+    thread.appendChild(el('p',{class:'empty', text:'아직 대화가 없어요. 먼저 인사를 건네보세요! 😊'}));
+  }
+  msgs.forEach(m=> thread.appendChild(chatBubbleRow(m, name)));
+  thread.scrollTop = thread.scrollHeight;
+}
+
+// ---------------------------------------------------------------------
+// [화면 9] 학급 누리집 모듈 (게시판, 좋아요, 댓글, 삭제)
+// ---------------------------------------------------------------------
+function renderFeed(app){
+  const name = state.currentUser;
+  state.module = 'feed';
+  app.appendChild(header('학급 누리집', '모두가 함께 나누는 열린 게시판', '누리집'));
+  app.appendChild(backBtn('매체수업 허브', 'student-hub'));
+
+  const composeCard = el('div',{class:'card'});
+  composeCard.appendChild(el('label',{text:'새 글 작성하기'}));
+  const ta = el('textarea',{attrs:{placeholder:'학급 친구들과 나누고 싶은 생각, 재미있는 이야기를 작성해 보세요.'}});
+  ta.value = drafts.feedPost;
+  ta.addEventListener('input', ()=> drafts.feedPost = ta.value);
+  composeCard.appendChild(ta);
+
+  const err = el('p',{class:'error'});
+  composeCard.appendChild(err);
+  composeCard.appendChild(el('button',{class:'btn-web', text:'게시하기 ✨', on:{click: async ()=>{
+    if(!normalize(ta.value)){ err.textContent='내용을 입력해 주세요.'; return; }
+    try{
+      await createPost(name, ta.value);
+      ta.value='';
+      drafts.feedPost='';
+      err.textContent='';
+      showToast('새 글이 등록되었어요!');
+    }catch(e){ console.error(e); err.textContent='게시에 실패했습니다.'; }
+  }}}));
+  app.appendChild(composeCard);
+
+  if(postsAll.length===0){
+    app.appendChild(el('div',{class:'empty', text:'아직 등록된 글이 없어요. 우리 반 첫 글을 남겨보세요!'}));
+    return;
+  }
+
+  postsAll.forEach(p=>{
+    const liked = (p.likes||[]).includes(name);
+    const isAuthor = p.author === name;
+    const pc = el('div',{class:'post-card'});
+
+    const head = el('div',{class:'post-head'});
+    head.appendChild(el('div',{style:'display:flex; align-items:center; gap:8px;'},[
+      avatarEl(p.author),
+      el('span',{class:'post-author', text:p.author})
+    ]));
+
+    const headRight = el('div',{style:'display:flex; align-items:center; gap:8px;'});
+    headRight.appendChild(el('span',{class:'post-time', text:timeStr(p.ts)}));
+    if(isAuthor){
+      headRight.appendChild(el('button',{class:'link-btn', text:'삭제', attrs:{style:'color:var(--danger);'}, on:{click: async ()=>{
+        if(confirm('이 게시글을 삭제할까요?')) {
+          await deletePost(p.id);
+          showToast('게시글이 삭제되었어요');
+        }
+      }}}));
+    }
+    head.appendChild(headRight);
+    pc.appendChild(head);
+
+    pc.appendChild(el('div',{class:'post-content', text:p.content}));
+
+    const actions = el('div',{class:'post-actions'});
+    actions.appendChild(el('button',{class:'like-btn'+(liked?' liked':''), text:'❤ '+(p.likes||[]).length, on:{click: async ()=>{
+      try{ await toggleLike(p.id, name); }catch(e){}
+    }}}));
+
+    const isOpen = state.openPostId===p.id;
+    actions.appendChild(el('button',{class:'comment-toggle', text: isOpen? '댓글 접기' : '💬 댓글 쓰기/보기', on:{click:()=>{
+      state.openPostId = isOpen ? null : p.id;
+      subscribeComments(state.openPostId);
+      render();
+    }}}));
+    pc.appendChild(actions);
+
+    if(isOpen){
+      const box = el('div',{class:'comment-box'});
+      const all = commentsForOpenPost.filter(c=>c.postId===p.id);
+      const topLevel = all.filter(c=>!c.parentId);
+      if(all.length===0){ box.appendChild(el('p',{class:'muted', text:'아직 댓글이 없어요. 첫 댓글을 남겨보세요!'})); }
+
+      function renderCommentNode(c, depth){
+        const isCommAuthor = c.author === name;
+        const liked = (c.likes||[]).includes(name);
+        const node = el('div',{class:'comment-node', attrs: depth>0 ? {style:'margin-left:'+(depth*22)+'px;'} : {}});
+
+        node.appendChild(el('div',{class:'comment-head'},[
+          avatarEl(c.author),
+          el('div',{class:'comment-bubble'},[
+            el('div',{class:'comment-author-line'},[
+              depth>0 ? el('span',{class:'reply-arrow', text:'↳ '}) : null,
+              el('b',{text:c.author})
+            ]),
+            el('div',{class:'comment-text', text:c.content})
+          ])
+        ]));
+
+        const actions = el('div',{class:'comment-actions'});
+        actions.appendChild(el('button',{class:'comment-like-btn'+(liked?' liked':''), text:'♥ '+(c.likes||[]).length, on:{click: async ()=>{
+          try{ await toggleCommentLike(c.id, name); }catch(e){}
+        }}}));
+        actions.appendChild(el('button',{class:'comment-reply-btn', text:'답글', on:{click:()=>{
+          state.replyToCommentId = state.replyToCommentId===c.id ? null : c.id;
+          render();
+        }}}));
+        if(isCommAuthor){
+          actions.appendChild(el('button',{class:'comment-reply-btn', attrs:{style:'color:var(--danger);'}, text:'삭제', on:{click: async ()=>{
+            if(confirm('이 댓글을 삭제할까요?')) await deleteComment(c.id);
+          }}}));
+        }
+        node.appendChild(actions);
+
+        if(state.replyToCommentId===c.id){
+          const replyForm = el('div',{class:'comment-compose', attrs:{style:'margin-top:8px;'}});
+          const replyInput = el('input',{attrs:{type:'text', placeholder:c.author+' 님에게 답글 남기기'}});
+          replyForm.appendChild(replyInput);
+          replyForm.appendChild(el('button',{class:'btn-secondary', text:'등록', on:{click: async ()=>{
+            if(!normalize(replyInput.value)) return;
+            try{
+              await addComment(p.id, name, replyInput.value, c.id);
+              state.replyToCommentId = null;
+              render();
+            }catch(e){}
+          }}}));
+          node.appendChild(replyForm);
+        }
+
+        all.filter(x=>x.parentId===c.id).forEach(ch=> node.appendChild(renderCommentNode(ch, depth+1)));
+        return node;
+      }
+
+      topLevel.forEach(c=> box.appendChild(renderCommentNode(c, 0)));
+
+      const cForm = el('div',{class:'comment-compose'});
+      const cInput = el('input',{attrs:{type:'text', placeholder:'따뜻한 선플을 남겨보세요'}});
+      cForm.appendChild(cInput);
+      cForm.appendChild(el('button',{class:'btn-secondary', text:'등록', on:{click: async ()=>{
+        if(!normalize(cInput.value)) return;
+        try{
+          await addComment(p.id, name, cInput.value);
+          cInput.value='';
+        }catch(e){}
+      }}}));
+      box.appendChild(cForm);
+      pc.appendChild(box);
+    }
+    app.appendChild(pc);
+  });
+}
+
+// ---------------------------------------------------------------------
+// [화면 10] 선생님 관리자 화면
+// ---------------------------------------------------------------------
+function renderTeacherLogin(app){
+  app.appendChild(header('선생님 로그인', classCode ? '학급 코드: '+classCode : '', '관리자'));
+  app.appendChild(backBtn('처음으로', 'teacher-entry'));
+  const card = el('div',{class:'card'});
+  card.appendChild(el('label',{text:'선생님 관리자 비밀번호 (숫자 4자리)'}));
+  const pin = el('input',{class:'pin-input', attrs:{type:'password', inputmode:'numeric', maxlength:'4', placeholder:'••••'}});
+  card.appendChild(pin);
+  const err = el('p',{class:'error'});
+  card.appendChild(err);
+
+  card.appendChild(el('button',{class:'btn-primary', text:'관리자 화면 들어가기', on:{click:()=>{
+    if(pin.value === classData.teacherPin){
+      state.teacherIn=true; state.teacherTab='roster'; state.screen='teacher'; render();
+    } else {
+      err.textContent='비밀번호가 일치하지 않습니다.';
+    }
+  }}}));
+  app.appendChild(card);
+}
+
+function renderTeacher(app){
+  if(!state.teacherIn){ state.screen='teacher-login'; render(); return; }
+  app.appendChild(header('선생님 관리자', '학급 코드: '+classCode));
+  app.appendChild(el('button',{class:'btn-ghost', text:'로그아웃', on:{click:()=>{ state.teacherIn=false; state.screen='teacher-entry'; render(); }}}));
+
+  const nav = el('div',{class:'nav'});
+  [
+    ['roster','📋 명단 관리'],
+    ['stats','📊 활동 통계'],
+    ['rounds','🎲 랜덤 라운드'],
+    ['monitor','👀 내용 열람·삭제'],
+    ['reveal','🔓 편지 공개 설정']
+  ].forEach(([key,label])=>{
+    nav.appendChild(el('button',{text:label, class: state.teacherTab===key?'active':'', on:{click:()=>{ state.teacherTab=key; render(); }}}));
+  });
+  app.appendChild(nav);
+
+  const tabs = {
+    roster: renderTeacherRoster,
+    stats: renderTeacherStats,
+    rounds: renderTeacherRounds,
+    monitor: renderTeacherMonitor,
+    reveal: renderTeacherReveal
+  };
+  (tabs[state.teacherTab]||renderTeacherRoster)(app);
+}
+
+// 1. 명단 관리
+function renderTeacherRoster(app){
+  const card = el('div',{class:'card'});
+  card.appendChild(el('h3',{text:'학급 명단 관리 ('+(classData.roster||[]).length+'명)'}));
+  const textarea = el('textarea',{});
+  textarea.value = (classData.roster||[]).join('\n');
+  card.appendChild(textarea);
+
+  const fileInput = el('input',{attrs:{type:'file', accept:'.txt,.csv'}});
+  fileInput.addEventListener('change',(e)=>{
+    const f=e.target.files[0]; if(!f) return;
+    const r=new FileReader(); r.onload=()=>{ textarea.value=r.result; }; r.readAsText(f,'utf-8');
+  });
+  card.appendChild(el('label',{text:'명단 파일로 다시 덮어쓰기 (선택)'}));
+  card.appendChild(fileInput);
+
+  const err = el('p',{class:'error'}); const ok = el('p',{class:'success'});
+  card.appendChild(err); card.appendChild(ok);
+
+  card.appendChild(el('button',{class:'btn-primary', text:'명단 저장하기', on:{click: async ()=>{
+    const unique = [...new Set(textarea.value.split(/[\n,]/).map(s=>s.trim()).filter(Boolean))];
+    if(unique.length<2){ err.textContent='학생을 2명 이상 입력해 주세요.'; ok.textContent=''; return; }
+    try{ await saveRoster(unique); err.textContent=''; ok.textContent='명단이 안전하게 저장되었어요.'; }
+    catch(e){ console.error(e); err.textContent='저장 실패'; }
+  }}}));
+  app.appendChild(card);
+
+  // 관리자 비밀번호 변경 및 위험 영역
+  const dangerCard = el('div',{class:'card'});
+  dangerCard.appendChild(el('h3',{text:'관리자 비밀번호 변경'}));
+  const newPin = el('input',{class:'pin-input', attrs:{type:'password', inputmode:'numeric', maxlength:'4', placeholder:'새 비밀번호 4자리'}});
+  dangerCard.appendChild(newPin);
+  dangerCard.appendChild(el('button',{class:'btn-secondary', text:'관리자 비밀번호 변경', on:{click: async ()=>{
+    if(!/^\d{4}$/.test(newPin.value)){ alert('숫자 4자리로 입력해 주세요.'); return; }
+    try{ await setTeacherPin(newPin.value); showToast('관리자 비밀번호가 변경되었어요'); }
+    catch(e){ alert('변경 실패'); }
+  }}}));
+
+  dangerCard.appendChild(el('hr',{class:'dashed'}));
+  dangerCard.appendChild(el('h3',{text:'⚠️ 학급 활동 초기화'}));
+  dangerCard.appendChild(el('p',{class:'muted', text:'모든 편지·메시지·게시글·댓글을 삭제합니다. (명단과 학급은 유지)'}));
+  dangerCard.appendChild(el('button',{class:'btn-outline-danger', text:'전체 활동 데이터 삭제', on:{click: async ()=>{
+    if(!confirm('정말 모든 활동 내용을 삭제할까요? 되돌릴 수 없습니다.')) return;
+    try{ await resetAllContent(); showToast('모든 활동 데이터가 초기화되었어요'); }
+    catch(e){ alert('초기화 실패'); }
+  }}}));
+  app.appendChild(dangerCard);
+}
+
+// 2. 학생별 통계 화면
+function renderTeacherStats(app){
+  const card = el('div',{class:'card'});
+  card.appendChild(el('h3',{text:'📊 학생별 활동 집계 통계'}));
+  card.appendChild(el('p',{class:'muted', text:'학생들이 세 가지 매체에 고르게 참여하고 있는지 확인합니다.'}));
+
+  const table = el('table',{attrs:{style:'margin-top:12px;'}});
+  table.appendChild(el('tr',{},[
+    el('th',{text:'이름'}), el('th',{text:'우편↑'}), el('th',{text:'우편↓'}),
+    el('th',{text:'메시지↑'}), el('th',{text:'메시지↓'}), el('th',{text:'누리집'})
+  ]));
+  (classData.roster||[]).slice().sort().forEach(n=>{
+    table.appendChild(el('tr',{},[
+      el('td',{text:n, attrs:{style:'font-weight:bold;'}}),
+      el('td',{text:String(mailSent(n))}), el('td',{text:String(mailReceived(n))}),
+      el('td',{text:String(msgSent(n))}), el('td',{text:String(msgReceived(n))}),
+      el('td',{text:String(postCount(n))})
+    ]));
+  });
+  card.appendChild(table);
+  card.appendChild(el('hr',{class:'dashed'}));
+  card.appendChild(el('p',{class:'muted', text:'합계: 편지 '+mailsAll.length+'통 · 메시지 '+messagesAll.length+'건 · 누리집 '+postsAll.length+'개'}));
+  app.appendChild(card);
+}
+
+// 3. 랜덤 라운드 관리 화면 (배정 현황표 포함)
+function renderTeacherRounds(app){
+  renderRoundManagerBlock(app, 'mail', '전자우편', 'btn-primary');
+  renderRoundManagerBlock(app, 'message', '휴대전화 메시지', 'btn-chat');
+  app.appendChild(el('div',{class:'card'},[
+    el('p',{class:'muted', text:'💡 학급 누리집은 모두에게 공개되는 게시판이므로 1:1 매칭 라운드가 필요하지 않습니다.'})
+  ]));
+}
+
+function renderRoundManagerBlock(app, type, label, btnClass){
+  const round = type==='mail' ? roundMail : roundMessage;
+  const card = el('div',{class:'card'});
+  card.appendChild(el('h3',{text:'🎲 '+label+' 랜덤 라운드'}));
+
+  if(round.active){
+    card.appendChild(el('span',{class:'badge round', text:'제'+round.roundNumber+'회차 라운드 진행 중'}));
+    const completedList = round.completed || [];
+    card.appendChild(el('p',{class:'muted', attrs:{style:'margin-top:8px;'}, text:'참여 완료율: '+completedList.length+' / '+(classData.roster||[]).length+'명'}));
+
+    // 누가 누구에게 보내야 하는지 매칭 현황표 (교사용 핵심 기능!)
+    card.appendChild(el('label',{text:'이번 라운드 매칭 현황표'}));
+    const mTable = el('table',{attrs:{style:'margin-bottom:12px;'}});
+    mTable.appendChild(el('tr',{},[ el('th',{text:'보내는 사람'}), el('th',{text:'받는 사람'}), el('th',{text:'진행 상태'}) ]));
+
+    Object.entries(round.pairs || {}).forEach(([from, to])=>{
+      const isDone = completedList.includes(from);
+      mTable.appendChild(el('tr',{},[
+        el('td',{text:from}),
+        el('td',{text:to}),
+        el('td',{},[ el('span',{class:'badge '+(isDone?'open':''), text: isDone ? '작성 완료 ✅' : '대기 중 ⏳'}) ])
+      ]));
+    });
+    card.appendChild(mTable);
+
+    card.appendChild(el('div',{class:'btn-row'},[
+      el('button',{class:btnClass, text:'새로운 짝으로 다시 배정', on:{click: async ()=>{
+        if(confirm('상대를 다시 무작위로 배정할까요? 기존 진행 현황은 초기화됩니다.')){
+          await startRandomRound(type);
+          showToast('새 라운드가 시작되었어요');
+        }
+      }}}),
+      el('button',{class:'btn-secondary', text:'라운드 종료하기', on:{click: async ()=>{
+        await endRound(type);
+        showToast('라운드가 종료되었어요');
+      }}})
+    ]));
+  } else {
+    card.appendChild(el('p',{class:'muted', text:'현재 진행 중인 라운드가 없습니다. 시작하면 겹치지 않게 1:1로 짝이 지어져 모든 학생이 1회씩 주고받습니다.'}));
+    card.appendChild(el('button',{class:btnClass, text:label+' 랜덤 라운드 시작', on:{click: async ()=>{
+      if((classData.roster||[]).length < 2){ alert('학생이 2명 이상이어야 합니다.'); return; }
+      await startRandomRound(type);
+      showToast(label+' 랜덤 라운드가 시작되었어요!');
+    }}}));
+  }
+  app.appendChild(card);
+}
+
+// 4. 내용 열람 및 안전 삭제 (선생님 모니터링)
+function renderTeacherMonitor(app){
+  const info = el('div',{class:'card'});
+  info.appendChild(el('h3',{text:'👀 수업 안전 모니터링 & 삭제'}));
+  info.appendChild(el('p',{class:'muted', text:'수업 안전을 위해 선생님만 모든 편지, 메시지, 누리집 글을 열람하고 부적절한 내용을 삭제할 수 있습니다.'}));
+  app.appendChild(info);
+
+  // 1) 편지 모니터링
+  app.appendChild(el('h3',{text:'✉️ 전자우편 목록 ('+mailsAll.length+'통)', attrs:{style:'margin:16px 0 8px 4px;'}}));
+  if(mailsAll.length===0){ app.appendChild(el('div',{class:'empty', text:'등록된 편지가 없습니다.'})); }
+  mailsAll.slice().sort((a,b)=>b.ts-a.ts).forEach(l=>{
+    const c = el('div',{class:'card'});
+    const topRow = el('div',{class:'envelope-row'},[
+      el('h4',{text:l.from+' → '+l.to+' : '+(l.subject||'(제목 없음)')}),
+      el('div',{style:'display:flex; align-items:center; gap:6px;'},[
+        el('span',{class:'badge'+(l.revealed?' open':''), text:l.revealed?'공개됨':'비공개'}),
+        el('button',{class:'link-btn', text:'삭제', attrs:{style:'color:var(--danger);'}, on:{click: async ()=>{
+          if(confirm('이 편지를 삭제할까요?')) await deleteMail(l.id);
+        }}})
+      ])
+    ]);
+    c.appendChild(topRow);
+    c.appendChild(el('p',{class:'muted', text:timeStr(l.ts)}));
+    c.appendChild(el('div',{class:'letter-view', text:l.body}));
+    app.appendChild(c);
+  });
+
+  // 2) 메시지 모니터링
+  app.appendChild(el('h3',{text:'💬 휴대전화 메시지 대화', attrs:{style:'margin:20px 0 8px 4px;'}}));
+  const pairsSeen = new Set();
+  const pairsList = [];
+  messagesAll.forEach(m=>{
+    const key = [m.from,m.to].sort().join('|');
+    if(!pairsSeen.has(key)){ pairsSeen.add(key); pairsList.push([m.from,m.to]); }
+  });
+  if(pairsList.length===0){ app.appendChild(el('div',{class:'empty', text:'등록된 메시지가 없습니다.'})); }
+  pairsList.forEach(([a,b])=>{
+    const c = el('div',{class:'card'});
+    c.appendChild(el('h4',{text:a+' ↔ '+b+' 대화방'}));
+    const thread = threadMessages(a,b);
+    thread.forEach(m=>{
+      const mRow = el('div',{style:'display:flex; justify-content:space-between; align-items:center; margin:6px 0;'});
+      mRow.appendChild(el('p',{attrs:{style:'margin:0; font-size:13.5px;'}, text:m.from+': '+m.text}));
+      mRow.appendChild(el('button',{class:'link-btn', text:'삭제', attrs:{style:'color:var(--danger);'}, on:{click: async ()=>{
+        if(confirm('이 메시지를 삭제할까요?')) await deleteMessage(m.id);
+      }}}));
+      c.appendChild(mRow);
+    });
+    app.appendChild(c);
+  });
+
+  // 3) 누리집 글 모니터링
+  app.appendChild(el('h3',{text:'🌐 학급 누리집 게시글 ('+postsAll.length+'개)', attrs:{style:'margin:20px 0 8px 4px;'}}));
+  if(postsAll.length===0){ app.appendChild(el('div',{class:'empty', text:'등록된 게시글이 없습니다.'})); }
+  postsAll.forEach(p=>{
+    const pc = el('div',{class:'card'});
+    const pHead = el('div',{class:'post-head'},[
+      el('span',{class:'post-author', text:p.author+' · '+timeStr(p.ts)}),
+      el('button',{class:'link-btn', text:'삭제', attrs:{style:'color:var(--danger);'}, on:{click: async ()=>{
+        if(confirm('이 게시글을 삭제할까요?')) await deletePost(p.id);
+      }}})
+    ]);
+    pc.appendChild(pHead);
+    pc.appendChild(el('p',{class:'post-content', text:p.content, attrs:{style:'margin-top:6px;'}}));
+    app.appendChild(pc);
+  });
+}
+
+// 5. 편지 열람 모드 & 공개 설정
+function renderTeacherReveal(app){
+  // 1) 공개 정책 스위치
+  const policyCard = el('div',{class:'card'});
+  policyCard.appendChild(el('h3',{text:'⚙️ 학생 편지 열람 모드 설정'}));
+  policyCard.appendChild(el('p',{class:'muted', text:'수업 진행 방식에 맞게 학생들이 편지를 열어보는 방식을 선택하세요.'}));
+
+  const curPolicy = classData.letterOpenPolicy || 'self';
+  const policySelect = el('select',{attrs:{style:'margin-top:10px;'}});
+  policySelect.appendChild(el('option',{attrs:{value:'self', ...(curPolicy==='self'?{selected:'selected'}:{})}, text:'자율 개봉 모드 (학생이 받은 편지함을 원할 때 직접 열어보기)'}));
+  policySelect.appendChild(el('option',{attrs:{value:'teacher', ...(curPolicy==='teacher'?{selected:'selected'}:{})}, text:'선생님 통제 모드 (선생님이 공개하기 전까지는 잠김 유지)'}));
+
+  policySelect.addEventListener('change', async ()=>{
+    await setLetterOpenPolicy(policySelect.value);
+    showToast('편지 열람 모드가 변경되었어요');
+  });
+  policyCard.appendChild(policySelect);
+  app.appendChild(policyCard);
+
+  // 2) 전체 공개
+  const card = el('div',{class:'card'});
+  card.appendChild(el('h3',{text:'전체 편지 일괄 공개'}));
+  card.appendChild(el('p',{class:'muted', text:'학급 전체가 주고받은 모든 편지에 "공개" 도장을 일괄 부여합니다.'}));
+  card.appendChild(el('button',{class:'btn-sage', text:'모든 편지 일괄 공개 ('+mailsAll.filter(l=>!l.revealed).length+'통 대기 중)', on:{click: async ()=>{
+    if(confirm('모든 편지를 일괄 공개하시겠습니까?')){
+      await revealAllMail();
+      showToast('모든 편지가 공개 처리되었어요');
+    }
+  }}}));
+  card.appendChild(el('button',{class:'btn-secondary', text:'전체 편지 다시 비공개로 되돌리기', on:{click: async ()=>{
+    if(confirm('모든 편지를 비공개로 되돌리시겠습니까?')){
+      await unrevealAllMail();
+      showToast('모든 편지가 비공개 상태로 전환되었어요');
+    }
+  }}}));
+  app.appendChild(card);
+
+  // 3) 개별 학생별 공개
+  const card2 = el('div',{class:'card'});
+  card2.appendChild(el('h3',{text:'특정 학생이 받은 편지만 개별 공개'}));
+  card2.appendChild(el('p',{class:'muted', text:'선택한 친구가 받은 편지만 열람 가능하도록 승인합니다.'}));
+
+  const auto = autocompleteInput('학생 이름 검색', classData.roster||[], (n)=>{ state.teacherRevealTarget=n; });
+  card2.appendChild(auto.wrap);
+  auto.input.value = state.teacherRevealTarget;
+  auto.input.addEventListener('input', ()=>{ state.teacherRevealTarget = auto.input.value; });
+
+  const btnRow = el('div',{class:'btn-row'});
+  btnRow.appendChild(el('button',{class:'btn-sage', text:'이 학생 편지 공개', on:{click: async ()=>{
+    const target = findRosterName(auto.input.value);
+    if(!target){ alert('명단에 있는 학생 이름을 선택해 주세요.'); return; }
+    await revealStudentMail(target, true);
+    showToast(target+' 학생의 편지가 공개되었어요');
+  }}}));
+  btnRow.appendChild(el('button',{class:'btn-secondary', text:'이 학생 편지 비공개', on:{click: async ()=>{
+    const target = findRosterName(auto.input.value);
+    if(!target){ alert('명단에 있는 학생 이름을 선택해 주세요.'); return; }
+    await revealStudentMail(target, false);
+    showToast(target+' 학생의 편지가 비공개로 전환되었어요');
+  }}}));
+  card2.appendChild(btnRow);
+  app.appendChild(card2);
+}
+
+// =====================================================================
+// 9) 앱 부팅
+// =====================================================================
+render();
+</script>
+</body>
+</html>
