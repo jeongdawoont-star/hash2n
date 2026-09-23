@@ -33,7 +33,7 @@ export const RECORDS = [
 
   {
     title: "학급 매체 수업",
-    desc: "5학년 매체 단원\n수업을 위해 제작했다.\n메일, 메시지, 게시판을\n학급에서 실제로 체험한다.",
+    desc: "5학년 매체 단원 수업을 위해 제작했다.\n메일, 메시지, 게시판을 학급에서 실제로 체험한다.",
     tags: "media, education, elementary, email, message, board, classroom, class-tools",
     category: "class-tools",
     link: "./vibe-apps/class-media-lab.html",
@@ -78,7 +78,7 @@ export const RECORDS = [
 
   {
     title: "영조를 설득하라",
-    desc: "조선 역사 속 임오화변(1762)을 소재로 한 설득 시뮬레이션이다.\n어린 세손이 되어 뒤주에 갇힌 아버지 사도세자를 살려달라고 영조를 설득해야 한다.\nGemini AI가 실시간으로 영조 역할과 채점·코칭·음성을 만들어준다. 무료 Gemini API 키만 있으면 바로 플레이 가능.",
+    desc: "조선 역사 속 임오화변(1762)을 소재로 한 설득 시뮬레이션이다. 어린 세손이 되어 뒤주에 갇힌 아버지 사도세자를 살려달라고 영조를 설득해야 한다. AI가 실시간으로 영조 역할과 채점·코칭·음성을 만들어준다. 무료 API 키만 있으면 바로 플레이 가능.",
     tags: "history, joseon, persuasion, AI, gemini, simulation, korean-history",
     category: "games",
     link: "./vibe-apps/yeongjo-1762.html",
