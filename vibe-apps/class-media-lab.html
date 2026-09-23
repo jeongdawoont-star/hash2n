@@ -29,12 +29,14 @@
     --radius:20px;
     --shadow: 0 6px 20px rgba(51,71,91,0.08);
   }
-  *{box-sizing:border-box;}
+  *{box-sizing:border-box; word-break:keep-all;}
   body{
     margin:0; background:var(--bg);
     color:var(--ink); font-family:'Gowun Dodum', sans-serif;
     min-height:100vh; display:flex; justify-content:center;
     padding:20px 16px 60px;
+    word-break:keep-all;
+    overflow-wrap:break-word;
   }
   .app{ width:100%; max-width:520px; transition:max-width .2s ease; }
   /* 와이드 모드 (컴퓨터실 모니터 지원) */
@@ -122,6 +124,17 @@
   .stat-box{ flex:1; min-width:68px; text-align:center; border-radius:14px; padding:12px 4px; background:var(--stat); }
   .stat-box .num{ font-size:21px; color:var(--stat-dark); font-weight:bold; }
   .stat-box .lbl{ font-size:11.5px; color:var(--ink-soft); margin-top:2px; }
+
+  /* 점검하기 (자기점검 3점 척도) */
+  .check-row{ padding:12px 0; border-bottom:1px solid var(--line); }
+  .check-row:last-of-type{ border-bottom:none; }
+  .check-question{ font-size:13.5px; line-height:1.5; margin-bottom:9px; color:var(--ink); }
+  .dot-rating{ display:flex; gap:10px; }
+  .dot{
+    width:30px; height:30px; border-radius:50%; border:2px solid var(--stat-ink);
+    background:#fff; margin:0; padding:0; transition:background .15s;
+  }
+  .dot.filled{ background:var(--stat-ink); }
 
   /* 내비게이션 바 */
   .nav{ display:flex; gap:6px; margin-bottom:16px; flex-wrap:wrap; }
@@ -400,8 +413,9 @@ let postsAll = [];
 let commentsForOpenPost = [];
 let roundMail = { active:false, pairs:{}, roundNumber:0, completed:[] };
 let roundMessage = { active:false, pairs:{}, roundNumber:0, completed:[] };
+let selfChecksAll = [];
 
-const unsub = { class:null, mails:null, messages:null, posts:null, comments:null, roundMail:null, roundMessage:null };
+const unsub = { class:null, mails:null, messages:null, posts:null, comments:null, roundMail:null, roundMessage:null, selfChecks:null };
 
 // 실시간 동기화 중 타자 치던 글이 날아가지 않도록 보존하는 drafts
 const drafts = {
@@ -466,6 +480,22 @@ function generateDerangement(names){
   const pairs={};
   names.forEach((n,i)=> pairs[n]=perm[i]);
   return pairs;
+}
+
+// 점검하기(자기점검) 고정 문항 — 3점 척도(매우 잘함3·잘함2·보통임1)
+const SELF_CHECK_ITEMS = [
+  '상황과 목적에 알맞은 매체(전자우편·메시지·누리집)를 골라 사용했나요?',
+  '그 매체의 특성(격식·즉각성·공개성)을 고려해 표현했나요?',
+  '상대를 배려하는 예의 바른 말을 사용했나요?',
+  '친구들과 편지·메시지·게시글 활동에 골고루 참여했나요?',
+  '보내기 전에 내가 쓴 글을 다시 읽고 점검했나요?'
+];
+function selfCheckFor(name){ return selfChecksAll.find(s=>s.id===name || s.name===name) || null; }
+function selfCheckAverage(name){
+  const sc = selfCheckFor(name);
+  if(!sc || !sc.scores || sc.scores.length===0) return null;
+  const sum = sc.scores.reduce((a,b)=>a+(b||0),0);
+  return sum / sc.scores.length;
 }
 
 function mailSent(name){ return mailsAll.filter(l=>l.from===name).length; }
@@ -536,6 +566,10 @@ function subscribeClass(code){
     roundMessage = doc.exists ? doc.data() : {active:false, pairs:{}, roundNumber:0, completed:[]};
     render();
   });
+  unsub.selfChecks = classDocRef.collection('selfChecks').onSnapshot(snap=>{
+    selfChecksAll = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    render();
+  });
 }
 
 function subscribeComments(postId){
@@ -583,6 +617,11 @@ async function startRandomRound(type){
 }
 async function endRound(type){
   await classDocRef.collection('rounds').doc(type).update({ active:false });
+}
+
+// 점검하기 — 학생 자기점검(3점 척도) 저장. 이름 하나당 문서 하나로 덮어쓰기 저장.
+async function saveSelfCheck(name, scores){
+  await classDocRef.collection('selfChecks').doc(name).set({ name, scores, ts: Date.now() });
 }
 
 async function sendMail(from,to,subject,body,isRandom){
@@ -900,8 +939,8 @@ function openSetDefaultClassModal() {
   modal.appendChild(el('h2',{text:'📌 기본 학급 코드 설정'}));
   modal.appendChild(el('p',{class:'muted', text:'컴퓨터실 학생 기기에 미리 코드를 저장해두면, 학생들이 번거롭게 코드를 묻거나 입력할 필요가 없어요.'}));
 
-  modal.appendChild(el('label',{text:'우리 반 학급 코드 (예: 0501)'}));
-  const codeInp = el('input',{class:'code-input', attrs:{type:'text', placeholder:'예: 0501', value: localStorage.getItem('mediaLabDefaultClassCode')||classCode||''}});
+  modal.appendChild(el('label',{text:'우리 반 학급 코드'}));
+  const codeInp = el('input',{class:'code-input', attrs:{type:'text', placeholder:'학급 코드를 입력하세요', value: localStorage.getItem('mediaLabDefaultClassCode')||classCode||''}});
   modal.appendChild(codeInp);
 
   const btnRow = el('div',{class:'btn-row'});
@@ -947,6 +986,7 @@ function render(){
     'class-setup': renderClassSetup,
     'student-login': renderStudentLogin,
     'student-hub': renderStudentHub,
+    'self-check': renderSelfCheck,
     'mail-home': renderMailHome,
     'mail-compose': renderMailCompose,
     'mail-inbox': renderMailInbox,
@@ -1031,7 +1071,7 @@ function renderJoin(app){
     studentCard.appendChild(el('span',{class:'badge open', text:'📌 기본 학급 설정됨: '+savedDefault, attrs:{style:'margin-bottom:8px;'}}));
   }
   studentCard.appendChild(el('label',{text:'우리 반 학급 코드'}));
-  const codeInput = el('input',{class:'code-input', attrs:{type:'text', placeholder:'예: 0501', value: currentInitialCode}});
+  const codeInput = el('input',{class:'code-input', attrs:{type:'text', placeholder:'학급 코드를 입력하세요', value: currentInitialCode}});
   studentCard.appendChild(codeInput);
   studentCard.appendChild(el('p',{class:'muted', text:'선생님이 알려주신 학급 코드를 입력하세요.'}));
 
@@ -1080,7 +1120,7 @@ function renderTeacherEntry(app){
 
   const card = el('div',{class:'card'});
   card.appendChild(el('label',{text:'우리 반 학급 코드'}));
-  const codeInput = el('input',{class:'code-input', attrs:{type:'text', placeholder:'예: 0501', value: currentInitialCode}});
+  const codeInput = el('input',{class:'code-input', attrs:{type:'text', placeholder:'학급 코드를 입력하세요', value: currentInitialCode}});
   card.appendChild(codeInput);
 
   const err = el('div',{class:'error'});
@@ -1111,7 +1151,7 @@ function renderTeacherEntry(app){
   newClassCard.appendChild(el('h3',{text:'아직 학급을 만들지 않았다면'}));
   newClassCard.appendChild(el('p',{class:'muted', text:'명단과 관리자 비밀번호를 등록해 새 학급을 개설해요.'}));
   newClassCard.appendChild(el('button',{class:'btn-secondary', text:'✨ 새 학급 만들기 (명단 & 코드 등록)', on:{click:()=>{
-    classCode = normalize(codeInput.value) || savedDefault || '0501';
+    classCode = normalize(codeInput.value) || savedDefault || '';
     state.screen = 'class-setup';
     render();
   }}}));
@@ -1131,7 +1171,7 @@ function renderClassSetup(app){
   const card = el('div',{class:'card'});
 
   card.appendChild(el('label',{text:'사용할 학급 코드 (영문·숫자·한글 자유 입력)'}));
-  const codeInp = el('input',{class:'code-input', attrs:{type:'text', placeholder:'예: 0501 또는 6-1', value: classCode || '0501'}});
+  const codeInp = el('input',{class:'code-input', attrs:{type:'text', placeholder:'학급 코드를 입력하세요', value: classCode || ''}});
   card.appendChild(codeInp);
   card.appendChild(el('p',{class:'muted', text:'학생들이 접속할 때 입력하게 되는 쉬운 코드를 정해주세요.'}));
 
@@ -1232,12 +1272,11 @@ function renderStudentHub(app){
     { title:'전자우편', desc:'격식을 갖춘 편지 쓰기', screen:'mail-home', module:'mail', color:'#8A5A1F', left:'15%', top:'30.5%', width:'34%', height:'26%' },
     { title:'휴대전화 메시지', desc:'친근한 실시간 대화', screen:'msg-home', module:'message', color:'#1F7A46', left:'51%', top:'30.5%', width:'34%', height:'26%' },
     { title:'학급 누리집', desc:'게시판에 글·댓글 남기기', screen:'feed', module:'feed', color:'#2C6BB0', left:'15%', top:'59%', width:'34%', height:'26%' },
-    { title:'나의 기록', desc:'내가 남긴 활동 모아보기', screen:null, module:null, color:'#7457C2', left:'51%', top:'59%', width:'34%', height:'26%' }
+    { title:'점검하기', desc:'스스로 활동을 되돌아봐요', screen:'self-check', module:null, color:'#7457C2', left:'51%', top:'59%', width:'34%', height:'26%' }
   ];
   hotspots.forEach(h=>{
     wrap.appendChild(el('div',{class:'hub-hotspot', attrs:{style:'left:'+h.left+'; top:'+h.top+'; width:'+h.width+'; height:'+h.height+';'}, on:{click:()=>{
-      if(h.screen){ state.module=h.module; state.screen=h.screen; render(); }
-      else { document.getElementById('myStatCard')?.scrollIntoView({behavior:'smooth', block:'start'}); }
+      state.module=h.module; state.screen=h.screen; render();
     }}},[
       el('span',{class:'hub-hotspot-title', attrs:{style:'color:'+h.color+';'}},[
         document.createTextNode(h.title),
@@ -1257,6 +1296,66 @@ function renderStudentHub(app){
     el('div',{class:'stat-box'},[ el('div',{class:'num',text:String(postCount(name))}), el('div',{class:'lbl',text:'누리집 글'}) ])
   ]));
   app.appendChild(stat);
+}
+
+// ---------------------------------------------------------------------
+// [화면 6-B] 점검하기 (교과서 3점 척도 자기점검 — 결과는 선생님 통계에 반영)
+// ---------------------------------------------------------------------
+function renderSelfCheck(app){
+  const name = state.currentUser;
+  app.appendChild(header('점검하기', '쓰기 과정을 떠올리며 스스로 확인해 봅시다', '점검'));
+  app.appendChild(backBtn('매체수업 허브', 'student-hub'));
+
+  const existing = selfCheckFor(name);
+  const scores = (existing && existing.scores && existing.scores.length===SELF_CHECK_ITEMS.length)
+    ? existing.scores.slice()
+    : SELF_CHECK_ITEMS.map(()=>0);
+
+  const card = el('div',{class:'card'});
+  card.appendChild(el('p',{class:'muted', text:'각 문항을 읽고, 스스로 잘했다고 생각하는 만큼 동그라미를 눌러 채워보세요.'}));
+
+  const rows = [];
+  SELF_CHECK_ITEMS.forEach((q, idx)=>{
+    const row = el('div',{class:'check-row'});
+    row.appendChild(el('div',{class:'check-question', text:(idx+1)+'. '+q}));
+    const dotsWrap = el('div',{class:'dot-rating'});
+    const dotEls = [];
+    for(let d=1; d<=3; d++){
+      const dot = el('button',{class:'dot', attrs:{type:'button'}, on:{click:()=>{
+        scores[idx] = (scores[idx]===d) ? 0 : d; // 같은 자리 다시 누르면 취소
+        updateDots();
+        scheduleSave();
+      }}});
+      dotEls.push(dot);
+      dotsWrap.appendChild(dot);
+    }
+    row.appendChild(dotsWrap);
+    card.appendChild(row);
+    rows.push({dotEls});
+  });
+
+  function updateDots(){
+    rows.forEach((r, idx)=>{
+      r.dotEls.forEach((d, i)=> d.classList.toggle('filled', i < scores[idx]));
+    });
+  }
+  updateDots();
+
+  card.appendChild(el('p',{class:'muted', attrs:{style:'margin-top:10px; font-size:12px;'}, text:'●●● 매우 잘함 · ●● 잘함 · ● 보통임'}));
+  const saveMsg = el('p',{class:'success', attrs:{style:'min-height:18px;'}});
+  card.appendChild(saveMsg);
+  app.appendChild(card);
+
+  let saveTimer = null;
+  function scheduleSave(){
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(async ()=>{
+      try{
+        await saveSelfCheck(name, scores);
+        saveMsg.textContent = '저장되었어요 ✓';
+      }catch(e){ console.error(e); }
+    }, 300);
+  }
 }
 
 // ---------------------------------------------------------------------
@@ -1902,20 +2001,43 @@ function renderTeacherStats(app){
   const table = el('table',{attrs:{style:'margin-top:12px;'}});
   table.appendChild(el('tr',{},[
     el('th',{text:'이름'}), el('th',{text:'우편↑'}), el('th',{text:'우편↓'}),
-    el('th',{text:'메시지↑'}), el('th',{text:'메시지↓'}), el('th',{text:'누리집'})
+    el('th',{text:'메시지↑'}), el('th',{text:'메시지↓'}), el('th',{text:'누리집'}), el('th',{text:'점검하기'})
   ]));
   (classData.roster||[]).slice().sort().forEach(n=>{
+    const avg = selfCheckAverage(n);
     table.appendChild(el('tr',{},[
       el('td',{text:n, attrs:{style:'font-weight:bold;'}}),
       el('td',{text:String(mailSent(n))}), el('td',{text:String(mailReceived(n))}),
       el('td',{text:String(msgSent(n))}), el('td',{text:String(msgReceived(n))}),
-      el('td',{text:String(postCount(n))})
+      el('td',{text:String(postCount(n))}),
+      el('td',{},[ avg===null
+        ? el('span',{class:'badge', text:'미완료'})
+        : el('span',{class:'badge open', text:avg.toFixed(1)+' / 3'})
+      ])
     ]));
   });
   card.appendChild(table);
   card.appendChild(el('hr',{class:'dashed'}));
   card.appendChild(el('p',{class:'muted', text:'합계: 편지 '+mailsAll.length+'통 · 메시지 '+messagesAll.length+'건 · 누리집 '+postsAll.length+'개'}));
   app.appendChild(card);
+
+  // 점검하기 문항별 상세 (선생님이 항목별 경향을 볼 수 있도록)
+  const detail = el('div',{class:'card'});
+  detail.appendChild(el('h3',{text:'📋 점검하기 문항별 응답 현황'}));
+  detail.appendChild(el('p',{class:'muted', text:'제출한 학생들의 문항별 점수를 모아 보여줘요. (3점 만점 평균)'}));
+  const dTable = el('table',{attrs:{style:'margin-top:10px;'}});
+  dTable.appendChild(el('tr',{},[ el('th',{text:'문항'}), el('th',{text:'평균'}), el('th',{text:'제출 인원'}) ]));
+  SELF_CHECK_ITEMS.forEach((q, idx)=>{
+    const vals = selfChecksAll.map(s=> (s.scores||[])[idx]).filter(v=> v!==undefined && v!==null && v>0);
+    const avg = vals.length ? (vals.reduce((a,b)=>a+b,0)/vals.length) : null;
+    dTable.appendChild(el('tr',{},[
+      el('td',{text:(idx+1)+'. '+q, attrs:{style:'font-size:12px;'}}),
+      el('td',{text: avg===null ? '-' : avg.toFixed(1)}),
+      el('td',{text: vals.length+'명'})
+    ]));
+  });
+  detail.appendChild(dTable);
+  app.appendChild(detail);
 }
 
 // 3. 랜덤 라운드 관리 화면 (배정 현황표 포함)
