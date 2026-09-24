@@ -32,6 +32,15 @@ export const RECORDS = [
   // ▼ 여기에 새 기록을 붙여넣으세요 (최신 항목을 맨 위에) ▼
 
   {
+    title: "붕당 - 전하, 결단하소서!",
+    desc: "1494년 연산군부터 1800년 정조까지, 붕당의 탄생과 분화를 몸으로 겪는 역사 로그라이크 게임이다.\n웹캠 앞에 서면 익선관과 곤룡포가 입혀지고, 사화·예송·환국 같은 큰 사건마다 손을 들어 어느 붕당의 상소를 받아들일지 판결한다.\n실제 역사와 다르게 고르면 목숨이 줄고, 끝나면 진짜 역사와 내가 만든 역사의 계보를 비교한다.",
+    tags: "history, joseon, bungdang, game, mediapipe, webcam, motion, roguelike, korean-history",
+    category: "games",
+    link: "./vibe-apps/bungdang/bungdang.html",
+    image: "img-re/bungdang.avif",
+  },
+
+  {
     title: "학급 매체 수업",
     desc: "5학년 매체 단원 수업을 위해 제작했다.\n메일, 메시지, 게시판을 학급에서 실제로 체험한다.",
     tags: "media, education, elementary, email, message, board, classroom, class-tools",

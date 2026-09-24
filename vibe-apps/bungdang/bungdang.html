@@ -1,0 +1,1756 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>붕당 - 전하, 결단하소서!</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<!-- 얼굴(478점)·몸/팔(33점) 인식: MediaPipe Tasks Vision (게임 시작 시 CDN에서 불러옴) -->
+<style>
+*{box-sizing:border-box}
+:root{
+  --navy:#1d223a; --navy2:#262d4c; --navy3:#12162a;
+  --gold:#d8b46a; --gold2:#f3dfae; --gold3:#a67c34;
+  --red:#b3241c; --red2:#d13a2a; --lacquer:#6e140e;
+  --jade:#2f8a64; --plum:#6a3fa0;
+  --cream:#f4ead2; --cream2:#e6d6b0; --ink:#241a10;
+  --muted:#aeb2c8; --line:rgba(216,180,106,.42);
+  --serif:'Gowun Batang','Nanum Myeongjo','AppleMyungjo','Batang',serif;
+  --sans:'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',system-ui,sans-serif;
+  --goldGrad:linear-gradient(180deg,#fff8e2 0%,#f3dfae 32%,#d8b46a 64%,#9d7330 100%);
+  --clouds:url(assets/cloud_a.png) right -40px top -30px/min(420px,55%) no-repeat, url(assets/cloud_b.png) left -40px bottom -40px/min(380px,50%) no-repeat;
+}
+html{height:100%}
+body{height:100%;margin:0;background:var(--navy3);color:var(--cream);font-family:var(--sans);overflow:hidden;word-break:keep-all;overflow-wrap:break-word}
+h1,h2,h3,.evCtx,.bubble .say,#banner .b1,#banner .b2,.card .tx span,.rCard p,.tag1,.how span,.panel .sub,.eTop p,.note{text-wrap:balance}
+button{font-family:inherit;cursor:pointer}
+button:focus-visible,[role=button]:focus-visible{outline:3px solid var(--gold2);outline-offset:2px}
+.hidden{display:none!important}
+.goldText{background:var(--goldGrad);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;
+  filter:drop-shadow(0 2px 0 rgba(70,45,10,.75)) drop-shadow(0 10px 26px rgba(0,0,0,.55))}
+
+/* 궁궐 배경 (영상의 단청 천장 + 일월오봉도) */
+#bgHall{position:fixed;inset:-24px;z-index:0;background:#241018 url(assets/hall_wide.jpg) center 22%/cover no-repeat;filter:blur(2.5px) brightness(.56) saturate(1.08);transform:scale(1.03)}
+#cv{position:fixed;inset:0;width:100%;height:100%;display:block;z-index:1}
+
+/* HUD */
+#hud{position:fixed;top:0;left:0;right:0;z-index:5;display:flex;align-items:center;gap:18px;
+  padding:calc(env(safe-area-inset-top,0px) + 12px) 18px 22px;pointer-events:none;
+  background:linear-gradient(to bottom,rgba(18,22,42,.95) 0%,rgba(18,22,42,.72) 60%,rgba(18,22,42,0))}
+#hud::after{content:"";position:absolute;left:0;right:0;top:calc(100% - 22px);height:1px;background:linear-gradient(90deg,transparent,var(--line) 20%,var(--line) 80%,transparent)}
+#hud .yr{font-weight:900;font-size:clamp(30px,4.4vw,54px);line-height:1;letter-spacing:.01em}
+#hud .yr small{font-size:.4em;margin-left:3px;font-weight:700}
+#hud .plaque{display:flex;flex-direction:column;align-items:center;line-height:1.15;padding:6px 16px 7px;border-radius:6px;
+  background:linear-gradient(180deg,#8d1d14,#5d100b);border:2px solid var(--gold);box-shadow:inset 0 0 0 2px #3e0906,inset 0 0 0 3px rgba(243,223,174,.35),0 6px 18px rgba(0,0,0,.5)}
+#hud .plaque span{font-size:11px;color:#f0cf95;letter-spacing:.08em}
+#hud .plaque b{font-family:var(--serif);font-size:clamp(18px,2.3vw,27px);color:var(--gold2);text-shadow:0 1px 0 #3e0906}
+#hud .lives{margin-left:auto;display:flex;align-items:center;gap:6px;line-height:1}
+#hud .lives .heart,#hud .lives b{font-weight:900;font-size:clamp(30px,3.4vw,42px);color:#ff5a4a;text-shadow:0 0 14px rgba(255,90,74,.55),0 2px 8px rgba(0,0,0,.6);display:inline-block}
+#hud .lives .heart{animation:beat 1.4s ease-in-out infinite}
+@keyframes beat{0%,100%{transform:scale(1)}15%{transform:scale(1.15)}30%{transform:scale(1)}}
+#hud .lives b{color:#ffe6df;transition:transform .2s}
+.comboHud{font-weight:900;font-size:18px;color:#ffe08a;text-shadow:0 0 12px rgba(255,200,80,.7);min-width:0}
+.comboHud:empty{display:none}
+#hud .lives b.hit{animation:hit .6s}
+@keyframes hit{0%,100%{transform:none}30%{transform:scale(1.6);color:#fff}}
+#hud .ctrl{display:flex;gap:6px;pointer-events:auto;flex-wrap:wrap;justify-content:flex-end}
+.chip{background:rgba(29,34,58,.82);border:1px solid var(--line);color:var(--cream);border-radius:999px;padding:6px 12px;font-size:13px;transition:background .15s,border-color .15s}
+.chip:hover{border-color:var(--gold2)}
+.chip.on{background:var(--goldGrad);color:#2a1d08;border-color:var(--gold2);font-weight:700}
+@media(max-width:760px){#hud{flex-wrap:wrap;gap:10px}#hud .ctrl{width:100%;justify-content:flex-start}}
+
+#poseBadge{display:inline-flex;align-items:center;gap:6px}
+#poseBadge i{display:inline-block;width:8px;height:8px;border-radius:50%;background:#7d8199}
+#poseBadge.ok i{background:#56c48a;box-shadow:0 0 8px #56c48a}
+#poseBadge.warn i{background:#e0a020;box-shadow:0 0 8px #e0a020}
+
+/* 인식 점검 패널 */
+#camPanel{position:fixed;right:16px;top:86px;width:320px;z-index:9;padding:14px 14px 12px;font-size:13px;line-height:1.5}
+#camPanel h4{margin:0 0 10px;font-size:15px;color:var(--gold2);display:flex;justify-content:space-between;align-items:center}
+#camPanel .closeBtn{background:none;border:none;color:var(--muted);font-size:20px;padding:0 4px}
+#camPanel .item{margin-bottom:7px;padding:7px 10px;background:rgba(255,255,255,.045);border-radius:8px;border-left:3px solid var(--gold)}
+#camPanel .item b{display:block;color:var(--cream);font-size:12.5px;margin-bottom:1px}
+#camPanel .item span{color:#c3c6d8;font-size:12px}
+#camPanel .gRow{display:flex;align-items:center;gap:8px;margin-top:4px;font-size:12px;color:#c3c6d8}
+#camPanel .miniG{flex:1;height:6px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden}
+#camPanel .miniG i{display:block;height:100%;width:0;background:var(--gold);transition:width .1s}
+#camPanel .ok{color:#6fd49b;font-weight:700}
+#camPanel .wait{color:#e9b95a;font-weight:700}
+#camPanel label{display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--cream);margin-top:6px;cursor:pointer}
+
+/* 공용 남색 카드 (영상 타이틀 카드 스타일) */
+.navyCard{background:var(--clouds),linear-gradient(180deg,#252b49,#1b2037);border:1px solid var(--line);border-radius:14px;
+  box-shadow:inset 0 0 0 4px #1d223a,inset 0 0 0 5px rgba(216,180,106,.22),0 18px 50px rgba(0,0,0,.55)}
+
+/* timeline */
+#tl{position:fixed;left:22px;right:22px;bottom:calc(env(safe-area-inset-bottom,0px) + 14px);z-index:5;pointer-events:none}
+#tl .track{position:relative;height:4px;background:rgba(243,223,174,.18);border-radius:2px}
+#tlFill{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--goldGrad);border-radius:2px;box-shadow:0 0 12px rgba(243,223,174,.6)}
+.mk{position:absolute;top:50%;width:11px;height:11px;margin:-5.5px 0 0 -5.5px;transform:rotate(45deg);background:#1d223a;border:2px solid var(--gold)}
+.mk.ok{background:#3fae74;border-color:#d4f5de}
+.mk.bad{background:var(--red2);border-color:#ffc2b5}
+#tl .ends{display:flex;justify-content:space-between;font-size:11px;color:#d7cfb8;margin-top:6px;text-shadow:0 1px 4px #000}
+
+/* mini genealogy */
+#mini{position:fixed;left:14px;bottom:calc(env(safe-area-inset-bottom,0px) + 42px);width:250px;z-index:4;padding:8px 8px 2px}
+#mini p{margin:0 0 2px 4px;font-size:12px;color:var(--gold2)}
+#mini svg{width:100%;height:auto;display:block}
+@media(max-width:820px){#mini{display:none}}
+
+/* ambient cards */
+#cards{position:fixed;inset:0;pointer-events:none;z-index:4}
+.card{position:absolute;width:var(--cw);display:flex;gap:12px;align-items:flex-start;padding:13px 15px 12px;border-radius:14px;
+  background:linear-gradient(180deg,rgba(37,43,73,.97),rgba(27,32,55,.97));border:1px solid rgba(216,180,106,.4);border-left:5px solid var(--c);
+  box-shadow:0 12px 34px rgba(0,0,0,.55),0 0 30px -8px var(--c);opacity:0;transform:translateX(-30px) scale(.94);
+  transition:opacity .45s,transform .55s cubic-bezier(.2,.8,.2,1.2);overflow:hidden}
+.card.sR{border-left-width:1px;border-right:5px solid var(--c);transform:translateX(30px) scale(.94)}
+.card.in{opacity:1;transform:none}
+.card .ink{position:absolute;left:24px;top:30px;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;
+  background:radial-gradient(circle,var(--c),transparent 70%);opacity:0;animation:ink 1.5s ease-out forwards;pointer-events:none}
+@keyframes ink{0%{transform:scale(.2);opacity:.9}100%{transform:scale(7);opacity:0}}
+.card .av{flex:none;width:52px;height:52px;border-radius:50%;display:grid;place-items:center;font-family:var(--serif);font-weight:700;font-size:25px;
+  background:radial-gradient(circle at 35% 28%,rgba(255,255,255,.45),transparent 55%),var(--c);color:var(--avc);border:2px solid var(--gold);position:relative;box-shadow:0 3px 8px rgba(0,0,0,.4)}
+.card .tx{position:relative;min-width:0;flex:1}
+.card .tx b{display:block;font-size:clamp(18px,1.6vw,22px);font-weight:900;line-height:1.25;color:var(--gold2);margin:2px 0 3px}
+.card .tx span{display:block;font-size:clamp(14.5px,1.25vw,16.5px);color:#eeeaf6;line-height:1.55}
+.card .tx em{display:block;font-style:normal;font-size:12px;color:#aab0cc}
+.card .tx em.kd{color:#c8bb95;letter-spacing:.03em}
+.card .tx em.gh{color:#c9c2d8;margin:2px 0}
+.card .cb{display:block;height:2px;margin-top:9px;background:rgba(255,255,255,.1);border-radius:1px;overflow:hidden}
+.card .cb u{display:block;height:100%;background:var(--c);animation:cbar linear forwards}
+@keyframes cbar{from{width:100%}to{width:0}}
+.card.ghost{filter:grayscale(1)}
+.card.ghost.in{opacity:.6}
+
+
+/* 그 시절 조선 이야기 */
+#hist{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + max(250px,29%));z-index:5;width:min(560px,86vw);padding:16px 22px 14px;text-align:center;pointer-events:none;
+  opacity:0;transform:translate(-50%,14px) scale(.96);transition:opacity .45s,transform .5s cubic-bezier(.2,.8,.2,1.2)}
+#hist.show{opacity:1;transform:translate(-50%,0)}
+#hist .hk{font-size:12.5px;color:#c8bb95;letter-spacing:.05em}
+#hist .hk b{color:var(--gold2)}
+#hist .hi{display:inline-grid;place-items:center;width:24px;height:24px;margin-right:6px;border-radius:50%;background:rgba(216,180,106,.18);border:1px solid var(--line);font-size:13px;vertical-align:middle}
+#hist .ht{font-weight:900;font-size:clamp(24px,3vw,34px);margin:4px 0 6px;background:var(--goldGrad);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 2px 0 rgba(70,45,10,.7))}
+#hist.t-war .ht{background:linear-gradient(180deg,#ffe0cf,#ff9b7b 60%,#c8402f);-webkit-background-clip:text;background-clip:text}
+#hist .hc{font-size:clamp(14px,1.55vw,16.5px);line-height:1.65;color:#ece8f4}
+#hist .hb{height:2px;margin-top:10px;background:rgba(255,255,255,.1);border-radius:1px;overflow:hidden}
+#hist .hb i{display:block;height:100%;width:100%;background:var(--goldGrad);transition:width linear}
+
+#mini{cursor:pointer;transition:transform .15s,border-color .15s}
+#mini:hover{transform:translateY(-2px);border-color:var(--gold2)}
+#mini p span{float:right;margin-right:4px;font-size:11px;color:#c8bb95}
+#treeModal{position:fixed;inset:0;z-index:11;display:grid;place-items:center;background:rgba(8,10,22,.6);backdrop-filter:blur(3px);padding:16px;animation:fade .3s}
+.tmBox{width:96vw;height:92vh;overflow:auto;padding:20px 26px 16px;animation:pop .4s;display:flex;flex-direction:column}
+.tmHead{display:flex;justify-content:space-between;align-items:flex-start}
+.tmHead h2{margin:2px 0 0;font-size:clamp(26px,3.4vw,38px);font-weight:900}
+.tmHead .closeBtn{background:none;border:1px solid var(--line);color:var(--cream);font-size:24px;width:40px;height:40px;border-radius:50%}
+.tmBody{flex:1;min-height:0;display:grid;grid-template-columns:1fr 280px;gap:22px;align-items:center;margin-top:8px}
+@media(max-width:760px){.tmBody{grid-template-columns:1fr}}
+#treeBig{height:100%;display:grid;place-items:center}
+#treeBig svg{width:100%;height:100%;max-height:74vh;display:block}
+#treeList{display:flex;flex-direction:column;gap:6px}
+#treeList .tl{display:grid;grid-template-columns:16px 1fr auto;gap:5px 10px;align-items:center;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,.05);font-size:17px}
+#treeList .tl.gone{opacity:.5}
+#treeList .tl i{width:12px;height:12px;border-radius:50%;border:1px solid rgba(255,255,255,.4)}
+#treeList .tl b{color:var(--cream)}
+#treeList .tl span{font-size:12.5px;color:var(--muted)}
+#treeList .tl em{grid-column:2/4;height:4px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden}
+#treeList .tl u{display:block;height:100%}
+.tmNote{font-size:12.5px;color:var(--muted);margin:12px 0 0;line-height:1.6}
+.tmNote b{color:var(--gold2)}
+
+#loading{background:var(--clouds),radial-gradient(ellipse at 50% 30%,#2a3156 0%,var(--navy) 65%);z-index:13;display:grid;place-items:center}
+#loading.hidden{display:none}
+.ldInner{width:min(460px,90vw);text-align:center}
+#ldSteps{list-style:none;padding:0;margin:18px 0 14px;text-align:left}
+#ldSteps li{display:flex;align-items:center;gap:10px;padding:9px 12px;margin-bottom:6px;border-radius:10px;background:rgba(255,255,255,.045);border:1px solid rgba(216,180,106,.2);font-size:14.5px;color:#cfcbd8}
+#ldSteps li span{margin-left:auto;font-size:12.5px;color:var(--muted)}
+#ldSteps li i{width:14px;height:14px;border-radius:50%;border:2px solid #6b6f88;flex:none}
+#ldSteps li.run{color:var(--cream);border-color:var(--line)}
+#ldSteps li.run i{border-color:var(--gold2);border-top-color:transparent;animation:spin .8s linear infinite}
+#ldSteps li.ok i{background:#3fae74;border-color:#bff0cf}
+#ldSteps li.ok span{color:#7fdca5}
+#ldSteps li.fail i{background:var(--red2);border-color:#ffc2b5}
+#ldSteps li.fail span{color:#ffa996}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ldTrack{height:6px;border-radius:3px;background:rgba(255,255,255,.1);overflow:hidden}
+#ldBar{display:block;height:100%;width:4%;background:var(--goldGrad);transition:width .5s;box-shadow:0 0 12px rgba(243,223,174,.6)}
+#ldMsg{min-height:1.6em;color:var(--cream);font-size:14.5px;margin:12px 0}
+
+/* 판결 팝업 */
+#pop{position:fixed;left:50%;top:40%;z-index:9;transform:translate(-50%,-50%) scale(.3) rotate(-8deg);opacity:0;pointer-events:none;text-align:center;white-space:nowrap}
+#pop.show{animation:popHit 1.5s cubic-bezier(.2,.9,.25,1.35) forwards}
+@keyframes popHit{0%{opacity:0;transform:translate(-50%,-50%) scale(2.4) rotate(-6deg)}14%{opacity:1;transform:translate(-50%,-50%) scale(.92) rotate(-3deg)}24%{transform:translate(-50%,-50%) scale(1.05) rotate(-3deg)}80%{opacity:1;transform:translate(-50%,-50%) scale(1) rotate(-3deg)}100%{opacity:0;transform:translate(-50%,-62%) scale(1) rotate(-3deg)}}
+#pop .pm{font-weight:900;font-size:clamp(56px,9vw,120px);line-height:1;letter-spacing:.02em;background:var(--goldGrad);-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 4px 0 #5a3a10) drop-shadow(0 0 30px rgba(255,210,120,.8)) drop-shadow(0 12px 30px #000)}
+#pop.bad .pm{background:linear-gradient(180deg,#fff,#ffb3a0 40%,#d93a2a);-webkit-background-clip:text;background-clip:text;filter:drop-shadow(0 4px 0 #4a0c08) drop-shadow(0 0 26px rgba(255,80,60,.7)) drop-shadow(0 12px 30px #000)}
+#pop .pc{display:inline-block;margin-top:12px;padding:8px 20px;border-radius:999px;font-weight:900;font-size:clamp(18px,2.2vw,26px);color:#2a1d08;background:var(--goldGrad);box-shadow:0 8px 24px rgba(0,0,0,.5)}
+#pop.bad .pc{color:#fff;background:linear-gradient(180deg,#d13a2a,#8d1d14)}
+#pop.hot .pc{animation:hotPulse .5s ease-in-out 3}
+@keyframes hotPulse{50%{transform:scale(1.12)}}
+#pop .pb{margin-top:10px;font-weight:900;font-size:clamp(20px,2.4vw,30px);color:#ffe08a;text-shadow:0 0 16px rgba(255,200,80,.8),0 3px 8px #000}
+/* banner & vignette */
+#banner{position:fixed;left:50%;top:max(84px,11%);transform:translate(-50%,-12px);z-index:6;text-align:center;pointer-events:none;opacity:0;transition:opacity .5s,transform .5s;width:min(90vw,760px)}
+#banner.show{opacity:1;transform:translate(-50%,0)}
+#banner .b1{font-weight:900;font-size:clamp(30px,4.6vw,54px);background:var(--goldGrad);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 2px 0 rgba(70,45,10,.8)) drop-shadow(0 6px 22px #000)}
+#banner .b2{display:inline-block;font-size:clamp(13px,1.6vw,17px);color:#f4ead2;margin-top:8px;padding:5px 16px;border-radius:999px;background:rgba(18,22,42,.72);border:1px solid var(--line)}
+#banner .b2:empty{display:none}
+#banner.war .b1{background:linear-gradient(180deg,#ffe0cf,#ff8b6b 60%,#b3241c);-webkit-background-clip:text;background-clip:text}
+#vig{position:fixed;inset:0;pointer-events:none;z-index:3;opacity:0;transition:opacity .7s;background:radial-gradient(ellipse at center,transparent 42%,rgba(200,40,20,.6) 100%)}
+#vig.on{opacity:1}
+#pauseOv{position:fixed;inset:0;z-index:6;display:grid;place-items:center;background:rgba(10,12,24,.55);pointer-events:none}
+#pauseOv b{font-size:44px;font-weight:900}
+
+/* event */
+#event{position:fixed;inset:0;z-index:7;pointer-events:none}
+#event .dim{position:absolute;inset:0;background:radial-gradient(ellipse 75% 65% at 50% 60%,rgba(0,0,0,0) 0%,rgba(8,10,22,.4) 100%);animation:fade .4s}
+@keyframes fade{from{opacity:0}}
+#event .head{position:absolute;top:calc(env(safe-area-inset-top,0px) + 80px);left:50%;transform:translateX(-50%);width:min(780px,92vw);text-align:center;animation:fade .7s}
+.evYear{display:inline-block;padding:4px 14px;border-radius:5px;font-size:13px;font-weight:700;color:var(--gold2);
+  background:linear-gradient(180deg,#8d1d14,#5d100b);border:1.5px solid var(--gold);box-shadow:inset 0 0 0 2px #3e0906}
+.evTitle{font-weight:900;font-size:clamp(36px,5.4vw,64px);margin:8px 0 8px;line-height:1.1;background:var(--goldGrad);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 2px 0 rgba(70,45,10,.8)) drop-shadow(0 8px 24px #000)}
+.evCtx{margin:0 auto;font-size:clamp(13.5px,1.5vw,16.5px);line-height:1.7;color:#f1ead8;max-width:680px;padding:10px 18px;border-radius:12px;background:rgba(18,22,42,.72);border:1px solid rgba(216,180,106,.28)}
+
+/* 상소 두루마리 말풍선 */
+.bubble{position:absolute;top:37%;width:min(31vw,390px);pointer-events:auto;cursor:pointer;text-align:left;color:var(--ink);
+  background:linear-gradient(180deg,#fbf4e2,#efe2c2);border-radius:6px;padding:16px 18px 12px;
+  box-shadow:0 18px 46px rgba(0,0,0,.6),inset 0 0 0 1px rgba(120,90,40,.25),inset 0 0 40px rgba(170,130,60,.18);
+  animation:pop .55s cubic-bezier(.2,.9,.3,1.3);transition:transform .15s}
+.bubble::before,.bubble::after{content:"";position:absolute;left:-8px;right:-8px;height:12px;border-radius:6px;
+  background:linear-gradient(180deg,var(--c3),var(--c) 45%,var(--c4));box-shadow:0 2px 6px rgba(0,0,0,.45)}
+.bubble::before{top:-8px}.bubble::after{bottom:-8px}
+.bubble.L{left:2.5vw}.bubble.R{right:2.5vw}
+.bubble:hover{transform:translateY(-3px)}
+.bubble .who{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 10px;margin-bottom:8px;padding-bottom:7px;border-bottom:1px dashed rgba(120,90,40,.35)}
+.bubble .fac{font-weight:900;font-size:clamp(24px,2.9vw,34px);line-height:1.1;color:var(--c2)}
+.bubble .per{font-weight:700;font-size:clamp(15px,1.8vw,20px);color:#4a3b22}
+.bubble .say b{font-weight:700;color:#120c05;background:linear-gradient(transparent 58%,var(--hl) 58%)}
+.bubble .say{font-family:var(--serif);font-size:clamp(15px,1.7vw,19.5px);line-height:1.6;min-height:3.2em}
+.bubble .gauge{height:8px;background:rgba(0,0,0,.1);border-radius:4px;margin-top:10px;overflow:hidden}
+.bubble .gauge i,.evBoth .gauge i{display:block;height:100%;width:0;background:var(--c)}
+.bubble .pick{font-size:12px;color:#7a6a4c;margin-top:6px}
+.evBoth{position:absolute;left:50%;top:31%;transform:translateX(-50%);pointer-events:auto;text-align:center;--c:var(--gold)}
+.evBoth button{background:var(--goldGrad);color:#2a1d08;border:1px solid #fff3cf;border-radius:999px;padding:11px 22px;font-weight:900;font-size:15px;box-shadow:0 8px 30px rgba(216,180,106,.45)}
+.evBoth .gauge{height:6px;width:180px;margin:8px auto 0;background:rgba(255,255,255,.15);border-radius:3px;overflow:hidden}
+.evHint{display:inline-block;margin-top:10px;max-width:94vw;text-align:center;font-size:14px;color:var(--cream);background:rgba(18,22,42,.85);padding:9px 18px;border-radius:999px;border:1px solid var(--line)}
+@keyframes pop{0%{transform:scale(.6);opacity:0}100%{transform:none;opacity:1}}
+@media(max-width:760px){.bubble{width:45vw;top:41%;padding:10px 12px}.bubble .say{font-size:14px}.evCtx{font-size:13px}}
+
+/* result */
+#result{position:fixed;inset:0;z-index:8;display:grid;place-items:start center;padding-top:calc(env(safe-area-inset-top,0px) + 86px);background:rgba(8,10,22,.25);pointer-events:none}
+#result .rCard{pointer-events:auto}
+.joinHint{font-size:13.5px!important;color:#ffe08a!important;margin:10px 0 0!important}
+.rCard{width:min(560px,92vw);padding:30px 28px 22px;position:relative;animation:pop .45s}
+.rStamp{position:absolute;right:22px;top:-26px;transform:rotate(8deg);font-family:var(--serif);font-weight:700;font-size:18px;line-height:1.1;
+  width:78px;height:78px;display:grid;place-items:center;text-align:center;border-radius:10px;color:#fff1dc;border:3px double rgba(255,241,220,.8);box-shadow:0 6px 18px rgba(0,0,0,.45)}
+.rCard.ok .rStamp{background:#b3241c}.rCard.bad .rStamp{background:#4b2f73}
+.rCard h3{font-weight:900;font-size:26px;margin:2px 0 12px;color:var(--gold2)}
+.rCard.bad h3{color:#ffb4a3}
+.rCard p{margin:8px 0;line-height:1.7;font-size:15px;color:#ece8f4}
+.rCard .real{background:linear-gradient(180deg,#fbf4e2,#efe2c2);color:var(--ink);border-left:4px solid var(--red);padding:11px 13px;border-radius:8px}
+.rBar{height:3px;background:rgba(255,255,255,.12);border-radius:2px;margin:16px 0 12px;overflow:hidden}
+.rBar i{display:block;height:100%;background:var(--goldGrad);width:100%}
+.btn{border:1px solid #fff3cf;border-radius:999px;padding:11px 24px;font-weight:900;font-size:15px;background:var(--goldGrad);color:#2a1d08}
+
+/* ===== 타이틀 (영상 기반) ===== */
+.screen{position:fixed;inset:0;z-index:10;overflow-y:auto;background:var(--navy)}
+#title{overflow:hidden;background:var(--navy)}
+#title .tVid{position:absolute;top:0;right:0;bottom:0;width:min(56.25vh,52vw);overflow:hidden;background:#000}
+#title .tVid video{width:100%;height:100%;object-fit:cover;display:block}
+#title .tVid::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,var(--navy) 0%,rgba(29,34,58,.55) 12%,rgba(29,34,58,0) 32%),linear-gradient(0deg,rgba(29,34,58,.6),rgba(29,34,58,0) 25%)}
+#title .tSide{position:absolute;top:0;bottom:0;left:0;right:min(56.25vh,52vw);background:var(--clouds),var(--navy);overflow-y:auto}
+.tInner{max-width:640px;min-height:100%;margin:0 auto;padding:calc(env(safe-area-inset-top,0px) + 36px) 28px 40px;text-align:center;display:flex;flex-direction:column;justify-content:center}
+.kicker{font-size:13px;letter-spacing:.24em;color:#c8bb95}
+.logo{font-weight:900;font-size:clamp(96px,15vw,190px);line-height:1;letter-spacing:.02em;margin:10px 0 0;animation:rise 1s cubic-bezier(.2,.9,.3,1.2)}
+.subtitle{font-size:clamp(22px,3vw,34px);font-weight:700;color:#efc9a6;letter-spacing:.04em;margin:10px 0 0;text-shadow:0 2px 12px rgba(0,0,0,.5);animation:rise 1s .15s both}
+@keyframes rise{from{opacity:0;transform:translateY(30px) scale(.94)}}
+.sparkle{display:inline-block;color:var(--gold2);opacity:.7;margin:18px 0 0;font-size:16px;letter-spacing:.6em}
+.tag1{font-family:var(--serif);font-size:clamp(16px,2vw,20px);color:#e6dfcb;margin:14px auto 22px}
+.row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:12px 0;align-items:center}
+.row label{font-size:14px;color:var(--muted)}
+.big{padding:15px 26px;font-size:17px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--cream);font-weight:700;transition:transform .15s,box-shadow .15s}
+.big:hover{transform:translateY(-2px)}
+.big.primary{background:var(--goldGrad);color:#2a1d08;border-color:#fff3cf;font-weight:900;box-shadow:0 10px 30px rgba(216,180,106,.35)}
+.more{margin:18px auto 0;max-width:620px;text-align:center}
+.more summary{cursor:pointer;color:var(--gold2);font-size:14px;list-style:none;display:inline-block;padding:7px 16px;border:1px solid var(--line);border-radius:999px}
+.more summary::-webkit-details-marker{display:none}
+.lead{color:#dcd7e6;line-height:1.75;font-size:15px;margin:16px auto 18px;max-width:600px}
+.how{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;text-align:left;margin-bottom:16px}
+.how div{background:rgba(255,255,255,.045);border:1px solid rgba(216,180,106,.3);border-radius:12px;padding:12px}
+.how b{display:block;font-size:15px;margin-bottom:5px;color:var(--gold2)}
+.how span{font-size:13px;color:#d0cfdc;line-height:1.6}
+.legend{display:flex;flex-wrap:wrap;gap:8px 14px;justify-content:center;font-size:13px;color:#cfcbd8;margin-top:14px}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:5px;vertical-align:-1px;border:1px solid rgba(255,255,255,.35)}
+.note{font-size:12.5px;color:var(--muted);margin-top:12px;line-height:1.6}
+@media (max-aspect-ratio:1/1){
+  #title .tVid{left:0;width:auto;bottom:auto;height:62vh}
+  #title .tVid::after{background:linear-gradient(0deg,var(--navy) 0%,rgba(29,34,58,0) 45%)}
+  #title .tSide{top:auto;right:0;height:auto;max-height:100%;background:linear-gradient(0deg,var(--navy) 70%,rgba(29,34,58,0));padding-top:60px}
+  #title .tInner{min-height:0;padding-bottom:26px}
+  .logo{font-size:clamp(76px,22vw,130px)}
+  .how{grid-template-columns:1fr}
+}
+#toast{position:fixed;left:50%;top:96px;transform:translateX(-50%);z-index:12;background:rgba(29,34,58,.96);border:1px solid var(--line);color:var(--cream);padding:10px 18px;border-radius:999px;font-size:14px;opacity:0;transition:.4s;pointer-events:none;max-width:90vw;text-align:center}
+#toast.show{opacity:1}
+
+/* ending */
+#ending{background:var(--clouds),radial-gradient(ellipse at 50% 0%,#2a3156 0%,var(--navy) 60%)}
+.eInner{max-width:1120px;margin:0 auto;padding:calc(env(safe-area-inset-top,0px) + 34px) 20px 60px}
+.eTop{text-align:center;display:flex;flex-direction:column;align-items:center}
+.eTop .portrait{width:120px;height:120px;border-radius:50%;background:url(assets/king_portrait.jpg) center 12%/cover;border:3px solid var(--gold);box-shadow:0 0 0 6px rgba(216,180,106,.2),0 12px 30px rgba(0,0,0,.5);margin-bottom:12px}
+.eTop .kicker{letter-spacing:.1em}
+.rank{font-weight:900;font-size:clamp(34px,5vw,58px);margin:6px 0 6px}
+.eTop p{color:#dcd7e6;margin:0}
+.stats{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin:22px 0 26px}
+.stat{background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:14px;padding:12px 18px;min-width:130px;text-align:center}
+.stat b{display:block;font-weight:900;font-size:32px;color:var(--gold2)}
+.stat span{font-size:12.5px;color:var(--muted)}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+@media(max-width:780px){.cmp{grid-template-columns:1fr}}
+.panel{padding:18px}
+.panel h3{margin:0 0 8px;font-size:20px;color:var(--gold2)}
+.panel .sub{font-size:13.5px;color:#cfcbd8;margin:0 0 8px;line-height:1.6}
+.panel svg{width:100%;height:auto;display:block}
+.tblwrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13.5px;min-width:520px}
+th{font-weight:500;color:var(--muted);text-align:left;padding:6px;border-bottom:1px solid var(--line)}
+td{padding:9px 6px;border-bottom:1px solid rgba(255,255,255,.07);vertical-align:top}
+td small{color:var(--muted)}
+tr.bad td{background:rgba(179,36,28,.16)}
+.tag{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:700;margin:1px 2px 1px 0}
+.codex{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px}
+.cx{display:flex;gap:8px;align-items:center;background:rgba(255,255,255,.045);border-radius:10px;padding:8px;font-size:12.5px;line-height:1.35}
+.cx i{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-family:var(--serif);font-weight:700;font-size:14px;border:1.5px solid var(--gold)}
+.cx.ghost{opacity:.5;filter:grayscale(1)}
+.cx b{display:block;font-family:var(--serif);color:var(--gold2)}
+.hint{margin-top:10px;padding:12px 14px;border-radius:12px;background:rgba(216,180,106,.1);border:1px dashed var(--gold);font-size:14px;line-height:1.65}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<div id="bgHall"></div>
+<canvas id="cv" aria-label="붕당 세력도와 왕의 모습"></canvas>
+<video id="cam" playsinline muted autoplay style="position:fixed;width:320px;height:240px;opacity:0;pointer-events:none;left:-9999px;top:-9999px"></video>
+
+<div id="hud" class="hidden">
+  <div class="yr goldText"><span id="yr">1494</span><small>년</small></div>
+  <div class="plaque"><span id="kingNo">제10대 임금</span><b id="kingName">연산군</b></div>
+  <div class="lives" aria-label="목숨"><span class="heart">♥</span><b id="lives">15</b><span id="livesMax" hidden></span></div><div class="comboHud" id="comboHud"></div>
+  <div class="ctrl">
+    <button class="chip" id="poseBadge"><i></i><span id="poseBadgeTxt">카메라 상태</span></button>
+    <button class="chip spd" data-s="1">1배</button>
+    <button class="chip spd" data-s="2">2배</button>
+    <button class="chip spd" data-s="4">4배</button>
+    <button class="chip" id="pauseBtn">일시정지</button>
+    <button class="chip" id="miniBtn">계보도</button>
+    <button class="chip" id="muteBtn">소리 켬</button>
+    <button class="chip" id="fsBtn">전체화면</button>
+  </div>
+</div>
+
+<div id="camPanel" class="navyCard hidden">
+  <h4><span>카메라 인식 점검</span><button class="closeBtn" id="camPanelClose" aria-label="닫기">&times;</button></h4>
+  <div class="item"><b>AI 인식 엔진</b><span id="statAI">대기 중</span></div>
+  <div class="item"><b>얼굴 · 눈썹 · 익선관</b><span id="statHead">얼굴 탐색 중…</span></div>
+  <div class="item"><b>어깨 · 곤룡포</b><span id="statBody">어깨 탐색 중…</span></div>
+  <div class="item"><b>팔 인식 (손 들어 결단)</b>
+    <div class="gRow"><span>왼손</span><div class="miniG"><i id="statGaugeL"></i></div><span id="statTxtL">-</span></div>
+    <div class="gRow"><span>오른손</span><div class="miniG"><i id="statGaugeR"></i></div><span id="statTxtR">-</span></div>
+    <div style="margin-top:3px;font-size:11.5px;color:#aeb2c8" id="statBoth">양손을 함께 들면 탕평책</div>
+  </div>
+  <label style="flex-wrap:wrap">곤룡포 높이 <input type="range" id="liftRange" min="-10" max="40" step="1" style="flex:1"> <span id="liftVal"></span></label>
+  <label><input type="checkbox" id="lmToggle"> 인식점(눈썹·어깨·팔) 화면에 표시</label>
+</div>
+
+<div id="tl" class="hidden"><div class="track"><div id="tlFill"></div><div id="tlMarks"></div></div><div class="ends"><span>1494 연산군</span><span>1800 정조</span></div></div>
+<div id="mini" class="navyCard hidden" role="button" tabindex="0" title="눌러서 크게 보기"><p>붕당 계보 <span>🔍 크게 보기</span></p><div id="miniSvg"></div></div>
+<div id="treeModal" class="hidden">
+  <div class="tmBox navyCard">
+    <div class="tmHead"><div><span class="kicker">지금까지의</span><h2 class="goldText">붕당 계보도</h2></div><button class="closeBtn" id="treeClose" aria-label="닫기">&times;</button></div>
+    <div class="tmBody"><div id="treeBig"></div><div id="treeList"></div></div>
+    <p class="tmNote">밝게 빛나는 붕당은 지금 조정에 살아 있는 세력, 흐린 붕당은 사라졌거나 아직 생기지 않은 세력입니다. 오른쪽 막대는 지금의 세력 크기입니다. <b>게임이 잠시 멈춰 있어요.</b></p>
+  </div>
+</div>
+<div id="cards"></div>
+<div id="hist" class="navyCard" aria-live="polite"></div>
+<div id="vig"></div>
+<div id="pop"></div>
+<div id="banner"><div class="b1"></div><div class="b2"></div></div>
+<div id="pauseOv" class="hidden"><b class="goldText">일시정지</b></div>
+
+<div id="event" class="hidden">
+  <div class="dim"></div>
+  <div class="head"><span class="evYear" id="evYear"></span><h2 class="evTitle" id="evTitle"></h2><p class="evCtx" id="evCtx"></p><div class="evHint" id="evHint"></div></div>
+  <div class="bubble L" id="bubL" role="button" tabindex="0"><div class="who"></div><div class="say"></div><div class="gauge"><i></i></div><div class="pick"></div></div>
+  <div class="bubble R" id="bubR" role="button" tabindex="0"><div class="who"></div><div class="say"></div><div class="gauge"><i></i></div><div class="pick"></div></div>
+  <div class="evBoth hidden" id="evBoth"><button id="bothBtn">양손 들기: 탕평</button><div class="gauge"><i></i></div></div>
+</div>
+
+<div id="result" class="hidden">
+  <div class="rCard navyCard" id="rCard">
+    <div class="rStamp" id="rStamp"></div>
+    <h3 id="rTitle"></h3>
+    <p id="rMine"></p>
+    <p class="real" id="rReal"></p>
+    <div class="rBar"><i id="rBarI"></i></div>
+    <button class="btn" id="rNext">다음 시대로</button>
+    <p class="joinHint hidden" id="joinHint">🙏 양손을 가슴 앞 금빛 원에 모으면 다음으로 넘어가요</p>
+  </div>
+</div>
+
+<div id="title" class="screen">
+  <div class="tVid"><video id="introVid" src="assets/intro.mp4" muted playsinline autoplay loop preload="auto" poster="assets/king_portrait.jpg"></video></div>
+  <div class="tSide">
+    <div class="tInner">
+      <div class="kicker">조선 붕당 로그라이크 · 1494 — 1800</div>
+      <h1 class="logo goldText">붕당</h1>
+      <p class="subtitle">전하, 결단하소서!</p>
+      <div><span class="sparkle">✦ ✦ ✦</span></div>
+      <p class="tag1">손을 들어 편을 들면, 조선의 역사가 바뀝니다.</p>
+      <div class="row">
+        <button class="big primary" id="startCam">카메라 켜고 즉위하기</button>
+        <button class="big" id="startNoCam">카메라 없이 시작</button>
+      </div>
+      <div class="row"><label>흐르는 속도</label>
+        <button class="chip spd" data-s="1">1배</button>
+        <button class="chip spd" data-s="2">2배</button>
+        <button class="chip spd" data-s="4">4배</button>
+      </div>
+      <details class="more">
+        <summary>게임 방법 보기</summary>
+        <p class="lead">1494년 연산군부터 1800년 정조까지, 1년이 1초씩 흐릅니다. 붕당이 생겨나고 갈라지고 사라지다가, 큰 사건이 터지면 시간이 멈추고 신하들이 상소를 올립니다.</p>
+        <div class="how">
+          <div><b>왕이 되기</b><span>카메라 앞에 서면 얼굴과 어깨를 인식해 익선관·곤룡포·눈썹·수염이 내 몸에 맞게 입혀지고, 시대마다 다른 왕으로 바뀝니다.</span></div>
+          <div><b>손 들어 판결하기</b><span>왼손을 들면 왼쪽 상소, 오른손을 들면 오른쪽 상소를 택합니다. 양손을 함께 들면 탕평책! 키보드와 터치도 됩니다.</span></div>
+          <div><b>역사와 다르면 목숨 −1</b><span>목숨은 사건 수만큼 15개. 끝나면 진짜 역사와 내 역사를 비교합니다.</span></div>
+        </div>
+        <div class="legend">
+          <span><i style="background:#3f86e0"></i>동인은 동쪽 파랑</span>
+          <span><i style="background:#ece6d6"></i>서인은 서쪽 흰색</span>
+          <span><i style="background:#e0503f"></i>남인은 남쪽 빨강</span>
+          <span><i style="background:#3d4157"></i>북인은 북쪽 검정</span>
+        </div>
+        <p class="note">카메라 영상은 브라우저 안에서만 실시간으로 처리되며, 외부로 저장되거나 전송되지 않습니다. (인식 모델만 처음에 인터넷에서 내려받습니다)</p>
+      </details>
+    </div>
+  </div>
+</div>
+
+<div id="loading" class="screen hidden">
+  <div class="ldInner">
+    <div class="kicker">즉위 준비 중</div>
+    <div class="logo goldText" style="font-size:clamp(70px,11vw,120px)">붕당</div>
+    <ul id="ldSteps"></ul>
+    <div class="ldTrack"><i id="ldBar"></i></div>
+    <p id="ldMsg"></p>
+    <button class="big hidden" id="ldSkip">기다리지 않고 시작하기</button>
+    <p class="note">처음 한 번은 인식 모델(약 10MB)을 내려받느라 시간이 걸릴 수 있어요.</p>
+  </div>
+</div>
+<div id="ending" class="screen hidden"><div class="eInner" id="eInner"></div></div>
+<div id="toast"></div>
+
+<script>
+'use strict';
+/* ============ 데이터 & 에셋 ============ */
+const START=1494, END=1800;
+const SERIF="'Gowun Batang','Nanum Myeongjo',serif", SANS="'Noto Sans KR','Malgun Gothic',sans-serif";
+
+/* 이미지 에셋 로드 */
+const IMGS={hat:new Image(),cloth:new Image(),face:new Image(),portrait:new Image()};
+const imgsLoaded={hat:false,cloth:false,face:false,portrait:false};
+for(const k in IMGS){IMGS[k].onload=()=>{imgsLoaded[k]=true;};}
+IMGS.hat.src='HAT.png';IMGS.cloth.src='cloth.png';IMGS.face.src='face.png';IMGS.portrait.src='assets/king_portrait.jpg';
+
+/* 의상 스프라이트 기준점 (원본 PNG 픽셀을 직접 측정한 값)
+   cloth.png 1024x1536 : 어깨 패드 윗선 y=150, 좌우 어깨 관절 간격 ≈ 470px, 깃 윗단 y=35, 중심 x=512
+   HAT.png   1254x1254 : 이마 띠 아래선 y=1190, 띠 너비 980px(x 136~1118), 중심 x=627            */
+const CLOTH={cx:511,shoulderY:150,shoulderSpan:450,collarTop:42,w:1024,h:1536};
+const HAT={cx:627,bandBottom:1190,bandW:980,size:1254};
+
+/* face.png 파츠 (x,y,w,h). 눈썹은 좌/우를 따로 잘라 각각의 실제 눈썹 위치에 붙인다 */
+const FACE_PARTS={
+  brow_angry:  {L:[438,598,169,90], R:[648,599,170,89]},
+  brow_worried:{L:[868,596,147,99], R:[1070,596,148,100]},
+  brow_bold:   {L:[24,1014,177,68], R:[225,1015,177,66]},
+  brow_normal: {L:[433,1021,174,66],R:[648,1021,175,66]},
+  // 콧수염류: 인중(코 밑~윗입술 사이)에 기준점, 폭은 입 너비의 k배
+  mustache_thin:   {r:[44,192,339,65],  ax:213.5,ay:222, k:1.75, at:'lip'},
+  mustache_goatee: {r:[461,166,332,231],ax:627,  ay:200, k:1.7,  at:'lip'},
+  // 턱수염류: 입 구멍 중심을 실제 입 중심에, 구멍 폭 = 입 너비 x k
+  beard_full:      {r:[865,66,353,348], ax:1041.5,ay:235,hole:153,k:1.25,at:'mouth'},
+  beard_white_long:{r:[47,453,333,425], ax:213.5,ay:522, hole:133,k:1.25,at:'mouth'},
+  // 안경: 두 렌즈 중심 간격 190px → 실제 두 눈동자 간격
+  glasses:         {r:[852,975,382,143],ax:1043, ay:1045,span:190}
+};
+
+const FACTIONS={
+  hungu :{name:'훈구파',short:'훈구',color:'#c99a4b',side:'L',parent:null,tree:[45,30],years:'~1567'},
+  sarim :{name:'사림파',short:'사림',color:'#4fae74',side:'R',parent:null,tree:[200,30],years:'~1575'},
+  daeyun:{name:'대윤',short:'대윤',color:'#9b7fd4',side:'L',parent:null,tree:[20,84],years:'1543~65'},
+  soyun :{name:'소윤',short:'소윤',color:'#d27aa9',side:'R',parent:null,tree:[70,84],years:'1543~65'},
+  dongin:{name:'동인',short:'동인',color:'#3f86e0',side:'R',parent:'sarim',tree:[150,84],years:'1575~91'},
+  seoin :{name:'서인',short:'서인',color:'#ece6d6',side:'L',parent:'sarim',tree:[250,84],years:'1575~1683'},
+  namin :{name:'남인',short:'남인',color:'#e0503f',side:'R',parent:'dongin',tree:[125,136],years:'1591~'},
+  bugin :{name:'북인',short:'북인',color:'#3d4157',side:'R',parent:'dongin',tree:[175,136],years:'1591~1623'},
+  noron :{name:'노론',short:'노론',color:'#f2d98c',side:'L',parent:'seoin',tree:[225,136],years:'1683~'},
+  soron :{name:'소론',short:'소론',color:'#9fb6d6',side:'R',parent:'seoin',tree:[275,136],years:'1683~'},
+};
+
+const KINGS=[
+  {n:'연산군',no:10,y:1494,royal:.75,beard:'mustache_thin',brow:'brow_angry'},
+  {n:'중종',no:11,y:1506,royal:.35,beard:'mustache_goatee',brow:'brow_normal'},
+  {n:'인종',no:12,y:1544.9,royal:.3,beard:'none',brow:'brow_worried'},
+  {n:'명종',no:13,y:1545.6,royal:.22,beard:'none',brow:'brow_worried'},
+  {n:'선조',no:14,y:1567,royal:.45,beard:'beard_full',brow:'brow_bold'},
+  {n:'광해군',no:15,y:1608,royal:.5,beard:'mustache_thin',brow:'brow_bold'},
+  {n:'인조',no:16,y:1623.3,royal:.3,beard:'mustache_goatee',brow:'brow_worried'},
+  {n:'효종',no:17,y:1649,royal:.55,beard:'beard_full',brow:'brow_bold'},
+  {n:'현종',no:18,y:1659,royal:.35,beard:'mustache_thin',brow:'brow_normal'},
+  {n:'숙종',no:19,y:1674.6,royal:.85,beard:'mustache_goatee',brow:'brow_bold'},
+  {n:'경종',no:20,y:1720,royal:.2,beard:'none',brow:'brow_worried'},
+  {n:'영조',no:21,y:1724,royal:.75,beard:'beard_white_long',brow:'brow_normal'},
+  {n:'정조',no:22,y:1776,royal:.9,beard:'beard_full',brow:'brow_bold',extra:'glasses'},
+];
+
+const EVENTS=[
+ {id:'muo',y:1498,title:'무오사화',era:'연산군 4년',
+  ctx:'김일손이 스승 김종직의 「조의제문」을 사초(역사 기록의 초안)에 실었다. 훈구파는 이 글이 세조를 비판한 것이라며 들고일어났다.',
+  L:{f:['hungu'],who:'훈구파 유자광',say:'전하! 김일손이 사초에 **세조 대왕을 헐뜯는** 글을 실었사옵니다. **엄히 벌하소서!**'},
+  R:{f:['sarim'],who:'사림파 김일손',say:'사관은 **있는 그대로 적을 뿐**이옵니다. **바른 기록을 벌하시면** 역사가 입을 닫사옵니다!'},
+  ans:'L',stamp:'처형·유배',real:'훈구파가 이겼다. 김일손 등이 처형되고, 이미 세상을 떠난 김종직은 무덤이 파헤쳐지는 벌(부관참시)을 받았다. 많은 사림이 귀양을 갔다.',
+  whatIf:'사림이 일찍 살아남으면 조선은 어떻게 달라질까?'},
+ {id:'gimyo',y:1519.6,title:'기묘사화',era:'중종 14년',
+  ctx:'조광조가 이끄는 사림은 공도 없이 공신이 된 사람들의 이름을 지우자는 “위훈 삭제”를 밀어붙였다. 공신들은 크게 반발했다.',
+  L:{f:['hungu'],who:'훈구파 남곤, 심정',say:'조광조 무리가 **공신들의 공을 멋대로 깎고** 있사옵니다! 조정을 **제 마음대로 흔드는** 무리이옵니다!'},
+  R:{f:['sarim'],who:'사림파 조광조',say:'**공 없이 공신이 된 자들**을 바로잡는 것이 **정의**이옵니다! 바른 정치를 펼치소서!'},
+  ans:'L',stamp:'사사·유배',real:'훈구파가 이겼다. 조광조는 귀양을 간 뒤 사약을 받았고(사사), 그를 따르던 사림들이 대거 쫓겨났다.',
+  whatIf:'조광조의 개혁이 성공한 조선은 어떤 모습일까?'},
+ {id:'eulsa',y:1545.8,title:'을사사화',era:'명종 즉위년',
+  ctx:'인종이 즉위 8개월 만에 세상을 떠나고 어린 명종이 왕이 되었다. 인종의 외삼촌 윤임(대윤)과 명종의 외삼촌 윤원형(소윤)이 맞섰다.',
+  L:{f:['daeyun'],who:'대윤 윤임',say:'**인종 임금을 모셔 온** 저희가 **조정을 지켜야** 하옵니다!'},
+  R:{f:['soyun'],who:'소윤 윤원형',say:'**어린 전하와 문정왕후**를 지킬 사람은 저희뿐이옵니다! 윤임이 **역모를 꾸몄사옵니다!**'},
+  ans:'R',stamp:'사사',real:'소윤이 이겼다. 윤임은 사약을 받았고, 대윤 편에 섰던 사림들도 함께 화를 입었다.',
+  whatIf:'대윤이 이기면 척신 정치는 달라질까?'},
+ {id:'eulhae',y:1575.3,title:'동인과 서인의 탄생',era:'선조 8년',
+  ctx:'사림이 조정을 차지한 뒤, 관리 인사를 맡는 “이조전랑” 자리를 두고 김효원과 심의겸이 부딪쳤다. 사림이 둘로 갈라졌다!',
+  L:{f:['seoin'],who:'서인 심의겸',say:'**선배 사림의 경험**을 믿어 주시옵소서! 저희가 **사림을 지켜 왔사옵니다.**'},
+  R:{f:['dongin'],who:'동인 김효원',say:'**왕실 외척**인 심의겸이 아니라, **젊고 깨끗한 선비들**을 믿어 주소서!'},
+  ans:'R',stamp:'지방 발령',real:'이이의 중재로 김효원과 심의겸 두 사람 모두 지방으로 보내졌지만, 젊은 선비가 많은 동인이 조정에서 우세해졌다.',
+  whatIf:'서인이 먼저 조정을 잡는다면?'},
+ {id:'gichuk',y:1589.8,title:'기축옥사',era:'선조 22년',
+  ctx:'동인이던 정여립이 반란을 꾸몄다는 고발이 들어왔다. 서인 정철이 사건 조사를 맡았다.',
+  L:{f:['seoin'],who:'서인 정철',say:'**정여립과 가까웠던 동인들**을 **모두 조사해야** 하옵니다!'},
+  R:{f:['dongin'],who:'동인 이발',say:'**정여립 한 사람의 일**로 **동인 전체를 죄인으로** 몰고 있사옵니다!'},
+  ans:'L',stamp:'처형·유배',real:'서인이 사건을 주도했다. 약 3년에 걸쳐 동인 1,000여 명이 죽거나 귀양을 갔다.',
+  whatIf:'동인이 기축옥사를 막아낸다면?'},
+ {id:'geonjeo',y:1591.2,title:'건저의 사건',era:'선조 24년',
+  ctx:'서인 정철이 광해군을 세자로 세우자고 건의했다(건저의). 그런데 선조는 다른 아들 신성군을 아끼고 있었다.',
+  L:{f:['seoin'],who:'서인 정철',say:'나라의 앞날을 위해 **광해군을 세자로** 세우셔야 하옵니다!'},
+  R:{f:['dongin'],who:'동인 이산해',say:'정철이 **전하의 뜻을 거스르고** 멋대로 일을 꾸몄사옵니다!'},
+  ans:'R',stamp:'파직·유배',real:'선조가 크게 노해 정철은 파직되고 귀양을 갔다. 이때 정철을 얼마나 벌할지를 두고 동인이 남인(온건)과 북인(강경)으로 갈라진다.',
+  whatIf:'정철이 무사하면 동인은 갈라지지 않을까?'},
+ {id:'injo',y:1623.2,title:'인조반정',era:'광해군 15년',
+  ctx:'광해군은 영창대군을 죽게 하고 인목대비를 가두었다(폐모살제). 서인이 임금을 바꾸는 반정을 일으켰다. 지금 당신은 광해군입니다!',
+  L:{f:['seoin'],who:'서인 김류, 이귀',say:'**어머니를 가두고 동생을 죽게 한** 것은 도리를 어긴 일이옵니다! **새 임금을 세워야** 하옵니다!'},
+  R:{f:['bugin'],who:'북인 이이첨',say:'전하께서는 **전쟁 뒤 나라를 다시 세우셨사옵니다!** **반역자들을 막으소서!**'},
+  ans:'L',stamp:'처형',real:'광해군은 쫓겨나 강화도와 제주도로 귀양을 갔고, 북인 이이첨과 정인홍 등이 처형되었다. 북인은 이후 역사에서 사라진다.',
+  whatIf:'광해군이 끝까지 왕위를 지키는 역사를 만들어 보세요.'},
+ {id:'gihae',y:1659.5,title:'기해예송',era:'현종 즉위년',
+  ctx:'효종이 세상을 떠났다. 효종의 새어머니인 자의대비는 상복을 얼마 동안 입어야 할까?',
+  L:{f:['seoin'],who:'서인 송시열',say:'효종은 **둘째 아들**이시니 **1년(기년)**이 예법에 맞사옵니다.'},
+  R:{f:['namin'],who:'남인 허목, 윤휴',say:'효종은 **임금이셨사옵니다!** **3년 상복**을 입으셔야 하옵니다!'},
+  ans:'L',stamp:'유배',real:'서인의 1년설이 받아들여졌다. 이를 강하게 비판한 남인 윤선도는 귀양을 갔다.',
+  whatIf:'남인의 3년설이 받아들여진다면?'},
+ {id:'gabin',y:1674.3,title:'갑인예송',era:'현종 15년',
+  ctx:'이번에는 효종의 왕비 인선왕후가 세상을 떠났다. 자의대비의 상복 기간을 다시 정해야 한다!',
+  L:{f:['seoin'],who:'서인 송시열',say:'**둘째 며느리의 예법**대로 **9개월(대공)**이면 충분하옵니다.'},
+  R:{f:['namin'],who:'남인 허적',say:'인선왕후는 **왕비이셨사옵니다!** **1년(기년)**이 옳사옵니다!'},
+  ans:'R',stamp:'파직·유배',real:'남인의 1년설이 채택되어 남인이 정권을 잡았고, 송시열은 귀양을 갔다.',
+  whatIf:'서인이 계속 집권한다면 환국이 일어날까?'},
+ {id:'gyeongsin',y:1680.3,title:'경신환국',era:'숙종 6년',
+  ctx:'남인 영의정 허적이 왕실의 기름 먹인 천막(유악)을 허락 없이 가져다 썼다. 숙종은 크게 노했다.',
+  L:{f:['seoin'],who:'서인',say:'허적이 **왕실 물건을 함부로** 썼사옵니다! 게다가 그 아들 허견이 **역모를 꾸몄다** 하옵니다!'},
+  R:{f:['namin'],who:'남인 허적',say:'**비가 와서 잠시 빌린 것뿐**이옵니다! **모함이옵니다!**'},
+  ans:'L',stamp:'사사',real:'남인이 쫓겨나고 서인이 정권을 잡았다. 허적과 윤휴는 사약을 받았다.',
+  whatIf:'남인이 버티면 노론과 소론은 생겨날까?'},
+ {id:'gisa',y:1689.1,title:'기사환국',era:'숙종 15년',
+  ctx:'희빈 장씨가 낳은 왕자(훗날 경종)를 원자로 정하려 하자, 서인이 반대하고 나섰다.',
+  L:{f:['noron','soron'],who:'서인(노론·소론) 송시열',say:'중전(인현왕후)께서 **아직 젊으시니**, **원자를 정하기엔 이르옵니다!**'},
+  R:{f:['namin'],who:'남인',say:'**왕자님을 원자로** 세우는 것이 **나라를 안정시키는 길**이옵니다!'},
+  ans:'R',stamp:'사사·폐위',real:'남인이 다시 정권을 잡았다. 송시열은 사약을 받았고, 인현왕후는 왕비 자리에서 쫓겨났다.',
+  whatIf:'송시열이 살아남는 역사는 어떨까?'},
+ {id:'gapsul',y:1694.3,title:'갑술환국',era:'숙종 20년',
+  ctx:'숙종은 인현왕후를 쫓아낸 일을 후회하기 시작했다. 서인이 인현왕후를 다시 모시자고 나섰다.',
+  L:{f:['noron','soron'],who:'서인(노론·소론)',say:'**인현왕후를 다시 중전으로** 모시소서!'},
+  R:{f:['namin'],who:'남인',say:'**중전 장씨를 지켜야** 하옵니다! 서인이 **음모를 꾸미고** 있사옵니다!'},
+  ans:'L',stamp:'축출',real:'서인이 돌아왔다. 인현왕후가 다시 왕비가 되고, 장씨는 희빈으로 내려갔다. 남인은 이후 다시 크게 일어서지 못했다.',
+  whatIf:'장씨가 끝까지 중전으로 남는다면?'},
+ {id:'sinim',y:1721.7,title:'신임사화',era:'경종 1~2년',
+  ctx:'몸이 약한 경종에게 아들이 없자, 노론은 동생 연잉군(훗날 영조)을 세제로 세우고 나랏일까지 대신 맡기자고 했다.',
+  L:{f:['noron'],who:'노론 김창집',say:'**세제(연잉군)**께서 **나랏일을 대신 보시게(대리청정)** 하소서!'},
+  R:{f:['soron'],who:'소론 김일경',say:'노론이 **전하를 밀어내려** 하옵니다! 이것은 **역모이옵니다!**'},
+  ans:'R',stamp:'사사',real:'소론이 이겼다. 노론 4대신(김창집, 이이명, 이건명, 조태채)이 사약을 받았다(1721~1722).',
+  whatIf:'노론 4대신이 살아남는다면?'},
+ {id:'eulsa2',y:1725.1,title:'을사처분',era:'영조 1년',
+  ctx:'연잉군이 왕(영조)이 되었다. 영조를 지지하다 죽은 노론 대신들의 억울함을 풀어 달라는 목소리가 높다.',
+  L:{f:['noron'],who:'노론',say:'저희는 **전하를 지키려다 억울하게** 죽었사옵니다! **명예를 되찾아** 주소서!'},
+  R:{f:['soron'],who:'소론',say:'**노론만 쓰시면** 조정이 **한쪽으로 기울어지옵니다!**'},
+  ans:'L',stamp:'처형·축출',real:'영조 즉위 직후 소론 강경파 김일경이 처형되었고, 1725년 을사처분으로 노론이 조정을 차지했다.',
+  whatIf:'영조가 소론을 택한다면?'},
+ {id:'tangpyeong',y:1742.3,title:'탕평책',era:'영조 18년',both:true,
+  ctx:'노론과 소론의 싸움은 끝이 없다. 영조는 결심했다. 한쪽 손을 들면 그 붕당만, 양손을 모두 들면 “탕평”!',
+  L:{f:['noron'],who:'노론',say:'전하, **노론만 믿으소서!** 소론은 **이인좌의 난(1728)**에도 가담했사옵니다!'},
+  R:{f:['soron'],who:'소론',say:'소론도 **전하의 신하**이옵니다! 노론만 쓰시면 **또 피바람이 부옵니다!**'},
+  ans:'B',stamp:'축출',real:'영조는 여러 붕당을 고루 쓰는 탕평책을 펴고, 성균관 앞에 탕평비를 세워 편을 가르지 말라는 뜻을 새겼다.',
+  whatIf:'한 붕당만 믿는 영조의 조정은 어떨까?'},
+];
+
+// [연도, 종류, 붕당, 이름, 설명, 세력 변화]
+const AMB=[
+ [1495,'person','sarim','김종직','사림의 큰 스승. 「조의제문」을 씀 (1492년에 세상을 떠남)',2],
+ [1496,'person','hungu','유자광','세조 때 공을 세운 훈구 공신',2],
+ [1497,'person','sarim','김일손','김종직의 제자이자 사관(역사 기록관)',1],
+ [1500,'person','sarim','김굉필','『소학』을 몸소 실천한 선비',1],
+ [1502,'person','sarim','정여창','김종직의 제자, 성리학자',1],
+ [1504,'incident',null,'갑자사화','폐비 윤씨 사건으로 훈구와 사림 모두 큰 피해',{hungu:-12,sarim:-10}],
+ [1506,'incident','hungu','중종반정','연산군이 쫓겨나고 중종 즉위. 반정 공신(훈구)의 힘이 커짐',12],
+ [1515,'person','sarim','조광조','중종이 발탁한 개혁파 사림',10],
+ [1518,'culture','sarim','현량과','시험 대신 추천으로 인재를 뽑자! (조광조의 건의)',4],
+ [1519,'person','hungu','남곤·심정','조광조와 맞선 훈구 대신',3],
+ [1519.3,'incident','hungu','주초위왕 이야기','나뭇잎에 “조씨가 왕이 된다”는 글자가 새겨졌다는 전해 오는 이야기',3],
+ [1543,'culture','sarim','백운동서원','주세붕이 세운 우리나라 첫 서원',4],
+ [1547,'incident','soyun','수렴청정','어린 명종 대신 문정왕후가 나라를 다스림. 윤원형의 힘이 커짐',8],
+ [1550,'culture','sarim','소수서원','임금이 이름을 내려 준 첫 사액 서원 (이황의 건의)',4],
+ [1555,'person','sarim','이황','영남학파의 큰 스승. 훗날 동인의 뿌리',4],
+ [1565,'incident',null,'윤원형의 몰락','문정왕후가 세상을 떠나며 척신 정치가 끝남',{soyun:-30,daeyun:-15}],
+ [1567,'incident','sarim','사림의 시대','선조 즉위. 사림이 조정을 차지함',15],
+ [1568,'person','sarim','이이','기호학파의 큰 스승. 훗날 서인의 뿌리',4],
+ [1572,'person','sarim','심의겸','명종 왕비의 동생이자 선배 사림',2],
+ [1574,'person','sarim','김효원','이조전랑이 된 젊은 사림',2],
+ [1578,'person','seoin','성혼','이이의 벗이자 서인의 스승',3],
+ [1580,'person','seoin','정철','「관동별곡」을 지은 서인. 가사 문학의 대가',3],
+ [1583,'person','seoin','이이의 중재','동인과 서인을 화해시키려 애씀 (1584년에 세상을 떠남)',2],
+ [1587,'person','dongin','류성룡','이황의 제자, 동인',3],
+ [1589.3,'person','dongin','정여립','동인 선비. 반란을 꾸몄다는 고발을 당함',-2],
+ [1591.6,'person','bugin','이산해','북인의 우두머리 (강경파)',3],
+ [1591.8,'person','namin','류성룡','남인의 중심 (온건파)',3],
+ [1592,'war',null,'임진왜란','일본이 조선을 침략하다 (1592~1598)',{all:-6}],
+ [1592.6,'person',null,'이순신','류성룡의 추천으로 발탁되어 바다를 지킨 장군',0],
+ [1598,'incident','bugin','북인의 부상','의병장을 많이 낸 북인이 힘을 얻음',8],
+ [1602,'person','bugin','정인홍','의병장 출신, 북인의 큰 어른',3],
+ [1608,'culture','namin','대동법','특산물 대신 쌀로 세금을! (경기도부터, 이원익의 건의)',3],
+ [1613,'incident','bugin','계축옥사','영창대군이 강화도로 쫓겨남 (북인 이이첨 주도)',6],
+ [1618,'incident','bugin','폐모','인목대비를 서궁에 가둠',4],
+ [1624,'incident','seoin','이괄의 난','반정 공신 이괄의 반란. 인조가 공주로 피난',-4],
+ [1627,'war',null,'정묘호란','후금이 쳐들어오다',{all:-4}],
+ [1636.9,'war',null,'병자호란','청이 쳐들어오다. 인조가 남한산성에서 항복 (1637)',{all:-6}],
+ [1637.3,'person','seoin','최명길과 김상헌','같은 서인이지만 “화해하자(주화)”와 “끝까지 싸우자(척화)”로 맞섬',0],
+ [1649,'person','seoin','송시열','효종의 스승. 북벌을 꿈꾼 서인의 큰 어른',6],
+ [1651,'culture','seoin','대동법 확대','김육의 노력으로 충청도까지 넓어짐',2],
+ [1655,'person','namin','허목','남인 학자, 예법 전문가',3],
+ [1657,'person','namin','윤휴','송시열과 맞선 남인 학자',3],
+ [1658,'person','namin','윤선도','「어부사시사」를 지은 남인 문인',2],
+ [1675,'person','namin','허적','남인 영의정',5],
+ [1683.3,'person','noron','송시열','노론의 영수. “남인을 엄하게 벌하자”',3],
+ [1683.6,'person','soron','윤증','소론의 영수. 송시열의 제자였지만 갈라섬',3],
+ [1688,'incident','namin','왕자 탄생','희빈 장씨가 왕자(훗날 경종)를 낳음',6],
+ [1701,'incident','namin','무고의 옥','인현왕후가 세상을 떠난 뒤 희빈 장씨가 사약을 받음',-6],
+ [1710,'person','noron','김창집','노론의 대신',3],
+ [1714,'person','soron','최석정','소론의 재상',3],
+ [1727,'incident','soron','정미환국','영조가 소론 온건파를 다시 등용',6],
+ [1728,'incident',null,'이인좌의 난','소론 강경파와 남인 일부가 일으킨 반란이 진압됨',{soron:-10,namin:-6}],
+ [1750,'culture',null,'균역법','백성의 군포 부담을 2필에서 1필로!',{royal:.05}],
+ [1762,'incident',null,'사도세자의 죽음','이후 조정이 시파(세자 동정)와 벽파(영조 지지)로 갈림',{all:-2}],
+ [1776.3,'culture',null,'규장각','정조가 세운 왕실 도서관 겸 연구 기관',{royal:.05}],
+ [1788,'person','namin','채제공','정조가 믿은 남인 재상',8],
+ [1792,'person','namin','정약용','거중기를 만든 남인 실학자',4],
+ [1793,'culture',null,'장용영','정조의 친위 부대',{royal:.05}],
+ [1796,'culture',null,'수원화성','정조의 꿈이 담긴 성곽 완성',{royal:.03}],
+];
+
+const STRUCT=[
+ {y:1543.5,k:'spawn',ids:[['daeyun',32],['soyun',34]],label:'척신 등장: 대윤(윤임)과 소윤(윤원형)'},
+ {y:1565.5,k:'fade',ids:['daeyun','soyun'],label:'척신 정치가 끝나다'},
+ {y:1567.5,k:'fade',ids:['hungu'],label:'훈구파, 조정에서 물러나다'},
+ {y:1575.0,k:'split',id:'sarim',into:['dongin','seoin'],label:'사림이 동인과 서인으로!'},
+ {y:1591.4,k:'split',id:'dongin',into:['namin','bugin'],label:'동인이 남인(온건)과 북인(강경)으로!'},
+ {y:1640,k:'fade',ids:['bugin'],label:'북인, 역사 속으로 사라지다',keepIf:{ev:'injo',side:'R'}},
+ {y:1683,k:'split',id:'seoin',into:['noron','soron'],label:'서인이 노론과 소론으로!'},
+];
+
+
+// 조용한 해를 채우는 '그 시절 조선' 이야기 (초등 사회 교과서 수준) [연도(타이밍), 표시 연도, 종류, 제목, 설명]
+const HIST=[
+ [1504.5,'1504','life','한글 사용 금지','연산군을 비판하는 한글 벽서(글)가 나붙자, 연산군은 한글을 가르치고 배우는 것을 금지했어요.'],
+ [1506.8,'1506','person','치마바위 이야기','중종반정 뒤 궁에서 쫓겨난 왕비 신씨가, 중종이 볼 수 있도록 인왕산 바위에 붉은 치마를 걸어 두었다는 이야기가 전해져요.'],
+ [1508.5,'1500년대','culture','하얀 백자의 시대','조선 사람들은 깨끗하고 소박한 흰 백자를 좋아했어요. 선비의 검소한 마음을 닮은 그릇이에요.'],
+ [1510.3,'1510','war','삼포왜란','부산포·제포·염포(삼포)에 살던 왜인들이 난을 일으켰어요. 이후 일본과의 무역이 크게 줄었어요.'],
+ [1512.5,'1512','person','임신약조','삼포왜란 뒤 끊겼던 일본과의 무역을 제포 한 곳에서만 다시 허락했어요.'],
+ [1514,'1500년대','life','양반과 상민','조선은 양반·중인·상민·천민으로 신분이 나뉜 사회였어요. 대부분의 백성은 농사짓는 상민이었어요.'],
+ [1517.3,'1517','life','향약','조광조와 사림은 마을 사람들이 서로 돕고 잘못을 바로잡자는 약속 ‘향약’을 널리 퍼뜨렸어요.'],
+ [1521,'1500년대','culture','과거 시험','관리가 되려면 과거에 합격해야 했어요. 장원 급제하면 머리에 어사화를 꽂고 마을을 돌았어요.'],
+ [1524,'1500년대','life','김치에는 아직…','이때 김치에는 고추가 들어가지 않았어요! 고추는 임진왜란 무렵 들어왔다고 해요.'],
+ [1527,'1527','culture','『훈몽자회』','최세진이 어린이 한자 공부 책을 펴냈어요. 한글 자음에 ‘기역, 니은’ 같은 이름을 붙인 책으로도 유명해요.'],
+ [1528,'1527','life','작서의 변','세자의 생일에 불에 그을린 쥐가 궁궐에 걸린 사건이 일어났어요. 세자를 저주했다는 의심으로 큰 소동이 벌어졌어요.'],
+ [1530.5,'1530','culture','『신증동국여지승람』','조선 각 고을의 산과 강, 인물, 풍속을 자세히 정리한 지리책이 완성되었어요.'],
+ [1533,'1500년대','culture','『소학』 읽기','사림은 어린이의 예절과 효도를 가르치는 『소학』을 중요하게 여겨 널리 읽게 했어요.'],
+ [1536,'1536','life','서당에서 글공부','마을마다 서당이 생겨 아이들이 『천자문』으로 한자를 익혔어요. 훈장님께 회초리를 맞기도 했대요.'],
+ [1540,'1500년대','life','모내기','남쪽 지방부터 모를 따로 길러 논에 옮겨 심는 모내기가 퍼지기 시작했어요. 일손은 덜고 수확은 늘었어요.'],
+ [1555.5,'1555','war','을묘왜변','왜구가 전라도 해안에 크게 쳐들어왔어요. 이 일로 나라를 지키는 회의 기구 ‘비변사’가 늘 열리게 되었어요.'],
+ [1559.5,'1559~1562','life','임꺽정','흉년과 관리들의 수탈로 백성들이 힘들던 때, 황해도에서 임꺽정 무리가 관아를 습격했어요.'],
+ [1568.5,'1568','culture','『성학십도』','이황이 어린 선조에게 성리학의 핵심을 열 장의 그림으로 정리해 올렸어요.'],
+ [1576,'1575','culture','『성학집요』','이이가 임금이 공부해야 할 내용을 정리한 책을 선조에게 올렸어요.'],
+ [1583.5,'1583','person','이이의 ‘10만 양병설’','이이가 전쟁에 대비해 군사 10만을 길러야 한다고 주장했다는 이야기가 전해져요.'],
+ [1590.5,'1590','person','일본에 간 통신사','황윤길과 김성일이 일본을 다녀왔지만, 일본이 쳐들어올지에 대해 서로 다르게 보고했어요.'],
+ [1592.45,'1592','war','한산도 대첩','이순신이 학이 날개를 편 모양의 ‘학익진’으로 일본 수군을 크게 무찔렀어요.'],
+ [1592.8,'1592','war','진주 대첩','김시민 장군과 백성들이 진주성을 끝까지 지켜 냈어요.'],
+ [1593.2,'1593','war','행주 대첩','권율 장군과 군사, 백성들이 힘을 모아 행주산성에서 크게 이겼어요.'],
+ [1597.6,'1597','war','정유재란과 명량 해전','일본이 다시 쳐들어왔어요. 이순신은 명량에서 단 13척의 배로 훨씬 많은 적을 물리쳤어요.'],
+ [1598.85,'1598','war','노량 해전','이순신이 마지막 전투에서 적의 총탄에 맞아 숨졌어요. “나의 죽음을 알리지 마라.”'],
+ [1610.3,'1610','culture','『동의보감』','허준이 우리 땅의 약재와 치료법을 정리한 의학책을 완성했어요 (1613년 펴냄).'],
+ [1619.3,'1619','person','광해군의 중립 외교','명과 후금이 다투자, 광해군은 강홍립에게 형편을 보아 행동하라고 하며 전쟁에 휩쓸리지 않으려 했어요.'],
+ [1637.6,'1637','war','청에 끌려간 왕자들','병자호란 뒤 소현세자와 봉림대군(훗날 효종)이 청나라 심양에 볼모로 끌려갔어요.'],
+ [1645.2,'1645','culture','소현세자의 귀국','소현세자가 청에서 서양의 천문학·과학 책과 물건을 가지고 돌아왔어요.'],
+ [1653.6,'1653','person','하멜 표류','네덜란드 사람 하멜이 제주도에 떠밀려 왔어요. 훗날 『하멜 표류기』로 조선을 유럽에 알렸어요.'],
+ [1654.4,'1654·1658','war','나선 정벌','청의 요청으로 조선의 조총 부대가 러시아군과 싸워 이겼어요.'],
+ [1670.5,'1670~1671','life','경신 대기근','큰 가뭄과 홍수, 전염병이 겹쳐 수많은 백성이 굶주린 큰 흉년이 들었어요.'],
+ [1678.2,'1678','life','상평통보','동전 ‘상평통보’가 만들어져 장터에서 널리 쓰이기 시작했어요.'],
+ [1693.5,'1693·1696','person','안용복','어부 안용복이 일본에 건너가 울릉도와 독도가 조선 땅임을 따졌어요.'],
+ [1699,'1690년대','life','장시가 늘어나다','전국에 5일마다 열리는 장이 생겨나고, 보부상들이 물건을 지고 이 장 저 장을 다녔어요.'],
+ [1708.3,'1708','life','대동법, 전국으로','특산물 대신 쌀로 세금을 내는 대동법이 황해도까지 시행되어 거의 전국으로 넓어졌어요.'],
+ [1712.4,'1712','culture','백두산정계비','조선과 청이 백두산에 국경을 표시한 비석을 세웠어요.'],
+ [1717,'1700년대','culture','한글 소설 유행','『홍길동전』, 『춘향전』 같은 한글 소설이 널리 읽히고, 이야기꾼(전기수)이 장터에서 소설을 읽어 주었어요.'],
+ [1735,'1735','person','사도세자 탄생','영조가 마흔이 넘어 얻은 아들 사도세자가 태어났어요.'],
+ [1739,'1700년대','culture','진경산수화','정선이 중국 산수가 아닌 우리 산천을 직접 보고 그렸어요. (「인왕제색도」, 1751)'],
+ [1746.5,'1746','culture','『속대전』','영조가 『경국대전』 이후 바뀐 법을 모아 새 법전을 펴냈어요.'],
+ [1755,'1700년대','culture','풍속화','김홍도와 신윤복이 서당, 씨름, 빨래터처럼 백성들의 생활 모습을 그렸어요.'],
+ [1760.3,'1760','life','청계천 공사','영조가 백성 수만 명을 동원해 막힌 청계천 바닥을 파내 홍수를 막았어요.'],
+ [1763.7,'1763','life','고구마가 들어오다','통신사로 일본에 간 조엄이 고구마를 들여왔어요. 흉년에 백성을 살리는 작물이 되었어요.'],
+ [1770.5,'1770','culture','『동국문헌비고』','우리나라의 땅, 제도, 문화를 모은 백과사전 같은 책이 완성되었어요.'],
+ [1771.5,'1771','life','신문고를 다시 달다','영조가 억울한 백성이 북을 쳐서 알릴 수 있는 신문고를 다시 설치했어요.'],
+ [1778.4,'1778','culture','『북학의』','박제가가 청나라의 앞선 기술과 수레·배를 배워 백성을 잘살게 하자고 주장했어요.'],
+ [1780.6,'1780','culture','『열하일기』','박지원이 청나라에 다녀온 여행기를 재미있게 썼어요. 실학자들이 즐겨 읽었어요.'],
+ [1785.5,'1785','culture','『대전통편』','정조가 조선의 법을 다시 하나로 정리한 법전을 펴냈어요.'],
+ [1789.6,'1789','person','아버지를 수원으로','정조가 아버지 사도세자의 무덤을 수원 화산으로 옮겼어요. 수원 화성의 시작이에요.'],
+ [1791.2,'1791','life','신해통공','정조가 큰 상인들만 누리던 특권을 없애, 누구나 자유롭게 장사할 수 있게 했어요.'],
+ [1794.1,'1794','culture','수원 화성 공사 시작','정약용이 설계를 돕고, 거중기로 무거운 돌을 쉽게 들어 올렸어요.'],
+ [1795.3,'1795','person','정조의 화성 행차','정조가 어머니 혜경궁 홍씨의 회갑 잔치를 위해 화성으로 성대한 행차를 떠났어요.'],
+];
+// 4년 넘게 조용할 때 자동으로 보여 줄 생활사 이야기 [시작연도, 끝연도, 표시연도, 제목, 설명]
+const FILLER=[
+ [1494,1800,'조선','경복궁','조선의 법궁. 임금은 근정전에서 신하들의 인사를 받고 나랏일을 의논했어요.'],
+ [1494,1800,'조선','상소','신하와 선비들은 임금에게 글(상소)을 올려 자기 생각을 전했어요. 도끼를 들고 올리는 ‘지부상소’도 있었대요.'],
+ [1494,1800,'조선','경연','임금도 매일 공부했어요! 신하들과 함께 유교 경전을 읽고 토론하는 시간을 ‘경연’이라고 해요.'],
+ [1494,1800,'조선','사관의 붓','사관은 임금 곁에서 모든 말과 행동을 기록했어요. 이 기록이 모여 『조선왕조실록』이 되었어요.'],
+ [1494,1800,'조선','해시계와 물시계','궁궐에서는 앙부일구(해시계)와 자격루(물시계)로 시간을 알렸어요.'],
+ [1494,1650,'조선','봉수','산꼭대기 봉수대에서 낮에는 연기, 밤에는 불빛으로 나라의 위급한 소식을 전했어요.'],
+ [1494,1800,'조선','한양의 시전','종로에는 나라가 허락한 상점 거리 ‘시전’이 늘어서 비단, 종이, 생선 등을 팔았어요.'],
+ [1600,1800,'조선 후기','보부상','봇짐장수와 등짐장수(보부상)가 전국의 장터를 돌며 물건을 팔고 소식을 전했어요.'],
+ [1650,1800,'조선 후기','판소리와 탈춤','장터에서는 판소리와 탈춤 공연이 열려 백성들이 함께 웃고 울었어요.'],
+ [1700,1800,'조선 후기','실학','백성의 삶에 실제로 도움이 되는 학문을 하자는 ‘실학’이 생겨났어요.'],
+];
+const TL=[];
+EVENTS.forEach((e,i)=>TL.push({y:e.y,k:'event',i}));
+AMB.forEach(a=>TL.push({y:a[0],k:'amb',a:{y:a[0],t:a[1],f:a[2],n:a[3],c:a[4],d:a[5]}}));
+STRUCT.forEach(s=>TL.push(s));
+HIST.forEach(h=>TL.push({y:h[0],k:'hist',h:{y:h[0],yl:h[1],t:h[2],n:h[3],c:h[4]}}));
+TL.push({y:END,k:'end'});
+TL.sort((a,b)=>a.y-b.y);
+
+const JOKES=['전하…? 어디 계시옵니까?','(왕이 붕당 사이에 끼었다!)','숨… 숨이 막히옵니다…','왕권이 쪼그라들었사옵니다!','신하들이 너무 커졌사옵니다!'];
+
+/* ============ 유틸 ============ */
+const $=s=>document.querySelector(s);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const lerp=(a,b,t)=>a+(b-a)*t;
+function hexRgb(h){h=h.replace('#','');return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
+function mix(h,t,to){const a=hexRgb(h),b=to==='w'?[255,255,255]:[0,0,0];return 'rgb('+a.map((v,i)=>Math.round(v+(b[i]-v)*t)).join(',')+')';}
+function lum(h){const c=hexRgb(h);return (c[0]*.299+c[1]*.587+c[2]*.114)/255;}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function pick(a){return a[Math.floor(Math.random()*a.length)];}
+let toastT=null;
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),4200);}
+
+/* ============ 캔버스 ============ */
+const cv=$('#cv'), ctx=cv.getContext('2d');
+let W=800,H=600,DPR=1;
+function resize(){DPR=Math.min(2,window.devicePixelRatio||1);W=innerWidth;H=innerHeight;cv.width=Math.round(W*DPR);cv.height=Math.round(H*DPR);ctx.setTransform(DPR,0,0,DPR,0,0);}
+addEventListener('resize',resize);resize();
+function rr(x,y,w,h,r){r=Math.max(0,Math.min(r,w/2,h/2));ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+const DUST=Array.from({length:70},()=>({x:Math.random(),y:Math.random(),r:Math.random()*1.6+.3,s:Math.random()*.01+.003}));
+
+/* ============ 소리 ============ */
+let AC=null, muted=false;
+function tone(freqs,dur,type,vol,gap){if(!AC||muted)return;const t0=AC.currentTime;freqs.forEach((f,i)=>{const o=AC.createOscillator(),g=AC.createGain();o.type=type||'sine';o.frequency.value=f;const st=t0+(gap||0)*i;g.gain.setValueAtTime(0.0001,st);g.gain.exponentialRampToValueAtTime(vol||.12,st+.02);g.gain.exponentialRampToValueAtTime(0.0001,st+dur);o.connect(g);g.connect(AC.destination);o.start(st);o.stop(st+dur+.05);});}
+const sGong=()=>tone([98,147,196],2.4,'sine',.22);
+const sGood=()=>tone([523,659,784,1046],.5,'triangle',.1,.09);
+const sBad=()=>tone([220,185,147],.55,'sawtooth',.05,.14);
+const sKing=()=>tone([392,494,587],.9,'triangle',.07,.07);
+const sSplit=()=>tone([330,440],.6,'sine',.08,.12);
+
+/* ============ 카메라 & AI 인식 (MediaPipe Tasks: 얼굴 478점 + 몸·팔 33점) ============
+   좌표 규칙: 화면은 거울처럼 좌우 반전해서 보여주므로 x는 모두 (1 - x)로 바꿔 저장한다.
+   거울 화면에서 '화면 왼쪽'에 보이는 것은 사람의 '왼쪽'(포즈 11·13·15, 얼굴 263·362·300…)이다.
+   (이전 버전은 이 좌우를 반대로 잡아 눈 기울기가 ±180°로 계산되면서 모자·옷이 뒤집히듯 돌아갔다) */
+const video=$('#cam');
+let camOn=false;
+const MP_VER='0.10.21';
+const MP_CDN='https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@'+MP_VER;
+const MODEL_URLS={
+  face:['models/face_landmarker.task','https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task'],
+  pose:['models/pose_landmarker_lite.task','https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task']
+};
+const AI={state:'off',face:null,pose:null,dev:'',lastVT:-1,frame:0,poseEvery:1,cost:0};
+let showLM=false;
+let clothLift=.2;try{const v=parseFloat(localStorage.getItem('bd_clothLift2'));if(!isNaN(v))clothLift=v;}catch(e){}
+
+/* 사용하는 얼굴 랜드마크 */
+const BROW={
+  L:{up:[300,293,334,296,336],lo:[276,283,282,295,285],outer:[300,276],inner:[336,285]}, // 화면 왼쪽 눈썹(사람의 왼쪽)
+  R:{up:[70,63,105,66,107],  lo:[46,53,52,65,55],     outer:[70,46],  inner:[107,55]}   // 화면 오른쪽 눈썹
+};
+const FACE_IDX=[...new Set([...BROW.L.up,...BROW.L.lo,...BROW.R.up,...BROW.R.lo,
+  33,133,362,263,468,473, 1,2,0,13,14,17,61,291, 10,152,234,454])];
+const POSE_IDX=[0,11,12,13,14,15,16];
+
+/* 떨림 제거용 One Euro 필터 (느릴 땐 부드럽게, 빠를 땐 즉각 반응) */
+class OneEuro{constructor(mc,b,dc){this.mc=mc;this.b=b;this.dc=dc;this.x=null;this.dx=0;this.t=0;}
+  al(c,dt){const r=2*Math.PI*c*dt;return r/(r+1);}
+  f(v,t){if(this.x===null||t-this.t>.5){this.x=v;this.dx=0;this.t=t;return v;}
+    const dt=Math.max(1e-3,t-this.t);this.t=t;const d=(v-this.x)/dt;this.dx+=this.al(this.dc,dt)*(d-this.dx);
+    const c=this.mc+this.b*Math.abs(this.dx);this.x+=this.al(c,dt)*(v-this.x);return this.x;}}
+const FILT=new Map();
+function oe(k,v,t,mc,b){let f=FILT.get(k);if(!f){f=new OneEuro(mc||1.4,b||3.5,1);FILT.set(k,f);}return f.f(v,t);}
+
+/* 추적 상태 */
+const T={face:null,faceSeen:0,faceOK:false,faceA:0,pose:null,poseSeen:0,bodyOK:false,bodyA:0,
+  hands:{L:{up:false,score:0,x:.2,y:.8},R:{up:false,score:0,x:.8,y:.8}},both:false,roll:0};
+
+async function createLM(Cls,fileset,urls,extra){
+  const list=location.protocol.startsWith('http')?urls:urls.slice(1); // file:// 에서는 로컬 모델을 읽을 수 없음
+  for(const url of list)for(const delegate of ['GPU','CPU']){
+    try{const lm=await Cls.createFromOptions(fileset,{baseOptions:{modelAssetPath:url,delegate},runningMode:'VIDEO',...extra});AI.dev=delegate;return lm;}
+    catch(e){console.warn('[AI] 모델 로드 실패',url,delegate,e);}
+  }
+  return null;
+}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const withTimeout=(p,ms)=>Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),ms))]);
+let visionPromise=null;
+/* AI 모델 불러오기: 최대 3번 시도. report(단계, 상태, 정보)로 로딩창에 진행 상황을 알린다 */
+function initVision(report){
+  report=report||(()=>{});
+  if(AI.state==='ready'){report('done','ok');return Promise.resolve(true);}
+  if(visionPromise)return visionPromise;
+  visionPromise=(async()=>{
+    AI.state='loading';setBadge('warn','AI 불러오는 중…');
+    const MAX=3;
+    for(let attempt=1;attempt<=MAX;attempt++){
+      report('attempt','run',attempt);
+      try{
+        report('engine','run');
+        if(!AI.lib)AI.lib=await withTimeout(import(MP_CDN+'/vision_bundle.mjs'+(attempt>1?'?retry='+attempt:'')),20000);
+        if(!AI.fileset)AI.fileset=await withTimeout(AI.lib.FilesetResolver.forVisionTasks(MP_CDN+'/wasm'),20000);
+        report('engine','ok');
+        report('face','run');
+        if(!AI.face)AI.face=await withTimeout(createLM(AI.lib.FaceLandmarker,AI.fileset,MODEL_URLS.face,{numFaces:1,minFaceDetectionConfidence:.5,minFacePresenceConfidence:.5,minTrackingConfidence:.5}),60000);
+        report('face',AI.face?'ok':'fail');
+        report('pose','run');
+        if(!AI.pose)AI.pose=await withTimeout(createLM(AI.lib.PoseLandmarker,AI.fileset,MODEL_URLS.pose,{numPoses:1,minPoseDetectionConfidence:.5,minPosePresenceConfidence:.5,minTrackingConfidence:.5}),60000);
+        report('pose',AI.pose?'ok':'fail');
+        if(AI.face&&AI.pose)break;
+        throw new Error('모델 일부를 받지 못함');
+      }catch(e){
+        console.warn('[AI] '+attempt+'번째 시도 실패',e);
+        if(attempt<MAX){report('retry','run',attempt);await sleep(1500*attempt);}
+      }
+    }
+    AI.state=(AI.face||AI.pose)?'ready':'fail';
+    if(AI.state==='ready')setBadge('ok',AI.face&&AI.pose?'인식 중':'일부 인식 중');
+    else setBadge('warn','움직임 감지 모드');
+    report('done',AI.state==='ready'?'ok':'fail');
+    return AI.state==='ready';
+  })();
+  return visionPromise;
+}
+function setBadge(cls,txt){const b=$('#poseBadge');b.classList.remove('ok','warn');if(cls)b.classList.add(cls);$('#poseBadgeTxt').textContent=txt;}
+
+/* 매 프레임 인식 */
+function trackStep(){
+  if(!camOn||AI.state!=='ready'||video.readyState<2)return;
+  if(video.currentTime===AI.lastVT)return;AI.lastVT=video.currentTime;
+  const ts=performance.now(),t=ts/1000;
+  try{
+    if(AI.face){
+      const r=AI.face.detectForVideo(video,ts);const lm=r&&r.faceLandmarks&&r.faceLandmarks[0];
+      if(lm&&lm.length>=468){const f={};for(const i of FACE_IDX){const p=lm[i]||lm[i<473?468:473]||lm[1];f[i]={x:oe('f'+i+'x',1-p.x,t),y:oe('f'+i+'y',p.y,t)};}
+        T.face=f;T.faceSeen=ts;}
+      T.faceOK=!!T.face&&ts-T.faceSeen<350;
+    }
+    AI.frame++;
+    if(AI.pose&&AI.frame%AI.poseEvery===0){
+      const r=AI.pose.detectForVideo(video,ts);const lm=r&&r.landmarks&&r.landmarks[0];
+      if(lm){const noVis=lm.every(q=>!q.visibility); // 가시도 값이 비어 오는 환경 대비: 화면 안에 있으면 보이는 것으로
+        const p={};for(const i of POSE_IDX){const q=lm[i];const inside=q.x>-.05&&q.x<1.05&&q.y>-.05&&q.y<1.05;
+          p[i]={x:oe('p'+i+'x',1-q.x,t,1.2,2.5),y:oe('p'+i+'y',q.y,t,1.2,2.5),v:noVis?(inside?.9:0):q.visibility};}
+        T.pose=p;T.poseSeen=ts;}
+      else if(ts-T.poseSeen>450)T.pose=null;
+      T.bodyOK=!!T.pose&&T.pose[11].v>.45&&T.pose[12].v>.45;
+    }
+  }catch(e){console.warn(e);}
+  const cost=performance.now()-ts;AI.cost=AI.cost*.9+cost*.1;AI.poseEvery=AI.cost>32?2:1;
+  updateGestures();
+}
+
+/* 팔 동작: 손목이 같은 쪽 어깨보다 (어깨폭 x 0.2) 이상 위로 올라가면 '손 듦'.
+   손목이 화면 밖으로 나가도 팔꿈치가 어깨 위에 있으면 든 것으로 본다. 화면 왼쪽 손 = 왼쪽 상소 */
+function updateGestures(){
+  const p=T.pose;const vw=video.videoWidth||640,vh=video.videoHeight||480;
+  ['L','R'].forEach(s=>{
+    const h=T.hands[s];let up=false;
+    if(p){const sh=p[s==='L'?11:12],o=p[s==='L'?12:11],el=p[s==='L'?13:14],wr=p[s==='L'?15:16];
+      const sw=Math.max(vw*.08,Math.hypot((sh.x-o.x)*vw,(sh.y-o.y)*vh));
+      if(sh.v>.3){
+        if(wr.v>.45){up=wr.y*vh<sh.y*vh-sw*.2;h.x=wr.x;h.y=wr.y;}
+        else if(el.v>.5&&el.y*vh<sh.y*vh-sw*.08){up=true;h.x=el.x;h.y=el.y;}
+      }}
+    h.up=up;h.score=lerp(h.score,up?1:0,.3);
+  });
+  T.both=T.hands.L.up&&T.hands.R.up;
+}
+
+/* 카메라 시작 */
+async function startCamera(){
+  try{
+    if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)throw new Error('no media');
+    const s=await navigator.mediaDevices.getUserMedia({video:{width:{ideal:960},height:{ideal:720},facingMode:'user'},audio:false});
+    video.srcObject=s;await video.play();camOn=true;
+  }catch(e){
+    camOn=false;setBadge('','카메라 없음');
+    toast('카메라를 켜지 못했습니다. 상소를 누르거나 ← → 키로 판결하세요.');
+  }
+}
+
+/* 백업: 프레임 차이 기반 움직임 감지 (AI 모델이 없을 때) */
+const motion={L:0,R:0,all:0};
+const mc=document.createElement('canvas');mc.width=64;mc.height=48;
+const mctx=mc.getContext('2d',{willReadFrequently:true});
+let prevG=null;
+function updateMotion(){
+  if(!camOn||video.readyState<2)return;
+  mctx.save();mctx.translate(64,0);mctx.scale(-1,1);mctx.drawImage(video,0,0,64,48);mctx.restore();
+  const d=mctx.getImageData(0,0,64,48).data;const g=new Float32Array(64*48);
+  for(let i=0;i<g.length;i++)g[i]=d[i*4]*.3+d[i*4+1]*.59+d[i*4+2]*.11;
+  if(prevG){let cL=0,nL=0,cR=0,nR=0,cA=0;
+    for(let y=0;y<48;y++)for(let x=0;x<64;x++){const i=y*64+x;const m=Math.abs(g[i]-prevG[i])>26;if(m)cA++;
+      if(y<27){if(x<19){nL++;if(m)cL++;}else if(x>=45){nR++;if(m)cR++;}}}
+    motion.L=motion.L*.5+(cL/nL)*.5;motion.R=motion.R*.5+(cR/nR)*.5;motion.all=motion.all*.6+(cA/g.length)*.4;}
+  prevG=g;
+}
+
+/* 점검 패널 */
+let panelT=0;
+function updateCamPanelUI(){
+  if($('#camPanel').classList.contains('hidden'))return;
+  const now=performance.now();if(now-panelT<120)return;panelT=now;
+  $('#statAI').innerHTML=!camOn?'카메라 꺼짐':AI.state==='ready'?'<span class="ok">준비 완료</span> ('+AI.dev+', '+Math.round(AI.cost)+'ms/프레임)':AI.state==='loading'?'<span class="wait">모델 불러오는 중…</span>':AI.state==='fail'?'<span class="wait">불러오기 실패</span> · 움직임 감지로 대체':'대기';
+  if(T.faceOK){$('#statHead').innerHTML='<span class="ok">478점 추적 중</span> · 머리 기울기 '+Math.round(T.roll*180/Math.PI)+'°';}
+  else $('#statHead').innerHTML='<span class="wait">얼굴 탐색 중…</span> 정면을 봐 주세요';
+  if(T.bodyOK){const p=T.pose;$('#statBody').innerHTML='<span class="ok">어깨 추적 중</span> · 어깨폭 '+Math.round(Math.hypot(p[11].x-p[12].x,p[11].y-p[12].y)*100)+'%';}
+  else $('#statBody').innerHTML=T.faceOK?'<span class="wait">어깨가 안 보임</span> · 얼굴 크기로 옷 크기 추정':'<span class="wait">어깨 탐색 중…</span>';
+  $('#statGaugeL').style.width=Math.round(T.hands.L.score*100)+'%';
+  $('#statGaugeR').style.width=Math.round(T.hands.R.score*100)+'%';
+  $('#statTxtL').textContent=T.hands.L.up?'들림 ✋':'내림';
+  $('#statTxtR').textContent=T.hands.R.up?'들림 ✋':'내림';
+  $('#statBoth').innerHTML=T.both?'<b style="color:var(--gold2)">양손 들림: 탕평책 제스처!</b>':'양손을 함께 들면 탕평책';
+}
+/* ============ 게임 상태 ============ */
+let S=null, speedPref=1, miniOn=true;
+function newState(){
+  return {gen:Date.now()+Math.random(),year:START,tIdx:0,lives:EVENTS.length,mode:'play',paused:false,speed:speedPref,royalBonus:0,
+    fac:{},tree:{},peak:{},winsMine:{},records:[],codex:new Map(),cardQ:[],activeCards:0,histQ:[],histBusy:false,lastInfoY:1494,usedFill:new Set(),slots:{L:[null,null],R:[null,null]},warBusy:false,combo:0,bestCombo:0,cine:null,rings:[],flash:0,centerSlot:0,
+    kingIdx:0,prevKingIdx:-1,kingFade:1,kingScaleNow:.8,ev:null,evIdx:-1,evSides:null,evArmedAt:0,gauge:{L:0,R:0},
+    splits:[],particles:[],floats:[],shake:0,lastJoke:0,resultShown:false,resultTimer:0,resultMax:10,guideT:8,typers:[],handAnim:null,faceFound:false};
+}
+function addPow(id,v){const f=S.fac[id];if(!f)return;f.power=clamp(f.power+v,3,98);S.peak[id]=Math.max(S.peak[id]||0,f.power);}
+function spawn(id,p,from){
+  const side=FACTIONS[id].side;
+  const f={id,power:p,x:from?from.x:(side==='L'?-160:W+160),y:from?from.y:H*.5,r:12,alpha:from?.7:0,scale:from?.5:.2,alive:true,dying:false,seed:Math.random()*10,flash:0,stamp:null,survived:false,dim:false};
+  S.fac[id]=f;S.tree[id]='alive';S.peak[id]=Math.max(S.peak[id]||0,p);
+}
+function kill(id){const f=S.fac[id];if(!f)return;f.dying=true;f.alive=false;S.tree[id]='gone';
+  bigBurst(f.x,f.y,FACTIONS[id].color,true);floatText(FACTIONS[id].name+' 몰락!',f.x,f.y-60,'#ff9b82',44);
+  if(S.mode==='play')startCine(f.x,f.y,'fade');sBad();}
+/* 연출: 카메라 줌인 + 충격파 + 섬광 */
+function startCine(x,y,kind){hideHist();S.cine={x,y,t:0,dur:2.8,kind};S.flash=Math.max(S.flash,kind==='split'?.55:.4);S.shake=Math.max(S.shake,.7);}
+function bigBurst(x,y,color,dark,scale){scale=scale||1;
+  burst(x,y,color,Math.round(110*scale),dark);burst(x,y,'#fff1c4',Math.round(40*scale),false);
+  for(let i=0;i<3;i++)S.rings.push({x,y,t:-i*.14,color,max:Math.min(W,H)*(.32+i*.08)*scale});}
+function doSplit(it){
+  const p=S.fac[it.id];const from=p?{x:p.x,y:p.y}:{x:W/2,y:H/2};const pw=p?p.power:30;
+  it.into.forEach(c=>spawn(c,Math.max(16,pw*.62),from));
+  S.splits.push({from,into:it.into,t:0,color:FACTIONS[it.id].color});
+  if(p){p.dying=true;p.alive=false;S.tree[it.id]='gone';}
+  bigBurst(from.x,from.y,FACTIONS[it.id].color,false);
+  it.into.forEach((c,i)=>setTimeout(()=>{const f=S&&S.fac[c];if(f)bigBurst(f.x,f.y,FACTIONS[c].color,false,.6);},700+i*250));
+  floatText(FACTIONS[it.id].short+' → '+it.into.map(c=>FACTIONS[c].short).join(' · '),from.x,from.y-70,'#fff1c4',46);
+  startCine(from.x,from.y,'split');
+  banner('붕당 분화!',it.label);sSplit();setTimeout(sSplit,350);refreshMini();
+}
+function doFade(it){
+  const keep=it.keepIf&&S.records.some(r=>EVENTS[r.i].id===it.keepIf.ev&&r.choice===it.keepIf.side);
+  it.ids.forEach(id=>{const f=S.fac[id];if(!f||!f.alive)return;
+    if(keep){f.survived=true;S.tree[id]='survived';S.cardQ.unshift({t:'incident',f:id,n:'대체 역사!',c:FACTIONS[id].name+'이 살아남았습니다. 실제 역사에서는 이 무렵 사라졌어요.',alt:true});}
+    else kill(id);});
+  if(!keep) banner(it.label,Math.floor(it.y)+'년');
+  refreshMini();
+}
+function applyDelta(a){
+  const d=a.d;
+  if(typeof d==='number'){if(a.f&&S.fac[a.f]&&S.fac[a.f].alive)addPow(a.f,d);}
+  else if(d){for(const k in d){
+    if(k==='all')Object.values(S.fac).forEach(f=>{if(f.alive)addPow(f.id,d[k]);});
+    else if(k==='royal')S.royalBonus+=d[k];
+    else if(S.fac[k]&&S.fac[k].alive)addPow(k,d[k]);}}
+}
+
+/* ============ 진행 ============ */
+function processTL(){
+  while(S.tIdx<TL.length&&TL[S.tIdx].y<=S.year){
+    const it=TL[S.tIdx++];
+    if(it.k==='event'){S.year=it.y;startEvent(it.i);return;}
+    if(it.k==='end'){S.year=END;endGame();return;}
+    if(it.k==='amb'){applyDelta(it.a);queueCard(it.a);}
+    else if(it.k==='hist')queueHist(it.h);
+    else if(it.k==='spawn'){it.ids.forEach(([id,p])=>spawn(id,p));banner('새 세력 등장',it.label);refreshMini();}
+    else if(it.k==='split')doSplit(it);
+    else if(it.k==='fade')doFade(it);
+  }
+}
+function queueCard(a){
+  const f=a.f?S.fac[a.f]:null;const ghost=!!a.f&&(!f||!f.alive||f.power<12);
+  const key=a.n+'|'+a.y;if(!S.codex.has(key))S.codex.set(key,{n:a.n,c:a.c,f:a.f,t:a.t,ghost});
+  a._ghost=ghost;S.cardQ.push(a);
+}
+/* 인물·사건 카드: 화면 양옆 고정 자리(각 2칸)에 차례로 → 겹치지 않음 */
+function cardSide(a){if(a.t==='war')return 'war';const F=a.f?FACTIONS[a.f]:null;return F?F.side:null;}
+function freeSlot(side){const sl=S.slots[side];for(let i=0;i<sl.length;i++)if(!sl[i])return i;return -1;}
+function pumpCards(){
+  if(!S||S.mode!=='play'||S.paused)return;
+  for(let qi=0;qi<S.cardQ.length&&qi<4;qi++){
+    const a=S.cardQ[qi];let side=cardSide(a);
+    if(side==='war'){if(S.warBusy)continue;S.cardQ.splice(qi,1);qi--;showWar(a);continue;}
+    if(!side)side=freeSlot('L')>=0&&(freeSlot('R')<0||Math.random()<.5)?'L':'R';
+    const i=freeSlot(side);if(i<0)continue;
+    S.cardQ.splice(qi,1);qi--;showCard(a,side,i);
+  }
+}
+function showWar(a){const gen=S.gen;S.warBusy=true;S.activeCards++;banner(a.n,a.c,'war');S.shake=Math.max(S.shake,1);vig();
+  setTimeout(()=>{if(S&&S.gen===gen){S.activeCards--;S.warBusy=false;}},Math.max(2600,4200/Math.sqrt(S.speed)));}
+function showCard(a,side,slot){
+  const gen=S.gen;S.activeCards++;S.slots[side][slot]=a;
+  const dur=Math.max(3600,6800/Math.sqrt(S.speed));
+  const F=a.f?FACTIONS[a.f]:null;const f=a.f?S.fac[a.f]:null;
+  const ghost=a.alt?false:(a._ghost!==undefined?a._ghost:(!!a.f&&(!f||!f.alive||f.power<12)));
+  const CW=Math.min(380,Math.max(250,W*.27));const color=F?F.color:'#d9b35e';
+  const el=document.createElement('div');
+  el.className='card t-'+a.t+(ghost?' ghost':'')+' s'+side;
+  el.style.setProperty('--c',color);el.style.setProperty('--cw',CW+'px');el.style.setProperty('--avc',lum(color)>.62?'#241c10':'#fff');
+  const icon=a.t==='person'?a.n[0]:(a.t==='culture'?'🏛':(a.alt?'!':'⚡'));
+  const kind={person:'인물',culture:'문화',incident:'사건'}[a.t]||'소식';
+  el.innerHTML='<div class="ink"></div><div class="av">'+esc(icon)+'</div><div class="tx"><em class="kd">'+kind+(F?' · '+F.name:'')+(a.y?' · '+Math.floor(a.y)+'년':'')+'</em>'+(ghost?'<em class="gh">원래 역사라면 크게 활약했을 텐데…</em>':'')+'<b>'+esc(a.n)+'</b><span>'+esc(a.c)+'</span><i class="cb"><u style="animation-duration:'+dur+'ms"></u></i></div>';
+  const x=side==='L'?16:W-CW-16;const y=Math.max(92,H*.12)+slot*Math.min(170,H*.2);
+  el.style.left=x+'px';el.style.top=y+'px';
+  $('#cards').appendChild(el);
+  if(f&&f.alive&&!ghost)burst(f.x,f.y,color,14,false);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add('in')));
+  setTimeout(()=>{el.classList.remove('in');setTimeout(()=>{el.remove();if(S&&S.gen===gen){S.activeCards--;S.slots[side][slot]=null;}},520);},dur);
+}
+/* 그 시절 조선 이야기 카드 (화면 가운데) */
+const HIST_ICON={war:'⚔',culture:'📜',life:'🏮',person:'👤'};
+function queueHist(h){
+  const key=h.n+'|'+h.yl;if(!S.codex.has(key))S.codex.set(key,{n:h.n,c:h.c,f:null,t:'history',ic:HIST_ICON[h.t],ghost:false});
+  S.histQ.push(h);if(S.histQ.length>2)S.histQ.shift();
+}
+function checkQuiet(){
+  if(!S||S.mode!=='play'||S.paused)return;
+  if(S.cardQ.length||S.histQ.length||S.histBusy||S.activeCards>0){S.lastInfoY=S.year;return;}
+  if(S.year-(S.lastInfoY||START)<4)return;
+  const pool=FILLER.filter((f,i)=>!S.usedFill.has(i)&&S.year>=f[0]&&S.year<=f[1]);if(!pool.length){S.lastInfoY=S.year;return;}
+  const f=pick(pool);S.usedFill.add(FILLER.indexOf(f));S.lastInfoY=S.year;
+  queueHist({y:S.year,yl:f[2],t:'life',n:f[3],c:f[4],nolabel:true});
+}
+function pumpHist(){
+  if(!S||S.histBusy||!S.histQ.length||S.mode!=='play'||S.paused||S.cine)return;
+  if($('#banner').classList.contains('show'))return;
+  const h=S.histQ.shift(),gen=S.gen,tok=++histTok;S.histBusy=true;
+  const el=$('#hist');el.className='navyCard t-'+h.t;
+  el.innerHTML='<div class="hk"><span class="hi">'+HIST_ICON[h.t]+'</span>그 시절 조선에서는 · <b>'+esc(h.yl)+(h.nolabel||!/\d$/.test(h.yl)?'':'년')+'</b></div><div class="ht">'+esc(h.n)+'</div><div class="hc">'+esc(h.c)+'</div><div class="hb"><i></i></div>';
+  void el.offsetWidth;el.classList.add('show');
+  const dur=Math.max(3200,6200/Math.sqrt(S.speed));el.querySelector('.hb i').style.transitionDuration=dur+'ms';
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{const b=el.querySelector('.hb i');if(b)b.style.width='0%';}));
+  if(h.t==='war')sBad();else tone([440,554],.35,'sine',.05,.08);
+  setTimeout(()=>{if(tok!==histTok)return;el.classList.remove('show');setTimeout(()=>{if(S&&S.gen===gen&&tok===histTok)S.histBusy=false;},450);},dur);
+}
+let histTok=0;
+function hideHist(){histTok++;const el=$('#hist');el.classList.remove('show');if(S){S.histBusy=false;}}
+function hideCards(){document.querySelectorAll('#cards .card').forEach(c=>c.classList.remove('in'));}
+let bannerT=null;
+function banner(t1,t2,cls){const b=$('#banner');b.className='';b.querySelector('.b1').textContent=t1;b.querySelector('.b2').textContent=t2||'';void b.offsetWidth;b.className='show '+(cls||'');clearTimeout(bannerT);bannerT=setTimeout(()=>{b.className=cls||'';},2600/Math.sqrt(S?S.speed:1));}
+function vig(){const v=$('#vig');v.classList.add('on');setTimeout(()=>v.classList.remove('on'),1900);}
+function burst(x,y,color,n,dark){for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,v=40+Math.random()*190;S.particles.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-40,life:1,dec:.5+Math.random()*.7,size:2+Math.random()*5,color:dark&&Math.random()<.6?'#26262e':color});}}
+function floatText(text,x,y,color,size){S.floats.push({text,x,y,t:0,color,size});}
+
+/* ============ 사건 ============ */
+function resolveSide(ids){return ids.map(id=>S.fac[id]).filter(f=>f&&f.alive);}
+function sideName(ev,side){if(side==='B')return '탕평 (양쪽 모두)';return ev[side].f.map(id=>FACTIONS[id].name).join('·');}
+function typeText(el,text){
+  const segs=text.split('**').map((t,i)=>({t,b:i%2===1})).filter(s=>s.t);const total=segs.reduce((a,s)=>a+s.t.length,0);
+  const draw=n=>{let left=n,out='';for(const s of segs){if(left<=0)break;const part=esc(s.t.slice(0,left));left-=s.t.length;out+=s.b?'<b>'+part+'</b>':part;}el.innerHTML=out;};
+  el.innerHTML='';let i=0;const id=setInterval(()=>{i++;draw(i);if(i>=total)clearInterval(id);},24);S.typers.push(id);}
+function startEvent(i){
+  const ev=EVENTS[i];S.mode='event';S.ev=ev;S.evIdx=i;S.gauge={L:0,R:0};S.evArmedAt=performance.now()+1700;
+  hideCards();hideHist();S.cardQ=[];S.handAnim=null;
+  S.evSides={L:resolveSide(ev.L.f),R:resolveSide(ev.R.f)};
+  $('#evYear').textContent=Math.floor(ev.y)+'년 '+ev.era;
+  $('#evTitle').textContent=ev.title;$('#evCtx').textContent=ev.ctx;
+  ['L','R'].forEach(s=>{
+    const b=$('#bub'+s);const F=FACTIONS[ev[s].f[0]];const light=lum(F.color)>.7;
+    b.style.setProperty('--c',light?'#9d8f6c':F.color);b.style.setProperty('--c2',light?'#6b5f45':mix(F.color,.3,'b'));
+    const wi=ev[s].who.indexOf(' ');const fac=wi<0?ev[s].who:ev[s].who.slice(0,wi),per=wi<0?'':ev[s].who.slice(wi+1);
+    b.querySelector('.who').innerHTML='<span class="fac">'+esc(fac)+'</span>'+(per?'<span class="per">'+esc(per)+'</span>':'');
+    const rgb=hexRgb(F.color);b.style.setProperty('--hl',light?'rgba(217,179,94,.5)':'rgba('+rgb.join(',')+',.3)');typeText(b.querySelector('.say'),ev[s].say);
+    b.querySelector('.gauge i').style.width='0%';
+    b.querySelector('.pick').textContent=camOn?(s==='L'?'왼손을 번쩍 들면 이쪽 편 (← 키)':'오른손을 번쩍 들면 이쪽 편 (→ 키)'):(s==='L'?'눌러서 이쪽 편 들기 (← 키)':'눌러서 이쪽 편 들기 (→ 키)');
+  });
+  $('#evBoth').classList.toggle('hidden',!ev.both);$('#evBoth .gauge i').style.width='0%';
+  $('#evHint').textContent=camOn?('손을 들어 편을 정하세요'+(ev.both?'. 양손을 함께 번쩍 들면 탕평 (↑ 키)':'')):('상소를 누르거나 ← → 키로 판결하세요'+(ev.both?'. 탕평은 가운데 버튼 또는 ↑ 키':''));
+  $('#event').classList.remove('hidden');
+  sGong();S.shake=.35;
+}
+function updateEventInput(dt,now){
+  const ev=S.ev;if(!ev)return;
+  if(camOn&&now>=S.evArmedAt){
+    // AI 팔 인식이 되면 그것만, 아니면 프레임 차이 움직임 감지로 대체
+    const useAI=AI.state==='ready'&&(!!AI.pose||!!T.pose);
+    const aL=useAI?T.hands.L.up:(motion.L>.08&&motion.L>motion.all*1.5);
+    const aR=useAI?T.hands.R.up:(motion.R>.08&&motion.R>motion.all*1.5);
+    const aBoth=aL&&aR;
+
+    S.gauge.L=clamp(S.gauge.L+(aL?dt*2.0:-dt*.9),0,1);
+    S.gauge.R=clamp(S.gauge.R+(aR?dt*2.0:-dt*.9),0,1);
+    $('#bubL .gauge i').style.width=(S.gauge.L*100)+'%';
+    $('#bubR .gauge i').style.width=(S.gauge.R*100)+'%';
+
+    if(ev.both){
+      const bothG = aBoth ? Math.min(S.gauge.L, S.gauge.R) + 0.2 : Math.min(S.gauge.L,S.gauge.R);
+      $('#evBoth .gauge i').style.width=(clamp(bothG,0,1)*100)+'%';
+    }
+
+    if(ev.both && (aBoth || (S.gauge.L>=0.7 && S.gauge.R>=0.7))){
+      choose('B');
+    }else if(S.gauge.L>=1){
+      choose('L');
+    }else if(S.gauge.R>=1){
+      choose('R');
+    }
+  }
+}
+function choose(side){
+  if(!S||S.mode!=='event')return;if(performance.now()<S.evArmedAt)return;
+  const ev=S.ev;if(side==='B'&&!ev.both)return;
+  S.mode='result';S.typers.forEach(clearInterval);S.typers=[];
+  const match=side===ev.ans;
+  if(!match){S.lives--;const lb=$('#lives');lb.classList.remove('hit');void lb.offsetWidth;lb.classList.add('hit');}
+  S.records.push({i:S.evIdx,choice:side,match});
+  const Ls=S.evSides.L,Rs=S.evSides.R;
+  if(side==='B'){
+    [...Ls,...Rs].forEach(f=>{f.power=f.power*.5+22;f.stamp={text:'고루 등용',color:'#b8872e',t:0};burst(f.x,f.y,'#f1d48d',20,false);S.winsMine[f.id]=(S.winsMine[f.id]||0)+1;});
+    if(match)S.royalBonus+=.15;
+  }else{
+    const win=side==='L'?Ls:Rs,lose=side==='L'?Rs:Ls,loseSide=side==='L'?'R':'L';
+    win.forEach(f=>{addPow(f.id,18);f.stamp={text:'등용',color:'#2f7d4f',t:0};burst(f.x,f.y,FACTIONS[f.id].color,24,false);S.winsMine[f.id]=(S.winsMine[f.id]||0)+1;});
+    lose.forEach(f=>{f.power=Math.max(4,f.power*.45);f.flash=1;f.stamp={text:match?ev.stamp:'파직 (가상)',color:'#c73b2b',t:0};burst(f.x,f.y,FACTIONS[f.id].color,40,true);f.x+=loseSide==='L'?-70:70;});
+    if(ev.both&&!match)S.royalBonus-=.08;
+  }
+  S.handAnim={side,t:0};S.shake=.6;
+  if(match){S.combo++;S.bestCombo=Math.max(S.bestCombo,S.combo);}else S.combo=0;
+  comboFX(match);
+  setTimeout(showResult,1150);
+}
+/* 판결 타격감: 큰 팝업 + 콤보 */
+const COMBO_TXT=['','','좋사옵니다!','성군의 기운이 보이옵니다!','명군 탄생!','천하태평!'];
+function comboFX(match){
+  const el=$('#pop');const c=S.combo;
+  if(match){
+    const sub=c>=2?'<div class="pc">'+c+'연속 일치 · '+(COMBO_TXT[Math.min(c,5)])+'</div>':'<div class="pc">역사의 흐름을 지켰습니다</div>';
+    let bonus='';if(c===3||c===5||c===8){S.royalBonus+=.06;bonus='<div class="pb">👑 왕권 상승!</div>';}
+    el.className='good'+(c>=3?' hot':'');el.innerHTML='<div class="pm">역사 일치!</div>'+sub+bonus;
+    S.flash=Math.max(S.flash,.5);
+    for(let i=0;i<(c>=3?4:2);i++)setTimeout(()=>{if(S)burst(W*(.3+Math.random()*.4),H*(.25+Math.random()*.2),pick(['#ffe08a','#f3dfae','#ffffff','#ffb86b']),60,false);},i*140);
+    sGood();if(c>=2)setTimeout(()=>tone([784,988,1175,1568].slice(0,Math.min(4,c)),.35,'triangle',.08,.07),260);
+  }else{
+    el.className='bad';el.innerHTML='<div class="pm">역사가 뒤틀렸다!</div><div class="pc">목숨 −1'+(S.lives<=3?' · 조심하소서, 전하!':'')+'</div>';
+    S.shake=1.2;vig();sBad();
+  }
+  void el.offsetWidth;el.classList.add('show');
+  clearTimeout(comboFX._t);comboFX._t=setTimeout(()=>el.classList.remove('show'),1500);
+  $('#comboHud').textContent=S.combo>=2?'🔥 '+S.combo+'연속':'';
+}
+function showResult(){
+  if(!S||S.mode!=='result')return;
+  const ev=S.ev,r=S.records[S.records.length-1];
+  $('#rCard').className='rCard navyCard '+(r.match?'ok':'bad');
+  $('#rStamp').innerHTML=r.match?(S.combo>=2?S.combo+'연속<br>일치':'역사<br>일치'):'역사<br>뒤틀림';
+  $('#rTitle').textContent=r.match?'역사와 일치합니다!':'역사가 뒤틀렸습니다! 목숨 −1';
+  let mine='<b>당신의 판결</b>: '+esc(sideName(ev,r.choice))+' 편을 들었습니다.';
+  if(!r.match){mine+=ev.ans==='B'?'<br><small>당신의 역사에서는 탕평 대신 한쪽 붕당만 남았습니다.</small>':'<br><small>당신의 역사에서는 '+esc(sideName(ev,ev.ans))+' 쪽이 쫓겨났습니다.</small>';}
+  $('#rMine').innerHTML=mine;
+  $('#rReal').innerHTML='<b>실제 역사</b>: '+esc(ev.real);
+  $('#joinHint').classList.toggle('hidden',!(camOn&&AI.state==='ready'));S.joinG=0;$('#result').classList.remove('hidden');S.resultShown=true;S.resultTimer=S.resultMax=11;
+  buildMarks();
+}
+function continueGame(){
+  if(!S||S.mode!=='result')return;
+  $('#result').classList.add('hidden');$('#event').classList.add('hidden');
+  S.resultShown=false;S.mode='play';S.ev=null;S.evSides=null;S.handAnim=null;
+  Object.values(S.fac).forEach(f=>f.dim=false);
+}
+function endGame(){S.mode='outro';banner('정조 승하 (1800년)','붕당의 시대가 저물고, 세도 정치가 시작됩니다');sGong();setTimeout(showEnding,3400);}
+
+/* ============ 업데이트 ============ */
+let last=performance.now();
+function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;try{update(dt,now);render(now/1000);}catch(e){console.error(e);}requestAnimationFrame(loop);}
+function kingRect(){const s=S?S.kingScaleNow:1;const fw0=Math.min(W*.46,(H*.60)*4/3);const w=fw0*s,h=w*.78;const bottom=H-66;return {x:W/2-w/2,y:bottom-h,w,h};}
+
+function update(dt,now){
+  if(!S)return;
+  if(camOn){
+    if(AI.state!=='ready')updateMotion();
+    trackStep();
+    updateCamPanelUI();
+  }
+  if(S.mode==='play'&&!S.paused){
+    const backlog=S.cardQ.length+S.histQ.length;const slow=S.cine?0:(backlog>=3?.35:backlog>=2?.6:1); // 읽을 거리가 밀리면 시간을 천천히
+    S.year=Math.min(END,S.year+dt*S.speed*slow);
+    for(const id in S.fac){const f=S.fac[id];if(f.alive)addPow(id,dt*S.speed*.12);}
+    processTL();
+  }
+  let ki=0;for(let i=0;i<KINGS.length;i++)if(KINGS[i].y<=S.year)ki=i;
+  if(ki!==S.kingIdx){S.prevKingIdx=S.kingIdx;S.kingIdx=ki;S.kingFade=0;const k=KINGS[ki];
+    banner(k.n+' 즉위','제'+k.no+'대 임금, '+Math.floor(k.y)+'년');sKing();const R=kingRect();burst(W/2,R.y+R.h*.25,'#ffd98a',34,false);}
+  S.kingFade=Math.min(1,S.kingFade+dt/1.3);
+  const K=KINGS[S.kingIdx];const royal=clamp(K.royal+S.royalBonus,0,1.25);
+  let sum=0;for(const id in S.fac)if(S.fac[id].alive)sum+=S.fac[id].power;
+  const pressure=clamp((sum-50)/130,0,1);
+  let target=clamp(.42+.72*royal-.5*pressure,.28,1.25);
+  if(S.mode==='event'||S.mode==='result')target=Math.max(target,.85);
+  S.kingScaleNow=lerp(S.kingScaleNow,target,Math.min(1,dt*1.4));
+  layout(dt);
+  for(const id in S.fac){const f=S.fac[id];f.flash=Math.max(0,f.flash-dt*1.2);if(f.stamp){f.stamp.t+=dt;if(f.stamp.t>3.4)f.stamp=null;}if(f.dying&&f.scale<.03)delete S.fac[id];}
+  for(let i=S.particles.length-1;i>=0;i--){const p=S.particles[i];p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=70*dt;p.vx*=.985;p.life-=p.dec*dt;if(p.life<=0)S.particles.splice(i,1);}
+  for(let i=S.floats.length-1;i>=0;i--){const f=S.floats[i];f.t+=dt;if(f.t>2.6)S.floats.splice(i,1);}
+  for(let i=S.splits.length-1;i>=0;i--){S.splits[i].t+=dt;if(S.splits[i].t>3)S.splits.splice(i,1);}
+  if(S.handAnim)S.handAnim.t+=dt;
+  if(S.cine){S.cine.t+=dt;if(S.cine.t>=S.cine.dur)S.cine=null;}
+  for(let i=S.rings.length-1;i>=0;i--){S.rings[i].t+=dt;if(S.rings[i].t>1.1)S.rings.splice(i,1);}
+  S.flash=Math.max(0,S.flash-dt*1.6);
+  S.shake=Math.max(0,S.shake-dt*1.4);S.guideT=Math.max(0,S.guideT-dt);
+  if(S.mode==='event')updateEventInput(dt,now);
+  if(S.mode==='result'&&S.resultShown){S.joinG=clamp((S.joinG||0)+(S.joinIn?dt*1.5:-dt*1.2),0,1);if(S.joinG>=1){S.joinG=0;sKing();continueGame();}}
+  if(S.mode==='result'&&S.resultShown){S.resultTimer-=dt;$('#rBarI').style.width=clamp(S.resultTimer/S.resultMax*100,0,100)+'%';if(S.resultTimer<=0)continueGame();}
+  pumpCards();pumpHist();checkQuiet();
+  if(S.mode==='play'&&!S.paused){
+    const R=kingRect();
+    if(S.kingScaleNow<.42&&now-S.lastJoke>9000){S.lastJoke=now;floatText(pick(JOKES),W/2,R.y-24,'#ffe1a0',18);}
+    else if(S.kingScaleNow>1.02&&now-S.lastJoke>12000){S.lastJoke=now;floatText('왕권이 하늘을 찌르옵니다!',W/2,R.y-24,'#ffe1a0',18);}
+  }
+  updateHUD();
+}
+function layout(dt){
+  const alive=Object.values(S.fac).filter(f=>f.alive);const md=Math.min(W,H);const cx=W/2;
+  const inEv=(S.mode==='event'||S.mode==='result')&&S.evSides;
+  if(inEv){
+    const inv=new Set([...S.evSides.L,...S.evSides.R].map(f=>f.id));
+    ['L','R'].forEach(s=>{const arr=S.evSides[s];arr.forEach((f,i)=>{f.dim=false;f.tx=s==='L'?W*.18:W*.82;f.ty=H*.74+(i-(arr.length-1)/2)*md*.16;f.tx+=(i%2)*(s==='L'?35:-35);});});
+    alive.forEach(f=>{if(!inv.has(f.id)){f.dim=true;f.tx=FACTIONS[f.id].side==='L'?W*.08:W*.92;f.ty=H*.24;}});
+  }else{
+    ['L','R'].forEach(s=>{const arr=alive.filter(f=>FACTIONS[f.id].side===s);const n=arr.length;
+      arr.forEach((f,i)=>{const pw=f.power/100;const edge=s==='L'?W*.12:W*.88;
+        const crowd=.05+.32*pw+(S.kingScaleNow<.45?.14:0);f.tx=lerp(edge,cx,crowd);f.ty=H*(.28+(i+1)/(n+1)*.56);});});
+  }
+  for(const id in S.fac){const f=S.fac[id];
+    if(!f.dying){f.x=lerp(f.x,f.tx,Math.min(1,dt*2.2));f.y=lerp(f.y,f.ty,Math.min(1,dt*2.2));}
+    const tr=md*(.035+.1*f.power/100);f.r=lerp(f.r,tr,Math.min(1,dt*3));
+    const ta=f.dying?0:(f.dim?.8:1);f.alpha=lerp(f.alpha,ta,Math.min(1,dt*(f.dying?1.6:2.5)));
+    const ts=f.dying?0:1;f.scale=lerp(f.scale,ts,Math.min(1,dt*(f.dying?.9:2.5)));}
+}
+function updateHUD(){
+  const y=Math.floor(S.year);if(y!==S._hy){S._hy=y;$('#yr').textContent=y;}
+  if(S._hk!==S.kingIdx){S._hk=S.kingIdx;const k=KINGS[S.kingIdx];$('#kingName').textContent=k.n;$('#kingNo').textContent='제'+k.no+'대 임금';}
+  if(S._hl!==S.lives){S._hl=S.lives;$('#lives').textContent=S.lives;}
+  $('#tlFill').style.width=((S.year-START)/(END-START)*100)+'%';
+}
+function buildMarks(){$('#tlMarks').innerHTML=EVENTS.map((e,i)=>{const r=S.records.find(r=>r.i===i);return '<div class="mk '+(r?(r.match?'ok':'bad'):'')+'" style="left:'+((e.y-START)/(END-START)*100)+'%" title="'+e.title+'"></div>';}).join('');}
+
+/* ============ 그리기 ============ */
+function render(t){
+  ctx.clearRect(0,0,W,H);drawBG(t);
+  if(!S)return;
+  if(S.mode==='ending')return;
+  const sx=(Math.random()-.5)*S.shake*14,sy=(Math.random()-.5)*S.shake*10;
+  ctx.save();ctx.translate(sx,sy);
+  let ce=0;if(S.cine){const c=S.cine,u=c.t/c.dur;ce=u<.2?easeOut(u/.2):u>.75?1-easeOut((u-.75)/.25):1;
+    const z=1+.42*ce,cx=lerp(W/2,c.x,ce),cy=lerp(H/2,c.y,ce);ctx.translate(W/2,H/2);ctx.scale(z,z);ctx.translate(-cx,-cy);}
+  ctx.save();ctx.globalAlpha=.05;ctx.fillStyle='#f1d48d';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.font='700 '+Math.round(Math.min(W*.3,H*.42))+'px '+SERIF;ctx.fillText(String(Math.floor(S.year)),W/2,H*.5);ctx.restore();
+  drawSplits();
+  drawKing(t);
+  if(ce>0){const c=S.cine,R=Math.min(W,H)*.34;const g=ctx.createRadialGradient(c.x,c.y,R*.4,c.x,c.y,R*2.4);
+    g.addColorStop(0,'rgba(10,12,26,0)');g.addColorStop(1,'rgba(6,8,18,'+(.62*ce)+')');ctx.fillStyle=g;ctx.fillRect(-W,-H,W*3,H*3);}
+  Object.values(S.fac).sort((a,b)=>b.r-a.r).forEach(f=>drawBlob(f,t));
+  S.rings.forEach(r=>{if(r.t<0)return;const u=r.t/1.1;ctx.save();ctx.globalAlpha=Math.max(0,1-u);ctx.lineWidth=10*(1-u)+1.5;ctx.strokeStyle=r.color;ctx.shadowColor=r.color;ctx.shadowBlur=24;
+    ctx.beginPath();ctx.arc(r.x,r.y,r.max*easeOut(Math.min(1,u)),0,Math.PI*2);ctx.stroke();ctx.strokeStyle='rgba(255,241,196,.9)';ctx.lineWidth*=.35;ctx.stroke();ctx.restore();});
+  S.particles.forEach(p=>{ctx.globalAlpha=Math.max(0,p.life);ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.size*p.life+.5,0,Math.PI*2);ctx.fill();});
+  ctx.globalAlpha=1;
+  S.floats.forEach(f=>{ctx.save();if(f.size>30){ctx.lineWidth=6;ctx.strokeStyle='rgba(20,14,6,.85)';ctx.lineJoin='round';}ctx.globalAlpha=f.t<.3?f.t/.3:Math.max(0,1-(f.t-1.8)/.8);ctx.font='900 '+f.size+'px '+SANS;ctx.textAlign='center';ctx.fillStyle=f.color;ctx.shadowColor='#000';ctx.shadowBlur=8;if(f.size>30){ctx.shadowBlur=0;ctx.strokeText(f.text,f.x,f.y-f.t*26);}ctx.shadowColor='#000';ctx.shadowBlur=8;ctx.fillText(f.text,f.x,f.y-f.t*26);ctx.restore();});
+  ctx.restore();
+  if(S.flash>0){ctx.fillStyle='rgba(255,236,190,'+(S.flash*.55)+')';ctx.fillRect(0,0,W,H);}
+}
+const easeOut=u=>1-Math.pow(1-clamp(u,0,1),3);
+const DEMO=['dongin','seoin','namin','bugin','noron','soron','hungu','sarim'].map((id,i)=>({id,power:40+(i%3)*18,r:0,scale:1,alpha:.5,seed:i*1.7,flash:0,stamp:null,survived:false,x:0,y:0,demo:true}));
+function drawDemo(t){const md=Math.min(W,H);DEMO.forEach((f,i)=>{const a=i/DEMO.length*Math.PI*2+t*.06;f.x=W/2+Math.cos(a)*W*.4;f.y=H/2+Math.sin(a)*H*.4;f.r=md*(.05+.07*f.power/100);drawBlob(f,t);});}
+function drawBG(t){
+  // 궁궐 배경은 CSS(#bgHall). 캔버스에는 남색 톤과 비네팅만 얹는다
+  const g=ctx.createRadialGradient(W/2,H*.62,Math.min(W,H)*.2,W/2,H*.55,Math.max(W,H)*.8);
+  g.addColorStop(0,'rgba(20,24,46,.05)');g.addColorStop(.6,'rgba(18,22,42,.35)');g.addColorStop(1,'rgba(10,12,26,.8)');
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  const b=ctx.createLinearGradient(0,H*.72,0,H);b.addColorStop(0,'rgba(18,22,42,0)');b.addColorStop(1,'rgba(18,22,42,.85)');ctx.fillStyle=b;ctx.fillRect(0,H*.72,W,H*.28);
+  ctx.fillStyle='#f3dfae';
+  DUST.forEach(d=>{const y=((d.y-t*d.s)%1+1)%1;ctx.globalAlpha=.15+.12*Math.sin(t+d.x*9);ctx.beginPath();ctx.arc(d.x*W,y*H,d.r,0,Math.PI*2);ctx.fill();});
+  ctx.globalAlpha=1;
+}
+function drawSplits(){
+  S.splits.forEach(s=>{const a=Math.max(0,1-s.t/3);s.into.forEach(id=>{const f=S.fac[id];if(!f)return;
+    ctx.save();ctx.globalAlpha=a;ctx.strokeStyle=FACTIONS[id].color;ctx.lineWidth=3;ctx.shadowColor=FACTIONS[id].color;ctx.shadowBlur=16;ctx.setLineDash([8,6]);ctx.lineDashOffset=-s.t*40;
+    ctx.beginPath();ctx.moveTo(s.from.x,s.from.y);ctx.quadraticCurveTo((s.from.x+f.x)/2,Math.min(s.from.y,f.y)-60,f.x,f.y);ctx.stroke();ctx.restore();});
+    ctx.save();ctx.globalAlpha=a;ctx.fillStyle=s.color;ctx.beginPath();ctx.arc(s.from.x,s.from.y,8+s.t*6,0,Math.PI*2);ctx.fill();ctx.restore();});
+}
+function drawBlob(f,t){
+  const F=FACTIONS[f.id];const r=f.r*f.scale;if(r<2||f.alpha<.02)return;
+  ctx.save();ctx.globalAlpha=f.alpha;ctx.translate(f.x,f.y);
+  // 바닥 그림자
+  ctx.save();ctx.globalAlpha=f.alpha*.35;ctx.fillStyle='#000';ctx.beginPath();ctx.ellipse(0,r*1.02,r*.8,r*.16,0,0,Math.PI*2);ctx.fill();ctx.restore();
+  ctx.beginPath();const N=56;
+  for(let i=0;i<=N;i++){const a=i/N*Math.PI*2;const k=1+.035*Math.sin(3*a+t*1.3+f.seed)+.025*Math.sin(5*a-t*.9+f.seed*1.7);
+    const px=Math.cos(a)*r*k,py=Math.sin(a)*r*k;if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);}
+  ctx.closePath();
+  // 광택 있는 3D 구슬 (영상의 입체 질감)
+  const g=ctx.createRadialGradient(-r*.35,-r*.4,r*.05,0,0,r*1.1);
+  g.addColorStop(0,mix(F.color,.65,'w'));g.addColorStop(.5,mix(F.color,.12,'w'));g.addColorStop(1,mix(F.color,.32,'b'));
+  ctx.shadowColor=F.id==='bugin'?'#8f96c0':F.color;ctx.shadowBlur=22+f.power*.35;ctx.fillStyle=g;ctx.fill();ctx.shadowBlur=0;
+  ctx.save();ctx.clip();
+  const rim=ctx.createRadialGradient(0,0,r*.75,0,0,r*1.05);rim.addColorStop(0,'rgba(0,0,0,0)');rim.addColorStop(1,'rgba(0,0,0,.14)');ctx.fillStyle=rim;ctx.fillRect(-r*1.2,-r*1.2,r*2.4,r*2.4);
+  const hl=ctx.createRadialGradient(-r*.3,-r*.5,0,-r*.3,-r*.5,r*.6);hl.addColorStop(0,'rgba(255,255,255,.55)');hl.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.fillStyle=hl;ctx.beginPath();ctx.ellipse(-r*.28,-r*.48,r*.5,r*.3,-.4,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+  ctx.lineWidth=Math.max(1.5,r*.045);ctx.strokeStyle='rgba(243,223,174,.85)';ctx.stroke();
+  if(r>30){ctx.beginPath();ctx.arc(0,0,r*.84,0,Math.PI*2);ctx.lineWidth=1;ctx.strokeStyle='rgba(243,223,174,.35)';ctx.stroke();}
+  if(f.power<12){ctx.beginPath();ctx.arc(0,0,r,0,Math.PI*2);ctx.fillStyle='rgba(18,18,26,.45)';ctx.fill();}
+  if(f.flash>0){ctx.beginPath();ctx.arc(0,0,r,0,Math.PI*2);ctx.fillStyle='rgba(220,40,30,'+(f.flash*.55)+')';ctx.fill();}
+  const inside=r>38;const light=lum(F.color)>.62;ctx.textAlign='center';ctx.textBaseline='middle';
+  const fs=clamp(r*.34,13,28);ctx.font='900 '+fs+'px '+SANS;
+  ctx.fillStyle=inside?(light?'#1b1510':'#fff'):'#f4eddb';ctx.shadowColor=inside&&light?'rgba(255,255,255,.5)':'#000';ctx.shadowBlur=inside?3:6;
+  const ly=inside?-fs*.28:r+fs*.9;ctx.fillText(F.name,0,ly);
+  ctx.font='500 '+Math.max(10,fs*.5)+'px '+SANS;ctx.globalAlpha=f.alpha*.85;if(!f.demo)ctx.fillText('세력 '+Math.round(f.power),0,ly+fs*.85);
+  if(f.survived){ctx.globalAlpha=f.alpha;ctx.font='700 12px '+SANS;ctx.fillStyle='#ffd98a';ctx.fillText('살아남음 (가상)',0,-r-10);}
+  ctx.restore();
+  if(f.stamp){const st=f.stamp;const a=Math.min(1,st.t*4)*(st.t>2.8?Math.max(0,1-(st.t-2.8)/.6):1);const sc=1+Math.max(0,.25-st.t)*3;
+    ctx.save();ctx.globalAlpha=a;ctx.translate(f.x,f.y-r-26);ctx.rotate(-.12);ctx.scale(sc,sc);
+    const fz=Math.max(16,Math.min(W,H)*.028);ctx.font='700 '+fz+'px '+SERIF;const tw=ctx.measureText(st.text).width;
+    rr(-tw/2-12,-fz*.9,tw+24,fz*1.8,6);ctx.fillStyle='rgba(245,236,213,.96)';ctx.fill();ctx.lineWidth=3;ctx.strokeStyle=st.color;ctx.stroke();
+    ctx.fillStyle=st.color;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(st.text,0,1);ctx.restore();}
+}
+
+/* ============ 왕 그리기 (카메라 + 익선관·곤룡포·소매·눈썹·수염 피팅) ============ */
+const avgP=(...ps)=>({x:ps.reduce((a,p)=>a+p.x,0)/ps.length,y:ps.reduce((a,p)=>a+p.y,0)/ps.length});
+const lerpP=(a,b,t)=>({x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t});
+const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+const toScr=(vm,p)=>({x:vm.ox+p.x*vm.dw,y:vm.oy+p.y*vm.dh});
+
+/* 얼굴 기하 정보 (화면 픽셀) */
+function faceGeom(vm){
+  const f=T.face;if(!f)return null;const P=i=>toScr(vm,f[i]);
+  const eyeL=avgP(P(263),P(362)),eyeR=avgP(P(33),P(133));
+  const roll=clamp(Math.atan2(eyeR.y-eyeL.y,eyeR.x-eyeL.x),-.7,.7);T.roll=roll;
+  const brow=s=>{const B=BROW[s];const pts=[...B.up,...B.lo].map(P);
+    return {c:avgP(...pts),outer:avgP(...B.outer.map(P)),inner:avgP(...B.inner.map(P))};};
+  const g={P,roll,eyeL,eyeR,browL:brow('L'),browR:brow('R'),top:P(10),chin:P(152),nose:P(1),
+    cheekL:P(454),cheekR:P(234),mouthC:avgP(P(13),P(14)),mouthW:dist(P(61),P(291)),
+    lip:lerpP(P(2),P(0),.55),pupilL:P(473),pupilR:P(468)};
+  g.faceW=dist(g.cheekL,g.cheekR);g.faceH=dist(g.top,g.chin);
+  return g;
+}
+/* 몸 기하 정보: 어깨가 보이면 어깨로, 안 보이면 얼굴 크기로 추정 */
+function bodyGeom(vm,fg){
+  const p=T.pose;
+  if(p&&p[11].v>.45&&p[12].v>.45){
+    const a=toScr(vm,p[11]),b=toScr(vm,p[12]);const mid=avgP(a,b);
+    let sw=dist(a,b);if(fg)sw=clamp(sw,fg.faceW*1.5,fg.faceW*3.6);
+    return {sw,nx:fg?lerp(mid.x,fg.chin.x,.35):mid.x,sy:mid.y};
+  }
+  if(fg)return {sw:fg.faceW*2.2,nx:fg.chin.x,sy:fg.chin.y+fg.faceH*.42};
+  return null;
+}
+
+function drawKing(t){
+  const R=kingRect();if(R.w<10)return;
+  ctx.save();
+  // 금박 액자 (어좌 뒤 일월오봉도 앞에 놓인 듯)
+  ctx.save();ctx.shadowColor='rgba(0,0,0,.65)';ctx.shadowBlur=36;ctx.shadowOffsetY=10;
+  rr(R.x-12,R.y-12,R.w+24,R.h+24,16);ctx.fillStyle='#5d100b';ctx.fill();ctx.restore();
+  const gg=ctx.createLinearGradient(R.x,R.y-12,R.x,R.y+R.h+12);
+  gg.addColorStop(0,'#fff1c4');gg.addColorStop(.25,'#d8b46a');gg.addColorStop(.55,'#9d7330');gg.addColorStop(.8,'#e7c77f');gg.addColorStop(1,'#8a6428');
+  rr(R.x-9,R.y-9,R.w+18,R.h+18,14);ctx.lineWidth=7;ctx.strokeStyle=gg;ctx.stroke();
+  rr(R.x-2,R.y-2,R.w+4,R.h+4,11);ctx.lineWidth=2;ctx.strokeStyle='#3e0906';ctx.stroke();
+  ctx.save();rr(R.x,R.y,R.w,R.h,10);ctx.clip();
+
+  const live=camOn&&video.readyState>=2;
+  let vm;
+  if(live){
+    const vw=video.videoWidth||640,vh=video.videoHeight||480;
+    const sc=Math.max(R.w/vw,R.h/vh);const dw=vw*sc,dh=vh*sc;
+    const ox=R.x+(R.w-dw)/2,oy=R.y+(R.h-dh)/2;
+    ctx.save();ctx.translate(ox+dw,oy);ctx.scale(-1,1);ctx.drawImage(video,0,0,dw,dh);ctx.restore();
+    vm={ox,oy,dw,dh};
+    // 인식 신뢰도에 따라 의상을 부드럽게 나타내고 사라지게
+    const dt=1/60;T.faceA=clamp(T.faceA+(T.faceOK?dt*4:-dt*2.5),0,1);
+    const bodyVis=T.faceOK||T.bodyOK;T.bodyA=clamp(T.bodyA+(bodyVis?dt*4:-dt*2.5),0,1);
+    const fg=faceGeom(vm),bg=bodyGeom(vm,fg);
+    if(bg){ctx.save();ctx.globalAlpha=T.bodyA;drawSleeves(vm,bg);drawCloth(bg,fg);ctx.restore();}
+    if(fg&&T.faceA>0){
+      const k=KINGS[S.kingIdx],pk=S.prevKingIdx>=0?KINGS[S.prevKingIdx]:null;
+      ctx.save();ctx.globalAlpha=T.faceA;
+      if(pk&&S.kingFade<1)drawFaceParts(pk,fg,1-S.kingFade);
+      drawFaceParts(k,fg,S.kingFade);
+      drawHat(fg);
+      ctx.restore();
+    }
+    drawGestureEffects(vm);
+    if(S.mode==='result'&&S.resultShown)drawJoinCircle(vm,bg);else S.joinIn=false;
+    if(showLM)drawLandmarks(vm,fg);
+    // 얼굴을 못 찾을 때 안내
+    if(!T.faceOK&&AI.state==='ready'){
+      ctx.save();ctx.setLineDash([7,6]);ctx.strokeStyle='rgba(243,223,174,.8)';ctx.lineWidth=2;
+      const cx=R.x+R.w/2,cy=R.y+R.h*.4,rw=R.h*.2;ctx.beginPath();ctx.ellipse(cx,cy,rw*.8,rw,0,0,Math.PI*2);ctx.stroke();
+      ctx.setLineDash([]);ctx.font='700 '+Math.max(12,R.w*.03)+'px '+SANS;ctx.fillStyle='#f3dfae';ctx.textAlign='center';
+      ctx.shadowColor='#000';ctx.shadowBlur=6;ctx.fillText('얼굴과 어깨가 보이게 서 주세요',cx,cy+rw+22);ctx.restore();
+    }
+    if(AI.state==='loading'){
+      ctx.save();ctx.font='700 '+Math.max(12,R.w*.028)+'px '+SANS;const tx='AI 인식 모델 불러오는 중…';const tw=ctx.measureText(tx).width;
+      rr(R.x+R.w/2-tw/2-14,R.y+14,tw+28,30,15);ctx.fillStyle='rgba(18,22,42,.85)';ctx.fill();
+      ctx.fillStyle='#f3dfae';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(tx,R.x+R.w/2,R.y+29);ctx.restore();
+    }
+  }else{
+    // 카메라가 없을 때: 영상 속 임금 초상
+    if(imgsLoaded.portrait){const im=IMGS.portrait;const sc=Math.max(R.w/im.width,R.h/im.height);
+      ctx.drawImage(im,R.x+(R.w-im.width*sc)/2,R.y,im.width*sc,im.height*sc);}
+    else{ctx.fillStyle='#2a1d18';ctx.fillRect(R.x,R.y,R.w,R.h);}
+    vm={ox:R.x,oy:R.y,dw:R.w,dh:R.h};
+  }
+
+  // 사건 중: 손 들기 판정 구역
+  if(live&&S.mode==='event'){
+    [['L',0],['R',.72]].forEach(([s,x0])=>{
+      const zx=R.x+x0*R.w,zy=R.y,zw=R.w*.28,zh=R.h*.62;const gv=S.gauge[s];const isUp=T.hands[s].up;
+      ctx.save();ctx.fillStyle='rgba(243,223,174,'+(isUp?.3:(.06+gv*.35))+')';
+      rr(zx+8,zy+8,zw-16,zh-16,12);ctx.fill();ctx.setLineDash([6,5]);ctx.lineWidth=isUp?3:2;
+      ctx.strokeStyle=isUp?'#ffe08a':'rgba(243,223,174,.75)';ctx.stroke();ctx.setLineDash([]);
+      ctx.textAlign='center';ctx.textBaseline='middle';ctx.font=Math.round(zw*.26)+'px sans-serif';ctx.fillText('✋',zx+zw/2,zy+zh*.4);
+      ctx.font='700 '+Math.round(Math.max(11,zw*.11))+'px '+SANS;ctx.fillStyle='#fff';ctx.shadowColor='#000';ctx.shadowBlur=6;
+      ctx.fillText(s==='L'?'왼손 들기':'오른손 들기',zx+zw/2,zy+zh*.66);ctx.restore();
+    });
+  }
+  ctx.restore();
+
+  // 현판 스타일 명패
+  const kn=KINGS[S.kingIdx].n;const fz=Math.max(15,Math.min(26,R.w*.05));ctx.font='700 '+fz+'px '+SERIF;
+  const label='전하 · '+kn;const tw=ctx.measureText(label).width;const px=W/2,py=R.y+R.h+6;
+  const pw=tw+44,ph=fz*1.8;
+  ctx.save();ctx.shadowColor='rgba(0,0,0,.55)';ctx.shadowBlur=14;ctx.shadowOffsetY=4;
+  rr(px-pw/2,py-ph/2,pw,ph,6);const pg=ctx.createLinearGradient(0,py-ph/2,0,py+ph/2);pg.addColorStop(0,'#8d1d14');pg.addColorStop(1,'#5d100b');ctx.fillStyle=pg;ctx.fill();ctx.restore();
+  rr(px-pw/2,py-ph/2,pw,ph,6);ctx.lineWidth=2.5;ctx.strokeStyle=gg;ctx.stroke();
+  rr(px-pw/2+4,py-ph/2+4,pw-8,ph-8,4);ctx.lineWidth=1;ctx.strokeStyle='rgba(243,223,174,.45)';ctx.stroke();
+  ctx.fillStyle='#f3dfae';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(label,px,py+1);
+  ctx.restore();
+}
+
+/* 결과 화면: 가슴 앞 금빛 원에 양손을 모으면 '다음으로' */
+function drawJoinCircle(vm,bg){
+  S.joinIn=false;if(!bg||AI.state!=='ready')return;
+  const c={x:bg.nx,y:bg.sy+bg.sw*.42},r=bg.sw*.36;
+  const p=T.pose;let n=0;
+  if(p)[15,16].forEach(i=>{if(p[i].v>.3&&dist(toScr(vm,p[i]),c)<r*1.15)n++;});
+  S.joinIn=n===2;const g=S.joinG||0;const t=performance.now()/1000;
+  ctx.save();
+  ctx.beginPath();ctx.arc(c.x,c.y,r,0,Math.PI*2);ctx.fillStyle='rgba(243,223,174,'+(.12+g*.3)+')';ctx.fill();
+  ctx.setLineDash([8,7]);ctx.lineDashOffset=-t*30;ctx.lineWidth=3;ctx.strokeStyle='rgba(255,224,138,'+(n?1:.75)+')';ctx.stroke();ctx.setLineDash([]);
+  if(g>0){ctx.beginPath();ctx.arc(c.x,c.y,r+7,-Math.PI/2,-Math.PI/2+g*Math.PI*2);ctx.lineWidth=8;ctx.strokeStyle='#ffe08a';ctx.shadowColor='#ffd54f';ctx.shadowBlur=18;ctx.stroke();ctx.shadowBlur=0;}
+  ctx.font='700 '+Math.max(13,r*.2)+'px '+SANS;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#fff';ctx.shadowColor='#000';ctx.shadowBlur=6;
+  ctx.fillText(n===2?'좋아요! 그대로…':n===1?'한 손 더!':'양손을 여기에 🙏',c.x,c.y);
+  ctx.font='700 '+Math.max(11,r*.14)+'px '+SANS;ctx.fillText('다음 시대로',c.x,c.y+r*.3);
+  ctx.restore();
+}
+/* 소매: 어깨→팔꿈치→손목을 따라 붉은 소매와 금색 소맷단을 그린다 (팔 인식 시각화) */
+function drawSleeves(vm,bg){
+  const p=T.pose;if(!p)return;
+  ctx.save();ctx.lineCap='round';ctx.lineJoin='round';
+  ['L','R'].forEach(s=>{
+    const sh=p[s==='L'?11:12],el=p[s==='L'?13:14],wr=p[s==='L'?15:16];
+    if(sh.v<.4||el.v<.35)return;
+    const A=toScr(vm,sh),B=toScr(vm,el),C=wr.v>.35?toScr(vm,wr):null;
+    const w1=bg.sw*.36,w2=bg.sw*.3;
+    const end=C?lerpP(B,C,.8):null,cuff0=C?lerpP(B,C,.66):null;
+    const seg=(a,b,w,col)=>{ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.lineWidth=w;ctx.strokeStyle=col;ctx.stroke();};
+    const path=(w,col)=>{ctx.beginPath();ctx.moveTo(A.x,A.y);ctx.lineTo(B.x,B.y);if(end)ctx.lineTo(end.x,end.y);ctx.lineWidth=w;ctx.strokeStyle=col;ctx.stroke();};
+    path(w1+5,'#3e0906');path(w1,'#a81f17');
+    ctx.globalCompositeOperation='source-atop';path(w1*.45,'rgba(255,120,90,.18)');ctx.globalCompositeOperation='source-over';
+    if(end){seg(cuff0,end,w2+5,'#6e4a16');seg(cuff0,end,w2,'#d8b46a');seg(lerpP(cuff0,end,.45),lerpP(cuff0,end,.55),w2,'#b3241c');}
+  });
+  ctx.restore();
+}
+
+/* 곤룡포: 회전 없이 항상 똑바로. 어깨폭으로 크기, 목(어깨 중앙)으로 위치를 잡고
+   카메라 액자 밖으로 나가는 부분은 액자에서 잘린다 (몸이 일부만 보이면 옷도 일부만) */
+function drawCloth(bg,fg){
+  if(!imgsLoaded.cloth)return;
+  const sc=bg.sw/CLOTH.shoulderSpan;
+  // 어깨 관절 점은 실제 어깨선보다 낮게 잡히므로 어깨폭 x clothLift 만큼 끌어올린다 (점검창 슬라이더로 조절)
+  let sy=bg.sy-bg.sw*clothLift;
+  if(fg)sy=Math.max(sy,fg.chin.y-fg.faceH*.3+(CLOTH.shoulderY-CLOTH.collarTop)*sc); // 너무 올라가 얼굴을 덮는 것만 방지
+  ctx.save();
+  if(fg){ // 깃이 턱 뒤로 들어가 보이도록 얼굴(턱선) 영역은 옷을 그리지 않는다
+    const c=avgP(fg.top,fg.chin);
+    ctx.beginPath();ctx.rect(-1e4,-1e4,3e4,3e4);
+    ctx.ellipse(c.x,c.y,fg.faceW*.5,fg.faceH*.53,fg.roll,0,Math.PI*2);ctx.clip('evenodd');
+  }
+  ctx.drawImage(IMGS.cloth,bg.nx-CLOTH.cx*sc,sy-CLOTH.shoulderY*sc,CLOTH.w*sc,CLOTH.h*sc);
+  ctx.restore();
+}
+
+/* 익선관: 이마 위에 얹고, 머리 기울기(roll)만큼 따라 기운다 */
+function drawHat(fg){
+  if(!imgsLoaded.hat)return;
+  const browMid=avgP(fg.browL.c,fg.browR.c);
+  const anc=lerpP(browMid,fg.top,.5);
+  const cheekMid=avgP(fg.cheekL,fg.cheekR);const yaw=clamp((fg.nose.x-cheekMid.x)/Math.max(1,fg.faceW),-.5,.5);
+  anc.x-=yaw*fg.faceW*.3; // 고개를 돌리면 얼굴 표면보다 머리 중심이 덜 움직이는 것 보정
+  const headW=Math.max(fg.faceW,fg.faceH*.8);
+  const size=headW*1.22/(HAT.bandW/HAT.size);
+  ctx.save();ctx.translate(anc.x,anc.y);ctx.rotate(fg.roll);
+  ctx.drawImage(IMGS.hat,-size*(HAT.cx/HAT.size),-size*(HAT.bandBottom/HAT.size),size,size);
+  ctx.restore();
+}
+
+/* 눈썹·수염·안경 */
+function drawSprite(r,cx,cy,w,ax,ay,rot){ // r: [x,y,w,h], (ax,ay): 스프라이트 안 기준점 → (cx,cy)
+  const s=w/r[2],h=r[3]*s;
+  ctx.save();ctx.translate(cx,cy);ctx.rotate(rot);
+  ctx.drawImage(IMGS.face,r[0],r[1],r[2],r[3],-(ax-r[0])*s,-(ay-r[1])*s,w,h);ctx.restore();
+}
+function drawFaceParts(k,fg,alpha){
+  if(!imgsLoaded.face||alpha<=.01)return;
+  ctx.save();ctx.globalAlpha*=alpha;
+  // 눈썹: 좌우 각각 실제 눈썹의 중심·길이에 맞춘다 (모양은 스프라이트 표정 유지, 회전은 머리 기울기)
+  const B=FACE_PARTS[k.brow];
+  if(B)['L','R'].forEach(s=>{const b=s==='L'?fg.browL:fg.browR;const r=B[s];
+    const len=dist(b.outer,b.inner)*1.18;
+    drawSprite(r,b.c.x,b.c.y,len,r[0]+r[2]/2,r[1]+r[3]*.55,fg.roll);});
+  // 수염
+  const M=k.beard&&k.beard!=='none'?FACE_PARTS[k.beard]:null;
+  if(M){
+    if(M.at==='lip'){drawSprite(M.r,fg.lip.x,fg.lip.y,fg.mouthW*M.k,M.ax,M.ay,fg.roll);}
+    else{const w=fg.mouthW*M.k/M.hole*M.r[2];drawSprite(M.r,fg.mouthC.x,fg.mouthC.y,w,M.ax,M.ay,fg.roll);}
+  }
+  // 안경: 렌즈 중심을 두 눈동자에
+  if(k.extra==='glasses'){const G=FACE_PARTS.glasses;const d=dist(fg.pupilL,fg.pupilR);const m=avgP(fg.pupilL,fg.pupilR);
+    drawSprite(G.r,m.x,m.y,d/G.span*G.r[2],G.ax,G.ay,fg.roll);}
+  ctx.restore();
+}
+
+/* 손을 들었을 때 손목에 금빛 고리 */
+function drawGestureEffects(vm){
+  ['L','R'].forEach(s=>{const h=T.hands[s];if(!h.up)return;
+    const P=toScr(vm,h);const rad=28+Math.sin(performance.now()*.008)*6;
+    ctx.save();ctx.beginPath();ctx.arc(P.x,P.y,rad,0,Math.PI*2);ctx.fillStyle='rgba(243,223,174,.22)';ctx.fill();
+    ctx.lineWidth=3;ctx.strokeStyle='#ffe08a';ctx.shadowColor='#ffd54f';ctx.shadowBlur=14;ctx.stroke();ctx.shadowBlur=0;
+    ctx.font='700 13px '+SANS;ctx.fillStyle='#fff';ctx.textAlign='center';ctx.shadowColor='#000';ctx.shadowBlur=5;
+    ctx.fillText(s==='L'?'왼손 ✋':'오른손 ✋',P.x,P.y-rad-8);ctx.restore();});
+}
+
+/* 인식점 표시 (점검용) */
+function drawLandmarks(vm,fg){
+  ctx.save();
+  if(fg){ctx.fillStyle='#ffe08a';[...BROW.L.up,...BROW.L.lo,...BROW.R.up,...BROW.R.lo].forEach(i=>{const p=fg.P(i);ctx.beginPath();ctx.arc(p.x,p.y,2.2,0,Math.PI*2);ctx.fill();});
+    ctx.fillStyle='#7fe0ff';[fg.pupilL,fg.pupilR,fg.nose,fg.lip,fg.mouthC,fg.chin,fg.top].forEach(p=>{ctx.beginPath();ctx.arc(p.x,p.y,3,0,Math.PI*2);ctx.fill();});}
+  const p=T.pose;
+  if(p){ctx.strokeStyle='#7fe0ff';ctx.lineWidth=3;
+    [[11,12],[11,13],[13,15],[12,14],[14,16]].forEach(([a,b])=>{if(p[a].v<.3||p[b].v<.3)return;const A=toScr(vm,p[a]),B=toScr(vm,p[b]);ctx.beginPath();ctx.moveTo(A.x,A.y);ctx.lineTo(B.x,B.y);ctx.stroke();});
+    ctx.fillStyle='#fff';[11,12,13,14,15,16].forEach(i=>{if(p[i].v<.3)return;const A=toScr(vm,p[i]);ctx.beginPath();ctx.arc(A.x,A.y,4,0,Math.PI*2);ctx.fill();});}
+  ctx.restore();
+}
+/* ============ 계보도 ============ */
+function mineTop(){let best=null,bp=-1;for(const id in S.fac){const f=S.fac[id];if(f.alive&&f.power>bp){bp=f.power;best=id;}}return best;}
+function treeSVG(mode){
+  const ids=Object.keys(FACTIONS);const top=mode==='mine'?mineTop():(mode==='real'?'noron':null);
+  let s='<svg viewBox="0 0 300 172" xmlns="http://www.w3.org/2000/svg" font-family="Noto Sans KR, sans-serif">';
+  s+='<text x="45" y="64" text-anchor="middle" font-size="8" fill="#a9a18d">척신(외척)</text>';
+  ids.forEach(id=>{const F=FACTIONS[id];if(!F.parent)return;const v=S.tree[id];if(mode==='live'&&!v)return;
+    const [x1,y1]=FACTIONS[F.parent].tree,[x2,y2]=F.tree;const my=(y1+y2)/2;
+    s+='<path d="M'+x1+' '+(y1+13)+' C '+x1+' '+my+', '+x2+' '+my+', '+x2+' '+(y2-13)+'" fill="none" stroke="'+F.color+'" stroke-opacity=".6" stroke-width="1.6"/>';});
+  ids.forEach(id=>{const F=FACTIONS[id];const [x,y]=F.tree;const v=S.tree[id];let r=12,op=1;
+    if(mode==='live'){if(!v)op=.12;else if(v==='gone')op=.45;}
+    if(mode==='mine'){r=8+Math.min(10,(S.peak[id]||0)*.1);if(!v)op=.15;}
+    const tc=lum(F.color)>.6?'#1b1510':'#fff';
+    if(mode==='live'&&(v==='alive'||v==='survived'))s+='<circle cx="'+x+'" cy="'+y+'" r="'+(r+3)+'" fill="none" stroke="#f1d48d" stroke-width="1.2" opacity=".85"/>';
+    s+='<g opacity="'+op+'"><circle cx="'+x+'" cy="'+y+'" r="'+r+'" fill="'+F.color+'" stroke="rgba(255,255,255,.45)"/><text x="'+x+'" y="'+(y+3.2)+'" text-anchor="middle" font-size="9" font-weight="700" fill="'+tc+'">'+F.short+'</text></g>';
+    let sub='';if(mode==='real')sub=F.years;else if(mode==='mine'&&v)sub=(v==='survived'?'생존! ':'')+'승리 '+(S.winsMine[id]||0);
+    if(sub)s+='<text x="'+x+'" y="'+(y+r+10)+'" text-anchor="middle" font-size="7.5" fill="#c8bfa9">'+sub+'</text>';
+    if(top&&id===top)s+='<text x="'+x+'" y="'+(y-r-3)+'" text-anchor="middle" font-size="11">👑</text>';});
+  return s+'</svg>';
+}
+function refreshMini(){if(S){$('#miniSvg').innerHTML=treeSVG('live');if(!$('#treeModal').classList.contains('hidden'))fillTreeModal();}}
+let treePausedByModal=false;
+function fillTreeModal(){
+  $('#treeBig').innerHTML=treeSVG('live');
+  const ids=Object.keys(FACTIONS).filter(id=>S.tree[id]);
+  $('#treeList').innerHTML=ids.map(id=>{const F=FACTIONS[id],f=S.fac[id],st=S.tree[id];const alive=f&&f.alive;
+    return '<div class="tl'+(alive?'':' gone')+'"><i style="background:'+F.color+'"></i><b>'+F.name+'</b><span>'+(alive?'세력 '+Math.round(f.power):(st==='survived'?'살아남음':'사라짐'))+'</span>'+
+      (alive?'<em><u style="width:'+Math.round(f.power)+'%;background:'+F.color+'"></u></em>':'')+'</div>';}).join('')||'<p>아직 붕당이 없습니다.</p>';
+}
+function openTree(){if(!S)return;fillTreeModal();$('#treeModal').classList.remove('hidden');
+  treePausedByModal=S.mode==='play'&&!S.paused;if(treePausedByModal){S.paused=true;}}
+function closeTree(){$('#treeModal').classList.add('hidden');if(S&&treePausedByModal){S.paused=false;}treePausedByModal=false;}
+
+/* ============ 엔딩 ============ */
+function chip(id){const F=FACTIONS[id];return '<span class="tag" style="background:'+F.color+';color:'+(lum(F.color)>.6?'#1b1510':'#fff')+'">'+F.name+'</span>';}
+function sideChips(ev,side){if(side==='B')return '<span class="tag" style="background:#d9b35e;color:#1a1409">탕평</span>';return ev[side].f.map(chip).join('');}
+function showEnding(){
+  if(!S)return;S.mode='ending';
+  ['#hud','#tl','#mini','#event','#result','#camPanel'].forEach(q=>$(q).classList.add('hidden'));hideCards();hideHist();
+  const n=EVENTS.length,ok=S.records.filter(r=>r.match).length,changed=n-ok;
+  const rank=ok===n?['완벽한 성군','사관도 감탄할 만큼 실제 역사 그대로 조정을 이끌었습니다.']:ok>=12?['역사를 아는 임금','몇 번 흔들렸지만 조선의 큰 흐름을 지켜 냈습니다.']:ok>=8?['갈팡질팡 임금','붕당 사이에서 이리저리 흔들린 조정이었습니다.']:['역사를 새로 쓴 임금','조선의 역사가 완전히 다른 길로 흘러갔습니다!'];
+  const winner=mineTop();
+  const rows=S.records.map(r=>{const ev=EVENTS[r.i];return '<tr class="'+(r.match?'':'bad')+'"><td><b>'+ev.title+'</b><br><small>'+Math.floor(ev.y)+'년, '+ev.era+'</small></td><td>'+sideChips(ev,ev.ans)+'</td><td>'+sideChips(ev,r.choice)+' '+(r.match?'✅':'🔀')+'</td></tr>';}).join('');
+  const codex=[...S.codex.values()];const ghosts=codex.filter(c=>c.ghost).length;
+  const cxHTML=codex.map(c=>{const F=c.f?FACTIONS[c.f]:null;const col=F?F.color:'#d9b35e';const icon=c.ic||(c.t==='person'?c.n[0]:(c.t==='war'?'⚔':(c.t==='culture'?'🏛':'⚡')));
+    return '<div class="cx'+(c.ghost?' ghost':'')+'"><i style="background:'+col+';color:'+(lum(col)>.62?'#241c10':'#fff')+'">'+esc(icon)+'</i><div><b>'+esc(c.n)+'</b>'+(F?F.name:'나라 전체')+(c.ghost?' (유령)':'')+'</div></div>';}).join('');
+  const hints=[];S.records.filter(r=>!r.match).slice(0,2).forEach(r=>{const ev=EVENTS[r.i];hints.push('「'+ev.title+'」('+Math.floor(ev.y)+'년)에서는 실제로 '+sideName(ev,ev.ans)+' 쪽이 이겼어요. 다음엔 역사대로 도전해 보세요.');});
+  const okRec=S.records.filter(r=>r.match);if(okRec.length){const ev=EVENTS[pick(okRec).i];const other=ev.ans==='L'?'R':'L';hints.push('「'+ev.title+'」에서 '+sideName(ev,other)+' 편을 들면? '+ev.whatIf);}
+  $('#eInner').innerHTML=
+    '<div class="eTop"><div class="portrait"></div><div class="kicker">1494 ~ 1800, 306년의 조정을 마쳤습니다</div><div class="rank goldText">'+rank[0]+'</div><p>'+rank[1]+'</p></div>'+
+    '<div class="stats"><div class="stat"><b>'+ok+'/'+n+'</b><span>역사와 일치</span></div><div class="stat"><b>'+changed+'번</b><span>역사를 바꿈</span></div><div class="stat"><b>'+S.lives+'</b><span>남은 목숨</span></div><div class="stat"><b>'+S.bestCombo+'</b><span>최고 연속 일치</span></div><div class="stat"><b>'+codex.length+'</b><span>만난 인물과 사건</span></div></div>'+
+    '<div class="cmp"><div class="panel navyCard"><h3>실제 역사의 계보</h3><p class="sub">1800년 무렵 조정의 주도권은 노론에게 있었고, 이후 세도 정치로 이어집니다.</p>'+treeSVG('real')+'</div>'+
+    '<div class="panel navyCard"><h3>당신이 만든 역사의 계보</h3><p class="sub">원이 클수록 크게 성장했던 붕당입니다. 최종 승자는 '+(winner?FACTIONS[winner].name:'없음')+'입니다.</p>'+treeSVG('mine')+'</div></div>'+
+    '<div class="panel navyCard" style="margin-bottom:16px"><h3>판결 기록: 실제 역사와 당신의 역사</h3><div class="tblwrap"><table><thead><tr><th>사건</th><th>실제 역사의 승자</th><th>당신이 편든 쪽</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
+    hints.map(h=>'<div class="hint">'+esc(h)+'</div>').join('')+'</div>'+
+    '<div class="panel navyCard" style="margin-bottom:20px"><h3>붕당 인물 도감</h3><p class="sub">'+(ghosts?'회색 카드는 당신의 역사에서 붕당이 몰락해 “유령”으로만 만난 인물과 사건입니다 ('+ghosts+'개).':'이번 회차에 만난 인물과 사건입니다.')+'</p><div class="codex">'+cxHTML+'</div></div>'+
+    '<div class="row"><button class="big primary" id="again">다른 역사 만들기</button><button class="big" id="toTitle">처음 화면으로</button></div>';
+  $('#ending').classList.remove('hidden');$('#ending').scrollTop=0;
+  $('#again').onclick=()=>resetGame();$('#toTitle').onclick=()=>{$('#ending').classList.add('hidden');$('#title').classList.remove('hidden');S=null;playIntro();};
+}
+
+/* ============ 시작과 조작 ============ */
+function setSpeed(s){speedPref=s;if(S)S.speed=s;document.querySelectorAll('.spd').forEach(b=>b.classList.toggle('on',+b.dataset.s===s));}
+function togglePause(){if(!S||S.mode!=='play')return;S.paused=!S.paused;$('#pauseOv').classList.toggle('hidden',!S.paused);$('#pauseBtn').textContent=S.paused?'계속하기':'일시정지';}
+const introVid=$('#introVid');
+function playIntro(){try{introVid.muted=true;const p=introVid.play();if(p&&p.catch)p.catch(()=>{});}catch(e){}}
+function resetGame(){
+  try{introVid.pause();}catch(e){}
+  $('#cards').innerHTML='';hideHist();S=newState();$('#comboHud').textContent='';
+  spawn('hungu',60);spawn('sarim',22);
+  ['#title','#ending','#event','#result','#pauseOv'].forEach(q=>$(q).classList.add('hidden'));
+  ['#hud','#tl'].forEach(q=>$(q).classList.remove('hidden'));$('#mini').classList.toggle('hidden',!miniOn);
+  $('#livesMax').textContent='/'+EVENTS.length;$('#pauseBtn').textContent='일시정지';
+  buildMarks();refreshMini();setSpeed(speedPref);
+  banner('연산군 즉위','제10대 임금, 1494년');T.faceA=0;T.bodyA=0;
+}
+function goFullscreen(){
+  const d=document.documentElement;if(document.fullscreenElement||document.webkitFullscreenElement)return;
+  try{const r=(d.requestFullscreen||d.webkitRequestFullscreen).call(d,{navigationUI:'hide'});if(r&&r.catch)r.catch(()=>{});}catch(e){}
+}
+function toggleFullscreen(){
+  if(document.fullscreenElement||document.webkitFullscreenElement){try{(document.exitFullscreen||document.webkitExitFullscreen).call(document);}catch(e){}}
+  else goFullscreen();
+}
+/* 로딩창 */
+const LSTEP={cam:'카메라 연결',engine:'AI 인식 엔진',face:'얼굴 인식 모델 (478점)',pose:'몸·팔 인식 모델 (33점)'};
+function showLoading(){
+  $('#ldSteps').innerHTML=Object.keys(LSTEP).map(k=>'<li id="ld_'+k+'"><i></i>'+LSTEP[k]+'<span></span></li>').join('');
+  $('#ldBar').style.width='4%';$('#ldMsg').textContent='잠시만 기다려 주세요, 전하.';$('#ldSkip').classList.add('hidden');
+  $('#loading').classList.remove('hidden');
+}
+function ldStep(k,st,info){
+  if(k==='attempt'){if(info>1)$('#ldMsg').textContent='인터넷 연결을 다시 확인하는 중… ('+info+'/3번째 시도)';return;}
+  if(k==='retry'){$('#ldMsg').textContent='불러오지 못했습니다. 곧 다시 시도합니다… ('+info+'/3)';return;}
+  if(k==='done'){$('#ldBar').style.width='100%';$('#ldMsg').textContent=st==='ok'?'준비 완료! 즉위식을 시작합니다.':'AI를 불러오지 못해 손 흔들기(움직임) 감지로 시작합니다.';return;}
+  const li=$('#ld_'+k);if(!li)return;li.className=st;
+  li.querySelector('span').textContent=st==='run'?'불러오는 중…':st==='ok'?'완료':'실패';
+  const done=document.querySelectorAll('#ldSteps li.ok,#ldSteps li.fail').length;
+  $('#ldBar').style.width=Math.max(4,done/4*100)+'%';
+}
+let skipLoad=null;
+async function startGame(withCam){
+  goFullscreen(); // 클릭 직후에 요청해야 브라우저가 허용한다
+  if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)();}catch(e){AC=null;}}
+  if(AC&&AC.state==='suspended')AC.resume();
+  if(withCam){
+    showLoading();
+    const skipP=new Promise(r=>{skipLoad=r;});
+    const skipTimer=setTimeout(()=>$('#ldSkip').classList.remove('hidden'),8000);
+    if(!camOn){ldStep('cam','run');await startCamera();}
+    ldStep('cam',camOn?'ok':'fail');
+    if(camOn){
+      await Promise.race([initVision(ldStep),skipP]);
+      await sleep(AI.state==='ready'?600:1600);
+    }else{
+      ['engine','face','pose'].forEach(k=>ldStep(k,'fail'));
+      $('#ldMsg').textContent='카메라를 켜지 못했습니다. 상소를 누르거나 ← → 키로 판결하세요.';await sleep(1800);
+    }
+    clearTimeout(skipTimer);$('#loading').classList.add('hidden');
+    if(AI.state==='loading')toast('AI는 계속 불러오는 중이에요. 준비되면 자동으로 인식이 시작됩니다.');
+  }
+  resetGame();
+}
+$('#ldSkip').onclick=()=>{if(skipLoad)skipLoad();};
+$('#fsBtn').onclick=toggleFullscreen;
+$('#startCam').onclick=()=>startGame(true);
+$('#startNoCam').onclick=()=>startGame(false);
+document.querySelectorAll('.spd').forEach(b=>b.onclick=()=>setSpeed(+b.dataset.s));
+$('#pauseBtn').onclick=togglePause;
+$('#mini').onclick=openTree;$('#mini').onkeydown=e=>{if(e.key==='Enter')openTree();};
+$('#treeClose').onclick=closeTree;$('#treeModal').onclick=e=>{if(e.target.id==='treeModal')closeTree();};
+$('#miniBtn').onclick=()=>{miniOn=!miniOn;$('#mini').classList.toggle('hidden',!miniOn);};
+$('#muteBtn').onclick=()=>{muted=!muted;$('#muteBtn').textContent=muted?'소리 끔':'소리 켬';};
+$('#poseBadge').onclick=()=>$('#camPanel').classList.toggle('hidden');
+$('#camPanelClose').onclick=()=>$('#camPanel').classList.add('hidden');
+$('#lmToggle').onchange=e=>{showLM=e.target.checked;};
+{const lr=$('#liftRange');const sync=()=>{$('#liftVal').textContent=(clothLift>=0?'+':'')+Math.round(clothLift*100);};lr.value=Math.round(clothLift*100);sync();
+ lr.oninput=()=>{clothLift=lr.value/100;sync();try{localStorage.setItem('bd_clothLift2',clothLift);}catch(e){}};}
+$('#bubL').onclick=()=>choose('L');$('#bubR').onclick=()=>choose('R');$('#bothBtn').onclick=()=>choose('B');
+$('#rNext').onclick=continueGame;
+addEventListener('keydown',e=>{
+  if(!S)return;
+  if(!$('#treeModal').classList.contains('hidden')){if(e.key==='Escape'||e.key===' '){e.preventDefault();closeTree();}return;}
+  if(S.mode==='event'){if(e.key==='ArrowLeft')choose('L');else if(e.key==='ArrowRight')choose('R');else if(e.key==='ArrowUp'||e.key===' '){e.preventDefault();choose('B');}}
+  else if(S.mode==='result'){if(e.key===' '||e.key==='Enter'){e.preventDefault();continueGame();}}
+  else if(S.mode==='play'){if(e.key===' '||e.key==='p'||e.key==='P'){e.preventDefault();togglePause();}else if(e.key==='1'||e.key==='2'||e.key==='4')setSpeed(+e.key);}
+});
+setSpeed(1);playIntro();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
