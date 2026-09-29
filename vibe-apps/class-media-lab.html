@@ -325,6 +325,25 @@
   .accordion-content{ display:block; }
   .accordion-content.collapsed{ display:none; }
 
+  /* 글 속 링크 & 이미지 링크 마우스오버 미리보기 */
+  .text-link{ color:var(--web-dark); text-decoration:underline; overflow-wrap:anywhere; word-break:break-all; }
+  .text-link.is-image::before{ content:'🖼️ '; text-decoration:none; display:inline; }
+  .img-preview{
+    position:fixed; z-index:300; pointer-events:none; display:none;
+    background:#fff; border-radius:14px; padding:6px; box-shadow:0 12px 32px rgba(51,71,91,0.28);
+  }
+  .img-preview img{ display:block; max-width:320px; max-height:260px; border-radius:10px; }
+  .img-preview.loading::after{ content:'이미지 불러오는 중…'; display:block; padding:8px 12px; font-size:12.5px; color:var(--ink-soft); }
+  .img-preview.failed::after{ content:'이미지를 불러올 수 없는 주소예요'; display:block; padding:8px 12px; font-size:12.5px; color:var(--danger-dark); }
+  @media(max-width:520px){ .img-preview img{ max-width:72vw; max-height:45vh; } }
+
+  /* 편지 첨부파일 */
+  .mail-attach-item.added{ animation:attachIn .35s ease; }
+  @keyframes attachIn{ from{ opacity:0; transform:translateY(-6px); background:#FFF6E0; } to{ opacity:1; transform:none; } }
+  .mail-attach-size{ color:var(--ink-soft); font-size:11.5px; margin-left:6px; }
+  .mail-attach-empty{ font-size:12.5px; color:var(--ink-soft); padding:6px 0; }
+  .attach-list-view{ margin-top:12px; border-top:1px solid var(--line); padding-top:10px; }
+
   .qr-center{ display:flex; flex-direction:column; align-items:center; justify-content:center; margin:16px 0; }
   .qr-box{ background:#fff; padding:14px; border-radius:16px; border:none; box-shadow:var(--shadow); }
 </style>
@@ -337,6 +356,9 @@
 
 <!-- 모달 마운트 컨테이너 -->
 <div id="modalMount"></div>
+
+<!-- 이미지 링크 미리보기 팝업 -->
+<div class="img-preview" id="imgPreview"><img alt="" id="imgPreviewImg"></div>
 
 <script>
 // =====================================================================
@@ -424,7 +446,9 @@ const drafts = {
   mailBody: '',
   chatInput: '',
   feedPost: '',
-  commentInput: ''
+  comments: {},    // 게시글 id → 쓰던 댓글
+  replies: {},     // 댓글 id → 쓰던 답글
+  mailAttach: null // 편지 첨부 목록 (null이면 기본 예시 2개로 시작)
 };
 
 let state = {
@@ -519,6 +543,50 @@ function lastMessageTs(a,b){
   const ms = threadMessages(a,b);
   return ms.length? ms[ms.length-1].ts : 0;
 }
+// 편지 첨부 — 재미용 가상 파일 (실제 파일은 올라가지 않음)
+const MAX_MAIL_ATTACH = 6;
+const DEFAULT_MAIL_ATTACH = [
+  { name:'편지에 어울리는 그림.hwp', size:'86KB' },
+  { name:'우리반_사진.png', size:'2.4MB' }
+];
+const RANDOM_ATTACH_POOL = [
+  '가을_현장체험학습.jpg','운동회_계주_결승.mp4','우리집_강아지_뭉치.png','급식_메뉴표_10월.pdf','독서감상문_어린왕자.hwp',
+  '과학_관찰일지_강낭콩.hwp','모둠_발표자료.pptx','학급_시간표.xlsx','교실_칠판_낙서.jpg','생일축하_카드.png',
+  '받아쓰기_연습장.pdf','수학_익힘책_정답.hwp','내가_그린_만화.png','여름방학_일기.hwp','학예회_리허설.mp4',
+  '가족여행_바다.jpg','동물원_기린.jpg','사회_조사보고서.docx','음악_리코더_악보.pdf','미술시간_작품.jpg',
+  '학급회의_회의록.hwp','줄넘기_기록표.xlsx','우리동네_지도.png','체육대회_단체사진.jpg','비밀_레시피_떡볶이.txt',
+  '급식실_오늘의_디저트.jpg','하늘_구름사진.jpg','영어_단어장.pdf','친구에게_주는_상장.hwp','노래_녹음파일.mp3'
+];
+function attachIcon(name){
+  const ext = (name.split('.').pop()||'').toLowerCase();
+  if(['jpg','jpeg','png','gif','webp'].includes(ext)) return '🖼️';
+  if(['mp4','mov','avi'].includes(ext)) return '🎬';
+  if(['mp3','wav','m4a'].includes(ext)) return '🎵';
+  if(['xlsx','xls','csv'].includes(ext)) return '📊';
+  if(['pptx','ppt'].includes(ext)) return '📽️';
+  if(ext==='pdf') return '📕';
+  return '📄';
+}
+function randomFileSize(name){
+  const ext = (name.split('.').pop()||'').toLowerCase();
+  if(['mp4','mov'].includes(ext)) return (Math.random()*40+8).toFixed(1)+'MB';
+  if(['jpg','png','mp3','pptx'].includes(ext)) return (Math.random()*4+0.6).toFixed(1)+'MB';
+  return Math.floor(Math.random()*400+20)+'KB';
+}
+function pickRandomAttachment(current){
+  const used = new Set(current.map(a=>a.name));
+  const left = RANDOM_ATTACH_POOL.filter(n=>!used.has(n));
+  if(left.length===0) return null;
+  const name = left[Math.floor(Math.random()*left.length)];
+  return { name, size: randomFileSize(name) };
+}
+function insertAtCursor(ta, text){
+  const s = ta.selectionStart ?? ta.value.length, e = ta.selectionEnd ?? ta.value.length;
+  ta.value = ta.value.slice(0, s) + text + ta.value.slice(e);
+  ta.focus();
+  ta.selectionStart = ta.selectionEnd = s + text.length;
+}
+
 function timeStr(ts){ return new Date(ts).toLocaleString('ko-KR'); }
 function dateStr(ts){ return new Date(ts).toLocaleDateString('ko-KR'); }
 
@@ -543,32 +611,32 @@ function subscribeClass(code){
     } else {
       classData = {roster:[],teacherPin:null,letterOpenPolicy:'self'};
     }
-    render();
+    requestRender();
   });
   unsub.mails = classDocRef.collection('mails').onSnapshot(snap=>{
     mailsAll = snap.docs.map(d=>({id:d.id, ...d.data()}));
-    render();
+    requestRender();
   });
   unsub.messages = classDocRef.collection('messages').onSnapshot(snap=>{
     messagesAll = snap.docs.map(d=>({id:d.id, ...d.data()}));
     renderChatThreadIfActive();
-    render();
+    requestRender();
   });
   unsub.posts = classDocRef.collection('posts').onSnapshot(snap=>{
     postsAll = snap.docs.map(d=>({id:d.id, ...d.data()})).sort((a,b)=>b.ts-a.ts);
-    render();
+    requestRender();
   });
   unsub.roundMail = classDocRef.collection('rounds').doc('mail').onSnapshot(doc=>{
     roundMail = doc.exists ? doc.data() : {active:false, pairs:{}, roundNumber:0, completed:[]};
-    render();
+    requestRender();
   });
   unsub.roundMessage = classDocRef.collection('rounds').doc('message').onSnapshot(doc=>{
     roundMessage = doc.exists ? doc.data() : {active:false, pairs:{}, roundNumber:0, completed:[]};
-    render();
+    requestRender();
   });
   unsub.selfChecks = classDocRef.collection('selfChecks').onSnapshot(snap=>{
     selfChecksAll = snap.docs.map(d=>({id:d.id, ...d.data()}));
-    render();
+    requestRender();
   });
 }
 
@@ -577,7 +645,7 @@ function subscribeComments(postId){
   if(!postId){ commentsForOpenPost = []; return; }
   unsub.comments = classDocRef.collection('comments').where('postId','==',postId).onSnapshot(snap=>{
     commentsForOpenPost = snap.docs.map(d=>({id:d.id, ...d.data()})).sort((a,b)=>a.ts-b.ts);
-    render();
+    requestRender();
   });
 }
 
@@ -624,9 +692,10 @@ async function saveSelfCheck(name, scores){
   await classDocRef.collection('selfChecks').doc(name).set({ name, scores, ts: Date.now() });
 }
 
-async function sendMail(from,to,subject,body,isRandom){
+async function sendMail(from,to,subject,body,isRandom,attachments){
   await classDocRef.collection('mails').add({
     from, to, subject, body, ts: Date.now(), revealed:false, selfOpened:false,
+    attachments: (attachments||[]).map(a=>({ name:a.name, size:a.size })),
     round: isRandom ? roundMail.roundNumber : null
   });
   if(isRandom){
@@ -777,7 +846,12 @@ function autocompleteInput(placeholder, pool, onPick, prefill){
     }}})));
     sugg.style.display='block';
   });
-  document.addEventListener('click', (e)=>{ if(!wrap.contains(e.target)) sugg.style.display='none'; });
+  // 화면을 다시 그릴 때마다 리스너가 쌓여 느려지지 않도록, 화면에서 사라진 입력칸의 리스너는 스스로 제거
+  const outsideClick = (e)=>{
+    if(!wrap.isConnected){ document.removeEventListener('click', outsideClick); return; }
+    if(!wrap.contains(e.target)) sugg.style.display='none';
+  };
+  document.addEventListener('click', outsideClick);
   return { wrap, input };
 }
 
@@ -969,11 +1043,87 @@ function openSetDefaultClassModal() {
 // =====================================================================
 // 8) 화면별 렌더링 라우터
 // =====================================================================
+// ---------------------------------------------------------------------
+// 실시간 동기화 렌더 보호
+//   다른 친구가 글·메시지를 보낼 때마다 화면 전체를 새로 그리면, 입력 중이던 칸이
+//   새 칸으로 바뀌어 커서가 풀리고(한 글자 치고 입력 불가) 한글 조합이 끊긴다.
+//   → 서버에서 온 변경은 requestRender()로 받아, 타자 중·한글 조합 중에는 미뤘다가
+//     손을 멈추면 그린다. 그릴 때는 입력칸의 포커스·커서 위치·스크롤을 복원한다.
+// ---------------------------------------------------------------------
+let renderPending = false;
+let renderRetryTimer = null;
+let lastTypingAt = 0;
+let imeComposing = false;
+document.addEventListener('compositionstart', ()=>{ imeComposing = true; }, true);
+document.addEventListener('compositionend', ()=>{ imeComposing = false; lastTypingAt = Date.now(); }, true);
+document.addEventListener('input', ()=>{ lastTypingAt = Date.now(); }, true);
+document.addEventListener('keydown', ()=>{ lastTypingAt = Date.now(); }, true);
+
+function isTypingField(node){
+  if(!node || !node.closest || !node.closest('#app')) return false;
+  if(node.tagName === 'TEXTAREA') return !node.disabled && !node.readOnly;
+  if(node.tagName === 'INPUT') return !node.disabled && !node.readOnly && ['text','password','search',''].includes(node.type);
+  return false;
+}
+// 실시간 갱신이 필요 없는 화면 — 서버 변경은 받아 두기만 하고, 화면을 옮길 때(보내기·뒤로가기) 최신 내용으로 그림
+//   편지 쓰기: 다 쓰고 보내면 되므로 쓰는 도중에는 절대 다시 그리지 않음
+const NO_LIVE_RENDER_SCREENS = ['mail-compose'];
+
+function requestRender(){
+  renderPending = true;
+  flushPendingRender();
+}
+function flushPendingRender(){
+  if(!renderPending) return;
+  clearTimeout(renderRetryTimer);
+  if(NO_LIVE_RENDER_SCREENS.includes(state.screen)) return;
+  if(isTypingField(document.activeElement) && (imeComposing || Date.now() - lastTypingAt < 1500)){
+    renderRetryTimer = setTimeout(flushPendingRender, 700);
+    return;
+  }
+  render();
+}
+
+function captureFocus(app){
+  const a = document.activeElement;
+  if(!isTypingField(a)) return null;
+  const fields = [...app.querySelectorAll('input,textarea')];
+  const same = fields.filter(f=> f.tagName===a.tagName && f.placeholder===a.placeholder);
+  return { tag:a.tagName, ph:a.placeholder, nth:same.indexOf(a), value:a.value,
+           s:a.selectionStart, e:a.selectionEnd, scroll:a.scrollTop };
+}
+function restoreFocus(app, info){
+  if(!info) return;
+  const same = [...app.querySelectorAll('input,textarea')].filter(f=> f.tagName===info.tag && f.placeholder===info.ph);
+  const t = same[info.nth] || same[0];
+  if(!t || !isTypingField(t)) return;
+  if(t.value !== info.value) t.value = info.value;
+  t.focus({ preventScroll:true });
+  try{ t.setSelectionRange(info.s, info.e); }catch(err){}
+  t.scrollTop = info.scroll;
+}
+
 function render(){
+  renderPending = false;
+  clearTimeout(renderRetryTimer);
   const app = document.getElementById('app');
+  const focusInfo = captureFocus(app);
+  const scrollY = window.scrollY;
+  app.style.minHeight = app.offsetHeight + 'px'; // 다시 그리는 순간 페이지가 줄어들어 스크롤이 튀는 것 방지
+  hideImagePreview();
   app.className = 'app' + (state.wideView ? ' wide-view' : '');
   app.innerHTML = '';
 
+  try{
+    renderScreen(app);
+  } finally {
+    app.style.minHeight = '';
+    restoreFocus(app, focusInfo);
+    if(focusInfo) window.scrollTo(0, scrollY);
+  }
+}
+
+function renderScreen(app){
   if(!firebaseInitialized) {
     renderConfigError(app);
     return;
@@ -1009,14 +1159,17 @@ function render(){
 //   상태(맨 처음 화면)에서 뒤로가기를 누르면 정말 나갈지 확인 팝업을 띄운다.
 // =====================================================================
 let lastHistoryScreen = null;
+let lastHistorySnapshot = null;
 function syncHistory(){
   const snapshot = JSON.stringify(state);
   if(state.screen !== lastHistoryScreen){
     history.pushState({ appState: snapshot }, '', location.href);
     lastHistoryScreen = state.screen;
-  } else {
+  } else if(snapshot !== lastHistorySnapshot){
+    // 같은 화면에서 실시간 갱신이 잦을 때 replaceState 남발(브라우저 제한) 방지
     history.replaceState({ appState: snapshot }, '', location.href);
   }
+  lastHistorySnapshot = snapshot;
 }
 window.addEventListener('popstate', (e)=>{
   if(e.state && e.state.appState){
@@ -1458,10 +1611,22 @@ function renderMailCompose(app){
 
   client.appendChild(fields);
 
-  // 서식 도구모음 (교과서 화면 재현용 목업 — 실제 서식 변경은 없음)
+  // 서식 도구모음 (교과서 화면 재현용 목업 — 🔗·🖼️만 실제로 주소를 넣어줌)
   const rte = el('div',{class:'mail-rte-toolbar'});
   ['명조 ▾','14 ▾','B','I','U','≡','1.','🔗','🖼️'].forEach(label=>{
-    rte.appendChild(el('button',{class:'mail-rte-btn', text:label, on:{click:(e)=>{ e.preventDefault(); }}}));
+    rte.appendChild(el('button',{class:'mail-rte-btn', text:label, attrs: label==='🖼️' ? {title:'이미지 주소 넣기'} : (label==='🔗' ? {title:'링크 넣기'} : {}), on:{click:(e)=>{
+      e.preventDefault();
+      if(label!=='🔗' && label!=='🖼️') return;
+      const ask = label==='🖼️'
+        ? '넣을 이미지의 주소를 붙여 넣으세요.\n(인터넷 그림에서 마우스 오른쪽 → "이미지 주소 복사")'
+        : '넣을 누리집 주소를 붙여 넣으세요.';
+      const url = normalize(prompt(ask, 'https://'));
+      if(!url || url==='https://') return;
+      if(!/^https?:\/\//i.test(url)){ showToast('http:// 또는 https:// 로 시작하는 주소만 넣을 수 있어요.'); return; }
+      insertAtCursor(bodyInput, '\n' + url + '\n');
+      drafts.mailBody = bodyInput.value;
+      showToast(label==='🖼️' ? '이미지 주소를 넣었어요. 받는 친구가 마우스를 올리면 그림이 보여요!' : '링크를 넣었어요.');
+    }}}));
   });
   client.appendChild(rte);
 
@@ -1470,24 +1635,46 @@ function renderMailCompose(app){
   bodyInput.addEventListener('input', ()=> drafts.mailBody = bodyInput.value);
   client.appendChild(bodyInput);
 
-  // 자료 첨부 (교과서 화면 재현용 목업)
+  // 자료 첨부 (재미용 가상 파일 — 실제 파일은 올라가지 않고 파일 이름만 편지와 함께 전달)
+  if(!drafts.mailAttach) drafts.mailAttach = DEFAULT_MAIL_ATTACH.map(a=>({...a}));
   const attachBox = el('div',{class:'mail-attach'});
+  const attachCount = el('span',{});
+  const attachList = el('div',{});
   attachBox.appendChild(el('div',{class:'mail-attach-head'},[
-    el('span',{text:'📁 자료 첨부'}),
+    attachCount,
     el('button',{class:'mail-btn mail-btn-mock', attrs:{style:'width:auto; margin:0; padding:4px 10px; font-size:12px;'}, text:'+ 파일 추가', on:{click:(e)=>{
       e.preventDefault();
-      showToast('이 버튼은 예시 화면이에요.');
+      if(drafts.mailAttach.length >= MAX_MAIL_ATTACH){ showToast('첨부파일은 '+MAX_MAIL_ATTACH+'개까지만 넣을 수 있어요.'); return; }
+      const f = pickRandomAttachment(drafts.mailAttach);
+      if(!f){ showToast('더 넣을 파일이 없어요.'); return; }
+      drafts.mailAttach.push(f);
+      drawAttachList(f);
     }}})
   ]));
-  [['📄','편지에 어울리는 그림.hwp'], ['🖼️','우리반_사진.png']].forEach(([icon, fname])=>{
-    attachBox.appendChild(el('div',{class:'mail-attach-item'},[
-      el('span',{text: icon+' '+fname}),
-      el('span',{class:'mail-attach-actions'},[
-        el('button',{class:'link-btn', text:'⬇', on:{click:(e)=>{ e.preventDefault(); showToast('예시 파일이라 다운로드는 안 돼요.'); }}}),
-        el('button',{class:'link-btn', text:'✕', attrs:{style:'margin-left:8px; color:var(--danger);'}, on:{click:(e)=>{ e.preventDefault(); }}})
-      ])
-    ]));
-  });
+  attachBox.appendChild(attachList);
+  function drawAttachList(justAdded){
+    attachCount.textContent = '📁 자료 첨부 ('+drafts.mailAttach.length+'개)';
+    attachList.innerHTML = '';
+    if(drafts.mailAttach.length===0){
+      attachList.appendChild(el('div',{class:'mail-attach-empty', text:'첨부한 파일이 없어요. [+ 파일 추가]를 눌러 보세요.'}));
+      return;
+    }
+    drafts.mailAttach.forEach((f, i)=>{
+      attachList.appendChild(el('div',{class:'mail-attach-item'+(f===justAdded?' added':'')},[
+        el('span',{},[ document.createTextNode(attachIcon(f.name)+' '+f.name), el('span',{class:'mail-attach-size', text:f.size}) ]),
+        el('span',{class:'mail-attach-actions'},[
+          el('button',{class:'link-btn', text:'⬇', attrs:{title:'내려받기'}, on:{click:(e)=>{ e.preventDefault(); showToast('예시 파일이라 다운로드는 안 돼요.'); }}}),
+          el('button',{class:'link-btn', text:'✕', attrs:{title:'첨부 삭제', style:'margin-left:8px; color:var(--danger);'}, on:{click:(e)=>{
+            e.preventDefault();
+            drafts.mailAttach.splice(i, 1);
+            drawAttachList();
+            showToast('"'+f.name+'" 첨부를 뺐어요.');
+          }}})
+        ])
+      ]));
+    });
+  }
+  drawAttachList();
   client.appendChild(attachBox);
 
   const err = el('p',{class:'error'});
@@ -1503,7 +1690,8 @@ function renderMailCompose(app){
     if(!normalize(bodyInput.value)){ err.textContent='편지 내용을 입력해 주세요.'; return; }
     err.textContent='전송 중...';
     try{
-      await sendMail(name, to, subjInput.value, bodyInput.value, state.isRandomCompose);
+      await sendMail(name, to, subjInput.value, bodyInput.value, state.isRandomCompose, drafts.mailAttach || []);
+      drafts.mailAttach = null;
       drafts.mailSubject = '';
       drafts.mailBody = '';
       drafts.mailTo = '';
@@ -1596,7 +1784,17 @@ function renderMailView(app){
   if(l.round){
     card.appendChild(el('span',{class:'badge round', text:'🎲 제'+l.round+'회 랜덤 배정 편지', attrs:{style:'margin-top:6px;'}}));
   }
-  card.appendChild(el('div',{class:'letter-view', text:l.body}));
+  card.appendChild(linkedText('div', 'letter-view', l.body));
+  const atts = l.attachments || [];
+  if(atts.length){
+    const box = el('div',{class:'attach-list-view'});
+    box.appendChild(el('div',{class:'mail-attach-head', text:'📎 첨부파일 '+atts.length+'개'}));
+    atts.forEach(f=> box.appendChild(el('div',{class:'mail-attach-item'},[
+      el('span',{},[ document.createTextNode(attachIcon(f.name)+' '+f.name), el('span',{class:'mail-attach-size', text:f.size||''}) ]),
+      el('button',{class:'link-btn', text:'⬇', attrs:{title:'내려받기'}, on:{click:()=> showToast('예시 파일이라 다운로드는 안 돼요.')}})
+    ])));
+    card.appendChild(box);
+  }
   app.appendChild(card);
 }
 
@@ -1669,7 +1867,8 @@ function renderMsgThread(app){
   input.value = drafts.chatInput;
   input.addEventListener('input', ()=> drafts.chatInput = input.value);
   input.addEventListener('keydown', (e)=>{
-    if(e.key==='Enter' && !e.shiftKey){
+    // 한글 조합 중 Enter(isComposing/229)는 무시 — 마지막 글자가 입력칸에 남거나 두 번 전송되는 문제 방지
+    if(e.key==='Enter' && !e.shiftKey && !e.isComposing && e.keyCode!==229){
       e.preventDefault();
       sendChatAction();
     }
@@ -1701,6 +1900,121 @@ function renderMsgThread(app){
   }, 40);
 }
 
+// ---------------------------------------------------------------------
+// 글 속 링크 → 클릭 가능한 링크로, 이미지 주소는 마우스를 올리면 미리보기 팝업
+//   (이미지를 서버에 올리지 않고 주소만 저장하므로 용량 부담 없음)
+// ---------------------------------------------------------------------
+const URL_RE = /https?:\/\/[^\s<>"'`]+/g;
+const IMAGE_URL_RE = /\.(png|jpe?g|gif|webp|bmp|svg|avif)([?#].*)?$/i;
+const IMAGE_HOST_RE = /(^|\.)(i\.imgur\.com|pbs\.twimg\.com|images\.unsplash\.com|googleusercontent\.com|gstatic\.com|pstatic\.net|kakaocdn\.net|daumcdn\.net|pinimg\.com|wikimedia\.org)$/i;
+const imgStatus = {}; // url → 'ok' | 'fail'
+let previewUrl = null;
+let previewPointer = { x:0, y:0 };
+let lastPointerType = 'mouse';
+document.addEventListener('pointerdown', (e)=>{ lastPointerType = e.pointerType || 'mouse'; }, true);
+
+function looksLikeImageUrl(url){
+  try{
+    const u = new URL(url);
+    return IMAGE_URL_RE.test(u.pathname) || IMAGE_HOST_RE.test(u.hostname);
+  }catch(e){ return false; }
+}
+
+// 텍스트를 넣되 http(s) 주소는 링크로 바꿔 담은 엘리먼트를 돌려줌 (innerHTML 미사용 — 안전)
+function linkedText(tag, cls, text){
+  const box = el(tag, cls ? {class:cls} : {});
+  const str = String(text || '');
+  let last = 0;
+  str.replace(URL_RE, (raw, idx)=>{
+    const url = raw.replace(/[),.!?]+$/, ''); // 문장 끝 문장부호는 링크에서 제외
+    if(idx > last) box.appendChild(document.createTextNode(str.slice(last, idx)));
+    box.appendChild(imageAwareLink(url));
+    last = idx + url.length;
+    return raw;
+  });
+  if(last < str.length) box.appendChild(document.createTextNode(str.slice(last)));
+  return box;
+}
+
+function imageAwareLink(url){
+  const a = el('a',{class:'text-link', text:url, attrs:{href:url, target:'_blank', rel:'noopener noreferrer'}});
+  const likely = looksLikeImageUrl(url);
+  if(likely || imgStatus[url]==='ok') a.classList.add('is-image');
+  a.addEventListener('mouseenter', (e)=>{
+    if(lastPointerType==='touch') return;
+    previewPointer = { x:e.clientX, y:e.clientY };
+    showImagePreview(url, a, likely);
+  });
+  a.addEventListener('mousemove', (e)=>{
+    previewPointer = { x:e.clientX, y:e.clientY };
+    positionImagePreview();
+  });
+  a.addEventListener('mouseleave', hideImagePreview);
+  // 태블릿(터치): 이미지 링크는 첫 번째 탭에 미리보기, 두 번째 탭에 새 창으로 열기
+  a.addEventListener('click', (e)=>{
+    if(lastPointerType!=='touch' || !a.classList.contains('is-image')) return;
+    if(previewUrl === url) return;
+    e.preventDefault();
+    const r = a.getBoundingClientRect();
+    previewPointer = { x:r.left, y:r.bottom };
+    showImagePreview(url, a, true);
+  });
+  return a;
+}
+
+function showImagePreview(url, anchor, announce){
+  const box = document.getElementById('imgPreview');
+  const img = document.getElementById('imgPreviewImg');
+  if(!box || imgStatus[url]==='fail' && !announce) return;
+  previewUrl = url;
+  box.classList.remove('loading','failed');
+  if(imgStatus[url]==='fail'){ img.style.display='none'; box.classList.add('failed'); box.style.display='block'; positionImagePreview(); return; }
+  img.referrerPolicy = 'no-referrer'; // 일부 사이트(네이버 등)의 외부 표시 차단 회피
+  img.onload = ()=>{
+    if(previewUrl!==url) return;
+    imgStatus[url] = 'ok';
+    anchor.classList.add('is-image');
+    box.classList.remove('loading');
+    img.style.display='block';
+    box.style.display='block';
+    positionImagePreview();
+  };
+  img.onerror = ()=>{
+    if(previewUrl!==url) return;
+    imgStatus[url] = 'fail';
+    img.style.display='none';
+    box.classList.remove('loading');
+    if(announce){ box.classList.add('failed'); box.style.display='block'; positionImagePreview(); }
+    else box.style.display='none';
+  };
+  if(imgStatus[url]!=='ok'){
+    img.style.display='none';
+    if(announce){ box.classList.add('loading'); box.style.display='block'; positionImagePreview(); }
+  }
+  img.src = url;
+  if(img.complete && img.naturalWidth > 0) img.onload();
+}
+
+function positionImagePreview(){
+  const box = document.getElementById('imgPreview');
+  if(!box || box.style.display!=='block') return;
+  const pad = 14;
+  const w = box.offsetWidth, h = box.offsetHeight;
+  let x = previewPointer.x + pad, y = previewPointer.y + pad;
+  if(x + w > window.innerWidth - 8) x = Math.max(8, previewPointer.x - w - pad);
+  if(y + h > window.innerHeight - 8) y = Math.max(8, previewPointer.y - h - pad);
+  box.style.left = x + 'px';
+  box.style.top = y + 'px';
+}
+
+function hideImagePreview(){
+  previewUrl = null;
+  const box = document.getElementById('imgPreview');
+  if(box) box.style.display = 'none';
+}
+document.addEventListener('scroll', hideImagePreview, true);
+document.addEventListener('pointerdown', (e)=>{ if(!e.target.closest || !e.target.closest('.text-link')) hideImagePreview(); });
+
 // 아바타 & 말풍선 렌더링 헬퍼 (이름 첫 글자로 만든 원형 아바타 — 교과서 화면 재현용)
 function avatarColor(name){
   const colors = ['#C89666','#6E8F71','#4C6B9A','#A63D40','#8A6FB0','#3E7C6B','#B38728'];
@@ -1719,7 +2033,7 @@ function chatBubbleRow(m, name){
     el('div',{class:'bubble-col'},[
       !mine ? el('div',{class:'bubble-name', text:m.from}) : null,
       el('div',{class:'bubble'},[
-        el('div',{text:m.text}),
+        linkedText('div', '', m.text),
         el('div',{class:'meta', text:timeText})
       ])
     ]),
@@ -1759,18 +2073,26 @@ function renderFeed(app){
   ta.value = drafts.feedPost;
   ta.addEventListener('input', ()=> drafts.feedPost = ta.value);
   composeCard.appendChild(ta);
+  composeCard.appendChild(el('p',{class:'muted', attrs:{style:'font-size:12px; margin-top:6px;'}, text:'🖼️ 인터넷 그림의 "이미지 주소"를 붙여 넣으면, 친구들이 마우스를 올렸을 때 그림이 떠요.'}));
 
   const err = el('p',{class:'error'});
   composeCard.appendChild(err);
   composeCard.appendChild(el('button',{class:'btn-web', text:'게시하기 ✨', on:{click: async ()=>{
-    if(!normalize(ta.value)){ err.textContent='내용을 입력해 주세요.'; return; }
+    const content = ta.value;
+    if(!normalize(content)){ err.textContent='내용을 입력해 주세요.'; return; }
+    // 전송 직후 실시간 갱신으로 화면이 다시 그려져도 글이 되살아나지 않도록 먼저 비움
+    ta.value='';
+    drafts.feedPost='';
+    err.textContent='';
     try{
-      await createPost(name, ta.value);
-      ta.value='';
-      drafts.feedPost='';
-      err.textContent='';
+      await createPost(name, content);
       showToast('새 글이 등록되었어요!');
-    }catch(e){ console.error(e); err.textContent='게시에 실패했습니다.'; }
+    }catch(e){
+      console.error(e);
+      drafts.feedPost = content;
+      render();
+      showToast('게시에 실패했습니다. 다시 시도해 주세요.');
+    }
   }}}));
   app.appendChild(composeCard);
 
@@ -1803,7 +2125,7 @@ function renderFeed(app){
     head.appendChild(headRight);
     pc.appendChild(head);
 
-    pc.appendChild(el('div',{class:'post-content', text:p.content}));
+    pc.appendChild(linkedText('div', 'post-content', p.content));
 
     const actions = el('div',{class:'post-actions'});
     actions.appendChild(el('button',{class:'like-btn'+(liked?' liked':''), text:'❤ '+(p.likes||[]).length, on:{click: async ()=>{
@@ -1836,7 +2158,7 @@ function renderFeed(app){
               depth>0 ? el('span',{class:'reply-arrow', text:'↳ '}) : null,
               el('b',{text:c.author})
             ]),
-            el('div',{class:'comment-text', text:c.content})
+            linkedText('div', 'comment-text', c.content)
           ])
         ]));
 
@@ -1858,14 +2180,18 @@ function renderFeed(app){
         if(state.replyToCommentId===c.id){
           const replyForm = el('div',{class:'comment-compose', attrs:{style:'margin-top:8px;'}});
           const replyInput = el('input',{attrs:{type:'text', placeholder:c.author+' 님에게 답글 남기기'}});
+          replyInput.value = drafts.replies[c.id] || '';
+          replyInput.addEventListener('input', ()=> drafts.replies[c.id] = replyInput.value);
           replyForm.appendChild(replyInput);
           replyForm.appendChild(el('button',{class:'btn-secondary', text:'등록', on:{click: async ()=>{
-            if(!normalize(replyInput.value)) return;
+            const content = replyInput.value;
+            if(!normalize(content)) return;
+            delete drafts.replies[c.id];
+            state.replyToCommentId = null;
+            render();
             try{
-              await addComment(p.id, name, replyInput.value, c.id);
-              state.replyToCommentId = null;
-              render();
-            }catch(e){}
+              await addComment(p.id, name, content, c.id);
+            }catch(e){ console.error(e); showToast('답글 등록에 실패했어요.'); }
           }}}));
           node.appendChild(replyForm);
         }
@@ -1878,14 +2204,25 @@ function renderFeed(app){
 
       const cForm = el('div',{class:'comment-compose'});
       const cInput = el('input',{attrs:{type:'text', placeholder:'따뜻한 선플을 남겨보세요'}});
-      cForm.appendChild(cInput);
-      cForm.appendChild(el('button',{class:'btn-secondary', text:'등록', on:{click: async ()=>{
-        if(!normalize(cInput.value)) return;
+      cInput.value = drafts.comments[p.id] || '';
+      cInput.addEventListener('input', ()=> drafts.comments[p.id] = cInput.value);
+      const submitComment = async ()=>{
+        const content = cInput.value;
+        if(!normalize(content)) return;
+        cInput.value='';
+        delete drafts.comments[p.id];
         try{
-          await addComment(p.id, name, cInput.value);
-          cInput.value='';
-        }catch(e){}
-      }}}));
+          await addComment(p.id, name, content);
+        }catch(e){
+          console.error(e);
+          drafts.comments[p.id] = content;
+          render();
+          showToast('댓글 등록에 실패했어요.');
+        }
+      };
+      cInput.addEventListener('keydown', (e)=>{ if(e.key==='Enter' && !e.isComposing){ e.preventDefault(); submitComment(); } });
+      cForm.appendChild(cInput);
+      cForm.appendChild(el('button',{class:'btn-secondary', text:'등록', on:{click: submitComment}}));
       box.appendChild(cForm);
       pc.appendChild(box);
     }
@@ -2120,7 +2457,7 @@ function renderTeacherMonitor(app){
     ]);
     c.appendChild(topRow);
     c.appendChild(el('p',{class:'muted', text:timeStr(l.ts)}));
-    c.appendChild(el('div',{class:'letter-view', text:l.body}));
+    c.appendChild(linkedText('div', 'letter-view', l.body));
     app.appendChild(c);
   });
 
@@ -2139,7 +2476,8 @@ function renderTeacherMonitor(app){
     const thread = threadMessages(a,b);
     thread.forEach(m=>{
       const mRow = el('div',{style:'display:flex; justify-content:space-between; align-items:center; margin:6px 0;'});
-      mRow.appendChild(el('p',{attrs:{style:'margin:0; font-size:13.5px;'}, text:m.from+': '+m.text}));
+      const mText = linkedText('p', '', m.from+': '+m.text); mText.style.cssText='margin:0; font-size:13.5px;';
+      mRow.appendChild(mText);
       mRow.appendChild(el('button',{class:'link-btn', text:'삭제', attrs:{style:'color:var(--danger);'}, on:{click: async ()=>{
         if(confirm('이 메시지를 삭제할까요?')) await deleteMessage(m.id);
       }}}));
@@ -2160,7 +2498,8 @@ function renderTeacherMonitor(app){
       }}})
     ]);
     pc.appendChild(pHead);
-    pc.appendChild(el('p',{class:'post-content', text:p.content, attrs:{style:'margin-top:6px;'}}));
+    const pText = linkedText('p', 'post-content', p.content); pText.style.marginTop='6px';
+    pc.appendChild(pText);
     app.appendChild(pc);
   });
 }
