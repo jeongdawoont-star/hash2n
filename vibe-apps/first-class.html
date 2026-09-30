@@ -344,6 +344,7 @@ legend{font-weight:600;margin-bottom:6px;font-size:13.5px;padding:0}
             <span class="spacer"></span>
             <button id="btnSave" class="btn" data-i18n="saveRecord">이 배치 기록하기</button>
             <button id="btnPng" class="btn" data-i18n="exportPng">이미지로 저장</button>
+            <button id="btnXlsx" class="btn" data-i18n="exportXlsx">엑셀로 저장</button>
             <button id="btnPrint" class="btn ghost" hidden data-i18n="print">인쇄</button>
             <button id="btnClear" class="btn ghost" data-i18n="clearAll">모두 비우기</button>
           </div>
@@ -523,7 +524,7 @@ const I18N={ko:{
  sbHint:'학생 좌석을 눌러 여러 명 고른 뒤, 점수를 적고 ‘칭찬 +’ 또는 ‘머쓱 −’을 누르세요. 머쓱은 칭찬 점수에서 뺍니다. 잘못 줬으면 ‘되돌리기’.',sbRest:'좌석이 없는 학생 {0}명',sbNoUndo:'되돌릴 점수가 없습니다.',sbUndone:'되돌렸습니다 ({0}명 {1})',scoreResetTitle:'점수 초기화',scoreResetDesc:'지금 학급의 칭찬 점수를 모두 0으로 돌립니다. 명단과 자리는 그대로 남습니다.',scoreReset:'점수 모두 0으로',scoreCleared:'점수를 모두 0으로 돌렸습니다.',sbEmpty:'아직 학생이 없습니다. 저장해 둔 데이터 파일(.json)을 불러오거나, 탑승객 명단에서 학생을 넣으세요.',
 class:'학급',rename:'이름 바꾸기',newClass:'새 학급',
  tabArrange:'자리 배치',tabStudents:'탑승객 명단',tabLayout:'좌석 모양',tabHistory:'배치 기록',tabSettings:'규칙·백업',
- auto:'자동 배치',undo:'되돌리기',saveRecord:'이 배치 기록하기',exportPng:'이미지로 저장',print:'인쇄',clearAll:'모두 비우기',
+ auto:'자동 배치',undo:'되돌리기',saveRecord:'이 배치 기록하기',exportPng:'이미지로 저장',exportXlsx:'엑셀로 저장',xlsxBtn:'엑셀',xlsxCurrent:'현재 자리 {0}',print:'인쇄',clearAll:'모두 비우기',
  recName:'기록 이름',date:'날짜',save:'저장',cancel:'취소',board:'칠판',podium:'교탁',busy:'자리를 맞춰 보는 중…',
  hint:'학생 카드를 끌어다 다른 자리에 놓으면 서로 바뀝니다. 끌기 어려우면 한 명을 누른 뒤 바꿀 자리를 누르세요. 자물쇠를 누르면 자동 배치 때 그 자리에 고정됩니다.',
  roster:'학생 명단',thNo:'번호',thName:'이름',thEn:'영문 이름',thGender:'성별',thHeight:'키(cm)',thFront:'앞자리',addOne:'학생 한 명 추가',
@@ -577,7 +578,7 @@ class:'학급',rename:'이름 바꾸기',newClass:'새 학급',
  sbHint:'Tap seats to select several students, enter points, then press Praise + or Oops −. Oops takes points away. Made a mistake? Press Undo.',sbRest:'{0} students without a seat',sbNoUndo:'Nothing to undo.',sbUndone:'Undone ({0} students {1})',scoreResetTitle:'Reset points',scoreResetDesc:'Sets every student’s points in this class back to 0. The list and seats stay.',scoreReset:'Reset all points',scoreCleared:'All points reset to 0.',sbEmpty:'No students yet. Load a saved data file (.json), or add students in Passengers.',
 class:'Class',rename:'Rename',newClass:'New class',
  tabArrange:'Seating',tabStudents:'Passengers',tabLayout:'Desk layout',tabHistory:'History',tabSettings:'Rules & backup',
- auto:'Auto-arrange',undo:'Undo',saveRecord:'Save to history',exportPng:'Save as image',print:'Print',clearAll:'Clear all',
+ auto:'Auto-arrange',undo:'Undo',saveRecord:'Save to history',exportPng:'Save as image',exportXlsx:'Save as Excel',xlsxBtn:'Excel',xlsxCurrent:'Seats {0}',print:'Print',clearAll:'Clear all',
  recName:'Name',date:'Date',save:'Save',cancel:'Cancel',board:'Board',podium:'Teacher’s desk',busy:'Working out seats…',
  hint:'Drag a student card onto another seat to swap them. If dragging is awkward, tap one student and then tap the seat to swap with. The lock keeps a student in place during auto-arrange.',
  roster:'Students',thNo:'No.',thName:'Name',thEn:'English name',thGender:'Gender',thHeight:'Height (cm)',thFront:'Front',addOne:'Add a student',
@@ -898,7 +899,7 @@ function renderHistory(){
     mini+='</div>';
     const cnt=Object.values(h.cells).filter(Boolean).length;
     return `<div class="hist${h.included===false?' off':''}" data-h="${h.id}">${mini}<div><div class="ttl">${esc(h.label)}</div><div class="sub">${esc(h.date||'')} · ${t('nPeople',cnt)}</div></div>
-    <div class="acts"><label class="check"><input type="checkbox" data-inc${h.included!==false?' checked':''}> ${t('include')}</label><span style="flex:1"></span><button type="button" class="btn sm" data-load>${t('load')}</button><button type="button" class="btn sm ghost danger" data-hdel>${t('del')}</button></div></div>`;
+    <div class="acts"><label class="check"><input type="checkbox" data-inc${h.included!==false?' checked':''}> ${t('include')}</label><span style="flex:1"></span><button type="button" class="btn sm ghost" data-xlsx>${t('xlsxBtn')}</button><button type="button" class="btn sm" data-load>${t('load')}</button><button type="button" class="btn sm ghost danger" data-hdel>${t('del')}</button></div></div>`;
   }).join(''):`<p class="muted">${t('histEmpty')}</p>`;
   renderImgCard();
 }
@@ -1218,6 +1219,7 @@ $('#histList').addEventListener('click',e=>{
   const card=e.target.closest('[data-h]');if(!card)return;const c=cls(),h=c.history.find(x=>x.id===card.dataset.h);if(!h)return;
   if(e.target.closest('[data-load]')){pushUndo();c.layout={rows:h.rows,cols:h.cols,seats:Object.keys(h.cells)};c.current={};c.locks={};
     for(const k in h.cells)if(h.cells[k]&&stuById(h.cells[k]))c.current[k]=h.cells[k];sel=null;persist();renderLayout();setTab('arrange');renderRoom();toast(t('loaded'));}
+  if(e.target.closest('[data-xlsx]')){exportXlsx(h,h.label||h.date);return;}
   const d=e.target.closest('[data-hdel]');
   if(d)armed(d,'confirmDel',()=>{c.history=c.history.filter(x=>x!==h);persist();renderHistory();renderRoom();});
 });
@@ -1338,6 +1340,66 @@ $('#bkFile').onchange=async e=>{
   catch(err){toast(t('bkBad'));}
   e.target.value='';
 };
+
+/* ---------------- XLSX export ---------------- */
+// 자리표를 엑셀 파일로. 라이브러리 없이 xlsx(무압축 zip)를 직접 만든다.
+const CRC_T=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0;}return t;})();
+function crc32(u){let c=0xFFFFFFFF;for(let i=0;i<u.length;i++)c=CRC_T[(c^u[i])&255]^(c>>>8);return(c^0xFFFFFFFF)>>>0;}
+function zipStore(files){
+  const enc=new TextEncoder(),parts=[],central=[];let off=0;
+  for(const f of files){
+    const name=enc.encode(f.name),data=typeof f.data==='string'?enc.encode(f.data):f.data,crc=crc32(data);
+    const h=new DataView(new ArrayBuffer(30));
+    h.setUint32(0,0x04034b50,true);h.setUint16(4,20,true);h.setUint16(6,0x0800,true);h.setUint32(14,crc,true);h.setUint32(18,data.length,true);h.setUint32(22,data.length,true);h.setUint16(26,name.length,true);
+    parts.push(new Uint8Array(h.buffer),name,data);
+    const c=new DataView(new ArrayBuffer(46));
+    c.setUint32(0,0x02014b50,true);c.setUint16(4,20,true);c.setUint16(6,20,true);c.setUint16(8,0x0800,true);c.setUint32(16,crc,true);c.setUint32(20,data.length,true);c.setUint32(24,data.length,true);c.setUint16(28,name.length,true);c.setUint32(42,off,true);
+    central.push(new Uint8Array(c.buffer),name);
+    off+=30+name.length+data.length;
+  }
+  const csz=central.reduce((a,b)=>a+b.length,0),e=new DataView(new ArrayBuffer(22));
+  e.setUint32(0,0x06054b50,true);e.setUint16(8,files.length,true);e.setUint16(10,files.length,true);e.setUint32(12,csz,true);e.setUint32(16,off,true);
+  return new Blob([...parts,...central,new Uint8Array(e.buffer)],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+}
+const xesc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])).replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g,'');
+const colName=i=>{let s='';i++;while(i>0){const m=(i-1)%26;s=String.fromCharCode(65+m)+s;i=(i-m-1)/26;}return s;};
+// plan: {rows, cols, cells:{'r-c': sid|null}} — 첫 줄이 칠판 쪽
+function seatXlsx(plan,sheetName){
+  const keys=Object.keys(plan.cells);if(!keys.length)return null;
+  const P=keys.map(pk),rs=P.map(p=>p[0]),cs=P.map(p=>p[1]);
+  const r0=Math.min(...rs),r1=Math.max(...rs),c0=Math.min(...cs),c1=Math.max(...cs);
+  const seatCol=new Set(cs);
+  let cols='<cols>',rowsX='';
+  for(let x=c0;x<=c1;x++){const i=x-c0+1;cols+=`<col min="${i}" max="${i}" width="${seatCol.has(x)?13:6}" customWidth="1"/>`;}
+  cols+='</cols>';
+  for(let r=r0;r<=r1;r++){
+    const rn=r-r0+1;let row=`<row r="${rn}" ht="33" customHeight="1">`;
+    for(let x=c0;x<=c1;x++){
+      const ref=colName(x-c0)+rn,k=r+'-'+x;
+      if(!seatCol.has(x)){row+=`<c r="${ref}" s="2"/>`;continue;}
+      const sid=plan.cells[k],s=sid&&stuById(sid);
+      row+=s?`<c r="${ref}" s="1" t="inlineStr"><is><t>${xesc(s.name)}</t></is></c>`:`<c r="${ref}" s="1"/>`;
+    }
+    rowsX+=row+'</row>';
+  }
+  const name=xesc(String(sheetName||'자리').replace(/[\\\/?*\[\]:]/g,' ').trim().slice(0,31)||'자리');
+  const sheet=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0" zoomScale="130" zoomScaleNormal="130"/></sheetViews><sheetFormatPr defaultRowHeight="16.5"/>${cols}<sheetData>${rowsX}</sheetData><pageMargins left="0.5" right="0.5" top="0.75" bottom="0.75" header="0.3" footer="0.3"/><pageSetup orientation="landscape" paperSize="9"/></worksheet>`;
+  const styles=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="맑은 고딕"/><family val="2"/></font><font><sz val="13"/><name val="맑은 고딕"/><family val="2"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFD9D9D9"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border><border><left style="thin"><color rgb="FFBFBFBF"/></left><right style="thin"><color rgb="FFBFBFBF"/></right><top style="thin"><color rgb="FFBFBFBF"/></top><bottom style="thin"><color rgb="FFBFBFBF"/></bottom><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="3"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="1" xfId="0" applyFont="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf><xf numFmtId="0" fontId="0" fillId="2" borderId="0" xfId="0" applyFill="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`;
+  return zipStore([
+    {name:'[Content_Types].xml',data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>'},
+    {name:'_rels/.rels',data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'},
+    {name:'xl/workbook.xml',data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="${name}" sheetId="1" r:id="rId1"/></sheets></workbook>`},
+    {name:'xl/_rels/workbook.xml.rels',data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'},
+    {name:'xl/worksheets/sheet1.xml',data:sheet},
+    {name:'xl/styles.xml',data:styles}]);
+}
+function exportXlsx(plan,label){
+  const b=seatXlsx(plan,label);if(!b){toast(t('noSeats'));return;}
+  saveBlob(`${safeName(cls().name)}_${safeName(label)}.xlsx`,b);
+}
+function currentPlan(){const c=cls(),L=c.layout,cells={};L.seats.forEach(k=>{const[r,x]=pk(k);if(r<L.rows&&x<L.cols)cells[k]=c.current[k]||null;});return{rows:L.rows,cols:L.cols,cells};}
+$('#btnXlsx').onclick=()=>exportXlsx(currentPlan(),t('xlsxCurrent',today()));
+window.__xlsx={seatXlsx,currentPlan};
 
 /* ---------------- PNG export ---------------- */
 async function exportPng(){
