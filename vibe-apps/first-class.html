@@ -1,0 +1,1410 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body><title>퍼스트클래스</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=Gaegu:wght@700&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: airline cabin. Navy cockpit (= board) up front, seat rows below, gold trim; scoreboard is the main screen. */
+:root{
+  --bg:#ECF1F7; --surface:#FFFFFF; --surface-2:#F3F6FA; --ink:#14213D; --muted:#56647E; --line:#D4DCE8;
+  --board:#14213D; --board-rail:#C9A227; --board-ink:#F5E9C8;
+  --desk:#DCE4EF; --desk-edge:#A7B6CC; --seat:#FFFFFF; --locked:#FBF1D6;
+  --accent:#1B3A6B; --accent-ink:#FFFFFF; --chalk:#C9A227;
+  --boy:#3C6DB4; --girl:#C44D6C; --unk:#9AA5B6;
+  --bad:#C0392B; --warn:#B8800E; --ok:#2E7D4F;
+  --praise:#23845A; --oops:#D25A34; --sel-bg:#FFF3C8; --sel-ink:#8A6A00;
+  --f-display:"Do Hyeon","IBM Plex Sans KR",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  --f-chalk:"Do Hyeon","IBM Plex Sans KR",sans-serif;
+  --seat-min:66px; --sc-min:104px; --aisle:clamp(10px,2.2vw,30px);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0C1320; --surface:#141D2E; --surface-2:#1A2539; --ink:#E6ECF5; --muted:#93A1B8; --line:#2A3650;
+  --board:#070C18; --board-rail:#D8B546; --board-ink:#F2E3B3;
+  --desk:#24314A; --desk-edge:#3A4A66; --seat:#1B2538; --locked:#3A3320;
+  --accent:#8FB4F0; --accent-ink:#0C1320; --chalk:#E3C255;
+  --boy:#82A9E8; --girl:#EE93A9; --unk:#7D8799;
+  --bad:#F07564; --warn:#E6B44C; --ok:#6CC08E;
+  --praise:#5CCB8F; --oops:#F08A68; --sel-bg:#43391A; --sel-ink:#F2D36B; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0C1320; --surface:#141D2E; --surface-2:#1A2539; --ink:#E6ECF5; --muted:#93A1B8; --line:#2A3650;
+  --board:#070C18; --board-rail:#D8B546; --board-ink:#F2E3B3;
+  --desk:#24314A; --desk-edge:#3A4A66; --seat:#1B2538; --locked:#3A3320;
+  --accent:#8FB4F0; --accent-ink:#0C1320; --chalk:#E3C255;
+  --boy:#82A9E8; --girl:#EE93A9; --unk:#7D8799;
+  --bad:#F07564; --warn:#E6B44C; --ok:#6CC08E;
+  --praise:#5CCB8F; --oops:#F08A68; --sel-bg:#43391A; --sel-ink:#F2D36B; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.5}
+button,input,select,textarea{font:inherit;color:inherit}
+.app{max-width:1320px;margin:0 auto;padding-inline:16px;padding-block:14px 40px;display:flex;flex-direction:column;gap:14px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+h2{font-family:var(--f-display);font-weight:400;font-size:20px;margin:0;letter-spacing:.01em;text-wrap:balance}
+h2 small{font-family:var(--f-body);font-size:13px;color:var(--muted);margin-left:6px}
+.muted{color:var(--muted);margin:0;font-size:13px}
+code{font-size:12.5px;background:var(--surface-2);padding:1px 5px;border-radius:4px;border:1px solid var(--line)}
+
+/* header */
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px}
+.brand{display:flex;align-items:center;gap:12px;margin-right:auto;min-width:0}
+.brand-logo{width:44px;height:44px;border-radius:12px;background:var(--board);color:var(--chalk);display:grid;place-items:center;flex:none;box-shadow:inset 0 -3px 0 var(--board-rail)}
+.brand-logo svg{width:26px;height:26px}
+.brand-txt{display:flex;flex-direction:column;gap:2px;min-width:0}
+.brand-mark{font-family:var(--f-display);font-size:30px;line-height:1;color:var(--ink)}
+.brand-sub{color:var(--muted);font-size:12px;letter-spacing:.14em;font-weight:600}
+.classbar{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.classbar select,.classbar input{height:34px;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:0 10px;max-width:220px}
+.langsw{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:var(--surface)}
+.langsw button{border:0;background:transparent;padding:5px 11px;cursor:pointer;font-weight:600;font-size:12.5px;color:var(--muted)}
+.langsw button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);overflow-x:auto;width:100%}
+.tab{border:0;background:none;padding:9px 14px 8px;font-family:var(--f-display);font-size:17px;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--chalk)}
+.tab:focus-visible,.btn:focus-visible,.stu:focus-visible{outline:3px solid var(--chalk);outline-offset:2px}
+
+/* buttons & forms */
+.btn{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 14px;border-radius:9px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-weight:600;font-size:13.5px;white-space:nowrap}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.ghost{background:transparent}
+.btn.sm{height:30px;padding:0 10px;font-size:12.5px;border-radius:7px}
+.btn.danger{color:var(--bad)}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.btn svg{width:16px;height:16px}
+input[type=text],input[type=number],input[type=date],select,textarea{border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:5px 8px}
+textarea{width:100%;resize:vertical;font-family:ui-monospace,Menlo,monospace;font-size:13px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.stack{display:flex;flex-direction:column;gap:14px;min-width:0}
+.check{display:inline-flex;align-items:center;gap:6px;font-size:13px;cursor:pointer}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.cols2{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:14px;align-items:start}
+@media (max-width:860px){.cols2{grid-template-columns:1fr}}
+.panel[hidden]{display:none!important}
+
+/* arrange */
+.arrange{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:14px;align-items:start}
+@media (max-width:980px){.arrange{grid-template-columns:1fr}}
+.room-tools{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.room-tools .spacer{flex:1}
+.savebar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.room{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:16px;position:relative;min-width:0}
+.front{display:flex;flex-direction:column;align-items:center;gap:6px}
+.front.flip{flex-direction:column-reverse}
+.board{width:min(70%,560px);height:46px;background:var(--board);color:var(--board-ink);border-radius:120px 120px 8px 8px;border-bottom:5px solid var(--board-rail);display:grid;place-items:center;font-family:var(--f-chalk);font-size:22px;letter-spacing:.35em;padding-left:.35em}
+.front.flip .board{border-bottom:0;border-top:5px solid var(--board-rail);border-radius:8px 8px 120px 120px}
+.podium{font-size:11.5px;color:var(--muted);border:1px solid var(--line);border-radius:5px;padding:1px 12px;background:var(--surface-2)}
+.grid-scroll{overflow-x:auto;padding-bottom:4px}
+.seatgrid{display:grid;row-gap:12px;column-gap:0;min-width:min-content}
+.seat{background:var(--desk);border:1px solid var(--desk-edge);padding:5px;min-width:0}
+.seat:not(.ge){border-right:0}
+.seat:not(.gs){border-left:1px dashed var(--desk-edge)}
+.seat.gs{border-radius:11px 0 0 11px;margin-left:3px}
+.seat.ge{border-radius:0 11px 11px 0;margin-right:3px}
+.seat.gs.ge{border-radius:11px}
+.seat.drop-over{background:var(--chalk)}
+.stu{position:relative;background:var(--seat);border-radius:7px;min-height:58px;padding:8px 6px 5px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;box-shadow:0 1px 0 var(--desk-edge);transition:box-shadow .15s}
+.stu::before{content:"";position:absolute;top:0;left:9px;right:9px;height:4px;border-radius:0 0 4px 4px;background:var(--unk)}
+.stu.m::before{background:var(--boy)} .stu.f::before{background:var(--girl)}
+.stu .nm{font-weight:700;font-size:clamp(12px,1.25vw,15px);line-height:1.2;text-align:center;word-break:keep-all;overflow-wrap:anywhere}
+.stu .meta{white-space:nowrap;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;display:flex;gap:6px}
+.stu.locked{background:var(--locked)}
+.stu .lock{position:absolute;top:3px;right:3px;width:20px;height:20px;border:0;background:none;padding:2px;cursor:pointer;color:var(--muted);opacity:.28;border-radius:5px}
+.stu:hover .lock,.stu .lock:focus-visible{opacity:.8}
+.stu.locked .lock{opacity:1;color:var(--accent)}
+.stu .ftag{position:absolute;top:3px;left:4px;font-size:10px;font-weight:700;color:var(--accent);line-height:1}
+.stu.empty{background:transparent;border:1.5px dashed var(--desk-edge);box-shadow:none;cursor:pointer;color:var(--muted);font-size:12px}
+.stu.empty::before{display:none}
+.stu.sel{box-shadow:0 0 0 3px var(--chalk)}
+.stu.mark-bad{box-shadow:inset 0 0 0 2px var(--bad)}
+.stu.mark-warn{box-shadow:inset 0 0 0 2px var(--warn)}
+.stu.sel.mark-bad,.stu.sel.mark-warn{box-shadow:0 0 0 3px var(--chalk)}
+.stu.rel-avoid{outline:2px dashed var(--bad);outline-offset:1px}
+.stu.rel-partner{outline:2px dashed var(--accent);outline-offset:1px}
+.stu.flash{animation:flash 1s ease 2}
+@keyframes flash{50%{box-shadow:0 0 0 4px var(--chalk)}}
+.stu.dragging{opacity:.35}
+.drag-ghost{position:fixed;left:0;top:0;pointer-events:none;z-index:50;opacity:.92;box-shadow:0 10px 24px rgba(0,0,0,.25);cursor:grabbing}
+.deal .stu:not(.empty){animation:deal .38s cubic-bezier(.2,.8,.3,1) both}
+@keyframes deal{from{opacity:0;transform:translateY(-10px) scale(.94)}}
+@media (prefers-reduced-motion:reduce){.deal .stu,.stu.flash{animation:none}}
+.busy{position:absolute;inset:0;background:color-mix(in srgb,var(--surface) 70%,transparent);display:grid;place-items:center;border-radius:14px;font-family:var(--f-display);font-size:20px;z-index:5}
+.tray{border:1.5px dashed var(--line);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:8px;min-height:56px}
+.tray.drop-over{border-color:var(--chalk);background:var(--surface-2)}
+.tray-head{font-size:12.5px;color:var(--muted);font-weight:600}
+.tray-list{display:flex;flex-wrap:wrap;gap:6px}
+.tray .stu{min-height:40px;min-width:78px;padding:7px 10px 4px}
+.hint{font-size:12.5px;color:var(--muted);margin:0}
+
+/* side */
+.side{display:flex;flex-direction:column;gap:14px;min-width:0}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:13px}
+.kv dt{color:var(--muted)} .kv dd{margin:0;font-variant-numeric:tabular-nums}
+.rep{display:flex;flex-direction:column;gap:6px}
+.rep-row{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:13px;padding:6px 0;border-bottom:1px solid var(--line)}
+.rep-row:last-child{border-bottom:0}
+.pill{font-size:12px;font-weight:700;padding:2px 9px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line);white-space:nowrap;font-variant-numeric:tabular-nums}
+.pill.ok{color:var(--ok);border-color:currentColor}
+.pill.bad{color:var(--bad);border-color:currentColor}
+.pill.warn{color:var(--warn);border-color:currentColor}
+.issues{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px;max-height:260px;overflow:auto}
+.issues li button{all:unset;cursor:pointer;display:flex;gap:8px;align-items:flex-start;font-size:12.5px;padding:4px 6px;border-radius:6px;width:100%;box-sizing:border-box}
+.issues li button:hover,.issues li button:focus-visible{background:var(--surface-2)}
+.dot{width:8px;height:8px;border-radius:50%;flex:none;margin-top:6px;background:var(--muted)}
+.dot.bad{background:var(--bad)} .dot.warn{background:var(--warn)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;padding:3px 4px 3px 10px;border-radius:999px;border:1px solid var(--line);background:var(--surface-2)}
+.chip button{border:0;background:none;cursor:pointer;color:var(--muted);width:20px;height:20px;border-radius:50%;font-size:14px;line-height:1}
+.chip.plain{padding-right:10px}
+.zones{display:flex;gap:4px}
+.zone{font-size:11px;padding:1px 7px;border-radius:5px;background:var(--surface-2);border:1px solid var(--line)}
+.gdot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--unk);margin-right:4px;vertical-align:1px}
+.gdot.m{background:var(--boy)} .gdot.f{background:var(--girl)}
+
+/* students */
+.table-scroll{overflow-x:auto}
+.st-table{width:100%;border-collapse:collapse;font-size:13px}
+.st-table th{text-align:left;font-weight:600;color:var(--muted);font-size:12px;padding:6px;border-bottom:1px solid var(--line);white-space:nowrap}
+.st-table td{padding:4px 6px;border-bottom:1px solid var(--line)}
+.st-table input[type=text]{width:100%;min-width:80px}
+.st-table input[type=number]{width:68px}
+.st-table .no input{width:52px}
+.gbtn{border:1px solid var(--line);background:var(--surface);border-radius:6px;height:28px;min-width:44px;cursor:pointer;font-weight:700}
+.gbtn.m{color:var(--boy);border-color:var(--boy)} .gbtn.f{color:var(--girl);border-color:var(--girl)}
+
+/* layout editor */
+.ly-wrap{display:flex;flex-direction:column;align-items:center;gap:12px;overflow-x:auto;padding:6px 0}
+.ly-grid{display:grid;gap:6px;touch-action:none;user-select:none}
+.ly-cell{width:34px;height:30px;border-radius:7px;border:1.5px dashed var(--line);background:transparent;cursor:pointer;padding:0}
+.ly-cell.on{background:var(--desk);border:1.5px solid var(--desk-edge)}
+.ly-count{font-size:13px}
+.board.mini{height:28px;font-size:16px;width:min(60%,360px)}
+.sep{width:1px;height:22px;background:var(--line)}
+label.inl{display:inline-flex;gap:6px;align-items:center;font-size:13px}
+label.inl input[type=number]{width:62px}
+
+/* history */
+.hist-list{display:flex;flex-direction:column;gap:10px}
+.hist{border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:grid;grid-template-columns:auto 1fr;gap:10px 14px;align-items:center;background:var(--surface-2)}
+.hist.off{opacity:.6}
+.hist .ttl{font-weight:700}
+.hist .sub{font-size:12px;color:var(--muted)}
+.hist .acts{grid-column:1/-1;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.mini{display:grid;gap:2px}
+.mini i{width:7px;height:7px;border-radius:2px;background:transparent}
+.mini i.s{background:var(--desk-edge)} .mini i.m{background:var(--boy)} .mini i.f{background:var(--girl)} .mini i.u{background:var(--unk)}
+.ip-grid{display:grid;gap:4px;overflow-x:auto}
+.ip-grid select{width:100%;min-width:74px;font-size:12px;padding:3px 4px;background:var(--seat)}
+.ip-grid select.unm{border-color:var(--warn);border-width:2px}
+.ip-grid .aisle{min-width:10px}
+.status{font-size:13px;padding:8px 10px;border-radius:8px;background:var(--surface-2)}
+.status.err{color:var(--bad)}
+
+/* settings */
+.set-row{display:grid;grid-template-columns:minmax(0,1fr) 150px 28px;gap:10px;align-items:center;font-size:13px}
+.set-row output{font-variant-numeric:tabular-nums;text-align:right;color:var(--muted)}
+.set-row .desc{font-size:12px;color:var(--muted)}
+.radios{display:flex;flex-direction:column;gap:6px}
+fieldset{border:0;padding:0;margin:0;display:flex;flex-direction:column;gap:8px}
+legend{font-weight:600;margin-bottom:6px;font-size:13.5px;padding:0}
+
+/* scoreboard */
+.sb{display:flex;flex-direction:column;gap:12px}
+.pass{display:flex;flex-wrap:wrap;align-items:stretch;background:var(--board);color:var(--board-ink);border-radius:14px;overflow:hidden}
+.pass>div{padding:10px 18px;display:flex;flex-direction:column;justify-content:center;gap:2px}
+.pass .k{font-size:11px;letter-spacing:.16em;opacity:.7;font-weight:600}
+.pass .v{font-family:var(--f-display);font-size:26px;line-height:1.1;font-variant-numeric:tabular-nums}
+.pass .main{flex:1;min-width:200px;border-right:2px dashed color-mix(in srgb,var(--board-ink) 30%,transparent)}
+.pass .v.p{color:#7EE0A8}
+.sb-tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.sb-tools .spacer{flex:1}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:11px;overflow:hidden;background:var(--surface)}
+.seg button{border:0;background:transparent;padding:0 14px;height:40px;cursor:pointer;font-weight:700;font-size:14.5px;color:var(--muted);white-space:nowrap}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.seg button:focus-visible{outline:3px solid var(--chalk);outline-offset:-3px}
+.sbbar{position:sticky;top:8px;z-index:6;display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;background:var(--surface);border:1.5px solid var(--line);border-radius:14px;padding:10px 12px;box-shadow:0 6px 18px -12px rgba(20,33,61,.5);transition:border-color .15s}
+.sbbar.live{border-color:var(--chalk)}
+.sbbar .cnt{display:inline-flex;align-items:baseline;gap:4px;font-weight:700;min-width:74px}
+.sbbar .cnt b{font-family:var(--f-display);font-weight:400;font-size:26px;line-height:1;color:var(--accent);font-variant-numeric:tabular-nums}
+.sbbar .sep{height:28px}
+.sbbar .amt{display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:14px}
+.sbbar input[type=number]{width:78px;height:42px;font-size:22px;font-weight:700;text-align:center;border-radius:10px;font-variant-numeric:tabular-nums}
+.qk{display:inline-flex;gap:4px}
+.qk button{border:1px solid var(--line);background:var(--surface-2);border-radius:8px;height:34px;min-width:34px;font-weight:700;cursor:pointer;color:var(--muted)}
+.qk button:hover{color:var(--ink);border-color:var(--muted)}
+.give{height:44px;padding:0 18px;border-radius:11px;border:0;font-weight:700;font-size:16px;cursor:pointer;color:#fff;white-space:nowrap}
+.give.p{background:var(--praise)} .give.m{background:var(--oops)}
+.give[disabled]{opacity:.35;cursor:not-allowed}
+.give:focus-visible{outline:3px solid var(--chalk);outline-offset:2px}
+.cabin{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.cabin.flip{flex-direction:column-reverse}
+.cabin.flip .board{border-bottom:0;border-top:5px solid var(--board-rail);border-radius:8px 8px 120px 120px}
+.sbgrid{display:grid;row-gap:10px;column-gap:8px;min-width:min-content}
+.sbgrid.list{grid-template-columns:repeat(auto-fill,minmax(190px,1fr));min-width:0}
+.sc{all:unset;box-sizing:border-box;position:relative;background:var(--seat);border:1.5px solid var(--desk-edge);border-radius:14px 14px 9px 9px;padding:16px 12px 10px;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:6px;cursor:pointer;min-height:84px;user-select:none;-webkit-user-select:none;transition:transform .08s,box-shadow .15s,background .15s;box-shadow:0 2px 0 var(--desk-edge)}
+.sc::before{content:"";position:absolute;top:0;left:22%;right:22%;height:6px;border-radius:0 0 6px 6px;background:var(--chalk)}
+.sc:hover{box-shadow:0 2px 0 var(--desk-edge),0 0 0 3px color-mix(in srgb,var(--accent) 22%,transparent)}
+.sc:active{transform:scale(.97)}
+.sc:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.sc.on{background:var(--sel-bg);border-color:var(--chalk);box-shadow:0 0 0 3px var(--chalk)}
+.sc.on::after{content:"✓";position:absolute;top:4px;right:7px;font-size:13px;font-weight:800;color:var(--sel-ink)}
+.sc .code{position:absolute;top:5px;left:9px;font-size:11px;font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums;letter-spacing:.04em}
+.sc .who{display:flex;flex-direction:column;min-width:0;gap:1px}
+.sc .nm{font-family:var(--f-display);font-size:clamp(22px,2.5vw,34px);line-height:1.05;word-break:keep-all;white-space:nowrap}
+.sc .en{font-size:10.5px;color:var(--muted);line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sc .pt{font-family:var(--f-display);font-weight:400;font-size:clamp(22px,2.3vw,32px);line-height:1;color:var(--praise);font-variant-numeric:tabular-nums;text-align:right}
+.sc .pt.neg{color:var(--oops)}
+.sc.empty{cursor:default;background:transparent;border-style:dashed;box-shadow:none}
+.sc.empty::before{display:none}
+.sc.bump{animation:bump .35s ease}
+@keyframes bump{40%{transform:scale(1.05)}}
+.float{position:absolute;right:12px;top:18%;font-family:var(--f-display);font-size:30px;pointer-events:none;animation:floatUp .9s ease-out forwards;text-shadow:0 2px 0 var(--surface)}
+.float.p{color:var(--praise)} .float.m{color:var(--oops)}
+@keyframes floatUp{to{transform:translateY(-42px);opacity:0}}
+@media (prefers-reduced-motion:reduce){.sc.bump,.float{animation:none}.float{display:none}}
+.sb-rest{display:flex;flex-direction:column;gap:8px}
+.sb-empty{grid-column:1/-1;display:flex;flex-direction:column;align-items:flex-start;gap:12px;padding:20px 6px}
+.tab[data-tab="score"]{color:var(--accent)}
+.tab[data-tab="score"][aria-selected="true"]{color:var(--ink)}
+:fullscreen{background:var(--bg);overflow:auto}
+#tab-score:fullscreen{padding:18px}
+@media (max-width:560px){:root{--sc-min:118px}.sc{min-height:74px;padding:15px 8px 8px}.pass .v{font-size:21px}.seg button{padding:0 10px;height:38px;font-size:14px}.give{padding:0 14px}}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:9px;font-size:13.5px;opacity:0;pointer-events:none;transition:.25s;z-index:60;max-width:calc(100% - 32px)}
+.toast.on{opacity:1;transform:translateX(-50%)}
+@media (max-width:560px){:root{--seat-min:58px}.seat{padding:3px}.stu{padding:9px 2px 4px}.stu .nm{font-size:12.5px;white-space:nowrap;overflow-wrap:normal}.stu .meta span:last-child:not(:first-child){display:none}.brand-sub{display:none}.stu{min-height:52px}.set-row{grid-template-columns:1fr 110px 28px}}
+@media print{.top,.room-tools,.side,.tray,.hint,.savebar,.toast{display:none!important}.arrange{display:block}.room{border:0}body{background:#fff}}
+</style>
+<div class="app" id="app">
+  <header class="top">
+    <div class="brand"><span class="brand-logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg></span><span class="brand-txt"><span class="brand-mark" data-i18n="brand">퍼스트클래스</span><span class="brand-sub" data-i18n="brandSub">FIRST CLASS · 우리 반 좌석과 점수</span></span></div>
+    <div class="classbar">
+      <label class="sr" for="classSel" data-i18n="class">학급</label>
+      <select id="classSel"></select>
+      <input type="text" id="className" hidden>
+      <button id="classRename" class="btn ghost sm" data-i18n="rename">이름 바꾸기</button>
+      <button id="classAdd" class="btn ghost sm" data-i18n="newClass">새 학급</button>
+      <div class="langsw" role="group" aria-label="Language">
+        <button id="langKo" aria-pressed="true">한국어</button><button id="langEn" aria-pressed="false">English</button>
+      </div>
+    </div>
+    <nav class="tabs" role="tablist">
+      <button class="tab" role="tab" data-tab="score" data-i18n="tabScore">점수판</button>
+      <button class="tab" role="tab" data-tab="arrange" data-i18n="tabArrange">자리 배치</button>
+      <button class="tab" role="tab" data-tab="students" data-i18n="tabStudents">학생 명단</button>
+      <button class="tab" role="tab" data-tab="layout" data-i18n="tabLayout">좌석 모양</button>
+      <button class="tab" role="tab" data-tab="history" data-i18n="tabHistory">배치 기록</button>
+      <button class="tab" role="tab" data-tab="settings" data-i18n="tabSettings">규칙·백업</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- SCOREBOARD -->
+    <section class="panel" id="tab-score" hidden>
+      <div class="sb">
+        <div class="pass">
+          <div class="main"><span class="k" data-i18n="passK">FLIGHT</span><span class="v" id="sbClass"></span></div>
+          <div><span class="k" data-i18n="totP">칭찬 점수 합계</span><span class="v p" id="sbTotP">0</span></div>
+        </div>
+        <div class="sb-tools">
+          <button type="button" id="sbFlip" class="btn"></button>
+          <div class="seg" id="sbView" role="group" aria-label="view"><button type="button" data-view="seat" data-i18n="vSeat">좌석으로</button><button type="button" data-view="no" data-i18n="vNo">번호순</button></div>
+          <span class="spacer"></span>
+          <button type="button" id="sbUndo" class="btn" data-i18n="undo">되돌리기</button>
+          <button type="button" id="sbFull" class="btn ghost" data-i18n="fullscreen">전체 화면</button>
+        </div>
+        <div class="sbbar" id="sbBar">
+          <span class="cnt"><b id="sbSelN">0</b><span id="sbSelK">명 선택</span></span>
+          <button type="button" id="sbSelAll" class="btn sm ghost" data-i18n="selAll">전체 선택</button>
+          <button type="button" id="sbSelNone" class="btn sm ghost" data-i18n="selNone">선택 해제</button>
+          <span class="sep"></span>
+          <label class="amt"><span data-i18n="amt">점수</span><input type="number" id="sbAmt" min="1" max="999" step="1" value="1" inputmode="numeric"></label>
+          <span class="qk"><button type="button" data-amt="1">1</button><button type="button" data-amt="2">2</button><button type="button" data-amt="3">3</button><button type="button" data-amt="5">5</button><button type="button" data-amt="10">10</button></span>
+          <span class="spacer" style="flex:1"></span>
+          <button type="button" id="sbGiveP" class="give p" data-i18n="giveP">칭찬 +</button>
+          <button type="button" id="sbGiveM" class="give m" data-i18n="giveM">머쓱 −</button>
+        </div>
+        <div class="cabin" id="sbCabin">
+          <div class="front" id="sbFront"><div class="board" data-i18n="board">칠판</div></div>
+          <div class="grid-scroll"><div class="sbgrid" id="sbGrid"></div></div>
+        </div>
+        <div class="sb-rest" id="sbRest" hidden><div class="tray-head" id="sbRestHead"></div><div class="sbgrid list" id="sbRestGrid"></div></div>
+        <p class="hint" id="sbHint"></p>
+      </div>
+    </section>
+
+    <!-- ARRANGE -->
+    <section class="panel" id="tab-arrange" hidden>
+      <div class="arrange">
+        <div class="stack">
+          <div class="room-tools">
+            <button id="btnAuto" class="btn primary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"/><path d="M4 20 21 3"/><path d="M21 16v5h-5"/><path d="m15 15 6 6"/><path d="M4 4l5 5"/></svg><span data-i18n="auto">자동 배치</span></button>
+            <button id="btnUndo" class="btn" disabled data-i18n="undo">되돌리기</button>
+            <button id="btnFlip" class="btn"></button>
+            <span class="spacer"></span>
+            <button id="btnSave" class="btn" data-i18n="saveRecord">이 배치 기록하기</button>
+            <button id="btnPng" class="btn" data-i18n="exportPng">이미지로 저장</button>
+            <button id="btnPrint" class="btn ghost" hidden data-i18n="print">인쇄</button>
+            <button id="btnClear" class="btn ghost" data-i18n="clearAll">모두 비우기</button>
+          </div>
+          <div class="savebar" id="saveBar" hidden>
+            <label class="inl"><span data-i18n="recName">기록 이름</span> <input type="text" id="saveLabel"></label>
+            <label class="inl"><span data-i18n="date">날짜</span> <input type="date" id="saveDate"></label>
+            <button id="saveOk" class="btn primary sm" data-i18n="save">저장</button>
+            <button id="saveCancel" class="btn ghost sm" data-i18n="cancel">취소</button>
+          </div>
+          <div class="room" id="room">
+            <div class="front" id="front"><div class="board" data-i18n="board">칠판</div><div class="podium" data-i18n="podium">교탁</div></div>
+            <div class="grid-scroll"><div class="seatgrid" id="seatgrid"></div></div>
+            <div class="busy" id="busy" hidden data-i18n="busy">자리를 맞춰 보는 중…</div>
+          </div>
+          <div class="tray" id="tray">
+            <div class="tray-head" id="trayHead"></div>
+            <div class="tray-list" id="trayList"></div>
+          </div>
+          <p class="hint" data-i18n="hint">학생 카드를 끌어다 다른 자리에 놓으면 서로 바뀝니다. 끌기 어려우면 한 명을 누른 뒤 바꿀 자리를 누르세요. 자물쇠를 누르면 자동 배치 때 그 자리에 고정됩니다.</p>
+        </div>
+        <aside class="side">
+          <div class="card" id="infoCard"></div>
+          <div class="card" id="reportCard"></div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- STUDENTS -->
+    <section class="panel" id="tab-students" hidden>
+      <div class="cols2">
+        <div class="card">
+          <h2><span data-i18n="roster">학생 명단</span> <small id="stCount"></small></h2>
+          <div class="table-scroll">
+            <table class="st-table">
+              <thead><tr><th data-i18n="thNo">번호</th><th data-i18n="thName">이름</th><th data-i18n="thEn">영문 이름</th><th data-i18n="thGender">성별</th><th data-i18n="thHeight">키(cm)</th><th data-i18n="thFront">앞자리</th><th></th></tr></thead>
+              <tbody id="stBody"></tbody>
+            </table>
+          </div>
+          <div class="row"><button id="stAdd" class="btn sm" data-i18n="addOne">학생 한 명 추가</button></div>
+        </div>
+        <div class="stack">
+          <div class="card">
+            <h2 data-i18n="bulkTitle">명단 한 번에 붙여넣기</h2>
+            <p class="muted" data-i18n="bulkDesc">한 줄에 한 명씩 번호, 이름, 성별, 키 순서로 적습니다. 엑셀에서 복사해 붙여도 됩니다. 영문 이름은 괄호에 넣으세요. 이미 있는 이름은 정보만 바뀌고 기록은 그대로 남습니다.</p>
+            <textarea id="bulkText" rows="8" placeholder="1 김하준 남 132 (Hajun)&#10;2 이서윤 여 128.5 (Seoyun)"></textarea>
+            <div class="row"><button id="bulkMerge" class="btn primary sm" data-i18n="bulkApply">명단에 반영</button><label class="check"><input type="checkbox" id="bulkReplace"> <span data-i18n="bulkReplace">붙여넣은 목록에 없는 학생은 삭제</span></label></div>
+          </div>
+          <div class="card">
+            <h2 data-i18n="avoidTitle">떨어져 앉혀야 할 사이</h2>
+            <p class="muted" id="avoidDesc"></p>
+            <div class="row"><select id="avA"></select><span>↔</span><select id="avB"></select><button id="avAdd" class="btn sm" data-i18n="add">추가</button></div>
+            <div class="chips" id="avList"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- LAYOUT -->
+    <section class="panel" id="tab-layout" hidden>
+      <div class="card">
+        <h2 data-i18n="layoutTitle">좌석 모양 만들기</h2>
+        <p class="muted" data-i18n="layoutDesc">점을 누르거나 끌어서 책상을 놓고 뺍니다. 가로로 붙은 책상끼리 짝이 되고(2명씩, 끝에 한 명이 남으면 3명), 빈 칸은 통로입니다. 맨 위 줄이 칠판 쪽입니다.</p>
+        <div class="row">
+          <label class="inl"><span data-i18n="rows">줄(앞→뒤)</span> <input type="number" id="lyRows" min="1" max="12"></label>
+          <label class="inl"><span data-i18n="cols">칸(왼→오)</span> <input type="number" id="lyCols" min="1" max="16"></label>
+          <span class="sep"></span>
+          <button class="btn sm" data-preset="pair3" data-i18n="pPair3">2인 짝 3분단</button>
+          <button class="btn sm" data-preset="pair4" data-i18n="pPair4">2인 짝 4분단</button>
+          <button class="btn sm" data-preset="single" data-i18n="pSingle">1인 5분단</button>
+          <button class="btn sm ghost" data-preset="fill" data-i18n="pFill">전부 채우기</button>
+          <button class="btn sm ghost" data-preset="empty" data-i18n="pEmpty">전부 비우기</button>
+        </div>
+        <div class="ly-count" id="lyCount"></div>
+        <div class="ly-wrap"><div class="board mini" data-i18n="board">칠판</div><div class="ly-grid" id="lyGrid"></div></div>
+      </div>
+    </section>
+
+    <!-- HISTORY -->
+    <section class="panel" id="tab-history" hidden>
+      <div class="cols2">
+        <div class="card">
+          <h2 data-i18n="histTitle">저장된 배치</h2>
+          <p class="muted" id="histDesc"></p>
+          <div class="hist-list" id="histList"></div>
+        </div>
+        <div class="stack">
+          <div class="card" id="imgCard">
+            <h2 data-i18n="imgTitle">이전 자리표 사진으로 가져오기</h2>
+            <p class="muted" id="imgDesc"></p>
+            <div class="row" id="imgControls"><input type="file" id="imgFile" accept="image/*"><button id="imgRead" class="btn primary sm" data-i18n="imgRead">사진 읽기</button></div>
+            <div class="status" id="imgStatus" hidden></div>
+          </div>
+          <div class="card">
+            <h2 data-i18n="txtTitle">표로 붙여넣기</h2>
+            <p class="muted" data-i18n="txtDesc">엑셀·한글 표를 복사해 붙이거나, 한 줄에 한 줄(행)씩 이름을 띄어 적습니다. 통로는 | 또는 빈 칸, 빈 책상은 . 으로 적습니다. 맨 윗줄이 칠판 쪽입니다.</p>
+            <textarea id="gridText" rows="6" placeholder="김하준 이서윤 | 박도윤 최지우 | 정시우 강하은&#10;조은우 윤서아 | 장이준 임지아 | 한유준 ."></textarea>
+            <div class="row"><label class="check"><input type="checkbox" id="gridFlip"> <span data-i18n="txtFlip">칠판이 표 아래쪽에 있음</span></label><button id="gridParse" class="btn sm" data-i18n="preview">미리보기</button></div>
+          </div>
+          <div class="card" id="importPreview" hidden>
+            <h2 data-i18n="ipTitle">가져온 배치 확인</h2>
+            <p class="muted" data-i18n="ipDesc">잘못 읽힌 이름은 칸에서 바로 고르세요. 노란 테두리는 명단에 없는 이름입니다.</p>
+            <div class="ip-grid" id="ipGrid"></div>
+            <p class="muted" id="ipNote"></p>
+            <div class="row"><label class="inl"><span data-i18n="recName">기록 이름</span> <input type="text" id="ipLabel"></label><label class="inl"><span data-i18n="date">날짜</span> <input type="date" id="ipDate"></label></div>
+            <label class="check"><input type="checkbox" id="ipApply"> <span data-i18n="ipApply">지금 자리도 이 배치로 바꾸기 (좌석 모양 포함)</span></label>
+            <div class="row"><button id="ipSave" class="btn primary sm" data-i18n="ipSave">기록에 추가</button><button id="ipCancel" class="btn ghost sm" data-i18n="cancel">취소</button></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section class="panel" id="tab-settings" hidden>
+      <div class="cols2">
+        <div class="card">
+          <h2 data-i18n="rulesTitle">배치 규칙</h2>
+          <fieldset>
+            <legend data-i18n="gLegend">짝의 성별</legend>
+            <div class="radios">
+              <label class="check"><input type="radio" name="gmode" value="same"> <span data-i18n="gSame">같은 성별끼리 짝 (남녀 분리)</span></label>
+              <label class="check"><input type="radio" name="gmode" value="mixed"> <span data-i18n="gMixed">남녀 짝</span></label>
+              <label class="check"><input type="radio" name="gmode" value="any"> <span data-i18n="gAny">따지지 않음</span></label>
+            </div>
+          </fieldset>
+          <div class="row">
+            <label class="inl"><span data-i18n="radius">떨어뜨릴 거리</span>
+              <select id="setRadius"><option value="1" data-i18n="r1">1칸 (옆·앞뒤·대각선)</option><option value="2" data-i18n="r2">2칸까지</option></select></label>
+          </div>
+          <div class="row">
+            <label class="inl"><span data-i18n="tol">키 허용 차이</span> <input type="number" id="setTol" min="0" max="30"> cm</label>
+            <label class="inl"><span data-i18n="lookback">반영할 기록 수</span> <input type="number" id="setLook" min="1" max="20"></label>
+          </div>
+          <div class="stack" id="weights" style="gap:10px"></div>
+        </div>
+        <div class="stack">
+          <div class="card">
+            <h2 data-i18n="backupTitle">백업</h2>
+            <p class="muted" data-i18n="backupDesc">명단과 기록은 지금 쓰는 브라우저에만 저장됩니다. 다른 컴퓨터에서 이어 쓰거나 새 학기 전에 보관하려면 백업 파일로 내보내세요.</p>
+            <div class="row"><button id="bkExport" class="btn sm" data-i18n="bkExport">백업 파일 내보내기</button><label class="btn sm" for="bkFile"><span data-i18n="bkImport">백업 파일 불러오기</span></label><input type="file" id="bkFile" accept=".json,application/json" class="sr"></div>
+          </div>
+          <div class="card">
+            <h2 data-i18n="scoreResetTitle">점수 초기화</h2>
+            <p class="muted" data-i18n="scoreResetDesc">지금 학급의 칭찬·머쓱 점수를 모두 0으로 돌립니다. 명단과 자리는 그대로 남습니다.</p>
+            <div class="row"><button id="scoreReset" class="btn sm danger" data-i18n="scoreReset">점수 모두 0으로</button></div>
+          </div>
+          <div class="card">
+            <h2 data-i18n="dangerTitle">학급 삭제</h2>
+            <p class="muted" data-i18n="dangerDesc">지금 선택한 학급의 명단과 기록을 모두 지웁니다.</p>
+            <div class="row"><button id="classDel" class="btn sm danger" data-i18n="classDel">이 학급 삭제</button></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</div>
+<script>
+(function(){
+'use strict';
+const STORE_KEY='firstclass.v1';
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const uid=()=>Math.random().toString(36).slice(2,10);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad=n=>String(n).padStart(2,'0');
+const today=()=>{const d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());};
+const pk=k=>k.split('-').map(Number);
+const cmpKey=(a,b)=>{const[x1,y1]=pk(a),[x2,y2]=pk(b);return x1-x2||y1-y2;};
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=(Math.random()*(i+1))|0;[a[i],a[j]]=[a[j],a[i]];}return a;}
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+const LOCK_OFF='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.5-2"/></svg>';
+const LOCK_ON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2" fill="currentColor" fill-opacity=".18"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
+
+/* ---------------- i18n ---------------- */
+const I18N={ko:{
+ brand:'퍼스트클래스',brandSub:'FIRST CLASS · 우리 반 좌석과 점수',tabScore:'점수판',passK:'FLIGHT · 탑승 학급',totP:'칭찬 점수 합계',vSeat:'좌석으로',vNo:'번호순',fullscreen:'전체 화면',
+ selK:'명 선택',selAll:'전체 선택',selNone:'선택 해제',amt:'점수',giveP:'칭찬 +',giveM:'머쓱 −',gaveP:'{0}명에게 칭찬 +{1}',gaveM:'{0}명 머쓱 −{1} (칭찬 점수에서 뺌)',pickFirst:'먼저 학생을 눌러 선택하세요.',amtBad:'점수를 1 이상으로 적으세요.',importData:'데이터 파일 불러오기',
+ sbHint:'학생 좌석을 눌러 여러 명 고른 뒤, 점수를 적고 ‘칭찬 +’ 또는 ‘머쓱 −’을 누르세요. 머쓱은 칭찬 점수에서 뺍니다. 잘못 줬으면 ‘되돌리기’.',sbRest:'좌석이 없는 학생 {0}명',sbNoUndo:'되돌릴 점수가 없습니다.',sbUndone:'되돌렸습니다 ({0}명 {1})',scoreResetTitle:'점수 초기화',scoreResetDesc:'지금 학급의 칭찬 점수를 모두 0으로 돌립니다. 명단과 자리는 그대로 남습니다.',scoreReset:'점수 모두 0으로',scoreCleared:'점수를 모두 0으로 돌렸습니다.',sbEmpty:'아직 학생이 없습니다. 저장해 둔 데이터 파일(.json)을 불러오거나, 탑승객 명단에서 학생을 넣으세요.',
+class:'학급',rename:'이름 바꾸기',newClass:'새 학급',
+ tabArrange:'자리 배치',tabStudents:'탑승객 명단',tabLayout:'좌석 모양',tabHistory:'배치 기록',tabSettings:'규칙·백업',
+ auto:'자동 배치',undo:'되돌리기',saveRecord:'이 배치 기록하기',exportPng:'이미지로 저장',print:'인쇄',clearAll:'모두 비우기',
+ recName:'기록 이름',date:'날짜',save:'저장',cancel:'취소',board:'칠판',podium:'교탁',busy:'자리를 맞춰 보는 중…',
+ hint:'학생 카드를 끌어다 다른 자리에 놓으면 서로 바뀝니다. 끌기 어려우면 한 명을 누른 뒤 바꿀 자리를 누르세요. 자물쇠를 누르면 자동 배치 때 그 자리에 고정됩니다.',
+ roster:'학생 명단',thNo:'번호',thName:'이름',thEn:'영문 이름',thGender:'성별',thHeight:'키(cm)',thFront:'앞자리',addOne:'학생 한 명 추가',
+ bulkTitle:'명단 한 번에 붙여넣기',bulkDesc:'한 줄에 한 명씩 번호, 이름, 성별, 키 순서로 적습니다. 엑셀에서 복사해 붙여도 됩니다. 영문 이름은 괄호에 넣으세요. 이미 있는 이름은 정보만 바뀌고 기록은 그대로 남습니다.',
+ bulkApply:'명단에 반영',bulkReplace:'붙여넣은 목록에 없는 학생은 삭제',avoidTitle:'떨어져 앉혀야 할 사이',add:'추가',
+ layoutTitle:'좌석 모양 만들기',layoutDesc:'점을 누르거나 끌어서 책상을 놓고 뺍니다. 가로로 붙은 책상끼리 짝이 되고(2명씩, 끝에 한 명이 남으면 3명), 빈 칸은 통로입니다. 맨 위 줄이 칠판 쪽입니다.',
+ rows:'줄(앞→뒤)',cols:'칸(왼→오)',pPair3:'2인 짝 3분단',pPair4:'2인 짝 4분단',pSingle:'1인 5분단',pFill:'전부 채우기',pEmpty:'전부 비우기',
+ histTitle:'저장된 배치',imgTitle:'이전 자리표 사진으로 가져오기',imgRead:'사진 읽기',txtTitle:'표로 붙여넣기',
+ txtDesc:'엑셀·한글 표를 복사해 붙이거나, 한 줄(행)에 이름을 띄어 적습니다. 통로는 | 또는 빈 칸, 빈 책상은 . 으로 적습니다. 맨 윗줄이 칠판 쪽입니다.',
+ txtFlip:'칠판이 표 아래쪽에 있음',preview:'미리보기',ipTitle:'가져온 배치 확인',ipDesc:'잘못 읽힌 이름은 칸에서 바로 고르세요. 노란 테두리는 명단에 없는 이름입니다.',
+ ipApply:'지금 자리도 이 배치로 바꾸기 (좌석 모양 포함)',ipSave:'기록에 추가',rulesTitle:'배치 규칙',gLegend:'짝의 성별',
+ gSame:'같은 성별끼리 짝 (남녀 분리)',gMixed:'남녀 짝',gAny:'따지지 않음',radius:'떨어뜨릴 거리',r1:'1칸 (옆·앞뒤·대각선)',r2:'2칸까지',
+ tol:'키 허용 차이',lookback:'반영할 기록 수',backupTitle:'백업',backupDesc:'명단과 기록은 지금 쓰는 브라우저에만 저장됩니다. 다른 컴퓨터에서 이어 쓰거나 새 학기 전에 보관하려면 백업 파일로 내보내세요.',
+ bkExport:'백업 파일 내보내기',bkImport:'백업 파일 불러오기',dangerTitle:'학급 삭제',dangerDesc:'지금 선택한 학급의 명단과 기록을 모두 지웁니다.',classDel:'이 학급 삭제',
+ flipTeacher:'칠판 아래로 (교사 시점)',flipStudent:'칠판 위로 (학생 시점)',trayHead:'자리 없는 학생 {0}명',
+ trayEmpty:'모두 앉았습니다. 학생을 이곳으로 끌어 놓으면 자리에서 뺄 수 있습니다.',seatShort:'책상이 {0}개 모자랍니다. 좌석 모양에서 책상을 더 놓으세요.',
+ empty:'빈자리',lock:'자리 고정',frontTag:'앞',noFmt:'{0}번',
+ avoidDesc:'짝이 되지 않고, {0} 안에도 붙어 앉지 않게 합니다.',rad1:'옆·앞뒤·대각선 1칸',rad2:'2칸 거리',
+ histDesc:'체크한 기록 가운데 최근 {0}개가 ‘이전 짝 피하기’와 ‘자리 순환’ 계산에 쓰입니다.',
+ histEmpty:'아직 기록이 없습니다. 자리 배치 화면에서 ‘이 배치 기록하기’를 누르거나 오른쪽에서 이전 자리표를 가져오세요.',
+ imgChecking:'사진 인식 기능을 확인하는 중입니다…',
+ imgDesc:'자리표 캡처나 칠판 사진을 올리면 Claude가 이름과 자리를 읽어 기록으로 바꿉니다. 읽을 때마다 보는 사람의 Claude 사용량이 조금 쓰입니다.',
+ imgNo:'사진 인식은 claude.ai에서 이 페이지를 열었을 때만 됩니다. 캡처를 Claude와의 대화에 올리면 아래 ‘표로 붙여넣기’에 넣을 표로 바꿔 드립니다.',
+ imgReading:'Claude가 자리표를 읽는 중입니다. 보통 20~60초 걸립니다.',imgDone:'읽었습니다. 아래에서 확인하세요.',imgFail:'읽지 못했습니다. ({0})',
+ imgPick:'사진을 먼저 고르세요.',imgDenied:'사용을 허락하지 않아 읽지 않았습니다.',
+ ipNote:'책상 {0}개 · 학생 {1}명 · 명단에 없는 이름 {2}개',ipDup:'{0} 학생이 두 자리에 있습니다. 한 곳을 고치세요.',ipSaved:'기록에 추가했습니다.',
+ newStudent:'새 학생으로 추가',ipEmptySeat:'(빈자리)',parseFail:'표를 읽지 못했습니다. 한 줄에 한 줄(행)씩 이름을 적었는지 확인하세요.',
+ students:'학생',desks:'책상',records:'기록',nPeople:'{0}명',recUsed:'{1}개 중 {0}개 반영',
+ infoHint:'학생 카드를 누르면 떨어져야 할 친구(빨간 점선)와 최근 짝(초록 점선)이 표시됩니다. 빨간 테두리는 규칙 위반, 노란 테두리는 주의입니다.',
+ iGender:'성별',iHeight:'키',iAvoid:'떨어져야 할 친구',iPartners:'최근 짝',iSeats:'최근 자리',none:'없음',nAgo:'{0}번 전',
+ z0:'앞',z1:'가운데',z2:'뒤',gM:'남',gF:'여',gU:'?',frontNeed:'앞자리 필요',
+ lockBtn:'이 자리에 고정',unlockBtn:'고정 풀기',editBtn:'명단에서 고치기',closeBtn:'닫기',
+ repTitle:'배치 점검',rAvoid:'떨어져야 할 사이',rPartner:'이전 짝과 다시 짝',gSameRep:'성별 섞인 짝',gMixedRep:'같은 성별 짝',gAnyRep:'짝의 성별',
+ rHeight:'키 가림 ({0}cm 초과)',rFair:'지난번과 같은 구역',rFront:'앞자리 필요 학생',noHist:'기록 없음',notUsed:'따지지 않음',countN:'{0}건',ok:'없음',
+ iAvoidPair:'{0} · {1}: 짝으로 붙음 (떨어져야 할 사이)',iAvoidNear:'{0} · {1}: 가까이 앉음 (떨어져야 할 사이)',iPartner:'{0} · {1}: {2}번 전에도 짝',
+ iHeightT:'{0}({1}) 뒤에 {2}({3}) · {4}cm 차이',iFront:'{0}: 앞자리가 필요한데 {1}에 앉음',iFair:'{0}: 지난번에 이어 또 {1}',
+ repNoIssue:'걸리는 곳이 없습니다.',
+ arranged:'새 자리를 배치했습니다.',arrangedWarn:'배치했지만 규칙 위반 {0}건은 피하지 못했습니다. 점검 목록을 보세요.',saved:'기록했습니다.',loaded:'불러왔습니다.',
+ cleared:'모두 비웠습니다.',undone:'되돌렸습니다.',noStudents:'먼저 학생 명단을 넣으세요.',noSeats:'먼저 좌석 모양에서 책상을 놓으세요.',
+ savedFile:'파일을 저장했습니다.',saveFail:'파일을 저장하지 못했습니다.',bkLoaded:'백업을 불러왔습니다.',bkBad:'백업 파일 형식이 아닙니다.',
+ rosterMerged:'명단에 반영했습니다. 새 학생 {0}명, 바뀐 학생 {1}명',avoidSame:'서로 다른 두 학생을 고르세요.',avoidDup:'이미 등록된 사이입니다.',
+ confirmAgain:'한 번 더 누르면 실행',confirmDel:'한 번 더 누르면 삭제',load:'불러오기',del:'삭제',include:'계산에 반영',
+ lyCount:'책상 {0}개 · 학생 {1}명',lyShort:' · 책상 {0}개 모자람',lyExtra:' · 빈 책상 {0}개',defLabel:'{0} 자리',newClassName:'새 학급 {0}',
+ wPartner:'이전 짝 피하기',wPartnerD:'최근 기록일수록 강하게 피합니다',wGender:'짝의 성별 규칙',wGenderD:'위에서 고른 방식을 얼마나 지킬지',
+ wHeight:'키 가림 방지',wHeightD:'허용 차이를 넘는 1cm마다 벌점',wFair:'앞뒤 자리 돌아가기',wFairD:'뒤에 앉았던 학생은 앞으로, 앞은 뒤로',
+ wCol:'좌우 자리 돌아가기',wColD:'창가·복도 쪽을 번갈아',studentView:'학생 시점',teacherView:'교사 시점',pngMade:'만든 날 {0}',
+ seedClass:'예시 · 3학년 1반',seedH1:'예시 기록 · 2학기 첫 자리',seedH2:'예시 기록 · 9월 둘째 자리',selectA:'학생 고르기',noClassStudents:'학생이 없습니다. 오른쪽에 명단을 붙여넣으세요.'
+},en:{
+ brand:'First Class',brandSub:'FIRST CLASS · SEATS & POINTS',tabScore:'Scoreboard',passK:'FLIGHT · CLASS',totP:'Total points',vSeat:'By seat',vNo:'By number',fullscreen:'Full screen',
+ selK:'selected',selAll:'Select all',selNone:'Clear',amt:'Points',giveP:'Praise +',giveM:'Oops −',gaveP:'Praise +{1} to {0}',gaveM:'Oops −{1} for {0} (taken from points)',pickFirst:'Tap students to select them first.',amtBad:'Enter 1 or more points.',importData:'Load data file',
+ sbHint:'Tap seats to select several students, enter points, then press Praise + or Oops −. Oops takes points away. Made a mistake? Press Undo.',sbRest:'{0} students without a seat',sbNoUndo:'Nothing to undo.',sbUndone:'Undone ({0} students {1})',scoreResetTitle:'Reset points',scoreResetDesc:'Sets every student’s points in this class back to 0. The list and seats stay.',scoreReset:'Reset all points',scoreCleared:'All points reset to 0.',sbEmpty:'No students yet. Load a saved data file (.json), or add students in Passengers.',
+class:'Class',rename:'Rename',newClass:'New class',
+ tabArrange:'Seating',tabStudents:'Passengers',tabLayout:'Desk layout',tabHistory:'History',tabSettings:'Rules & backup',
+ auto:'Auto-arrange',undo:'Undo',saveRecord:'Save to history',exportPng:'Save as image',print:'Print',clearAll:'Clear all',
+ recName:'Name',date:'Date',save:'Save',cancel:'Cancel',board:'Board',podium:'Teacher’s desk',busy:'Working out seats…',
+ hint:'Drag a student card onto another seat to swap them. If dragging is awkward, tap one student and then tap the seat to swap with. The lock keeps a student in place during auto-arrange.',
+ roster:'Students',thNo:'No.',thName:'Name',thEn:'English name',thGender:'Gender',thHeight:'Height (cm)',thFront:'Front',addOne:'Add a student',
+ bulkTitle:'Paste a class list',bulkDesc:'One student per line: number, name, gender, height. Copying from a spreadsheet works. Put the English name in brackets. Existing names are updated and keep their history.',
+ bulkApply:'Apply list',bulkReplace:'Remove students not in the pasted list',avoidTitle:'Keep apart',add:'Add',
+ layoutTitle:'Desk layout',layoutDesc:'Tap or drag over the dots to add or remove desks. Desks touching side by side become partners (pairs, or a group of three at the end of a row). Gaps are aisles. The top row is nearest the board.',
+ rows:'Rows (front→back)',cols:'Columns (left→right)',pPair3:'Pairs, 3 sections',pPair4:'Pairs, 4 sections',pSingle:'Single desks, 5 columns',pFill:'Fill all',pEmpty:'Clear all',
+ histTitle:'Saved seating plans',imgTitle:'Import an old plan from a photo',imgRead:'Read photo',txtTitle:'Paste as a table',
+ txtDesc:'Paste a table from a spreadsheet, or type one row per line with names separated by spaces. Use | or a blank cell for an aisle and . for an empty desk. The first line is nearest the board.',
+ txtFlip:'The board is at the bottom of this table',preview:'Preview',ipTitle:'Check the imported plan',ipDesc:'Fix any misread name by choosing from the list. A yellow border means the name is not on the class list.',
+ ipApply:'Also use this plan as the current seating (desk layout included)',ipSave:'Add to history',rulesTitle:'Seating rules',gLegend:'Desk partners',
+ gSame:'Same gender (keep boys and girls apart)',gMixed:'Boy–girl pairs',gAny:'Ignore gender',radius:'Keep-apart distance',r1:'1 seat (side, front/back, diagonal)',r2:'Up to 2 seats',
+ tol:'Height tolerance',lookback:'Records to use',backupTitle:'Backup',backupDesc:'The class list and history are stored only in this browser. Export a backup file to move to another computer or to keep before a new term.',
+ bkExport:'Export backup',bkImport:'Import backup',dangerTitle:'Delete class',dangerDesc:'Deletes the selected class, its list and its history.',classDel:'Delete this class',
+ flipTeacher:'Board at bottom (teacher view)',flipStudent:'Board on top (student view)',trayHead:'Not seated: {0}',
+ trayEmpty:'Everyone has a seat. Drag a student here to take them off their seat.',seatShort:'{0} more desks needed. Add desks in Desk layout.',
+ empty:'Empty',lock:'Lock seat',frontTag:'F',noFmt:'#{0}',
+ avoidDesc:'They never share a desk and never sit within {0}.',rad1:'one seat (side, front/back, diagonal)',rad2:'two seats',
+ histDesc:'The latest {0} checked plans are used to avoid past partners and to rotate seats.',
+ histEmpty:'No saved plans yet. Use “Save to history” on the Seating tab, or import an old plan on the right.',
+ imgChecking:'Checking photo reading…',
+ imgDesc:'Upload a screenshot or photo of a seating chart and Claude will read the names and seats into a history record. Each read uses a little of the viewer’s Claude usage.',
+ imgNo:'Photo reading works only when this page is opened on claude.ai. You can upload the screenshot in a chat with Claude and get a table to paste below.',
+ imgReading:'Claude is reading the chart. This usually takes 20–60 seconds.',imgDone:'Done. Check the result below.',imgFail:'Could not read it. ({0})',
+ imgPick:'Choose a photo first.',imgDenied:'Not read because permission was declined.',
+ ipNote:'{0} desks · {1} students · {2} names not on the list',ipDup:'{0} is in two seats. Fix one of them.',ipSaved:'Added to history.',
+ newStudent:'add as new student',ipEmptySeat:'(empty)',parseFail:'Could not read the table. Put one row of names on each line.',
+ students:'Students',desks:'Desks',records:'History',nPeople:'{0}',recUsed:'{0} of {1} in use',
+ infoHint:'Tap a student to see who they must sit apart from (red dashes) and recent partners (green dashes). A red border breaks a rule; a yellow border is a caution.',
+ iGender:'Gender',iHeight:'Height',iAvoid:'Keep apart from',iPartners:'Recent partners',iSeats:'Recent seats',none:'None',nAgo:'{0} ago',
+ z0:'Front',z1:'Middle',z2:'Back',gM:'M',gF:'F',gU:'?',frontNeed:'Needs a front seat',
+ lockBtn:'Lock this seat',unlockBtn:'Unlock',editBtn:'Edit in list',closeBtn:'Close',
+ repTitle:'Plan check',rAvoid:'Keep-apart conflicts',rPartner:'Repeat partners',gSameRep:'Boy–girl pairs',gMixedRep:'Same-gender pairs',gAnyRep:'Partner gender',
+ rHeight:'Blocked view (over {0} cm)',rFair:'Same zone as last time',rFront:'Front-seat needs',noHist:'No history',notUsed:'Not used',countN:'{0}',ok:'None',
+ iAvoidPair:'{0} · {1}: share a desk (keep apart)',iAvoidNear:'{0} · {1}: sit close (keep apart)',iPartner:'{0} · {1}: partners {2} plans ago',
+ iHeightT:'{0} ({1}) in front of {2} ({3}) · {4} cm taller',iFront:'{0}: needs the front but sits in the {1}',iFair:'{0}: {1} again',
+ repNoIssue:'No problems found.',
+ arranged:'New seating arranged.',arrangedWarn:'Arranged, but {0} rule conflicts could not be avoided. See the check list.',saved:'Saved to history.',loaded:'Loaded.',
+ cleared:'All seats cleared.',undone:'Undone.',noStudents:'Add the class list first.',noSeats:'Place desks in Desk layout first.',
+ savedFile:'File saved.',saveFail:'Could not save the file.',bkLoaded:'Backup imported.',bkBad:'This is not a backup file.',
+ rosterMerged:'List applied: {0} new, {1} updated',avoidSame:'Choose two different students.',avoidDup:'That pair is already listed.',
+ confirmAgain:'Tap again to confirm',confirmDel:'Tap again to delete',load:'Load',del:'Delete',include:'Use in rules',
+ lyCount:'{0} desks · {1} students',lyShort:' · {0} desks short',lyExtra:' · {0} spare desks',defLabel:'Seating {0}',newClassName:'New class {0}',
+ wPartner:'Avoid past partners',wPartnerD:'Recent plans count more',wGender:'Partner gender rule',wGenderD:'How strictly to follow the choice above',
+ wHeight:'Keep views clear',wHeightD:'Penalty per cm over the tolerance',wFair:'Rotate front and back',wFairD:'Back-row students move forward and vice versa',
+ wCol:'Rotate left and right',wColD:'Alternate window and door sides',studentView:'Student view',teacherView:'Teacher view',pngMade:'Made {0}',
+ seedClass:'Sample · Grade 3 Class 1',seedH1:'Sample · First plan of term 2',seedH2:'Sample · Second plan in September',selectA:'Choose a student',noClassStudents:'No students yet. Paste a class list on the right.'
+}};
+const lang=()=>DB&&DB.lang==='en'?'en':'ko';
+function t(k,...a){let s=I18N[lang()][k];if(s==null)s=I18N.ko[k];if(s==null)return k;return s.replace(/\{(\d)\}/g,(_,i)=>a[+i]??'');}
+const dname=s=>lang()==='en'&&s.en?s.en:s.name;
+
+/* ---------------- data ---------------- */
+let DB=null, sel=null, undoStack=[], pending=null, lastX=null, lastE=null, sampleFn=null, capsReady=false;
+const cls=()=>DB.classes.find(c=>c.id===DB.activeId)||DB.classes[0];
+const stuById=id=>cls().students.find(s=>s.id===id);
+function defSettings(){return{gmode:'same',radius:1,tol:5,look:6,boardTop:true,m:{partner:5,gender:5,height:5,fair:5,col:5}};}
+function newClass(name){return{id:uid(),name,students:[],avoid:[],layout:presetLayout('pair3',4),current:{},locks:{},history:[],settings:defSettings(),scores:{},scoreLog:[]};}
+function presetLayout(kind,rows,cols){
+  let C,sc;
+  if(kind==='pair3'){C=8;sc=[0,1,3,4,6,7];}
+  else if(kind==='pair4'){C=11;sc=[0,1,3,4,6,7,9,10];}
+  else if(kind==='single'){C=9;sc=[0,2,4,6,8];}
+  else{C=cols;sc=kind==='fill'?[...Array(C).keys()]:[];}
+  const seats=[];for(let r=0;r<rows;r++)for(const c of sc)seats.push(r+'-'+c);
+  return{rows,cols:C,seats};
+}
+function load(){try{const s=localStorage.getItem(STORE_KEY);if(!s)return null;const d=JSON.parse(s);return valid(d)?d:null;}catch(e){return null;}}
+function valid(d){return d&&Array.isArray(d.classes)&&d.classes.length&&d.classes.every(c=>c&&c.id&&Array.isArray(c.students)&&c.layout);}
+function migrate(d){d.classes.forEach(c=>{c.avoid=c.avoid||[];c.current=c.current||{};c.locks=c.locks||{};c.history=c.history||[];c.settings=Object.assign(defSettings(),c.settings||{});c.settings.m=Object.assign(defSettings().m,c.settings.m||{});c.scores=c.scores||{};for(const k in c.scores){const v=c.scores[k];if(v&&typeof v==='object')c.scores[k]=(+v.p||0)-(+v.m||0);}c.scoreLog=(c.scoreLog||[]).filter(u=>u&&u.sids&&typeof u.d==='number');});if(!d.classes.some(c=>c.id===d.activeId))d.activeId=d.classes[0].id;d.tab=d.tab||'score';d.sb=Object.assign({step:1,view:'seat'},d.sb||{});delete d.sb.kind;return d;}
+let pTimer;function persist(){clearTimeout(pTimer);pTimer=setTimeout(flushPersist,120);}
+function flushPersist(){clearTimeout(pTimer);pTimer=null;try{localStorage.setItem(STORE_KEY,JSON.stringify(DB));}catch(e){}}
+addEventListener('pagehide',()=>{if(pTimer)flushPersist();});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&pTimer)flushPersist();});
+
+/* ---------------- geometry ---------------- */
+function computeGroups(rows,cols,set){
+  const groups=[];
+  for(let r=0;r<rows;r++){
+    let run=[];
+    const flush=()=>{const L=run.length;if(!L)return;if(L===1)groups.push(run);else{const ch=[];for(let i=0;i+1<L;i+=2)ch.push(run.slice(i,i+2));if(L%2)ch[ch.length-1].push(run[L-1]);groups.push(...ch);}run=[];};
+    for(let c=0;c<cols;c++){const k=r+'-'+c;if(set.has(k))run.push(k);else flush();}
+    flush();
+  }
+  return groups;
+}
+function posMeta(keys){
+  const P=keys.map(pk);const rs=[...new Set(P.map(p=>p[0]))].sort((a,b)=>a-b),cs=[...new Set(P.map(p=>p[1]))].sort((a,b)=>a-b);
+  const rI=new Map(rs.map((v,i)=>[v,i])),cI=new Map(cs.map((v,i)=>[v,i]));const m={};
+  keys.forEach((k,i)=>{const[r,c]=P[i];const rr=rI.get(r),cr=cI.get(c);m[k]={r,c,rr,cr,rn:rs.length>1?rr/(rs.length-1):0,cn:cs.length>1?cr/(cs.length-1):.5};});
+  return m;
+}
+const zoneOf=rn=>rn<.3?0:rn<.7?1:2;
+function sortedHistory(c){return c.history.filter(h=>h.included!==false).sort((a,b)=>(b.date||'').localeCompare(a.date||'')||(b.created||0)-(a.created||0));}
+
+function buildCtx(c){
+  const st=c.students,n=st.length,set=c.settings,L=c.layout;
+  const keys=L.seats.filter(k=>{const[r,cc]=pk(k);return r<L.rows&&cc<L.cols;}).sort(cmpKey);
+  const meta=posMeta(keys);const S=keys.map(k=>Object.assign({k},meta[k]));
+  const idx=new Map(keys.map((k,i)=>[k,i]));
+  const groups=computeGroups(L.rows,L.cols,new Set(keys)).map(g=>g.map(k=>idx.get(k)));
+  const gOf=new Int16Array(keys.length);groups.forEach((g,gi)=>g.forEach(s=>gOf[s]=gi));
+  const R=+set.radius||1,nb=[];
+  for(let a=0;a<S.length;a++)for(let b=a+1;b<S.length;b++){if(gOf[a]===gOf[b])continue;if(Math.max(Math.abs(S[a].r-S[b].r),Math.abs(S[a].c-S[b].c))<=R)nb.push([a,b]);}
+  const behind=S.map(s=>{const out=[];S.forEach((o,j)=>{if(o.rr===s.rr+1){const dc=Math.abs(o.c-s.c);if(dc===0)out.push([j,1]);else if(dc===1)out.push([j,.4]);}});return out;});
+  const sidIdx=new Map(st.map((s,i)=>[s.id,i]));
+  const G=st.map(s=>s.gender==='M'?1:s.gender==='F'?2:0),H=st.map(s=>+s.height||0),FR=st.map(s=>!!s.front);
+  const avoid=new Uint8Array(n*n);
+  for(const[a,b]of c.avoid){const i=sidIdx.get(a),j=sidIdx.get(b);if(i!=null&&j!=null){avoid[i*n+j]=1;avoid[j*n+i]=1;}}
+  const partner=new Float32Array(n*n),plast=new Uint8Array(n*n),hist=st.map(()=>[]),acc=st.map(()=>({r:0,c:0,w:0,k:0}));
+  const HS=sortedHistory(c).slice(0,Math.max(1,+set.look||6));
+  HS.forEach((h,k)=>{
+    const d=Math.pow(.65,k),hk=Object.keys(h.cells||{}),hm=posMeta(hk);
+    for(const g of computeGroups(h.rows,h.cols,new Set(hk))){
+      const ids=g.map(x=>h.cells[x]).filter(Boolean).map(x=>sidIdx.get(x)).filter(x=>x!=null);
+      for(let a=0;a<ids.length;a++)for(let b=a+1;b<ids.length;b++){const p=ids[a]*n+ids[b],q=ids[b]*n+ids[a];partner[p]+=d;partner[q]+=d;if(!plast[p]){plast[p]=k+1;plast[q]=k+1;}}
+    }
+    for(const key of hk){const i=sidIdx.get(h.cells[key]);if(i==null)continue;const m=hm[key];acc[i].r+=d*m.rn;acc[i].c+=d*m.cn;acc[i].w+=d;acc[i].k++;hist[i].push({z:zoneOf(m.rn),k:k+1});}
+  });
+  const fair=acc.map(a=>a.w?{r:a.r/a.w,c:a.c/a.w,conf:Math.min(1,a.k/2)}:null);
+  const M=set.m||{},mm=x=>(x==null?5:+x)/5;
+  const w={avoid:1000,near:300,front:150,partner:40*mm(M.partner),gender:15*mm(M.gender),height:6*mm(M.height),fair:30*mm(M.fair),col:8*mm(M.col)};
+  return{c,st,n,S,idx,groups,gOf,nb,behind,sidIdx,G,H,FR,avoid,partner,plast,hist,fair,w,tol:+set.tol||0,gmode:set.gmode||'same',histN:HS.length};
+}
+function cost(A,X){
+  let t=0;const w=X.w,n=X.n;
+  for(const g of X.groups){for(let a=0;a<g.length;a++){const i=A[g[a]];if(i<0)continue;for(let b=a+1;b<g.length;b++){const j=A[g[b]];if(j<0)continue;const p=i*n+j;
+    if(X.avoid[p])t+=w.avoid;t+=w.partner*X.partner[p];
+    if(X.gmode!=='any'){const gi=X.G[i],gj=X.G[j];if(gi&&gj&&(X.gmode==='same'?gi!==gj:gi===gj))t+=w.gender;}}}}
+  for(const[a,b]of X.nb){const i=A[a],j=A[b];if(i>=0&&j>=0&&X.avoid[i*n+j])t+=w.near;}
+  for(let s=0;s<A.length;s++){const i=A[s],S=X.S[s];
+    if(i<0){t+=1.5*(1-S.rn);continue;}
+    const hi=X.H[i];
+    if(hi)for(const[b,wt]of X.behind[s]){const j=A[b];if(j>=0){const hj=X.H[j];if(hj){const d=hi-hj-X.tol;if(d>0)t+=w.height*d*wt;}}}
+    if(X.FR[i]){if(S.rn>.4)t+=w.front;}
+    else{const f=X.fair[i];if(f){const dr=1-Math.abs(S.rn-f.r),dc=1-Math.abs(S.cn-f.c);t+=f.conf*(w.fair*dr*dr+w.col*dc*dc);}}
+  }
+  return t;
+}
+function curA(X){const A=new Int16Array(X.S.length).fill(-1);const cur=X.c.current;X.S.forEach((s,i)=>{const sid=cur[s.k];if(sid&&X.sidIdx.has(sid))A[i]=X.sidIdx.get(sid);});return A;}
+function optimize(c){
+  const X=buildCtx(c),m=X.S.length;
+  const A0=new Int16Array(m).fill(-1),fixed=new Uint8Array(m),used=new Uint8Array(X.n);
+  for(const k in c.locks){if(!c.locks[k])continue;const s=X.idx.get(k),sid=c.current[k];if(s==null||!sid)continue;const i=X.sidIdx.get(sid);if(i==null||used[i])continue;A0[s]=i;fixed[s]=1;used[i]=1;}
+  const free=[];for(let s=0;s<m;s++)if(!fixed[s])free.push(s);
+  const pool=[];for(let i=0;i<X.n;i++)if(!used[i])pool.push(i);
+  const F=free.length,L=Math.max(F,pool.length);
+  let best=null,bestC=Infinity;
+  const iters=Math.min(90000,20000+L*2200);
+  for(let r=0;r<3;r++){
+    const P=new Int16Array(L).fill(-1),order=shuffle([...Array(L).keys()]);shuffle(pool);pool.forEach((s,j)=>P[order[j]]=s);
+    const A=A0.slice();for(let j=0;j<F;j++)A[free[j]]=P[j];
+    let cur=cost(A,X);if(cur<bestC){bestC=cur;best=A.slice();}
+    if(L<2)continue;
+    const T0=60,T1=.2;
+    for(let it=0;it<iters;it++){
+      const T=T0*Math.pow(T1/T0,it/iters);
+      const a=(Math.random()*L)|0;let b=(Math.random()*(L-1))|0;if(b>=a)b++;
+      if(P[a]===P[b]||(a>=F&&b>=F))continue;
+      const pa=P[a],pb=P[b];P[a]=pb;P[b]=pa;if(a<F)A[free[a]]=pb;if(b<F)A[free[b]]=pa;
+      const nc=cost(A,X);
+      if(nc<=cur||Math.random()<Math.exp((cur-nc)/T)){cur=nc;if(nc<bestC-1e-9){bestC=nc;best=A.slice();}}
+      else{P[a]=pa;P[b]=pb;if(a<F)A[free[a]]=pa;if(b<F)A[free[b]]=pb;}
+    }
+  }
+  const out={};best.forEach((i,s)=>{if(i>=0)out[X.S[s].k]=X.st[i].id;});
+  return{current:out,cost:bestC};
+}
+function explain(A,X){
+  const iss=[],mark={},n=X.n,nm=i=>dname(X.st[i]);
+  const cnt={avoid:0,partner:0,gender:0,height:0,front:0,frontN:0,same:0,withHist:0,pairs:0};
+  const add=(sev,text,keys)=>{iss.push({sev,text,keys});if(sev!=='info')keys.forEach(k=>{if(mark[k]!=='bad')mark[k]=sev;});};
+  for(const g of X.groups){for(let a=0;a<g.length;a++){const i=A[g[a]];if(i<0)continue;for(let b=a+1;b<g.length;b++){const j=A[g[b]];if(j<0)continue;
+    const p=i*n+j,ks=[X.S[g[a]].k,X.S[g[b]].k];cnt.pairs++;
+    if(X.avoid[p]){cnt.avoid++;add('bad',t('iAvoidPair',nm(i),nm(j)),ks);}
+    if(X.plast[p]){cnt.partner++;add('warn',t('iPartner',nm(i),nm(j),X.plast[p]),ks);}
+    const gi=X.G[i],gj=X.G[j];if(gi&&gj&&((X.gmode==='same'&&gi!==gj)||(X.gmode==='mixed'&&gi===gj)))cnt.gender++;}}}
+  for(const[a,b]of X.nb){const i=A[a],j=A[b];if(i>=0&&j>=0&&X.avoid[i*n+j]){cnt.avoid++;add('bad',t('iAvoidNear',nm(i),nm(j)),[X.S[a].k,X.S[b].k]);}}
+  for(let s=0;s<A.length;s++){const i=A[s];if(i<0)continue;const S=X.S[s],hi=X.H[i];
+    if(hi)for(const[b,wt]of X.behind[s]){const j=A[b];if(j<0||!X.H[j])continue;const d=hi-X.H[j];if(d>X.tol&&(wt===1||d>X.tol+4)){cnt.height++;add('warn',t('iHeightT',nm(i),hi,nm(j),X.H[j],Math.round(d*10)/10),[S.k,X.S[b].k]);}}
+    if(X.FR[i]){cnt.frontN++;if(S.rn>.4){cnt.front++;add('bad',t('iFront',nm(i),t('z'+zoneOf(S.rn))),[S.k]);}}
+    else if(X.hist[i].length){cnt.withHist++;const z=zoneOf(S.rn);if(X.hist[i][0].z===z){cnt.same++;add('info',t('iFair',nm(i),t('z'+z)),[S.k]);}}
+  }
+  const ord={bad:0,warn:1,info:2};iss.sort((a,b)=>ord[a.sev]-ord[b.sev]);
+  return{iss,mark,cnt};
+}
+
+/* ---------------- rendering ---------------- */
+function applyI18n(){
+  document.documentElement.lang=lang();
+  $$('[data-i18n]').forEach(el=>{el.textContent=t(el.dataset.i18n);});
+  $('#langKo').setAttribute('aria-pressed',lang()==='ko');$('#langEn').setAttribute('aria-pressed',lang()==='en');
+}
+function renderClassSel(){
+  $('#classSel').innerHTML=DB.classes.map(c=>`<option value="${c.id}"${c.id===DB.activeId?' selected':''}>${esc(c.name)}</option>`).join('');
+}
+function renderTabs(){
+  $$('.tab').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===DB.tab));
+  $$('.panel').forEach(p=>p.hidden=p.id!=='tab-'+DB.tab);
+}
+function cardHTML(s,o){
+  o=o||{};const g=s.gender==='M'?'m':s.gender==='F'?'f':'u';const cl=['stu',g];
+  if(o.locked)cl.push('locked');if(o.mark)cl.push('mark-'+o.mark);if(o.rel)cl.push(o.rel);if(sel===s.id)cl.push('sel');
+  const sub=lang()==='en'&&s.en?s.name:'';
+  const meta=[sub?`<span>${esc(sub)}</span>`:'',s.no!=null&&s.no!==''?`<span>${esc(t('noFmt',s.no))}</span>`:'',s.height?`<span>${esc(s.height)}</span>`:''].join('');
+  return `<div class="${cl.join(' ')}" data-sid="${s.id}" tabindex="0" role="button" aria-label="${esc(dname(s))}"${o.delay!=null?` style="animation-delay:${o.delay}ms"`:''}>`+
+    (s.front?`<span class="ftag" title="${esc(t('frontNeed'))}">${esc(t('frontTag'))}</span>`:'')+
+    (o.tray?'':`<button class="lock" type="button" aria-label="${esc(t('lock'))}" title="${esc(t('lock'))}">${o.locked?LOCK_ON:LOCK_OFF}</button>`)+
+    `<span class="nm">${esc(dname(s))}</span><span class="meta">${meta}</span></div>`;
+}
+function viewOrder(c,X){
+  const L=c.layout,flip=!c.settings.boardTop;
+  const colHas=[...Array(L.cols)].map((_,x)=>X.S.some(s=>s.c===x)),rowHas=[...Array(L.rows)].map((_,y)=>X.S.some(s=>s.r===y));
+  let cols=[...Array(L.cols).keys()],rows=[...Array(L.rows).keys()];if(flip){cols.reverse();rows.reverse();}
+  // trim trailing empty rows (in data order) so the grid has no dead space
+  const lastRow=Math.max(-1,...X.S.map(s=>s.r));rows=rows.filter(r=>r<=lastRow);
+  const edge={};X.groups.forEach(g=>g.forEach((s,i)=>{let a=i===0,b=i===g.length-1;if(flip)[a,b]=[b,a];edge[X.S[s].k]=(a?' gs':'')+(b?' ge':'');}));
+  return{flip,colHas,rowHas,cols,rows,edge};
+}
+function renderRoom(deal){
+  const c=cls(),X=buildCtx(c);lastX=X;
+  // drop stale entries
+  for(const k of Object.keys(c.current)){if(!X.idx.has(k)||!X.sidIdx.has(c.current[k])){delete c.current[k];delete c.locks[k];}}
+  const A=curA(X),E=explain(A,X);lastE=E;
+  const V=viewOrder(c,X),grid=$('#seatgrid'),room=$('#room'),front=$('#front');
+  front.classList.toggle('flip',V.flip);
+  if(V.flip)room.insertBefore(front,$('#busy'));else room.insertBefore(front,room.firstChild);
+  $('#btnFlip').textContent=V.flip?t('flipStudent'):t('flipTeacher');
+  grid.style.gridTemplateColumns=V.cols.map(x=>V.colHas[x]?'minmax(var(--seat-min),1fr)':'var(--aisle)').join(' ');
+  let relA=new Set(),relP=new Set();
+  if(sel&&X.sidIdx.has(sel)){const i=X.sidIdx.get(sel);for(let j=0;j<X.n;j++){if(X.avoid[i*X.n+j])relA.add(X.st[j].id);else if(X.plast[i*X.n+j])relP.add(X.st[j].id);}}
+  let html='',di=0;
+  for(const r of V.rows){
+    if(!V.rowHas[r]){html+=V.cols.map(()=>'<div style="height:var(--aisle)"></div>').join('');continue;}
+    for(const x of V.cols){const k=r+'-'+x;
+      if(!X.idx.has(k)){html+='<div></div>';continue;}
+      const s=c.current[k]&&stuById(c.current[k]);
+      html+=`<div class="seat${V.edge[k]||''}" data-key="${k}">`+(s?cardHTML(s,{locked:!!c.locks[k],mark:E.mark[k],rel:relA.has(s.id)?'rel-avoid':relP.has(s.id)?'rel-partner':'',delay:deal?(di++)*16:null}):`<div class="stu empty" tabindex="0" role="button">${esc(t('empty'))}</div>`)+'</div>';
+    }
+  }
+  grid.innerHTML=html;grid.classList.toggle('deal',!!deal);
+  const placed=new Set(Object.values(c.current)),rest=c.students.filter(s=>!placed.has(s.id)).sort(byNo);
+  $('#trayHead').textContent=rest.length?t('trayHead',rest.length)+(rest.length>X.S.length-placed.size?' · '+t('seatShort',rest.length-(X.S.length-placed.size)):''):t('trayEmpty');
+  $('#trayList').innerHTML=rest.map(s=>cardHTML(s,{tray:true})).join('');
+  renderInfo();renderReport();
+}
+function byNo(a,b){const x=+a.no||999,y=+b.no||999;return x-y||String(a.name).localeCompare(String(b.name));}
+function renderInfo(){
+  const c=cls(),X=lastX,el=$('#infoCard'),s=sel&&stuById(sel);
+  if(!s){
+    const m=c.students.filter(x=>x.gender==='M').length,f=c.students.filter(x=>x.gender==='F').length;
+    el.innerHTML=`<h2>${esc(c.name)}</h2><dl class="kv"><dt>${t('students')}</dt><dd>${t('nPeople',c.students.length)} &nbsp;<span class="gdot m"></span>${m} <span class="gdot f"></span>${f}</dd><dt>${t('desks')}</dt><dd>${X.S.length}</dd><dt>${t('records')}</dt><dd>${t('recUsed',X.histN,c.history.length)}</dd></dl><p class="muted">${esc(t('infoHint'))}</p>`;
+    return;
+  }
+  const i=X.sidIdx.get(s.id),n=X.n;
+  const av=[],pr=[];for(let j=0;j<n;j++){if(X.avoid[i*n+j])av.push(X.st[j]);if(X.plast[i*n+j])pr.push([X.plast[i*n+j],X.st[j]]);}
+  pr.sort((a,b)=>a[0]-b[0]);
+  const key=Object.keys(c.current).find(k=>c.current[k]===s.id),locked=key&&c.locks[key];
+  const g=s.gender==='M'?'m':s.gender==='F'?'f':'u';
+  el.innerHTML=`<h2>${esc(dname(s))} <small>${s.no!=null&&s.no!==''?esc(t('noFmt',s.no)):''}${lang()==='en'&&s.en?' · '+esc(s.name):''}</small></h2>
+  <dl class="kv"><dt>${t('iGender')}</dt><dd><span class="gdot ${g}"></span>${t(g==='m'?'gM':g==='f'?'gF':'gU')}${s.front?' · '+esc(t('frontNeed')):''}</dd>
+  <dt>${t('iHeight')}</dt><dd>${s.height?esc(s.height)+' cm':'–'}</dd>
+  <dt>${t('iAvoid')}</dt><dd>${av.length?av.map(x=>esc(dname(x))).join(', '):t('none')}</dd>
+  <dt>${t('iPartners')}</dt><dd>${pr.length?pr.slice(0,6).map(([k,x])=>esc(dname(x))+` <span class="muted">(${t('nAgo',k)})</span>`).join(', '):t('none')}</dd>
+  <dt>${t('iSeats')}</dt><dd><div class="zones">${X.hist[i].length?X.hist[i].slice(0,6).map(h=>`<span class="zone">${t('z'+h.z)}</span>`).join(''):t('none')}</div></dd></dl>
+  <div class="row">${key?`<button class="btn sm" id="infoLock">${t(locked?'unlockBtn':'lockBtn')}</button>`:''}<button class="btn sm ghost" id="infoEdit">${t('editBtn')}</button><button class="btn sm ghost" id="infoClose">${t('closeBtn')}</button></div>`;
+  $('#infoLock')&&($('#infoLock').onclick=()=>{pushUndo();c.locks[key]=!locked;if(!c.locks[key])delete c.locks[key];commit();});
+  $('#infoEdit').onclick=()=>{setTab('students');};
+  $('#infoClose').onclick=()=>{sel=null;renderRoom();};
+}
+function renderReport(){
+  const c=cls(),X=lastX,E=lastE,C=E.cnt,el=$('#reportCard');
+  const pill=(txt,cls_)=>`<span class="pill ${cls_}">${esc(txt)}</span>`;
+  const row=(label,p)=>`<div class="rep-row"><span>${esc(label)}</span>${p}</div>`;
+  let h=`<h2>${t('repTitle')}</h2><div class="rep">`;
+  h+=row(t('rAvoid'),C.avoid?pill(t('countN',C.avoid),'bad'):pill(t('ok'),'ok'));
+  h+=row(t('rPartner'),X.histN?(C.partner?pill(t('countN',C.partner),'warn'):pill(t('ok'),'ok')):pill(t('noHist'),''));
+  const gl=X.gmode==='same'?t('gSameRep'):X.gmode==='mixed'?t('gMixedRep'):t('gAnyRep');
+  h+=row(gl,X.gmode==='any'?pill(t('notUsed'),''):pill(C.gender+' / '+C.pairs,C.gender?'warn':'ok'));
+  h+=row(t('rHeight',X.tol),C.height?pill(t('countN',C.height),'warn'):pill(t('ok'),'ok'));
+  if(C.frontN)h+=row(t('rFront'),C.front?pill(C.front+' / '+C.frontN,'bad'):pill(C.frontN+' / '+C.frontN,'ok'));
+  h+=row(t('rFair'),C.withHist?pill(C.same+' / '+C.withHist,C.same>C.withHist/3?'warn':'ok'):pill(t('noHist'),''));
+  h+='</div>';
+  h+=E.iss.length?`<ul class="issues">${E.iss.map((it,ix)=>`<li><button type="button" data-ix="${ix}"><span class="dot ${it.sev}"></span><span>${esc(it.text)}</span></button></li>`).join('')}</ul>`:`<p class="muted">${t('repNoIssue')}</p>`;
+  el.innerHTML=h;
+}
+function renderStudents(){
+  const c=cls(),list=c.students.slice().sort(byNo);
+  $('#stCount').textContent=t('nPeople',list.length);
+  $('#stBody').innerHTML=list.length?list.map(s=>{const g=s.gender==='M'?'m':s.gender==='F'?'f':'';
+    return `<tr data-id="${s.id}"><td class="no"><input type="number" data-f="no" value="${esc(s.no??'')}" aria-label="${t('thNo')}"></td>
+    <td><input type="text" data-f="name" value="${esc(s.name)}" aria-label="${t('thName')}"></td>
+    <td><input type="text" data-f="en" value="${esc(s.en||'')}" aria-label="${t('thEn')}"></td>
+    <td><button type="button" class="gbtn ${g}" data-f="gender">${t(g==='m'?'gM':g==='f'?'gF':'gU')}</button></td>
+    <td><input type="number" step="0.1" data-f="height" value="${esc(s.height??'')}" aria-label="${t('thHeight')}"></td>
+    <td><input type="checkbox" data-f="front"${s.front?' checked':''} aria-label="${t('thFront')}"></td>
+    <td><button type="button" class="btn sm ghost danger" data-del>${t('del')}</button></td></tr>`;}).join(''):`<tr><td colspan="7" class="muted">${t('noClassStudents')}</td></tr>`;
+  const opts=`<option value="">${t('selectA')}</option>`+list.map(s=>`<option value="${s.id}">${esc((s.no!=null&&s.no!==''?s.no+'. ':'')+dname(s))}</option>`).join('');
+  $('#avA').innerHTML=opts;$('#avB').innerHTML=opts;
+  $('#avoidDesc').textContent=t('avoidDesc',t(+c.settings.radius===2?'rad2':'rad1'));
+  $('#avList').innerHTML=c.avoid.map(([a,b],i)=>{const A=stuById(a),B=stuById(b);if(!A||!B)return'';return `<span class="chip">${esc(dname(A))} ↔ ${esc(dname(B))}<button type="button" data-av="${i}" aria-label="${t('del')}">×</button></span>`;}).join('');
+}
+function renderLayout(){
+  const c=cls(),L=c.layout,set=new Set(L.seats);
+  $('#lyRows').value=L.rows;$('#lyCols').value=L.cols;
+  const g=$('#lyGrid');g.style.gridTemplateColumns=`repeat(${L.cols},34px)`;
+  let h='';for(let r=0;r<L.rows;r++)for(let x=0;x<L.cols;x++){const k=r+'-'+x;h+=`<button type="button" class="ly-cell${set.has(k)?' on':''}" data-k="${k}" aria-label="${r+1}-${x+1}" aria-pressed="${set.has(k)}"></button>`;}
+  g.innerHTML=h;
+  const n=L.seats.length,s=c.students.length;
+  $('#lyCount').textContent=t('lyCount',n,s)+(n<s?t('lyShort',s-n):n>s?t('lyExtra',n-s):'');
+}
+function renderHistory(){
+  const c=cls(),list=c.history.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')||(b.created||0)-(a.created||0));
+  $('#histDesc').textContent=t('histDesc',c.settings.look);
+  $('#histList').innerHTML=list.length?list.map(h=>{
+    let mini=`<div class="mini" style="grid-template-columns:repeat(${h.cols},7px)">`;
+    for(let r=0;r<h.rows;r++)for(let x=0;x<h.cols;x++){const k=r+'-'+x;if(!(k in h.cells)){mini+='<i></i>';continue;}const s=h.cells[k]&&stuById(h.cells[k]);mini+=`<i class="${s?(s.gender==='M'?'m':s.gender==='F'?'f':'u'):'s'}"></i>`;}
+    mini+='</div>';
+    const cnt=Object.values(h.cells).filter(Boolean).length;
+    return `<div class="hist${h.included===false?' off':''}" data-h="${h.id}">${mini}<div><div class="ttl">${esc(h.label)}</div><div class="sub">${esc(h.date||'')} · ${t('nPeople',cnt)}</div></div>
+    <div class="acts"><label class="check"><input type="checkbox" data-inc${h.included!==false?' checked':''}> ${t('include')}</label><span style="flex:1"></span><button type="button" class="btn sm" data-load>${t('load')}</button><button type="button" class="btn sm ghost danger" data-hdel>${t('del')}</button></div></div>`;
+  }).join(''):`<p class="muted">${t('histEmpty')}</p>`;
+  renderImgCard();
+}
+function renderImgCard(){
+  const d=$('#imgDesc'),ctl=$('#imgControls');
+  if(!capsReady){d.textContent=t('imgChecking');ctl.hidden=true;return;}
+  if(sampleFn){d.textContent=t('imgDesc');ctl.hidden=false;}else{d.textContent=t('imgNo');ctl.hidden=true;}
+}
+const WEIGHTS=[['partner','wPartner','wPartnerD'],['gender','wGender','wGenderD'],['height','wHeight','wHeightD'],['fair','wFair','wFairD'],['col','wCol','wColD']];
+function renderSettings(){
+  const s=cls().settings;
+  $$('input[name=gmode]').forEach(r=>r.checked=r.value===s.gmode);
+  $('#setRadius').value=String(s.radius);$('#setTol').value=s.tol;$('#setLook').value=s.look;
+  $('#weights').innerHTML=WEIGHTS.map(([k,l,d])=>`<div class="set-row"><div><div>${t(l)}</div><div class="desc">${t(d)}</div></div><input type="range" min="0" max="10" step="1" id="w-${k}" data-w="${k}" value="${s.m[k]}" aria-label="${t(l)}"><output>${s.m[k]}</output></div>`).join('');
+}
+function renderAll(){applyI18n();renderClassSel();renderTabs();renderScore();renderRoom();renderStudents();renderLayout();renderHistory();renderSettings();}
+function commit(deal){persist();renderRoom(deal);if(DB.tab==='score')renderScore();}
+function setTab(tab){DB.tab=tab;persist();renderTabs();if(tab==='score')renderScore();if(tab==='history')renderHistory();if(tab==='students')renderStudents();if(tab==='layout')renderLayout();}
+
+/* ---------------- scoreboard ---------------- */
+// 점수는 학생마다 숫자 하나. 칭찬은 더하고 머쓱은 뺀다.
+let sbSel=new Set();
+const ptOf=sid=>+cls().scores[sid]||0;
+const fmtN=n=>(n<0?'−':'')+Math.abs(n);
+const noCode=s=>s.no!=null&&s.no!==''?t('noFmt',s.no):'';
+function scCard(s,code){
+  const en=lang()==='en'?s.name:s.en,v=ptOf(s.id);
+  return `<button type="button" class="sc${sbSel.has(s.id)?' on':''}" data-sid="${s.id}" aria-pressed="${sbSel.has(s.id)}" aria-label="${esc(dname(s))}">`+(code?`<span class="code">${esc(code)}</span>`:'')+
+    `<span class="who"><span class="nm">${esc(dname(s))}</span>`+(en?`<span class="en">${esc(en)}</span>`:'')+`</span>`+
+    `<b class="pt${v<0?' neg':''}">${fmtN(v)}</b></button>`;
+}
+function renderScore(){
+  const c=cls(),sb=DB.sb,grid=$('#sbGrid'),flip=!c.settings.boardTop;
+  for(const id of [...sbSel])if(!stuById(id))sbSel.delete(id);
+  $$('#sbView [data-view]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.view===sb.view));
+  $('#sbClass').textContent=c.name;$('#sbHint').textContent=t('sbHint');
+  $('#sbFlip').textContent=flip?t('flipStudent'):t('flipTeacher');
+  $('#sbUndo').disabled=!c.scoreLog.length;
+  $('#sbFull').hidden=!(document.fullscreenEnabled&&$('#tab-score').requestFullscreen);
+  if(document.activeElement!==$('#sbAmt'))$('#sbAmt').value=sb.step;
+  renderTotals();renderSelBar();
+  const list=c.students.slice().sort(byNo);
+  $('#sbCabin').classList.toggle('flip',flip);
+  if(!list.length){grid.className='sbgrid list';grid.style.gridTemplateColumns='';grid.innerHTML=`<div class="sb-empty"><p class="muted">${esc(t('sbEmpty'))}</p><label class="btn primary" for="bkFile">${esc(t('importData'))}</label></div>`;$('#sbRest').hidden=true;$('#sbFront').hidden=true;return;}
+  if(sb.view==='no'||!c.layout.seats.length){
+    $('#sbFront').hidden=true;grid.className='sbgrid list';grid.style.gridTemplateColumns='';
+    grid.innerHTML=list.map(s=>scCard(s,noCode(s))).join('');$('#sbRest').hidden=true;return;
+  }
+  $('#sbFront').hidden=false;grid.className='sbgrid';
+  const L=c.layout,keys=L.seats.filter(k=>{const[r,x]=pk(k);return r<L.rows&&x<L.cols;});
+  const rowsUsed=[...new Set(keys.map(k=>pk(k)[0]))].sort((a,b)=>a-b),colsUsed=[...new Set(keys.map(k=>pk(k)[1]))].sort((a,b)=>a-b);
+  const set=new Set(keys);
+  let rows=[];for(let r=rowsUsed[0];r<=rowsUsed[rowsUsed.length-1];r++)rows.push(r);
+  let cols=[...Array(L.cols).keys()].filter(x=>x>=colsUsed[0]&&x<=colsUsed[colsUsed.length-1]);
+  if(flip){rows.reverse();cols.reverse();}
+  grid.style.gridTemplateColumns=cols.map(x=>colsUsed.includes(x)?'minmax(var(--sc-min),1fr)':'var(--aisle)').join(' ');
+  let h='';
+  for(const r of rows){
+    if(!rowsUsed.includes(r)){h+=cols.map(()=>'<div style="height:var(--aisle)"></div>').join('');continue;}
+    for(const x of cols){const k=r+'-'+x;
+      if(!set.has(k)){h+='<div></div>';continue;}
+      const code=(rowsUsed.indexOf(r)+1)+String.fromCharCode(65+colsUsed.indexOf(x));
+      const s=c.current[k]&&stuById(c.current[k]);
+      h+=s?scCard(s,code):`<div class="sc empty" aria-hidden="true"><span class="code">${code}</span></div>`;
+    }
+  }
+  grid.innerHTML=h;
+  const placed=new Set(Object.values(c.current)),rest=list.filter(s=>!placed.has(s.id));
+  $('#sbRest').hidden=!rest.length;
+  if(rest.length){$('#sbRestHead').textContent=t('sbRest',rest.length);$('#sbRestGrid').innerHTML=rest.map(s=>scCard(s,noCode(s))).join('');}
+}
+function renderTotals(){const c=cls();let p=0;c.students.forEach(s=>{p+=ptOf(s.id);});$('#sbTotP').textContent=fmtN(p);}
+function renderSelBar(){
+  const n=sbSel.size;$('#sbSelN').textContent=n;$('#sbSelK').textContent=t('selK');
+  $('#sbGiveP').disabled=!n;$('#sbGiveM').disabled=!n;$('#sbSelNone').disabled=!n;
+  $('#sbBar').classList.toggle('live',n>0);
+}
+function paintCard(sid,d){
+  const v=ptOf(sid);
+  $$(`.sc[data-sid="${sid}"]`).forEach(el=>{
+    const b=el.querySelector('.pt');b.textContent=fmtN(v);b.classList.toggle('neg',v<0);
+    el.classList.toggle('on',sbSel.has(sid));el.setAttribute('aria-pressed',sbSel.has(sid));
+    if(d==null)return;
+    el.classList.remove('bump');void el.offsetWidth;el.classList.add('bump');
+    const f=document.createElement('span');f.className='float '+(d>0?'p':'m');f.textContent=(d>0?'+':'−')+Math.abs(d);el.appendChild(f);setTimeout(()=>f.remove(),950);
+  });
+}
+function readAmt(){const v=Math.round(Math.abs(+$('#sbAmt').value));return v>0?Math.min(v,999):0;}
+function give(sign){
+  const c=cls(),ids=[...sbSel].filter(id=>stuById(id)),n=readAmt();
+  if(!ids.length){toast(t('pickFirst'));return;}
+  if(!n){toast(t('amtBad'));$('#sbAmt').focus();return;}
+  const d=sign*n;DB.sb.step=n;
+  ids.forEach(id=>{c.scores[id]=ptOf(id)+d;});
+  c.scoreLog.push({sids:ids,d,at:Date.now()});if(c.scoreLog.length>300)c.scoreLog.shift();
+  sbSel.clear();persist();ids.forEach(id=>paintCard(id,d));renderTotals();renderSelBar();$('#sbUndo').disabled=false;
+  toast(t(sign>0?'gaveP':'gaveM',ids.length,n));
+}
+$('#tab-score').addEventListener('click',e=>{
+  const card=e.target.closest('.sc[data-sid]');
+  if(card){const id=card.dataset.sid;if(sbSel.has(id))sbSel.delete(id);else sbSel.add(id);paintCard(id);renderSelBar();return;}
+  const v=e.target.closest('[data-view]');if(v){DB.sb.view=v.dataset.view;persist();renderScore();return;}
+  const q=e.target.closest('[data-amt]');if(q){$('#sbAmt').value=q.dataset.amt;DB.sb.step=+q.dataset.amt;persist();return;}
+});
+$('#sbAmt').addEventListener('change',()=>{const n=readAmt();if(n){DB.sb.step=n;persist();}});
+$('#sbAmt').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();give(1);}});
+$('#sbGiveP').onclick=()=>give(1);
+$('#sbGiveM').onclick=()=>give(-1);
+$('#sbSelAll').onclick=()=>{cls().students.forEach(s=>sbSel.add(s.id));$$('.sc[data-sid]').forEach(el=>paintCard(el.dataset.sid));renderSelBar();};
+$('#sbSelNone').onclick=()=>{const ids=[...sbSel];sbSel.clear();ids.forEach(id=>paintCard(id));renderSelBar();};
+$('#sbFlip').onclick=()=>{const s=cls().settings;s.boardTop=!s.boardTop;persist();renderScore();renderRoom();};
+$('#sbUndo').onclick=()=>{
+  const c=cls(),u=c.scoreLog.pop();if(!u){toast(t('sbNoUndo'));return;}
+  const ids=(u.sids||[u.sid]).filter(id=>stuById(id));ids.forEach(id=>{c.scores[id]=ptOf(id)-u.d;paintCard(id);});
+  toast(t('sbUndone',ids.length,(u.d>0?'+':'−')+Math.abs(u.d)));
+  persist();renderTotals();$('#sbUndo').disabled=!c.scoreLog.length;
+};
+$('#sbFull').onclick=()=>{try{if(document.fullscreenElement)document.exitFullscreen();else $('#tab-score').requestFullscreen();}catch(e){}};
+$('#scoreReset').onclick=e=>armed(e.currentTarget,'confirmAgain',()=>{const c=cls();c.scores={};c.scoreLog=[];persist();renderScore();toast(t('scoreCleared'));});
+
+/* ---------------- toast / confirm ---------------- */
+let toastT;function toast(msg){const el=$('#toast');el.textContent=msg;el.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('on'),2600);}
+function armed(btn,key,fn){
+  if(btn.dataset.arm==='1'){clearTimeout(btn._t);btn.dataset.arm='';btn.textContent=btn._orig;fn();return;}
+  btn._orig=btn.textContent;btn.dataset.arm='1';btn.textContent=t(key||'confirmAgain');
+  btn._t=setTimeout(()=>{btn.dataset.arm='';btn.textContent=btn._orig;},3000);
+}
+
+/* ---------------- moves / undo ---------------- */
+function pushUndo(){const c=cls();undoStack.push({cid:c.id,current:{...c.current},locks:{...c.locks}});if(undoStack.length>40)undoStack.shift();$('#btnUndo').disabled=false;}
+function keyOf(sid){const c=cls();return Object.keys(c.current).find(k=>c.current[k]===sid);}
+function move(sid,target){
+  const c=cls(),from=keyOf(sid);
+  if(target.type==='tray'){if(!from)return;pushUndo();delete c.current[from];delete c.locks[from];}
+  else{const tk=target.key;if(tk===from)return;pushUndo();const other=c.current[tk];
+    if(from){if(other)c.current[from]=other;else delete c.current[from];delete c.locks[from];}
+    c.current[tk]=sid;delete c.locks[tk];}
+  commit();
+}
+function tapStudent(sid){
+  if(!sel){sel=sid;renderRoom();return;}
+  if(sel===sid){sel=null;renderRoom();return;}
+  const a=sel,ka=keyOf(a),kb=keyOf(sid);sel=null;
+  if(kb)move(a,{type:'seat',key:kb});else if(ka)move(sid,{type:'seat',key:ka});else{sel=sid;renderRoom();}
+}
+
+/* ---------------- drag ---------------- */
+let drag=null;
+function targetAt(x,y){const el=document.elementFromPoint(x,y);if(!el)return null;const seat=el.closest('.seat[data-key]');if(seat)return{type:'seat',key:seat.dataset.key,el:seat};const tr=el.closest('#tray');if(tr)return{type:'tray',el:tr};return null;}
+function clearOver(){$$('.drop-over').forEach(e=>e.classList.remove('drop-over'));}
+document.addEventListener('pointerdown',e=>{
+  if(e.button>0)return;const card=e.target.closest('#seatgrid .stu[data-sid], #trayList .stu[data-sid]');
+  if(!card||e.target.closest('.lock'))return;
+  drag={card,sid:card.dataset.sid,x:e.clientX,y:e.clientY,on:false,ghost:null};
+});
+document.addEventListener('pointermove',e=>{
+  if(!drag)return;
+  if(!drag.on){if(Math.hypot(e.clientX-drag.x,e.clientY-drag.y)<7)return;
+    drag.on=true;const r=drag.card.getBoundingClientRect(),g=drag.card.cloneNode(true);g.classList.add('drag-ghost');g.style.width=r.width+'px';
+    drag.ox=drag.x-r.left;drag.oy=drag.y-r.top;document.body.appendChild(g);drag.ghost=g;drag.card.classList.add('dragging');}
+  e.preventDefault();
+  drag.ghost.style.transform=`translate(${e.clientX-drag.ox}px,${e.clientY-drag.oy}px)`;
+  clearOver();const tg=targetAt(e.clientX,e.clientY);if(tg)tg.el.classList.add('drop-over');
+},{passive:false});
+function endDrag(e,cancel){
+  if(!drag)return;const d=drag;drag=null;clearOver();
+  if(d.on){d.ghost.remove();d.card.classList.remove('dragging');if(cancel)return;const tg=targetAt(e.clientX,e.clientY);if(tg){sel=null;move(d.sid,tg);}}
+  else if(!cancel){tapStudent(d.sid);}
+}
+document.addEventListener('pointerup',e=>endDrag(e,false));
+document.addEventListener('pointercancel',e=>endDrag(e,true));
+
+/* ---------------- arrange events ---------------- */
+$('#seatgrid').addEventListener('click',e=>{
+  const lk=e.target.closest('.lock');
+  if(lk){const k=lk.closest('.seat').dataset.key,c=cls();pushUndo();if(c.locks[k])delete c.locks[k];else c.locks[k]=true;commit();return;}
+  const em=e.target.closest('.stu.empty');
+  if(em&&sel){const k=em.closest('.seat').dataset.key,s=sel;sel=null;move(s,{type:'seat',key:k});}
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&sel){sel=null;renderRoom();return;}
+  if(e.key!=='Enter'&&e.key!==' ')return;
+  const card=e.target.closest&&e.target.closest('#seatgrid .stu, #trayList .stu');if(!card||e.target.closest('.lock'))return;
+  e.preventDefault();
+  if(card.dataset.sid)tapStudent(card.dataset.sid);else if(sel){const k=card.closest('.seat').dataset.key,s=sel;sel=null;move(s,{type:'seat',key:k});}
+});
+$('#room').addEventListener('click',e=>{if(sel&&!e.target.closest('.stu')&&!drag){sel=null;renderRoom();}});
+$('#reportCard').addEventListener('click',e=>{
+  const b=e.target.closest('[data-ix]');if(!b)return;const it=lastE.iss[+b.dataset.ix];
+  it.keys.forEach(k=>{const el=$(`.seat[data-key="${k}"] .stu`);if(el){el.classList.remove('flash');void el.offsetWidth;el.classList.add('flash');}});
+  const first=$(`.seat[data-key="${it.keys[0]}"]`);first&&first.scrollIntoView({block:'nearest',inline:'nearest',behavior:'smooth'});
+});
+$('#btnAuto').onclick=()=>{
+  const c=cls();if(!c.students.length){toast(t('noStudents'));return;}if(!c.layout.seats.length){toast(t('noSeats'));return;}
+  $('#busy').hidden=false;
+  setTimeout(()=>{
+    pushUndo();const r=optimize(c);c.current=r.current;sel=null;
+    for(const k in c.locks)if(!c.current[k])delete c.locks[k];
+    $('#busy').hidden=true;commit(true);
+    toast(lastE.cnt.avoid||lastE.cnt.front?t('arrangedWarn',lastE.cnt.avoid+lastE.cnt.front):t('arranged'));
+  },40);
+};
+$('#btnUndo').onclick=()=>{
+  const c=cls();let u;while(undoStack.length&&(u=undoStack.pop())&&u.cid!==c.id)u=null;
+  if(u){c.current=u.current;c.locks=u.locks;sel=null;commit();toast(t('undone'));}
+  $('#btnUndo').disabled=!undoStack.some(x=>x.cid===c.id);
+};
+$('#btnFlip').onclick=()=>{const s=cls().settings;s.boardTop=!s.boardTop;commit();};
+$('#btnClear').onclick=e=>armed(e.currentTarget,'confirmAgain',()=>{pushUndo();const c=cls();c.current={};c.locks={};sel=null;commit();applyI18n();toast(t('cleared'));});
+$('#btnSave').onclick=()=>{const bar=$('#saveBar');bar.hidden=!bar.hidden;if(!bar.hidden){const d=today();$('#saveDate').value=d;$('#saveLabel').value=t('defLabel',d);$('#saveLabel').focus();}};
+$('#saveCancel').onclick=()=>{$('#saveBar').hidden=true;};
+$('#saveOk').onclick=()=>{
+  const c=cls(),cells={};c.layout.seats.forEach(k=>{cells[k]=c.current[k]||null;});
+  c.history.push({id:uid(),label:$('#saveLabel').value.trim()||t('defLabel',$('#saveDate').value),date:$('#saveDate').value||today(),rows:c.layout.rows,cols:c.layout.cols,cells,included:true,created:Date.now()});
+  $('#saveBar').hidden=true;commit();renderHistory();toast(t('saved'));
+};
+$('#btnPng').onclick=()=>exportPng();
+if(!window.claude){$('#btnPrint').hidden=false;$('#btnPrint').onclick=()=>window.print();}
+
+/* ---------------- header events ---------------- */
+$('#langKo').onclick=()=>{DB.lang='ko';persist();renderAll();};
+$('#langEn').onclick=()=>{DB.lang='en';persist();renderAll();};
+$$('.tab').forEach(b=>b.onclick=()=>setTab(b.dataset.tab));
+$('#classSel').onchange=e=>{DB.activeId=e.target.value;sel=null;sbSel.clear();pending=null;$('#importPreview').hidden=true;persist();renderAll();$('#btnUndo').disabled=!undoStack.some(x=>x.cid===DB.activeId);};
+$('#classRename').onclick=()=>{const i=$('#className'),s=$('#classSel');if(i.hidden){i.value=cls().name;i.hidden=false;s.hidden=true;i.focus();i.select();}else finishRename();};
+function finishRename(){const i=$('#className');if(i.hidden)return;const v=i.value.trim();if(v)cls().name=v;i.hidden=true;$('#classSel').hidden=false;persist();renderClassSel();renderInfo();}
+$('#className').addEventListener('keydown',e=>{if(e.key==='Enter')finishRename();if(e.key==='Escape'){$('#className').hidden=true;$('#classSel').hidden=false;}});
+$('#className').addEventListener('blur',()=>setTimeout(finishRename,120));
+$('#classAdd').onclick=()=>{const c=newClass(t('newClassName',DB.classes.length+1));DB.classes.push(c);DB.activeId=c.id;DB.tab='students';sel=null;persist();renderAll();};
+$('#classDel').onclick=e=>armed(e.currentTarget,'confirmDel',()=>{
+  DB.classes=DB.classes.filter(c=>c.id!==DB.activeId);if(!DB.classes.length)DB.classes.push(newClass(t('newClassName',1)));
+  DB.activeId=DB.classes[0].id;sel=null;persist();renderAll();
+});
+
+/* ---------------- students events ---------------- */
+$('#stBody').addEventListener('change',e=>{
+  const tr=e.target.closest('tr[data-id]');if(!tr)return;const s=stuById(tr.dataset.id),f=e.target.dataset.f;if(!s||!f)return;
+  if(f==='no'){s.no=e.target.value===''?null:+e.target.value;}
+  else if(f==='height'){s.height=e.target.value===''?null:+e.target.value;}
+  else if(f==='front'){s.front=e.target.checked;}
+  else if(f==='name'){const v=e.target.value.trim();if(v)s.name=v;else e.target.value=s.name;}
+  else if(f==='en'){s.en=e.target.value.trim();}
+  persist();renderRoom();
+});
+$('#stBody').addEventListener('click',e=>{
+  const tr=e.target.closest('tr[data-id]');if(!tr)return;const c=cls(),s=stuById(tr.dataset.id);
+  const gb=e.target.closest('[data-f=gender]');
+  if(gb){s.gender=s.gender==='M'?'F':s.gender==='F'?'':'M';gb.className='gbtn '+(s.gender==='M'?'m':s.gender==='F'?'f':'');gb.textContent=t(s.gender==='M'?'gM':s.gender==='F'?'gF':'gU');persist();renderRoom();return;}
+  const del=e.target.closest('[data-del]');
+  if(del)armed(del,'confirmDel',()=>{removeStudents([s.id]);persist();renderStudents();renderRoom();});
+});
+function removeStudents(ids){
+  const c=cls(),set=new Set(ids);
+  c.students=c.students.filter(s=>!set.has(s.id));c.avoid=c.avoid.filter(([a,b])=>!set.has(a)&&!set.has(b));
+  for(const k of Object.keys(c.current))if(set.has(c.current[k])){delete c.current[k];delete c.locks[k];}
+  if(set.has(sel))sel=null;
+}
+$('#stAdd').onclick=()=>{const c=cls(),no=Math.max(0,...c.students.map(s=>+s.no||0))+1;c.students.push({id:uid(),no,name:(lang()==='en'?'Student ':'학생')+no,en:'',gender:'',height:null,front:false});persist();renderStudents();renderRoom();const ins=$$('#stBody input[data-f=name]');const last=$(`#stBody tr:last-child input[data-f=name]`);(last||ins[ins.length-1])&&(last||ins[ins.length-1]).select();};
+function normName(s){return String(s||'').replace(/\s+/g,'').toLowerCase();}
+function parseRoster(text){
+  const out=[];
+  for(let line of text.split(/\r?\n/)){
+    line=line.trim();if(!line)continue;let en='';
+    line=line.replace(/[(（]([^)）]*)[)）]/,(_,x)=>{en=x.trim();return' ';});
+    const toks=line.split(/[\t,;]+|\s+/).map(x=>x.trim()).filter(Boolean);
+    let no=null,gender='',height=null;const rest=[];
+    for(const tk of toks){
+      if(!gender&&/^(남|남자|남학생|m|male|boy|b)$/i.test(tk)){gender='M';continue;}
+      if(!gender&&/^(여|여자|여학생|f|female|girl|g)$/i.test(tk)){gender='F';continue;}
+      const num=tk.replace(/(cm|번|\.)$/i,'');
+      if(/^\d+(\.\d+)?$/.test(num)){const v=parseFloat(num);if(no==null&&height==null&&v<=60&&Number.isInteger(v)){no=v;continue;}if(height==null&&v>=80&&v<=220){height=v;continue;}if(no==null){no=v;continue;}continue;}
+      rest.push(tk);
+    }
+    const name=rest.join(' ');if(!name||/^(이름|성명|name)$/i.test(name)||/이름|성별/.test(name))continue;
+    out.push({no,name,gender,height,en});
+  }
+  return out;
+}
+$('#bulkMerge').onclick=()=>{
+  const c=cls(),rows=parseRoster($('#bulkText').value);if(!rows.length){toast(t('parseFail'));return;}
+  let added=0,upd=0;const seen=new Set();
+  for(const r of rows){
+    let s=c.students.find(x=>normName(x.name)===normName(r.name));
+    if(s){if(r.no!=null)s.no=r.no;if(r.gender)s.gender=r.gender;if(r.height!=null)s.height=r.height;if(r.en)s.en=r.en;upd++;}
+    else{s={id:uid(),no:r.no,name:r.name,en:r.en||'',gender:r.gender||'',height:r.height,front:false};c.students.push(s);added++;}
+    seen.add(s.id);
+  }
+  if($('#bulkReplace').checked)removeStudents(c.students.filter(s=>!seen.has(s.id)).map(s=>s.id));
+  persist();renderStudents();renderRoom();renderLayout();toast(t('rosterMerged',added,upd));$('#bulkText').value='';
+};
+$('#avAdd').onclick=()=>{
+  const c=cls(),a=$('#avA').value,b=$('#avB').value;if(!a||!b||a===b){toast(t('avoidSame'));return;}
+  if(c.avoid.some(([x,y])=>(x===a&&y===b)||(x===b&&y===a))){toast(t('avoidDup'));return;}
+  c.avoid.push([a,b]);persist();renderStudents();renderRoom();
+};
+$('#avList').addEventListener('click',e=>{const b=e.target.closest('[data-av]');if(!b)return;cls().avoid.splice(+b.dataset.av,1);persist();renderStudents();renderRoom();});
+
+/* ---------------- layout events ---------------- */
+function layoutChanged(){persist();renderLayout();renderRoom();}
+function resize(){const c=cls(),L=c.layout,r=Math.min(12,Math.max(1,+$('#lyRows').value||1)),k=Math.min(16,Math.max(1,+$('#lyCols').value||1));L.rows=r;L.cols=k;L.seats=L.seats.filter(s=>{const[a,b]=pk(s);return a<r&&b<k;});layoutChanged();}
+$('#lyRows').onchange=resize;$('#lyCols').onchange=resize;
+$$('[data-preset]').forEach(b=>b.onclick=()=>{
+  const c=cls(),kind=b.dataset.preset,n=c.students.length;
+  const per={pair3:6,pair4:8,single:5}[kind];
+  c.layout=per?presetLayout(kind,Math.min(12,Math.max(1,Math.ceil((n||24)/per)))):presetLayout(kind,c.layout.rows,c.layout.cols);
+  layoutChanged();
+});
+let paint=null;
+$('#lyGrid').addEventListener('pointerdown',e=>{const cell=e.target.closest('.ly-cell');if(!cell)return;e.preventDefault();paint={on:!cell.classList.contains('on')};setCell(cell);});
+$('#lyGrid').addEventListener('pointermove',e=>{if(!paint)return;const el=document.elementFromPoint(e.clientX,e.clientY);const cell=el&&el.closest('.ly-cell');if(cell)setCell(cell);});
+function setCell(cell){cell.classList.toggle('on',paint.on);cell.setAttribute('aria-pressed',paint.on);}
+document.addEventListener('pointerup',()=>{if(!paint)return;paint=null;cls().layout.seats=$$('#lyGrid .ly-cell.on').map(x=>x.dataset.k);layoutChanged();});
+$('#lyGrid').addEventListener('keydown',e=>{if(e.key!=='Enter'&&e.key!==' ')return;const cell=e.target.closest('.ly-cell');if(!cell)return;e.preventDefault();paint={on:!cell.classList.contains('on')};setCell(cell);paint=null;cls().layout.seats=$$('#lyGrid .ly-cell.on').map(x=>x.dataset.k);layoutChanged();});
+
+/* ---------------- history events ---------------- */
+$('#histList').addEventListener('click',e=>{
+  const card=e.target.closest('[data-h]');if(!card)return;const c=cls(),h=c.history.find(x=>x.id===card.dataset.h);if(!h)return;
+  if(e.target.closest('[data-load]')){pushUndo();c.layout={rows:h.rows,cols:h.cols,seats:Object.keys(h.cells)};c.current={};c.locks={};
+    for(const k in h.cells)if(h.cells[k]&&stuById(h.cells[k]))c.current[k]=h.cells[k];sel=null;persist();renderLayout();setTab('arrange');renderRoom();toast(t('loaded'));}
+  const d=e.target.closest('[data-hdel]');
+  if(d)armed(d,'confirmDel',()=>{c.history=c.history.filter(x=>x!==h);persist();renderHistory();renderRoom();});
+});
+$('#histList').addEventListener('change',e=>{const inc=e.target.closest('[data-inc]');if(!inc)return;const h=cls().history.find(x=>x.id===e.target.closest('[data-h]').dataset.h);h.included=inc.checked;persist();renderHistory();renderRoom();});
+
+/* ---------------- import ---------------- */
+function normGrid(rows,flip){
+  let W=Math.max(0,...rows.map(r=>r.length));
+  let g=rows.map(r=>{const a=r.map(v=>v==null?'':String(v).trim());while(a.length<W)a.push('#');return a;});
+  if(flip)g=g.reverse().map(r=>r.slice().reverse());
+  while(g.length&&g[g.length-1].every(v=>v==='#'))g.pop();
+  while(g.length&&g[0].every(v=>v==='#'))g.shift();
+  const colAll=x=>g.every(r=>r[x]==='#');
+  while(g.length&&g[0].length&&colAll(g[0].length-1))g.forEach(r=>r.pop());
+  while(g.length&&g[0].length&&colAll(0))g.forEach(r=>r.shift());
+  return g;
+}
+function gridFromText(text,flip){
+  const lines=text.split(/\r?\n/).filter(l=>l.trim());
+  const rows=lines.map(l=>{
+    if(l.includes('\t'))return l.split('\t').map(x=>{x=x.trim();return x===''||/^[|#/]+$/.test(x)?'#':/^[.\-_·]$/.test(x)?'':x;});
+    return l.trim().split(/[\s,]+/).map(x=>/^[|#/]+$/.test(x)?'#':/^[.\-_·]$/.test(x)?'':x);
+  });
+  return normGrid(rows,flip);
+}
+function matchName(raw){
+  const c=cls();raw=String(raw||'').trim();if(!raw)return null;
+  const m=raw.match(/^(?:번호[:：]?\s*|#)?(\d{1,2})(?:번)?$/);
+  if(m){const s=c.students.find(x=>+x.no===+m[1]);return s?s.id:null;}
+  const n=normName(raw);
+  let s=c.students.find(x=>normName(x.name)===n||(x.en&&normName(x.en)===n));
+  if(!s&&n.length>=2)s=c.students.find(x=>normName(x.name).includes(n)||n.includes(normName(x.name)));
+  return s?s.id:null;
+}
+function openPreview(g){
+  if(!g.length||!g[0].length){toast(t('parseFail'));return;}
+  const cells={};g.forEach((row,r)=>row.forEach((v,x)=>{if(v!=='#')cells[r+'-'+x]=v;}));
+  pending={rows:g.length,cols:g[0].length,cells};renderPreview();
+  $('#importPreview').hidden=false;const d=today();$('#ipDate').value=d;$('#ipLabel').value=t('defLabel',d);
+  $('#importPreview').scrollIntoView({block:'nearest',behavior:'smooth'});
+}
+function renderPreview(){
+  const c=cls(),P=pending,list=c.students.slice().sort(byNo);
+  const colSeat=[...Array(P.cols)].map((_,x)=>Object.keys(P.cells).some(k=>pk(k)[1]===x));
+  const g=$('#ipGrid');g.style.gridTemplateColumns=colSeat.map(s=>s?'minmax(74px,1fr)':'12px').join(' ');
+  let h='',unm=0,people=0;
+  for(let r=0;r<P.rows;r++)for(let x=0;x<P.cols;x++){const k=r+'-'+x;
+    if(!(k in P.cells)){h+='<div class="aisle"></div>';continue;}
+    const raw=P.cells[k],sid=raw?matchName(raw):null;if(raw&&!sid)unm++;if(raw)people++;
+    h+=`<select data-k="${k}" class="${raw&&!sid?'unm':''}" aria-label="${r+1}-${x+1}"><option value="">${t('ipEmptySeat')}</option>`+
+      (raw&&!sid?`<option value="new:${esc(raw)}" selected>＋ ${esc(raw)} (${t('newStudent')})</option>`:'')+
+      list.map(s=>`<option value="${s.id}"${s.id===sid?' selected':''}>${esc((s.no!=null&&s.no!==''?s.no+'. ':'')+dname(s))}</option>`).join('')+'</select>';
+  }
+  g.innerHTML=h;$('#ipNote').textContent=t('ipNote',Object.keys(P.cells).length,people,unm);
+}
+$('#ipGrid').addEventListener('change',e=>{const s=e.target.closest('select');if(s)s.classList.toggle('unm',s.value.startsWith('new:'));});
+$('#gridParse').onclick=()=>{const g=gridFromText($('#gridText').value,$('#gridFlip').checked);openPreview(g);};
+$('#ipCancel').onclick=()=>{pending=null;$('#importPreview').hidden=true;};
+$('#ipSave').onclick=()=>{
+  const c=cls(),P=pending;if(!P)return;const cells={},seen=new Map();let dup=null;
+  $$('#ipGrid select').forEach(s=>{let v=s.value;const k=s.dataset.k;
+    if(v.startsWith('new:')){const name=v.slice(4);let ex=c.students.find(x=>normName(x.name)===normName(name));if(!ex){ex={id:uid(),no:null,name,en:'',gender:'',height:null,front:false};c.students.push(ex);}v=ex.id;}
+    if(v){if(seen.has(v))dup=v;seen.set(v,k);}cells[k]=v||null;});
+  if(dup){toast(t('ipDup',dname(stuById(dup))));return;}
+  const date=$('#ipDate').value||today();
+  c.history.push({id:uid(),label:$('#ipLabel').value.trim()||t('defLabel',date),date,rows:P.rows,cols:P.cols,cells,included:true,created:Date.now()});
+  if($('#ipApply').checked){pushUndo();c.layout={rows:P.rows,cols:P.cols,seats:Object.keys(cells)};c.current={};c.locks={};for(const k in cells)if(cells[k])c.current[k]=cells[k];}
+  pending=null;$('#importPreview').hidden=true;$('#gridText').value='';persist();renderStudents();renderLayout();renderHistory();renderRoom();toast(t('ipSaved'));
+};
+$('#imgRead').onclick=async()=>{
+  const f=$('#imgFile').files[0],st=$('#imgStatus');if(!f){toast(t('imgPick'));return;}if(!sampleFn)return;
+  const c=cls(),names=c.students.slice().sort(byNo).map(s=>(s.no!=null&&s.no!==''?s.no+'번 ':'')+s.name).join(', ');
+  const prompt=`첨부한 이미지는 한국 학교 교실의 자리 배치표(캡처 또는 사진)입니다. 좌석 격자로 옮겨 적어 주세요.
+
+학급 명단 (이름은 가능한 한 이 표기와 똑같이 맞추세요): ${names||'(명단 없음)'}
+
+규칙
+- grid의 첫 행은 칠판(교탁)에 가장 가까운 줄입니다.
+- 각 행은 칠판을 바라보고 앉은 학생 기준 왼쪽에서 오른쪽 순서입니다. 이미지에서 칠판이나 교탁이 아래쪽에 있으면 표를 180도 돌려서 적으세요 (행 순서와 좌우 모두 뒤집기).
+- 칸 값: 학생 이름 문자열, 사람이 없는 책상은 "", 책상이 없는 통로·빈 공간은 "#".
+- 붙어 있는 책상(짝)은 같은 행에서 이웃한 칸에 두고, 분단 사이 통로는 "#" 한 칸으로 표시하세요.
+- 모든 행의 길이를 같게 맞추세요.
+- 이름 대신 번호만 보이면 "7번"처럼 적으세요.
+
+다음 형태의 JSON 하나로만 답하세요:
+{"grid":[["김하준","이서윤","#","박도윤","최지우"],["","정시우","#","강하은","조은우"]],"notes":"읽기 어려웠던 부분 (없으면 빈 문자열)"}`;
+  st.hidden=false;st.classList.remove('err');st.textContent=t('imgReading');$('#imgRead').disabled=true;
+  try{
+    const data=await sampleFn.json(prompt,{images:[f]});
+    const grid=data&&Array.isArray(data.grid)?data.grid.map(r=>Array.isArray(r)?r.map(v=>v==null?'':String(v)):[]):[];
+    st.textContent=t('imgDone')+(data&&data.notes?' '+data.notes:'');
+    openPreview(normGrid(grid,false));
+  }catch(e){
+    st.classList.add('err');st.textContent=e&&e.code==='not_granted'?t('imgDenied'):t('imgFail',(e&&(e.code||e.message))||'error');
+  }finally{$('#imgRead').disabled=false;}
+};
+
+/* ---------------- settings events ---------------- */
+$$('input[name=gmode]').forEach(r=>r.onchange=()=>{cls().settings.gmode=r.value;commit();});
+$('#setRadius').onchange=e=>{cls().settings.radius=+e.target.value;commit();renderStudents();};
+$('#setTol').onchange=e=>{cls().settings.tol=Math.max(0,+e.target.value||0);commit();};
+$('#setLook').onchange=e=>{cls().settings.look=Math.min(20,Math.max(1,+e.target.value||6));commit();renderHistory();};
+$('#weights').addEventListener('input',e=>{const r=e.target.closest('[data-w]');if(!r)return;cls().settings.m[r.dataset.w]=+r.value;r.nextElementSibling.textContent=r.value;persist();});
+
+/* ---------------- files ---------------- */
+async function saveBlob(name,blob){
+  let d=null;try{d=window.claude&&window.claude.use?await window.claude.use('downloads'):null;}catch(e){d=null;}
+  if(d){try{const r=await d.save({filename:name,data:blob});if(r&&r.status==='saved')toast(t('savedFile'));}catch(e){if(!e||e.code!=='declined')toast(t('saveFail'));}return;}
+  if(window.claude){toast(t('saveFail'));return;}
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);
+}
+const safeName=s=>String(s).replace(/[\\/:*?"<>|]+/g,'').replace(/\s+/g,'_');
+$('#bkExport').onclick=()=>saveBlob(`firstclass_backup_${today()}.json`,new Blob([JSON.stringify(DB,null,1)],{type:'application/json'}));
+$('#bkFile').onchange=async e=>{
+  const f=e.target.files[0];if(!f)return;
+  try{const d=JSON.parse(await f.text());if(!valid(d))throw 0;DB=migrate(d);DB.tab='score';sel=null;sbSel.clear();undoStack=[];persist();renderAll();toast(t('bkLoaded'));}
+  catch(err){toast(t('bkBad'));}
+  e.target.value='';
+};
+
+/* ---------------- PNG export ---------------- */
+async function exportPng(){
+  const c=cls(),X=buildCtx(c),V=viewOrder(c,X);
+  try{await document.fonts.ready;}catch(e){}
+  const CW=150,CH=78,AW=30,RG=18,PAD=40,HEAD=86,BOARD=46,POD=26;
+  const colX=[];let cx=PAD;V.cols.forEach(x=>{colX[x]=cx;cx+=V.colHas[x]?CW:AW;});const gridW=cx-PAD;
+  const rowY=[];let ry=0;V.rows.forEach(r=>{rowY[r]=ry;ry+=(V.rowHas[r]?CH:AW)+RG;});const gridH=Math.max(0,ry-RG);
+  const W=Math.max(gridW+PAD*2,560),frontH=BOARD+10+POD;
+  const H=HEAD+frontH+28+gridH+56;
+  const off=Math.round((W-gridW-PAD*2)/2);
+  const sc=2,cv=document.createElement('canvas');cv.width=W*sc;cv.height=H*sc;const g=cv.getContext('2d');g.scale(sc,sc);
+  const col={bg:'#FFFFFF',ink:'#1D2822',muted:'#5B6A61',board:'#2E4E3F',rail:'#8B6B45',chalk:'#EEF3E4',desk:'#E6D4B1',edge:'#C4A67A',seat:'#FFFDF7',boy:'#3C6DB4',girl:'#C44D6C',unk:'#9AA59E',line:'#D3DBD2'};
+  const F=(w,s,fam)=>`${w} ${s}px ${fam||'"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif'}`;
+  const rr=(x,y,w,h,r)=>{g.beginPath();g.roundRect?g.roundRect(x,y,w,h,r):g.rect(x,y,w,h);};
+  g.fillStyle=col.bg;g.fillRect(0,0,W,H);
+  g.fillStyle=col.ink;g.textBaseline='alphabetic';g.textAlign='left';
+  g.font=F('400',30,'"Do Hyeon","IBM Plex Sans KR",sans-serif');g.fillText(c.name,PAD,50);
+  g.font=F('500',14);g.fillStyle=col.muted;g.fillText(`${today()} · ${t(V.flip?'teacherView':'studentView')}`,PAD,72);
+  const top=HEAD,gridTop=V.flip?top:top+frontH+28,frontTop=V.flip?top+gridH+28:top;
+  // board
+  const bw=Math.min(W*0.6,520),bx=(W-bw)/2,by=V.flip?frontTop+POD+10:frontTop;
+  g.fillStyle=col.board;rr(bx,by,bw,BOARD,6);g.fill();
+  g.fillStyle=col.rail;g.fillRect(bx,V.flip?by:by+BOARD-6,bw,6);
+  g.fillStyle=col.chalk;g.textAlign='center';g.textBaseline='middle';g.font=F('700',26,'"Gaegu","Do Hyeon",cursive');g.fillText(t('board'),W/2,by+BOARD/2+(V.flip?3:-2));
+  const py=V.flip?frontTop:frontTop+BOARD+10;g.strokeStyle=col.line;g.lineWidth=1;g.fillStyle='#F2F5F1';rr(W/2-50,py,100,POD-4,5);g.fill();g.stroke();
+  g.fillStyle=col.muted;g.font=F('500',12);g.fillText(t('podium'),W/2,py+(POD-4)/2);
+  // desks
+  const pos=k=>{const[r,x]=pk(k);return{x:off+colX[x],y:gridTop+rowY[r]};};
+  for(const grp of X.groups){const ps=grp.map(s=>pos(X.S[s].k));const x0=Math.min(...ps.map(p=>p.x)),x1=Math.max(...ps.map(p=>p.x))+CW,y=ps[0].y;
+    g.fillStyle=col.desk;g.strokeStyle=col.edge;g.lineWidth=1.5;rr(x0+3,y,x1-x0-6,CH,12);g.fill();g.stroke();
+    g.setLineDash([4,4]);for(let i=1;i<ps.length;i++){const dx=Math.min(ps[i].x,ps[i-1].x)+CW;g.beginPath();g.moveTo(dx,y+4);g.lineTo(dx,y+CH-4);g.stroke();}g.setLineDash([]);}
+  let nm=0,nf=0,total=0;
+  for(const S of X.S){const p=pos(S.k),sid=c.current[S.k],s=sid&&stuById(sid);const ix=p.x+9,iy=p.y+6,iw=CW-18,ih=CH-12;
+    if(!s){g.setLineDash([4,4]);g.strokeStyle=col.edge;rr(ix,iy,iw,ih,8);g.stroke();g.setLineDash([]);continue;}
+    total++;if(s.gender==='M')nm++;if(s.gender==='F')nf++;
+    g.fillStyle=col.seat;rr(ix,iy,iw,ih,8);g.fill();
+    g.fillStyle=s.gender==='M'?col.boy:s.gender==='F'?col.girl:col.unk;rr(ix+12,iy,iw-24,5,2);g.fill();
+    const main=dname(s),sub=lang()==='en'&&s.en?s.name:(s.no!=null&&s.no!==''?t('noFmt',s.no):'');
+    let fs=22;g.font=F('700',fs);while(fs>11&&g.measureText(main).width>iw-12){fs--;g.font=F('700',fs);}
+    g.fillStyle=col.ink;g.textAlign='center';g.textBaseline='middle';g.fillText(main,ix+iw/2,iy+ih/2-(sub?7:0));
+    if(sub){g.font=F('500',12);g.fillStyle=col.muted;g.fillText(sub,ix+iw/2,iy+ih/2+15);}
+  }
+  // footer legend
+  const fy=H-26;g.textAlign='left';g.textBaseline='middle';g.font=F('500',13);let lx=PAD;
+  [[col.boy,t('gM')+' '+nm],[col.girl,t('gF')+' '+nf]].forEach(([cc,txt])=>{g.fillStyle=cc;g.beginPath();g.arc(lx+5,fy,5,0,Math.PI*2);g.fill();g.fillStyle=col.muted;g.fillText(txt,lx+15,fy);lx+=g.measureText(txt).width+36;});
+  g.fillStyle=col.muted;g.fillText(`${t('students')} ${total}`,lx,fy);
+  cv.toBlob(b=>{if(b)saveBlob(`${safeName(c.name)}_${lang()==='en'?'seating':'자리배치'}_${today()}.png`,b);else toast(t('saveFail'));},'image/png');
+}
+
+/* ---------------- seed ---------------- */
+// 처음 여는 사람은 빈 학급 하나로 시작한다. 학급 데이터는 백업 파일(.json)로 불러온다.
+function seed(){
+  const c=newClass('우리 반');
+  DB={v:1,lang:'ko',activeId:c.id,tab:'score',classes:[c]};
+  return DB;
+}
+
+/* ---------------- boot ---------------- */
+async function initCaps(){
+  if(window.claude&&window.claude.use){
+    try{sampleFn=await window.claude.use('sample');if(sampleFn){const lim=await sampleFn.limits().catch(()=>null);if(!lim||!lim.images)sampleFn=null;}}catch(e){sampleFn=null;}
+  }
+  capsReady=true;renderImgCard();
+}
+DB=load();DB=migrate(DB||seed());DB.tab='score';persist();
+renderAll();initCaps();
+window.__seat={optimize,buildCtx,cost,explain,parseRoster,gridFromText,get DB(){return DB;}};
+})();
+</script>
+</body></html>

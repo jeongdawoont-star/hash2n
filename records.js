@@ -32,6 +32,15 @@ export const RECORDS = [
   // ▼ 여기에 새 기록을 붙여넣으세요 (최신 항목을 맨 위에) ▼
 
   {
+    title: "퍼스트클래스",
+    desc: "우리 반을 비행기 일등석처럼 꾸민 자리배치·칭찬 점수판이다.\n학생 여럿을 골라 칭찬 점수를 한 번에 주고, 머쓱 점수는 칭찬에서 빼는 방식으로 교실 화면에 띄워 쓴다.\n짝·키·이전 자리 기록을 따져 자동으로 자리를 바꿔 주고, 학급 데이터는 파일로 저장해 불러온다.",
+    tags: "classroom, seating, score, praise, class-tools, first-class",
+    category: "class-tools",
+    link: "./vibe-apps/first-class.html",
+    image: "img/first-class.png",
+  },
+
+  {
     title: "붕당 - 전하, 결단하소서!",
     desc: "1494년 연산군부터 1800년 정조까지, 붕당의 탄생과 분화를 몸으로 겪는 역사 로그라이크 게임이다.\n웹캠 앞에 서면 익선관과 곤룡포가 입혀지고, 사화·예송·환국 같은 큰 사건마다 손을 들어 어느 붕당의 상소를 받아들일지 판결한다.\n실제 역사와 다르게 고르면 목숨이 줄고, 끝나면 진짜 역사와 내가 만든 역사의 계보를 비교한다.",
     tags: "history, joseon, bungdang, game, mediapipe, webcam, motion, roguelike, korean-history",
