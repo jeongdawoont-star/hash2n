@@ -1,4 +1,10 @@
 {
   "buildCommand": "npm run harden:all",
-  "outputDirectory": ".deploy-hardened"
+  "outputDirectory": ".deploy-hardened",
+  "rewrites": [
+    {
+      "source": "/robots.txt",
+      "destination": "/robots-vercel.txt"
+    }
+  ]
 }

@@ -1,4 +1,2 @@
 User-agent: *
-Allow: /
-
-Sitemap: https://hash2n.vercel.app/sitemap.xml
+Disallow: /

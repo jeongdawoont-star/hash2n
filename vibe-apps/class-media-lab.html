@@ -70,7 +70,7 @@
   input:focus, textarea:focus, select:focus{ border-color:var(--primary); background:#fff; }
   textarea{ resize:vertical; min-height:110px; line-height:1.6; }
   .pin-input{ letter-spacing:8px; font-size:20px; text-align:center; font-family:monospace; }
-  .code-input{ letter-spacing:3px; font-size:18px; text-align:center; text-transform:uppercase; font-weight:bold; }
+  .code-input{ letter-spacing:2px; font-size:18px; text-align:center; font-weight:bold; }
   .autocomplete{ position:relative; }
   .suggestions{
     position:absolute; z-index:20; left:0; right:0; top:calc(100% + 4px);
@@ -423,8 +423,6 @@ initFirebase(embeddedConfig);
 // =====================================================================
 let classCode = sharedData?.classCode
              || (embeddedClassCode ? embeddedClassCode.trim() : null)
-             || localStorage.getItem('mediaLabDefaultClassCode')
-             || localStorage.getItem('mediaLabLastClassCode')
              || null;
 let classDocRef = null;
 let classData = { roster: [], teacherPin: null, letterOpenPolicy: 'self' };
@@ -653,7 +651,12 @@ function subscribeComments(postId){
 // 5) 쓰기 동작 (Firestore)
 // =====================================================================
 async function createClass(code, roster, teacherPin){
-  await db.collection('classes').doc(code).set({
+  const docRef = db.collection('classes').doc(code);
+  const snap = await docRef.get();
+  if(snap.exists){
+    throw new Error('이미 존재하는 학급 코드입니다. 다른 코드를 사용해 주세요.');
+  }
+  await docRef.set({
     roster, teacherPin, letterOpenPolicy: 'self', createdAt: Date.now()
   });
 }
@@ -1198,13 +1201,36 @@ function renderConfigError(app){
   app.appendChild(card);
 }
 
-// Firestore 통신 타임아웃 헬퍼 (무한 로딩 방지)
+// Firestore 통신 타임아웃 헬퍼 (대소문자 구분 없이 학급 검색)
 async function fetchClassWithTimeout(code, timeoutMs = 15000){
   const timeoutPromise = new Promise((_, reject) =>
     setTimeout(() => reject(new Error('TIMEOUT')), timeoutMs)
   );
+  const lookup = async () => {
+    // 1. 입력한 코드 그대로 조회
+    let snap = await db.collection('classes').doc(code).get();
+    if(snap.exists) { snap.actualCode = snap.id; return snap; }
+    
+    // 2. 소문자로 변환하여 조회
+    const lower = code.toLowerCase();
+    if(lower !== code){
+      snap = await db.collection('classes').doc(lower).get();
+      if(snap.exists) { snap.actualCode = snap.id; return snap; }
+    }
+
+    // 3. 대문자로 변환하여 조회
+    const upper = code.toUpperCase();
+    if(upper !== code && upper !== lower){
+      snap = await db.collection('classes').doc(upper).get();
+      if(snap.exists) { snap.actualCode = snap.id; return snap; }
+    }
+
+    snap.actualCode = code;
+    return snap;
+  };
+
   return await Promise.race([
-    db.collection('classes').doc(code).get(),
+    lookup(),
     timeoutPromise
   ]);
 }
@@ -1215,16 +1241,12 @@ async function fetchClassWithTimeout(code, timeoutMs = 15000){
 function renderJoin(app){
   app.appendChild(header('우리반 매체수업', '전자우편 · 메시지 · 학급 누리집', '학생용'));
 
-  const savedDefault = localStorage.getItem('mediaLabDefaultClassCode') || embeddedClassCode || '';
-  const currentInitialCode = classCode || savedDefault || '';
+  const currentInitialCode = classCode || '';
 
   const studentCard = el('div',{class:'card'});
   studentCard.appendChild(el('h2',{text:'🎒 학생 입장하기'}));
-  if(savedDefault){
-    studentCard.appendChild(el('span',{class:'badge open', text:'📌 기본 학급 설정됨: '+savedDefault, attrs:{style:'margin-bottom:8px;'}}));
-  }
   studentCard.appendChild(el('label',{text:'우리 반 학급 코드'}));
-  const codeInput = el('input',{class:'code-input', attrs:{type:'text', placeholder:'학급 코드를 입력하세요', value: currentInitialCode}});
+  const codeInput = el('input',{class:'code-input', attrs:{type:'text', placeholder:'학급 코드를 입력하세요 (대소문자 구분 없음)', value: currentInitialCode}});
   studentCard.appendChild(codeInput);
   studentCard.appendChild(el('p',{class:'muted', text:'선생님이 알려주신 학급 코드를 입력하세요.'}));
 
@@ -1239,7 +1261,7 @@ function renderJoin(app){
     try{
       const snap = await fetchClassWithTimeout(code);
       if(snap.exists){
-        subscribeClass(code);
+        subscribeClass(snap.actualCode || code);
         state.screen = 'student-login'; // 학생은 곧바로 이름 선택 화면으로 이동!
         state.error = '';
         render();
@@ -1268,25 +1290,24 @@ function renderJoin(app){
 function renderTeacherEntry(app){
   app.appendChild(header('선생님 관리자 접속', '학급 코드로 로그인하거나 새 학급을 만드세요', '관리자'));
 
-  const savedDefault = localStorage.getItem('mediaLabDefaultClassCode') || embeddedClassCode || '';
-  const currentInitialCode = classCode || savedDefault || '';
+  const currentInitialCode = classCode || '';
 
   const card = el('div',{class:'card'});
   card.appendChild(el('label',{text:'우리 반 학급 코드'}));
-  const codeInput = el('input',{class:'code-input', attrs:{type:'text', placeholder:'학급 코드를 입력하세요', value: currentInitialCode}});
+  const codeInput = el('input',{class:'code-input', attrs:{type:'text', placeholder:'학급 코드를 입력하세요 (대소문자 구분 없음)', value: currentInitialCode}});
   card.appendChild(codeInput);
 
   const err = el('div',{class:'error'});
   card.appendChild(err);
 
   card.appendChild(el('button',{class:'btn-primary', text:'🔐 선생님 로그인', on:{click: async ()=>{
-    const code = normalize(codeInput.value) || savedDefault;
+    const code = normalize(codeInput.value);
     if(!code){ err.textContent='먼저 학급 코드를 입력해 주세요.'; return; }
     err.innerHTML = '<span style="color:var(--envelope-dark);">연결 확인 중...</span>';
     try{
       const snap = await fetchClassWithTimeout(code);
       if(snap.exists){
-        subscribeClass(code);
+        subscribeClass(snap.actualCode || code);
         state.screen = 'teacher-login';
         state.error = '';
         render();
@@ -1355,8 +1376,14 @@ function renderClassSetup(app){
     const names = [...new Set(roster.value.split(/[\n,]/).map(s=>s.trim()).filter(Boolean))];
     if(names.length<2){ err.textContent='학생을 2명 이상 입력해 주세요.'; return; }
     if(!/^\d{4}$/.test(pin.value)){ err.textContent='선생님 비밀번호는 숫자 4자리로 입력해 주세요.'; return; }
-    err.textContent = '학급 생성 중...';
+    err.innerHTML = '<span style="color:var(--envelope-dark);">학급 코드 중복 확인 중...</span>';
     try{
+      const existing = await fetchClassWithTimeout(targetCode);
+      if(existing && existing.exists){
+        err.innerHTML = '⚠️ <b>이미 있는 학급 코드입니다.</b> 다른 코드를 사용해 주세요.';
+        return;
+      }
+      err.textContent = '학급 생성 중...';
       await createClass(targetCode, names, pin.value);
       classCode = targetCode;
       localStorage.setItem('mediaLabDefaultClassCode', targetCode);
@@ -1368,7 +1395,9 @@ function renderClassSetup(app){
       render();
     }catch(e){
       console.error(e);
-      err.textContent='저장 실패: ' + e.message;
+      err.textContent = e.message.includes('이미 존재하는') 
+        ? '⚠️ 이미 있는 학급 코드입니다. 다른 코드를 사용해 주세요.' 
+        : ('저장 실패: ' + e.message);
     }
   }}}));
   app.appendChild(card);
