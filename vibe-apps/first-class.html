@@ -274,6 +274,21 @@ legend{font-weight:600;margin-bottom:6px;font-size:13.5px;padding:0}
 .toast.on{opacity:1;transform:translateX(-50%)}
 @media (max-width:560px){:root{--seat-min:58px}.seat{padding:3px}.stu{padding:9px 2px 4px}.stu .nm{font-size:12.5px;white-space:nowrap;overflow-wrap:normal}.stu .meta span:last-child:not(:first-child){display:none}.brand-sub{display:none}.stu{min-height:52px}.set-row{grid-template-columns:1fr 110px 28px}}
 @media print{.top,.room-tools,.side,.tray,.hint,.savebar,.toast{display:none!important}.arrange{display:block}.room{border:0}body{background:#fff}}
+/* sb-bulk-modal */
+.sb-bulk-dlg{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:18px;padding:22px 24px;box-shadow:0 18px 48px rgba(20,33,61,.3);width:min(560px,calc(100vw - 32px));margin:auto;max-height:90vh;overflow-y:auto}
+.sb-bulk-dlg::backdrop{background:rgba(12,19,32,.6);backdrop-filter:blur(3px)}
+.sb-bulk-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.sb-bulk-head h2{font-size:19px;display:flex;align-items:center;gap:8px;font-family:var(--f-display)}
+.sb-bulk-close{border:0;background:transparent;font-size:20px;cursor:pointer;color:var(--muted);width:32px;height:32px;border-radius:8px;display:grid;place-items:center;line-height:1}
+.sb-bulk-close:hover{background:var(--surface-2);color:var(--ink)}
+.sb-bulk-preview{display:flex;flex-direction:column;gap:6px;margin:8px 0}
+.sb-bulk-chips{display:flex;flex-wrap:wrap;gap:6px;max-height:130px;overflow-y:auto;padding:8px 10px;background:var(--surface-2);border:1px solid var(--line);border-radius:9px;min-height:42px;align-items:flex-start}
+.sb-bulk-chip{font-size:12.5px;font-weight:600;padding:3px 9px;border-radius:999px;background:var(--surface);border:1px solid var(--desk-edge);color:var(--ink);display:inline-flex;align-items:center;gap:4px}
+.sb-bulk-chip.unm{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 12%,var(--surface));color:var(--bad)}
+.sb-bulk-bar{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+.sb-bulk-bar .amt{display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:14px}
+.sb-bulk-bar input[type=number]{width:74px;height:38px;font-size:20px;font-weight:700;text-align:center;border-radius:8px}
+.sb-bulk-actions{display:flex;gap:8px;align-items:center;margin-left:auto}
 </style>
 <div class="app" id="app">
   <header class="top">
@@ -309,6 +324,7 @@ legend{font-weight:600;margin-bottom:6px;font-size:13.5px;padding:0}
         <div class="sb-tools">
           <button type="button" id="sbFlip" class="btn"></button>
           <div class="seg" id="sbView" role="group" aria-label="view"><button type="button" data-view="seat" data-i18n="vSeat">좌석으로</button><button type="button" data-view="no" data-i18n="vNo">번호순</button></div>
+          <button type="button" id="sbBulkOpen" class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M9 14l2 2 4-4"/></svg><span data-i18n="sbBulkMenu">수동 일괄 입력</span></button>
           <span class="spacer"></span>
           <button type="button" id="sbUndo" class="btn" data-i18n="undo">되돌리기</button>
           <button type="button" id="sbFull" class="btn ghost" data-i18n="fullscreen">전체 화면</button>
@@ -499,6 +515,30 @@ legend{font-weight:600;margin-bottom:6px;font-size:13.5px;padding:0}
       </div>
     </section>
   </main>
+  <!-- BULK SCORE MODAL -->
+  <dialog id="sbBulkDialog" class="sb-bulk-dlg" aria-labelledby="sbBulkTitle">
+    <div class="sb-bulk-head">
+      <h2 id="sbBulkTitle"><span aria-hidden="true">📋</span> <span data-i18n="sbBulkTitle">수동 일괄 점수 입력</span></h2>
+      <button type="button" id="sbBulkClose" class="sb-bulk-close" aria-label="닫기">✕</button>
+    </div>
+    <p class="muted" style="margin-top:0;margin-bottom:10px;" data-i18n="sbBulkDesc">학생 명단을 복사해 붙여넣으세요. 이름, 번호, 엑셀 표(열/행), 쉼표 구분 모두 지원됩니다.</p>
+    <textarea id="sbBulkText" rows="6" placeholder="김하준&#10;이서윤&#10;1 박도윤&#10;최지우, 강하은"></textarea>
+    <div class="sb-bulk-preview">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span class="muted" style="font-weight:600;font-size:12.5px;" id="sbBulkCount">인식된 학생: 0명</span>
+        <button type="button" id="sbBulkClearText" class="btn ghost sm" style="height:24px;padding:0 6px;font-size:11.5px;" data-i18n="clearAll">모두 비우기</button>
+      </div>
+      <div class="sb-bulk-chips" id="sbBulkChips"><span class="muted" style="font-size:12px;padding:4px;" data-i18n="sbBulkNone">명단을 붙여넣으면 인식된 학생이 여기에 표시됩니다.</span></div>
+    </div>
+    <div class="sb-bulk-bar">
+      <label class="amt"><span data-i18n="amt">점수</span><input type="number" id="sbBulkAmt" min="1" max="999" step="1" value="1" inputmode="numeric"></label>
+      <span class="qk" id="sbBulkQk"><button type="button" data-amt="1">1</button><button type="button" data-amt="2">2</button><button type="button" data-amt="3">3</button><button type="button" data-amt="5">5</button><button type="button" data-amt="10">10</button></span>
+      <div class="sb-bulk-actions">
+        <button type="button" id="sbBulkGiveP" class="give p" style="height:40px;padding:0 16px;font-size:14.5px;" data-i18n="sbBulkGiveP">칭찬 + 일괄 입력</button>
+        <button type="button" id="sbBulkGiveM" class="give m" style="height:40px;padding:0 16px;font-size:14.5px;" data-i18n="sbBulkGiveM">머쓱 − 일괄 입력</button>
+      </div>
+    </div>
+  </dialog>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </div>
 <script>
@@ -521,6 +561,7 @@ const LOCK_ON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke
 const I18N={ko:{
  brand:'퍼스트클래스',brandSub:'FIRST CLASS · 우리 반 좌석과 점수',tabScore:'점수판',passK:'FLIGHT · 탑승 학급',totP:'칭찬 점수 합계',vSeat:'좌석으로',vNo:'번호순',fullscreen:'전체 화면',
  selK:'명 선택',selAll:'전체 선택',selNone:'선택 해제',amt:'점수',giveP:'칭찬 +',giveM:'머쓱 −',gaveP:'{0}명에게 칭찬 +{1}',gaveM:'{0}명 머쓱 −{1} (칭찬 점수에서 뺌)',pickFirst:'먼저 학생을 눌러 선택하세요.',amtBad:'점수를 1 이상으로 적으세요.',importData:'데이터 파일 불러오기',
+ sbBulkMenu:'수동 일괄 입력',sbBulkTitle:'수동 일괄 점수 입력',sbBulkDesc:'학생 명단을 복사해 붙여넣으세요. 이름, 번호, 엑셀 표(열/행), 쉼표 구분 모두 지원됩니다.',sbBulkParsed:'인식된 학생: {0}명',sbBulkNone:'명단을 붙여넣으면 인식된 학생이 여기에 표시됩니다.',sbBulkUnmatched:'미확인 {0}개',sbBulkGiveP:'칭찬 + 일괄 입력',sbBulkGiveM:'머쓱 − 일괄 입력',sbBulkDoneP:'{0}명에게 칭찬 +{1} 일괄 입력 완료',sbBulkDoneM:'{0}명 머쓱 −{1} 일괄 차감 완료',
  sbHint:'학생 좌석을 눌러 여러 명 고른 뒤, 점수를 적고 ‘칭찬 +’ 또는 ‘머쓱 −’을 누르세요. 머쓱은 칭찬 점수에서 뺍니다. 잘못 줬으면 ‘되돌리기’.',sbRest:'좌석이 없는 학생 {0}명',sbNoUndo:'되돌릴 점수가 없습니다.',sbUndone:'되돌렸습니다 ({0}명 {1})',scoreResetTitle:'점수 초기화',scoreResetDesc:'지금 학급의 칭찬 점수를 모두 0으로 돌립니다. 명단과 자리는 그대로 남습니다.',scoreReset:'점수 모두 0으로',scoreCleared:'점수를 모두 0으로 돌렸습니다.',sbEmpty:'아직 학생이 없습니다. 저장해 둔 데이터 파일(.json)을 불러오거나, 탑승객 명단에서 학생을 넣으세요.',
 class:'학급',rename:'이름 바꾸기',newClass:'새 학급',
  tabArrange:'자리 배치',tabStudents:'탑승객 명단',tabLayout:'좌석 모양',tabHistory:'배치 기록',tabSettings:'규칙·백업',
@@ -575,6 +616,7 @@ class:'학급',rename:'이름 바꾸기',newClass:'새 학급',
 },en:{
  brand:'First Class',brandSub:'FIRST CLASS · SEATS & POINTS',tabScore:'Scoreboard',passK:'FLIGHT · CLASS',totP:'Total points',vSeat:'By seat',vNo:'By number',fullscreen:'Full screen',
  selK:'selected',selAll:'Select all',selNone:'Clear',amt:'Points',giveP:'Praise +',giveM:'Oops −',gaveP:'Praise +{1} to {0}',gaveM:'Oops −{1} for {0} (taken from points)',pickFirst:'Tap students to select them first.',amtBad:'Enter 1 or more points.',importData:'Load data file',
+ sbBulkMenu:'Batch Points',sbBulkTitle:'Manual Batch Points',sbBulkDesc:'Paste a list of students. Names, numbers, Excel rows/columns, and comma-separated lists are supported.',sbBulkParsed:'Recognized: {0}',sbBulkNone:'Pasted students will appear here.',sbBulkUnmatched:'Unrecognized: {0}',sbBulkGiveP:'Batch Praise +',sbBulkGiveM:'Batch Oops −',sbBulkDoneP:'Batch Praise +{1} to {0}',sbBulkDoneM:'Batch Oops −{1} to {0}',
  sbHint:'Tap seats to select several students, enter points, then press Praise + or Oops −. Oops takes points away. Made a mistake? Press Undo.',sbRest:'{0} students without a seat',sbNoUndo:'Nothing to undo.',sbUndone:'Undone ({0} students {1})',scoreResetTitle:'Reset points',scoreResetDesc:'Sets every student’s points in this class back to 0. The list and seats stay.',scoreReset:'Reset all points',scoreCleared:'All points reset to 0.',sbEmpty:'No students yet. Load a saved data file (.json), or add students in Passengers.',
 class:'Class',rename:'Rename',newClass:'New class',
  tabArrange:'Seating',tabStudents:'Passengers',tabLayout:'Desk layout',tabHistory:'History',tabSettings:'Rules & backup',
@@ -1019,6 +1061,113 @@ $('#sbUndo').onclick=()=>{
 };
 $('#sbFull').onclick=()=>{try{if(document.fullscreenElement)document.exitFullscreen();else $('#tab-score').requestFullscreen();}catch(e){}};
 $('#scoreReset').onclick=e=>armed(e.currentTarget,'confirmAgain',()=>{const c=cls();c.scores={};c.scoreLog=[];persist();renderScore();toast(t('scoreCleared'));});
+
+/* ---------------- scoreboard bulk score ---------------- */
+let bulkMatched=[];
+function parseStudentNames(text){
+  const c=cls(),list=c.students;
+  if(!text||!text.trim()||!list.length)return{matched:[],unmatched:[]};
+  const byNorm=new Map(),byNo=new Map();
+  list.forEach(s=>{
+    byNorm.set(normName(s.name),s);
+    if(s.en)byNorm.set(normName(s.en),s);
+    if(s.no!=null&&s.no!=='')byNo.set(String(s.no),s);
+  });
+  const sortedNames=list.map(s=>({name:s.name,norm:normName(s.name),s})).filter(x=>x.norm.length>=2).sort((a,b)=>b.norm.length-a.norm.length);
+  const matchedSet=new Set(),matchedList=[],unmatched=[];
+  const addMatch=s=>{
+    if(s&&!matchedSet.has(s.id)){matchedSet.add(s.id);matchedList.push(s);return true;}
+    return false;
+  };
+  const lines=text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+  for(let line of lines){
+    let lineClean=line.replace(/[(（]([^)）]*)[)）]/g,' $1 ');
+    let lineMatched=false;
+    for(const item of sortedNames){
+      if(lineClean.includes(item.name)||normName(lineClean).includes(item.norm)){
+        addMatch(item.s);lineMatched=true;
+        lineClean=lineClean.replace(item.name,' ');
+      }
+    }
+    const tokens=lineClean.split(/[\t,;|\/]+|\s+/).map(x=>x.trim()).filter(Boolean);
+    for(const tk of tokens){
+      if(/^(이름|성명|name|남|여|남자|여자|cm|번|번호)$/i.test(tk))continue;
+      const ntk=normName(tk);
+      if(byNorm.has(ntk)){addMatch(byNorm.get(ntk));continue;}
+      const numMatch=tk.match(/^(?:#|번호[:：]?\s*)?(\d{1,2})(?:번|\.)?$/);
+      if(numMatch&&byNo.has(numMatch[1])){addMatch(byNo.get(numMatch[1]));continue;}
+      if(!lineMatched&&tk.length>=2&&!/^\d+$/.test(tk)){
+        const partial=list.find(s=>normName(s.name).includes(ntk)||ntk.includes(normName(s.name)));
+        if(partial)addMatch(partial);
+        else if(!unmatched.includes(tk))unmatched.push(tk);
+      }
+    }
+  }
+  return{matched:matchedList,unmatched};
+}
+function updateBulkPreview(){
+  const text=$('#sbBulkText').value;
+  const res=parseStudentNames(text);
+  bulkMatched=res.matched;
+  const chipsEl=$('#sbBulkChips');
+  const countEl=$('#sbBulkCount');
+  let cntText=t('sbBulkParsed',res.matched.length);
+  if(res.unmatched.length)cntText+=` · ${t('sbBulkUnmatched',res.unmatched.length)}`;
+  countEl.textContent=cntText;
+  if(!res.matched.length&&!res.unmatched.length){
+    chipsEl.innerHTML=`<span class="muted" style="font-size:12px;padding:4px;">${esc(t('sbBulkNone'))}</span>`;
+    return;
+  }
+  let html='';
+  res.matched.forEach(s=>{
+    const no=s.no!=null&&s.no!==''?s.no+'. ':'';
+    html+=`<span class="sb-bulk-chip"><span class="gdot ${s.gender==='M'?'m':s.gender==='F'?'f':''}"></span>${esc(no+dname(s))}</span>`;
+  });
+  res.unmatched.forEach(name=>{
+    html+=`<span class="sb-bulk-chip unm">❓ ${esc(name)}</span>`;
+  });
+  chipsEl.innerHTML=html;
+}
+function giveBulk(sign){
+  if(!bulkMatched.length){toast(t('sbBulkNone'));return;}
+  const amt=Math.round(Math.abs(+$('#sbBulkAmt').value));
+  if(!amt||amt<=0){toast(t('amtBad'));$('#sbBulkAmt').focus();return;}
+  const c=cls(),d=sign*amt;
+  const ids=bulkMatched.map(s=>s.id);
+  ids.forEach(id=>{c.scores[id]=ptOf(id)+d;});
+  c.scoreLog.push({sids:ids,d,at:Date.now()});
+  if(c.scoreLog.length>300)c.scoreLog.shift();
+  persist();
+  ids.forEach(id=>paintCard(id,d));
+  renderTotals();renderSelBar();
+  $('#sbUndo').disabled=false;
+  toast(t(sign>0?'sbBulkDoneP':'sbBulkDoneM',ids.length,amt));
+  $('#sbBulkDialog').close();
+}
+$('#sbBulkOpen').onclick=()=>{
+  $('#sbBulkText').value='';
+  $('#sbBulkAmt').value=DB.sb.step||1;
+  updateBulkPreview();
+  $('#sbBulkDialog').showModal();
+  $('#sbBulkText').focus();
+};
+$('#sbBulkClose').onclick=()=>$('#sbBulkDialog').close();
+$('#sbBulkText').addEventListener('input',updateBulkPreview);
+$('#sbBulkClearText').onclick=()=>{
+  $('#sbBulkText').value='';
+  updateBulkPreview();
+  $('#sbBulkText').focus();
+};
+$('#sbBulkQk').addEventListener('click',e=>{
+  const q=e.target.closest('[data-amt]');
+  if(q){$('#sbBulkAmt').value=q.dataset.amt;}
+});
+$('#sbBulkGiveP').onclick=()=>giveBulk(1);
+$('#sbBulkGiveM').onclick=()=>giveBulk(-1);
+$('#sbBulkAmt').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();giveBulk(1);}});
+$('#sbBulkDialog').addEventListener('click',e=>{
+  if(e.target===$('#sbBulkDialog'))$('#sbBulkDialog').close();
+});
 
 /* ---------------- toast / confirm ---------------- */
 let toastT;function toast(msg){const el=$('#toast');el.textContent=msg;el.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('on'),2600);}
