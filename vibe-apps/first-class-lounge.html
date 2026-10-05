@@ -1,0 +1,1529 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>퍼스트클래스 라운지</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🛫%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=Black+Han+Sans&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+/* 퍼스트클래스(교사용)와 같은 항공 테마: 네이비 + 골드. 학생용이라 버튼을 크게, 화면 한 장 고정. */
+:root{
+  --bg:#ECF1F7;--surface:#fff;--surface-2:#F3F6FA;--ink:#14213D;--muted:#5A6882;--line:#D4DCE8;
+  --navy:#14213D;--accent:#1B3A6B;--gold:#C9A227;--gold-2:#F5E9C8;
+  --up:#D2353B;--down:#2563C9;--ok:#23845A;--warn:#B8800E;--bad:#C0392B;--pink:#C44D6C;
+  --f-d:"Do Hyeon","IBM Plex Sans KR",system-ui,sans-serif;--f-b:"IBM Plex Sans KR","Malgun Gothic",system-ui,sans-serif;
+  --top:58px;--dock:74px;--r:14px;
+}
+*{box-sizing:border-box}html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--ink);font-family:var(--f-b);-webkit-tap-highlight-color:transparent}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+#app{position:fixed;inset:0;display:grid;grid-template-rows:var(--top) 1fr var(--dock)}
+/* top */
+.top{display:flex;align-items:center;gap:10px;padding:0 14px;background:var(--navy);color:#fff;border-bottom:3px solid var(--gold)}
+.brand{display:flex;align-items:center;gap:8px;font-family:var(--f-d);font-size:22px;letter-spacing:.5px;white-space:nowrap}
+.brand small{font-family:var(--f-b);font-size:11px;opacity:.7;letter-spacing:1px}
+.top .sp{flex:1}
+.conn{font-size:11.5px;padding:3px 8px;border-radius:99px;background:rgba(255,255,255,.12);white-space:nowrap}
+.conn.cloud::before{content:"●";color:#4ADE80;margin-right:4px}.conn.demo::before{content:"●";color:#FBBF24;margin-right:4px}.conn.err::before{content:"●";color:#F87171;margin-right:4px}
+.chip-me{display:flex;align-items:center;gap:8px;background:var(--gold);color:var(--navy);padding:5px 6px 5px 12px;border-radius:99px;font-weight:700;white-space:nowrap}
+.chip-me .idle{font-size:11px;font-weight:600;opacity:.8}
+.chip-me button{border:0;background:var(--navy);color:#fff;border-radius:99px;padding:4px 10px;font-size:12.5px}
+.tbtn{border:1px solid rgba(255,255,255,.3);background:transparent;color:#fff;border-radius:99px;padding:5px 11px;font-size:13px;white-space:nowrap}
+.tbtn.on{background:#fff;color:var(--navy)}
+/* main */
+main{position:relative;overflow:hidden;padding:12px 14px;min-height:0}
+.view{height:100%;display:flex;flex-direction:column;gap:10px;min-height:0;overflow-y:auto}
+.vhead{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.vhead h1{margin:0;font-family:var(--f-d);font-weight:400;font-size:26px;white-space:nowrap}
+.vhead .sp{flex:1}
+.seg{display:inline-flex;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:3px;gap:2px}
+.seg button{border:0;background:transparent;padding:7px 13px;border-radius:9px;font-weight:600;font-size:14px;color:var(--muted);white-space:nowrap}
+.seg button[aria-pressed=true]{background:var(--navy);color:#fff}
+.body{flex:1;min-height:0;display:flex;gap:12px}
+.col{display:flex;flex-direction:column;gap:10px;min-height:0;min-width:0}
+.fill{flex:1;min-height:0}
+.scroll{overflow:auto;min-height:0;overscroll-behavior:contain}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;min-width:0}
+.card h2{margin:0 0 8px;font-size:16px;display:flex;align-items:center;gap:6px}
+.muted{color:var(--muted)}.small{font-size:12.5px}.tiny{font-size:11.5px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:40px;padding:0 16px;border-radius:11px;border:1px solid var(--line);background:var(--surface);font-weight:700;font-size:14.5px;white-space:nowrap}
+.btn.p{background:var(--navy);border-color:var(--navy);color:#fff}
+.btn.g{background:var(--gold);border-color:var(--gold);color:var(--navy)}
+.btn.red{background:var(--up);border-color:var(--up);color:#fff}
+.btn.sm{min-height:32px;padding:0 11px;font-size:13px;border-radius:9px}
+.btn.ghost{background:transparent}
+.btn[disabled]{opacity:.4;pointer-events:none}
+.pill{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:700;background:var(--surface-2);border:1px solid var(--line);white-space:nowrap}
+.pill.ok{background:#E3F4EA;border-color:#B7E0C7;color:var(--ok)}.pill.warn{background:#FFF4D6;border-color:#F0D88F;color:var(--warn)}.pill.bad{background:#FDE8E7;border-color:#F3C1BD;color:var(--bad)}.pill.navy{background:var(--navy);color:#fff;border-color:var(--navy)}
+input[type=text],input[type=number],input[type=date],input[type=password],input[type=url],select,textarea{border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 11px;min-height:40px;width:100%}
+textarea{resize:vertical}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:600;color:var(--muted)}
+.empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;color:var(--muted);padding:20px}
+.empty .big{font-size:52px}
+/* dock */
+.dock{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;background:var(--surface);border-top:1px solid var(--line);padding:6px 8px calc(6px + env(safe-area-inset-bottom))}
+.dock button{border:0;background:transparent;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-weight:700;font-size:13px;color:var(--muted)}
+.dock button .i{font-size:25px;line-height:1}
+.dock button[aria-current=true]{background:var(--navy);color:#fff}
+.dock button{position:relative}
+.dock button .dot{position:absolute;top:5px;left:calc(50% + 12px);min-width:18px;height:18px;padding:0 5px;border-radius:99px;background:var(--up);color:#fff;font-size:11px;line-height:18px;border:2px solid var(--surface)}
+.help{border:1px solid var(--line);background:var(--gold-2);color:var(--navy);border-radius:99px;padding:5px 12px;font-weight:700;font-size:13.5px;white-space:nowrap}
+.howto{display:flex;flex-direction:column;gap:10px;font-size:15px;line-height:1.55}
+.howto .ex{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.todo{display:flex;align-items:center;gap:12px;padding:10px 4px;border-bottom:1px solid var(--line)}
+.todo .ic{font-size:26px;width:34px;text-align:center}
+.todo .tx{flex:1;min-width:0}
+.todo .tx b{display:block;font-size:15px}
+.todo.hot{background:#FFFBEA}
+.saved{font-size:13px;font-weight:700;color:var(--ok);white-space:nowrap}
+.saved.ing{color:var(--warn)}
+/* name grid / login */
+.names{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));grid-auto-rows:1fr;gap:8px;flex:1;min-height:0}
+.names button{border:1px solid var(--line);background:#fff;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-weight:700;font-size:17px;min-height:48px;padding:4px}
+.names button small{font-size:11px;color:var(--muted);font-weight:600}
+.names button.F{border-bottom:3px solid #E8A7B8}.names button.M{border-bottom:3px solid #A7C0E8}
+.names button:active{transform:scale(.97);background:var(--gold-2)}
+/* modal */
+.ov{position:fixed;inset:0;background:rgba(10,18,36,.55);display:flex;align-items:center;justify-content:center;z-index:50;padding:14px}
+.modal{background:#fff;border-radius:18px;max-width:560px;width:100%;max-height:calc(100dvh - 28px);display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.modal.wide{max-width:900px}
+.modal .mh{padding:16px 18px 8px;display:flex;align-items:center;gap:8px}
+.modal .mh h3{margin:0;font-size:19px;flex:1}
+.modal .mb{padding:6px 18px 12px;overflow:auto;display:flex;flex-direction:column;gap:10px}
+.modal .mf{padding:10px 18px 16px;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.x{border:0;background:var(--surface-2);width:34px;height:34px;border-radius:50%;font-size:18px}
+.pin{display:flex;flex-direction:column;align-items:center;gap:12px}
+.pin .who{font-family:var(--f-d);font-size:30px}
+.pin .dots{display:flex;gap:14px}.pin .dots i{width:18px;height:18px;border-radius:50%;border:2px solid var(--navy)}.pin .dots i.on{background:var(--navy)}
+.pin .dots.shake{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.pad{display:grid;grid-template-columns:repeat(3,76px);gap:10px}
+.pad button{height:62px;border-radius:14px;border:1px solid var(--line);background:var(--surface-2);font-size:26px;font-weight:700}
+.pad button:active{background:var(--gold-2)}
+.toast{position:fixed;left:50%;bottom:calc(var(--dock) + 16px);transform:translateX(-50%);background:var(--navy);color:#fff;padding:11px 18px;border-radius:12px;font-weight:600;z-index:80;box-shadow:0 8px 24px rgba(0,0,0,.25);max-width:90vw;text-align:center}
+/* home */
+.hero{display:flex;align-items:center;gap:14px;background:var(--navy);color:#fff;border-radius:var(--r);padding:14px 18px;border-bottom:4px solid var(--gold)}
+.hero h1{margin:0;font-family:var(--f-d);font-weight:400;font-size:28px}
+.hero p{margin:2px 0 0;opacity:.8;font-size:14px}
+.notice{background:var(--gold-2);border:1px solid #E6D49A;border-radius:12px;padding:9px 13px;font-weight:600;font-size:14px}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:1fr;gap:10px;flex:1;min-height:0}
+.tile{border:1px solid var(--line);background:#fff;border-radius:16px;padding:14px;text-align:left;display:flex;flex-direction:column;gap:4px;min-height:0;overflow:hidden}
+.tile .k{font-size:13px;color:var(--muted);font-weight:700}
+.tile .v{font-family:var(--f-d);font-size:32px;line-height:1.1}
+.tile .s{font-size:13px;color:var(--muted)}
+.tile .em{font-size:26px}
+/* seat / stock board */
+.board{flex:1;min-height:0;display:flex;flex-direction:column;gap:6px}
+.chalk{background:var(--navy);color:var(--gold-2);text-align:center;border-radius:8px;padding:4px;font-family:var(--f-d);border-bottom:3px solid var(--gold);font-size:15px}
+.sgrid{flex:1;min-height:0;display:grid;gap:5px}
+.sgrid.list{grid-template-columns:repeat(auto-fill,minmax(118px,1fr));grid-auto-rows:minmax(52px,1fr)}
+.cell{position:relative;border:1px solid var(--line);border-radius:10px;background:#fff;padding:4px 7px;display:flex;flex-direction:column;justify-content:center;min-height:0;min-width:0;overflow:hidden}
+.cell .n{font-weight:700;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cell .n small{color:var(--muted);font-weight:600;font-size:10.5px;margin-right:3px}
+.cell .m{display:flex;gap:6px;font-size:12px;align-items:baseline;white-space:nowrap}
+.cell .heat{position:absolute;inset:0;background:var(--gold);opacity:var(--h,0);pointer-events:none}
+.cell>*{position:relative}
+.cell .inv{position:absolute;right:5px;top:3px;font-size:11px;font-weight:800;color:var(--navy)}
+.up{color:var(--up)}.dn{color:var(--down)}
+.aisle{background:transparent}
+.legend{display:flex;gap:12px;align-items:center;font-size:12px;color:var(--muted);flex-wrap:wrap}
+/* invest */
+.ibar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:10px 14px}
+.ibar .bud{font-family:var(--f-d);font-size:22px}
+.meter{flex:1;min-width:140px;height:12px;background:var(--surface-2);border-radius:99px;overflow:hidden;border:1px solid var(--line)}
+.meter i{display:block;height:100%;background:var(--gold)}
+.igrid{flex:1;min-height:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));grid-auto-rows:minmax(64px,1fr);gap:6px}
+.icell{border:1px solid var(--line);border-radius:10px;background:#fff;display:flex;flex-direction:column;justify-content:center;padding:6px 8px;gap:4px;min-height:0;overflow:hidden}
+.icell .bot{display:flex;align-items:center;justify-content:space-between;gap:4px}
+.icell.on{border-color:var(--gold);background:#FFFBEA;box-shadow:inset 0 0 0 1px var(--gold)}
+.icell .nm{font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.icell .sub{font-size:11px;color:var(--muted)}
+.stp{display:flex;align-items:center;gap:3px}
+.stp button{width:30px;height:30px;border-radius:8px;border:1px solid var(--line);background:var(--surface-2);font-size:18px;font-weight:700;line-height:1}
+.stp b{min-width:24px;text-align:center;font-size:15px}
+table.t{width:100%;border-collapse:collapse;font-size:13.5px}
+table.t th,table.t td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:left}
+table.t th{font-size:12px;color:var(--muted);font-weight:700;position:sticky;top:0;background:#fff}
+table.t td.r,table.t th.r{text-align:right}
+/* manito */
+.steps{display:flex;gap:4px;flex-wrap:wrap}
+.steps span{font-size:12.5px;padding:4px 10px;border-radius:99px;background:var(--surface-2);border:1px solid var(--line);color:var(--muted);font-weight:700}
+.steps span.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.steps span.done{background:#E3F4EA;color:var(--ok);border-color:#B7E0C7}
+.secret{background:linear-gradient(135deg,#1B3A6B,#14213D);color:#fff;border-radius:16px;padding:16px;text-align:center;user-select:none;-webkit-user-select:none;touch-action:none;border:2px dashed var(--gold)}
+.secret .q{font-size:13px;opacity:.8}
+.secret .nm{font-family:var(--f-d);font-size:40px;color:var(--gold-2);min-height:52px;display:flex;align-items:center;justify-content:center}
+.mis{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px}
+.mis .mi{border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 10px;display:flex;align-items:center;gap:8px;text-align:left;font-weight:600;font-size:13.5px}
+.mis .mi b{margin-left:auto;font-size:12px;background:var(--gold-2);border-radius:99px;padding:1px 8px}
+.pick{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));grid-auto-rows:minmax(44px,1fr);gap:6px}
+.pick button{border:1px solid var(--line);background:#fff;border-radius:10px;font-weight:700;font-size:14.5px;padding:4px}
+.pick button[aria-pressed=true]{background:var(--navy);color:#fff;border-color:var(--navy)}
+.pick button:disabled{opacity:.35}
+.rules{margin:0;padding-left:18px;font-size:13.5px;line-height:1.6}
+.log{font-size:12.5px;display:flex;flex-direction:column;gap:3px}
+.log div{display:flex;gap:8px}.log time{color:var(--muted);white-space:nowrap}
+/* reveal show */
+.show{position:fixed;inset:0;z-index:60;background:radial-gradient(circle at 50% 30%,#2A4A82,#0B1428 70%);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;text-align:center;padding:20px}
+.show .cnt{position:absolute;top:16px;left:20px;font-size:15px;opacity:.7}
+.show .close{position:absolute;top:14px;right:16px}
+.show .q{font-family:var(--f-d);font-size:clamp(28px,5vw,54px)}
+.show .guess{font-size:clamp(17px,2.4vw,24px);opacity:.9}
+.show .ans{font-family:"Black Han Sans",var(--f-d);font-size:clamp(56px,11vw,130px);color:var(--gold);min-height:1.2em;text-shadow:0 6px 30px rgba(201,162,39,.5)}
+.show .ans.spin{animation:flick .09s steps(1) infinite;color:#fff;opacity:.85}
+.show .ans.pop{animation:pop .6s cubic-bezier(.2,1.6,.4,1)}
+@keyframes pop{0%{transform:scale(.3);opacity:0}100%{transform:scale(1);opacity:1}}
+@keyframes flick{50%{opacity:.6}}
+.show .res{font-size:clamp(22px,3.4vw,38px);font-weight:800;min-height:1.3em}
+.show .res.o{color:#4ADE80}.show .res.x{color:#FCA5A5}
+.show .btns{display:flex;gap:10px}
+.show .btn{min-height:52px;font-size:18px;padding:0 26px}
+.conf{position:fixed;top:-20px;width:10px;height:14px;z-index:70;animation:fall linear forwards;pointer-events:none}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+/* contest */
+.clist{width:300px;flex:none;display:flex;flex-direction:column;gap:8px}
+.citem{border:1px solid var(--line);background:#fff;border-radius:12px;padding:10px 12px;text-align:left;display:flex;gap:10px;align-items:center}
+.citem[aria-current=true]{border-color:var(--navy);box-shadow:inset 0 0 0 2px var(--navy)}
+.citem .e{font-size:30px}
+.citem .tt{font-weight:800;font-size:15px}
+.cdetail{flex:1;display:flex;flex-direction:column;gap:10px;min-width:0;min-height:0}
+.pwrap{flex:1;min-height:0;display:flex;align-items:flex-start;justify-content:center;overflow:hidden;background:var(--surface-2);border-radius:var(--r);border:1px solid var(--line);padding:10px}
+.pscale{transform-origin:top left;flex:none}
+/* poster (A4 @96dpi = 794x1123) */
+.poster{width:794px;height:1123px;position:relative;overflow:hidden;display:flex;flex-direction:column;font-family:var(--f-b);background:#fff;color:#14213D}
+.poster .ph{padding:56px 60px 30px;text-align:center}
+.poster .tag{display:inline-block;font-weight:800;letter-spacing:4px;font-size:18px;padding:6px 18px;border-radius:99px}
+.poster .em{font-size:150px;line-height:1.1;margin:18px 0 6px}
+.poster h1{margin:0;font-family:"Black Han Sans",var(--f-d);font-weight:400;font-size:84px;line-height:1.08;word-break:keep-all}
+.poster .ds{font-size:26px;margin-top:16px;font-weight:600;word-break:keep-all}
+.poster .pinfo{margin:10px 60px 0;display:grid;grid-template-columns:150px 1fr;gap:0;border-top:3px solid currentColor}
+.poster .pinfo div{padding:14px 6px;border-bottom:1px solid rgba(0,0,0,.15);font-size:23px;white-space:pre-line;word-break:keep-all}
+.poster .pinfo .k{font-weight:800}
+.poster .pf{margin-top:auto;display:flex;align-items:flex-end;gap:20px;padding:24px 60px 44px}
+.poster .pf .how{flex:1;font-size:22px;font-weight:700;line-height:1.5}
+.poster .pf .how small{display:block;font-size:17px;font-weight:500;opacity:.75}
+.poster .qr{background:#fff;padding:8px;border-radius:8px}
+.poster.classic{background:#F7F3E8;color:#14213D}.poster.classic .ph{background:#14213D;color:#F5E9C8;border-bottom:10px solid #C9A227}.poster.classic .tag{background:#C9A227;color:#14213D}
+.poster.pop{background:#FFE14D;color:#1A1A1A}.poster.pop .tag{background:#E8352E;color:#fff}.poster.pop h1{color:#E8352E;text-shadow:5px 5px 0 #1A1A1A}.poster.pop .pinfo{background:#fff;border:4px solid #1A1A1A;border-radius:18px;padding:0 18px}
+.poster.field{background:#1F6B45;color:#fff}.poster.field .tag{background:#fff;color:#1F6B45}.poster.field h1{color:#FFF6C7}.poster.field .pinfo div{border-color:rgba(255,255,255,.3)}
+/* bracket */
+.bk{display:flex;gap:26px;align-items:stretch;min-height:100%;padding:6px}
+.bk .rd{display:flex;flex-direction:column;justify-content:space-around;gap:10px;min-width:150px}
+.bk .rd h4{margin:0 0 4px;text-align:center;font-size:13px;color:var(--muted)}
+.mt{border:1px solid var(--line);border-radius:10px;background:#fff;overflow:hidden}
+.mt button{display:flex;width:100%;border:0;background:#fff;padding:7px 10px;font-weight:700;font-size:14px;text-align:left;gap:6px;align-items:center}
+.mt button+button{border-top:1px solid var(--line)}
+.mt button.w{background:var(--navy);color:#fff}
+.mt button.l{color:#A0A9BA;text-decoration:line-through}
+.mt button:disabled{cursor:default}
+.lv{font-size:10px;padding:1px 5px;border-radius:5px;background:var(--gold-2);color:var(--navy)}
+.champ{text-align:center;font-family:var(--f-d);font-size:22px}
+/* plaza */
+.post{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+.post .tx{font-size:15px;white-space:pre-wrap;word-break:break-word}
+.post .meta{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--muted);flex-wrap:wrap}
+.like{border:1px solid var(--line);background:#fff;border-radius:99px;padding:3px 10px;font-weight:700;font-size:13px}
+.like.on{background:#FDE8E7;border-color:#F3C1BD;color:var(--up)}
+.opt{position:relative;display:flex;align-items:center;justify-content:space-between;border:1px solid var(--line);background:#fff;border-radius:10px;padding:10px 12px;font-weight:700;overflow:hidden;text-align:left;width:100%}
+.opt i{position:absolute;left:0;top:0;bottom:0;background:var(--gold-2);z-index:0}
+.opt span,.opt b{position:relative}
+.opt.me{border-color:var(--navy);box-shadow:inset 0 0 0 1px var(--navy)}
+.baton{background:linear-gradient(90deg,#FFF4D6,#fff);border:2px solid var(--gold);border-radius:14px;padding:12px 14px;display:flex;gap:12px;align-items:center}
+.baton .b{font-size:34px}
+.flag{font-weight:800}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));grid-auto-rows:minmax(54px,1fr);gap:7px;flex:1;min-height:0}
+.pgrid button{border:1px solid var(--line);background:#fff;border-radius:12px;font-weight:700;font-size:15.5px}
+.pgrid button:disabled{opacity:.35}
+/* print */
+/* 도트 이모지 (해시 워드워 Px 방식) */
+img.px{display:inline-block;width:1.2em;height:1.2em;vertical-align:-.24em;image-rendering:pixelated;image-rendering:crisp-edges;pointer-events:none;-webkit-user-drag:none}
+/* 그림담벼락 (아이작품 칭찬앨범 감성: 폴라로이드 + 주황 날짜 스탬프 + 칭찬 도장) */
+.wgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:14px;align-content:start;padding:4px 4px 10px}
+.pola{background:#fff;border:1px solid #E6E0D4;border-radius:6px;padding:9px 9px 10px;box-shadow:0 4px 12px rgba(20,33,61,.12);display:flex;flex-direction:column;gap:6px;text-align:left;transform:rotate(var(--rot,0deg));transition:transform .15s}
+.pola:active{transform:scale(.97)}
+.pola .ph{position:relative;aspect-ratio:1;background:#F3EFE6;overflow:hidden;border-radius:2px}
+.pola .ph img{width:100%;height:100%;object-fit:cover;display:block}
+.stamp{position:absolute;right:6px;bottom:5px;font:700 12px/1 "Courier New",monospace;color:#FF8A1F;text-shadow:0 0 2px rgba(0,0,0,.45);letter-spacing:.5px}
+.pola .tt{font-weight:800;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pola .meta{display:flex;gap:8px;font-size:12px;color:var(--muted);align-items:center;flex-wrap:wrap}
+.pola .badge{position:absolute;left:6px;top:6px;background:rgba(20,33,61,.82);color:#fff;font-size:11px;font-weight:700;border-radius:99px;padding:2px 8px}
+.wview{display:flex;gap:16px;align-items:flex-start}
+.wview .big{flex:1.2;min-width:0;background:#F3EFE6;border-radius:10px;display:flex;align-items:center;justify-content:center;min-height:240px;position:relative;overflow:hidden}
+.wview .big img{max-width:100%;max-height:62vh;display:block}
+.wview .side{flex:1;min-width:0;display:flex;flex-direction:column;gap:10px}
+.tcm{background:linear-gradient(135deg,#FFF6E0,#FFFBEF);border:2px solid #F0D88F;border-radius:14px;padding:12px 14px;font-size:15px;line-height:1.6}
+.tcm .who{font-weight:800;color:var(--warn);font-size:13px;margin-bottom:4px;display:flex;gap:6px;align-items:center}
+.stamps{display:flex;gap:6px;flex-wrap:wrap}
+.stamps button{border:2px solid var(--line);background:#fff;border-radius:99px;padding:5px 11px;font-weight:800;font-size:13.5px}
+.stamps button.on{border-color:var(--up);background:#FDE8E7;color:var(--up)}
+.cms{display:flex;flex-direction:column;gap:6px;max-height:30vh;overflow:auto}
+.cms div{background:var(--surface-2);border-radius:10px;padding:6px 10px;font-size:14px}
+.cms b{margin-right:6px}
+@media (max-width:760px){.wview{flex-direction:column}.wgrid{grid-template-columns:repeat(2,1fr);gap:10px}.cms{max-height:none}}
+#printArea{display:none}
+@media print{
+  @page{size:A4;margin:0}
+  html,body{height:auto;overflow:visible;background:#fff}
+  body>*:not(#printArea){display:none!important}
+  #printArea{display:block}
+  #printArea .poster{-webkit-print-color-adjust:exact;print-color-adjust:exact;width:210mm;height:296mm}
+  #printArea table{width:100%;border-collapse:collapse;font-size:14pt}
+  #printArea td,#printArea th{border:1px solid #999;padding:6px 10px}
+}
+/* small screens (QR on phone) */
+@media (max-width:760px){
+  :root{--top:52px;--dock:64px}
+  .brand small,.conn{display:none}
+  .brand{font-size:18px}
+  .dock button{font-size:11px}.dock button .i{font-size:22px}
+  .body{flex-direction:column}
+  .clist{width:auto;max-height:30%}
+  .tiles{grid-template-columns:repeat(2,1fr)}
+  .kwrap{flex-direction:column}
+  .vhead h1{font-size:22px}
+  .names{grid-template-columns:repeat(auto-fill,minmax(84px,1fr))}
+  .igrid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
+  /* 폰은 한 화면에 다 안 들어가므로 화면(view)을 세로로 스크롤 */
+  .view{height:auto;min-height:100%;overflow:visible}
+  main{overflow-y:auto;overscroll-behavior:contain}
+  .fill,.names,.tiles,.igrid,.pick,.pgrid,.board,.sgrid{flex:none!important}
+  .body,.col,.scroll,.fill{min-height:auto!important;max-height:none!important}
+  .col[style*="width"]{width:auto!important}
+  .tiles{grid-auto-rows:auto}.tile{min-height:104px}
+  .sgrid{grid-template-rows:none!important;grid-auto-rows:minmax(50px,auto)}
+  .pwrap{flex:none;height:68vh}
+  .clist{flex-direction:row;overflow-x:auto}.citem{min-width:230px}
+  .ibar .seg,.ibar .meter{min-width:100%}
+  .todo{flex-wrap:wrap}.todo .tx{flex:1 1 60%}.todo>.row,.todo>.btn{margin-left:46px}
+}
+</style>
+</head><body>
+<div id="app">
+  <header class="top">
+    <div class="brand">🛫 퍼스트클래스 라운지 <small>STUDENT LOUNGE</small></div>
+    <span class="sp"></span>
+    <span class="conn" id="conn">연결 중…</span>
+    <span id="meSlot"></span>
+    <button class="tbtn" id="tBtn" data-a="teacherToggle" title="선생님 모드">🔑</button>
+  </header>
+  <main id="main"></main>
+  <nav class="dock" id="dock"></nav>
+</div>
+<div id="modalRoot"></div>
+<div id="printArea"></div>
+
+<script type="module">
+'use strict';
+/* =========================================================
+   설정 — 파일에 직접 적어 두면 어디서 열어도 같은 반으로 연결됩니다.
+   비워 두면 ⚙ 선생님 > 연결 에서 붙여 넣은 값(이 기기에 저장)을 씁니다.
+   ========================================================= */
+const FILE_CONFIG = { code: '', firebase: null };
+
+const FB_VER = '10.12.2';
+const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const uid = () => Date.now().toString(36).slice(-4) + Math.random().toString(36).slice(2, 8);
+const clone = o => o == null ? o : JSON.parse(JSON.stringify(o));
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1));[a[i], a[j]] = [a[j], a[i]]; } return a; };
+const DAY = 86400000, todayKey = (t = Date.now()) => new Date(t).toLocaleDateString('sv');
+const fmtT = t => { const d = new Date(t); return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
+const won = n => { n = Math.round(n / 10000); const s = n < 0 ? '-' : ''; n = Math.abs(n); const e = Math.floor(n / 10000), m = n % 10000; return s + (e ? e.toLocaleString() + '억' + (m ? ' ' : '') : '') + (m || !e ? m.toLocaleString() + '만' : '') + '원'; };
+const pct = r => r == null || !isFinite(r) ? '–' : (r > 0 ? '▲' : r < 0 ? '▼' : '') + Math.abs(r * 100).toFixed(1) + '%';
+const cls = r => r > 0 ? 'up' : r < 0 ? 'dn' : '';
+const b64e = s => btoa(unescape(encodeURIComponent(s))), b64d = s => decodeURIComponent(escape(atob(s)));
+/* 비밀번호는 퍼스트클래스(교사 PC)에서 생일로 만들고, Firestore에는 해시만 올라옵니다. 퍼스트클래스와 같은 함수 */
+const sha256 = (() => {
+  const K = [], H0 = []; let n = 2, c = 0; const frac = x => (x - Math.floor(x)) * 4294967296 | 0;
+  outer: while (c < 64) { for (let i = 2; i * i <= n; i++) if (n % i === 0) { n++; continue outer; } if (c < 8) H0[c] = frac(Math.pow(n, 1 / 2)); K[c++] = frac(Math.pow(n, 1 / 3)); n++; }
+  return str => {
+    const s = unescape(encodeURIComponent(str)), l = s.length, nW = (((l + 8) >> 6) + 1) * 16, w = new Array(nW).fill(0);
+    for (let i = 0; i < l; i++) w[i >> 2] |= s.charCodeAt(i) << (24 - (i % 4) * 8);
+    w[l >> 2] |= 0x80 << (24 - (l % 4) * 8); w[nW - 1] = l * 8;
+    let H = H0.slice(); const W = [];
+    for (let j = 0; j < nW; j += 16) {
+      let [a, b, c2, d, e, f, g, h] = H;
+      for (let i = 0; i < 64; i++) {
+        if (i < 16) W[i] = w[j + i] | 0;
+        else { const x = W[i - 15], y = W[i - 2]; W[i] = (W[i - 16] + ((x >>> 7 | x << 25) ^ (x >>> 18 | x << 14) ^ (x >>> 3)) + W[i - 7] + ((y >>> 17 | y << 15) ^ (y >>> 19 | y << 13) ^ (y >>> 10))) | 0; }
+        const t1 = (h + ((e >>> 6 | e << 26) ^ (e >>> 11 | e << 21) ^ (e >>> 25 | e << 7)) + ((e & f) ^ (~e & g)) + K[i] + W[i]) | 0;
+        const t2 = (((a >>> 2 | a << 30) ^ (a >>> 13 | a << 19) ^ (a >>> 22 | a << 10)) + ((a & b) ^ (a & c2) ^ (b & c2))) | 0;
+        h = g; g = f; f = e; e = (d + t1) | 0; d = c2; c2 = b; b = a; a = (t1 + t2) | 0;
+      }
+      const v = [a, b, c2, d, e, f, g, h]; H = H.map((x, k) => (x + v[k]) | 0);
+    }
+    return H.map(x => (x >>> 0).toString(16).padStart(8, '0')).join('');
+  };
+})();
+const pinHash = (sid, pin) => sha256('fc-lounge:' + sid + ':' + pin);
+
+/* ---------------- config ---------------- */
+const CFG_KEY = 'fclounge.cfg';
+function parseFb(txt) {
+  if (!txt) return null; if (typeof txt === 'object') return txt;
+  const m = String(txt).match(/\{[\s\S]*\}/); if (!m) return null;
+  try { return JSON.parse(m[0]); } catch (e) { }
+  try { return JSON.parse(m[0].replace(/\/\/.*$/gm, '').replace(/([{,]\s*)([A-Za-z_]\w*)\s*:/g, '$1"$2":').replace(/'/g, '"').replace(/,\s*}/g, '}')); } catch (e) { return null; }
+}
+function loadCfg() {
+  const h = location.hash.match(/[#&]c=([^&]+)/);
+  if (h) { try { const c = JSON.parse(b64d(decodeURIComponent(h[1]))); localStorage.setItem(CFG_KEY, JSON.stringify(c)); } catch (e) { } history.replaceState(null, '', location.pathname + location.search); }
+  let c = {}; try { c = JSON.parse(localStorage.getItem(CFG_KEY) || '{}'); } catch (e) { }
+  if (FILE_CONFIG.code) c.code = FILE_CONFIG.code; if (FILE_CONFIG.firebase) c.fb = FILE_CONFIG.firebase;
+  c.code = (c.code || 'demo').trim(); return c;
+}
+// 폰 모드 판정은 loadCfg가 주소의 #c=…&phone을 지우기 전에 해야 함 (새로고침해도 유지되게 sessionStorage에도 기억)
+const PHONE = (() => { const on = /[?&]phone\b/.test(location.search) || /[#&]phone\b/.test(location.hash); try { if (on) sessionStorage.setItem('fclounge.phone', '1'); return on || sessionStorage.getItem('fclounge.phone') === '1'; } catch (e) { return on; } })();
+const CFG = loadCfg();
+const IDLE_LIMIT = (PHONE ? 15 * 60 : 120) * 1000, T_IDLE_LIMIT = 10 * 60 * 1000;
+
+/* ---------------- store: Firestore / 체험(localStorage) ---------------- */
+const DEL = { __del: true };
+const san = v => v === DEL ? v : (v === undefined ? null : clone(v));
+function setPath(o, path, v) { const k = path.split('.'); let t = o; for (let i = 0; i < k.length - 1; i++) { if (typeof t[k[i]] !== 'object' || t[k[i]] === null) t[k[i]] = {}; t = t[k[i]]; } if (v === DEL) delete t[k.at(-1)]; else t[k.at(-1)] = v; }
+function deepMerge(a, b) { for (const k in b) { const v = b[k]; if (v && typeof v === 'object' && !Array.isArray(v) && a[k] && typeof a[k] === 'object' && !Array.isArray(a[k])) deepMerge(a[k], v); else a[k] = clone(v); } return a; }
+
+async function makeCloud(cfg) {
+  const { initializeApp } = await import(`https://www.gstatic.com/firebasejs/${FB_VER}/firebase-app.js`);
+  const F = await import(`https://www.gstatic.com/firebasejs/${FB_VER}/firebase-firestore.js`);
+  const app = initializeApp(cfg.fb, 'lounge'); const db = F.getFirestore(app);
+  const ref = p => F.doc(db, 'fc', cfg.code, ...p.split('/'));
+  const onErr = e => { console.error(e); setConn('err', '연결 오류: ' + (e.code || e.message)); };
+  return {
+    kind: 'cloud',
+    watchDoc: (p, cb) => F.onSnapshot(ref(p), s => cb(s.exists() ? s.data() : null), onErr),
+    watchCol: (c, cb) => F.onSnapshot(F.collection(db, 'fc', cfg.code, c), q => cb(q.docs.map(d => ({ id: d.id, ...d.data() }))), onErr),
+    set: (p, data, merge = true) => F.setDoc(ref(p), san(data), { merge }),
+    async update(p, fields) {
+      const f = {}; for (const k in fields) f[k] = fields[k] === DEL ? F.deleteField() : san(fields[k]);
+      try { await F.updateDoc(ref(p), f); }
+      catch (e) { if (e.code !== 'not-found') throw e; const o = {}; for (const k in fields) if (fields[k] !== DEL) setPath(o, k, san(fields[k])); await F.setDoc(ref(p), o, { merge: true }); }
+    },
+    del: p => F.deleteDoc(ref(p)),
+    get: async p => { const s = await F.getDoc(ref(p)); return s.exists() ? s.data() : null; },
+  };
+}
+function makeLocal(code) {
+  const KEY = 'fclounge.demo.' + code; const read = () => { try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) { return {}; } };
+  let data = read(); const dw = new Set(), cw = new Set();
+  const bc = 'BroadcastChannel' in window ? new BroadcastChannel(KEY) : null;
+  const fcMain = () => { // 같은 브라우저의 퍼스트클래스 데이터를 그대로 읽어 옴
+    try { const d = JSON.parse(localStorage.getItem('firstclass.v1') || 'null'); const c = d && (d.classes.find(x => x.id === d.activeId) || d.classes[0]); if (c) return mainFromFC(c); } catch (e) { }
+    return null;
+  };
+  const getDoc = p => { if (p === 'app/main') return data[p] || fcMain() || SAMPLE_MAIN(); return data[p] ?? null; };
+  const colOf = c => Object.keys(data).filter(k => k.startsWith(c + '/') && k.split('/').length === 2).map(k => ({ id: k.split('/')[1], ...clone(data[k]) }));
+  let q = 0; const emit = () => { if (q) return; q = setTimeout(() => { q = 0; dw.forEach(w => w.cb(clone(getDoc(w.p)))); cw.forEach(w => w.cb(colOf(w.c))); }, 0); };
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) { toast('저장 공간이 부족해요'); } bc && bc.postMessage(1); emit(); };
+  if (bc) bc.onmessage = () => { data = read(); emit(); };
+  addEventListener('storage', e => { if (e.key === KEY) data = read(); if (e.key === KEY || e.key === 'firstclass.v1') emit(); });
+  return {
+    kind: 'demo',
+    watchDoc(p, cb) { const w = { p, cb }; dw.add(w); setTimeout(() => cb(clone(getDoc(p))), 0); return () => dw.delete(w); },
+    watchCol(c, cb) { const w = { c, cb }; cw.add(w); setTimeout(() => cb(colOf(c)), 0); return () => cw.delete(w); },
+    async set(p, d, merge = true) { data[p] = merge && data[p] ? deepMerge(data[p], san(d)) : san(d); save(); },
+    async update(p, fields) { data[p] = data[p] || {}; for (const k in fields) setPath(data[p], k, san(fields[k])); save(); },
+    async del(p) { delete data[p]; save(); },
+    async get(p) { return clone(getDoc(p)); },
+    wipe() { data = {}; save(); },
+  };
+}
+function mainFromFC(c) {
+  return {
+    cname: c.name, at: Date.now(),
+    roster: c.students.map(s => ({ id: s.id, no: s.no, name: s.name, g: s.gender || '' })),
+    layout: { rows: c.layout.rows, cols: c.layout.cols, seats: c.layout.seats || [] }, current: c.current || {},
+    boardTop: c.settings ? c.settings.boardTop !== false : true, scores: c.scores || {},
+    pinH: Object.fromEntries(Object.entries(c.lpins || {}).filter(e => e[1]?.pin).map(([id, v]) => [id, pinHash(id, v.pin)])),
+  };
+}
+function SAMPLE_MAIN() {
+  const names = '김하준 이서윤 박도윤 최지우 정시우 강하은 조은우 윤수아 장지호 임서아 한예준 오지유 서건우 신채원 권우진 황다은'.split(' ');
+  const roster = names.map((n, i) => ({ id: 's' + (i + 1), no: i + 1, name: n, g: i % 2 ? 'F' : 'M' }));
+  const seats = [], current = {}; let k = 0;
+  for (let r = 0; r < 4; r++) for (const x of [0, 1, 3, 4]) { const key = r + '-' + x; seats.push(key); current[key] = roster[k++]?.id; }
+  return { cname: '체험 학급', sample: true, roster, layout: { rows: 4, cols: 5, seats }, current, boardTop: true, scores: Object.fromEntries(roster.map((s, i) => [s.id, 10 + (i * 7) % 23])), pinH: Object.fromEntries(roster.map(s => [s.id, pinHash(s.id, '111111')])) };
+}
+
+/* ---------------- state ---------------- */
+const S = { main: null, secret: null, set: null, stock: null, mani: null, att: null, wallets: {}, manis: {}, contests: [], board: [], polls: [], relay: [], reports: [], wall: [] };
+const U = { view: 'home', me: null, teacher: false, sub: { stock: 'board', contest: 'poster', plaza: 'board', teacher: 'todo', wall: 'all' }, wallOpen: null, seatView: innerWidth < 760 ? 'no' : 'seat', inv: null, invSaving: false, step: 1, contest: null, repPeriod: 'today', repSel: new Set(), last: Date.now() };
+let DB;
+
+const roster = () => (S.main?.roster || []).slice().sort((a, b) => a.no - b.no);
+const stu = id => (S.main?.roster || []).find(s => s.id === id);
+const nm = id => stu(id)?.name || (id ? '(알 수 없음)' : '');
+const others = () => roster().filter(s => s.id !== U.me);
+const ST = () => Object.assign({ floor: 10, unit: 1000000, rate: 1000000, allowSelf: false, budget: 'score', fixed: 20, minBudget: 5 }, S.set?.stock || {});
+/** app/attitude.pen = 퍼스트클래스로 보낼 점수 조정. pts > 0 감점(태도 신고), pts < 0 가산(환전 승인, kind:'ex') */
+const pendingPen = id => Object.values(S.att?.pen || {}).filter(p => p.sid === id && !p.applied).reduce((a, p) => a + (+p.pts || 0), 0);
+/** 주식에 쓰는 점수 = 퍼스트클래스 칭찬 점수 − 아직 퍼스트클래스에 반영되지 않은 조정(감점·환전) */
+const sc = id => (+(S.main?.scores?.[id]) || 0) - pendingPen(id);
+const curRound = () => S.stock?.cur ? S.stock.rounds?.[S.stock.cur] : null;
+function growth(id, R = curRound()) {
+  if (!R) return null; const b = +(R.base?.[id] ?? 0); const e = R.status === 'settled' ? +(R.final?.[id] ?? 0) : sc(id);
+  return (e - b) / Math.max(b, ST().floor);
+}
+function investTotals(R = curRound()) { const t = {}; if (!R) return t; for (const w of Object.values(S.wallets)) { const m = w.inv?.[R.id] || {}; for (const k in m) t[k] = (t[k] || 0) + (+m[k] || 0); } return t; }
+const myW = () => S.wallets[U.me] || {};
+const myM = () => S.manis[U.me] || {};
+const canT = () => U.teacher;
+const attOpen = () => (+S.set?.attUntil || 0) > Date.now();
+/** 선생님이 처리할 일 (⚙ 오늘 할 일·메뉴 빨간 점) */
+function teacherTodo() {
+  let ex = 0; for (const w of Object.values(S.wallets)) ex += (w.ex || []).filter(e => e.st === 'req').length;
+  return { ex, prop: S.contests.filter(c => c.st === 'proposed').length, rep: S.reports.filter(r => !r.h).length, bnew: S.board.filter(p => (p.st || 'new') === 'new').length, hid: S.wall.filter(w => w.hidden).length, aiWait: S.wall.filter(w => ['wait', 'busy'].includes(w.ai?.st)).length, aiErr: S.wall.filter(w => w.ai?.st === 'err').length };
+}
+/** 학생이 아직 안 한 일 (메뉴 빨간 점) */
+function studentTodo() {
+  if (!U.me) return {};
+  const R = curRound(), M = S.mani || {}, mm = myM();
+  return {
+    stock: R?.status === 'open' && !Object.keys(myW().inv?.[R.id] || {}).length ? 1 : 0,
+    mani: (M.phase === 'survey' && !(mm.wish || []).length) || (M.phase === 'running' && mm.target && !mm.guess) ? 1 : 0,
+    plaza: S.polls.filter(p => p.open && p.votes?.[U.me] == null).length + (relayHolder() === U.me ? 1 : 0),
+  };
+}
+
+/* ---------------- ui helpers ---------------- */
+function toast(m) { const t = document.createElement('div'); t.className = 'toast'; t.textContent = m; document.body.appendChild(t); setTimeout(() => t.remove(), 2400); }
+function setConn(k, txt) { const c = $('#conn'); c.className = 'conn ' + k; c.textContent = txt; }
+let modalClose = null;
+function modal(html, { wide = false, onClose } = {}) {
+  closeModal(); const root = $('#modalRoot');
+  root.innerHTML = `<div class="ov" data-ov><div class="modal ${wide ? 'wide' : ''}" role="dialog">${html}</div></div>`;
+  modalClose = onClose || null;
+  root.querySelector('[data-ov]').addEventListener('click', e => { if (e.target.hasAttribute('data-ov')) closeModal(); });
+  return root.querySelector('.modal');
+}
+function closeModal() { $('#modalRoot').innerHTML = ''; const f = modalClose; modalClose = null; f && f(); }
+const mHead = t => `<div class="mh"><h3>${t}</h3><button class="x" data-a="closeModal">✕</button></div>`;
+function confirmBox(msg, ok, okLabel = '확인') {
+  const m = modal(`${mHead('확인')}<div class="mb"><p style="margin:0;font-size:15px;white-space:pre-line">${esc(msg)}</p></div><div class="mf"><button class="btn" data-a="closeModal">취소</button><button class="btn p" id="cOk">${esc(okLabel)}</button></div>`);
+  m.querySelector('#cOk').onclick = async () => { closeModal(); await ok(); };
+}
+const needMe = () => U.me ? '' : `<div class="empty"><div class="big">🔒</div><b>먼저 내 이름으로 들어와야 해요</b><button class="btn p" data-a="go" data-v="home">이름 고르러 가기</button></div>`;
+const seg = (key, items) => `<div class="seg">${items.map(([v, l]) => `<button data-a="sub" data-k="${key}" data-v="${v}" aria-pressed="${U.sub[key] === v}">${l}</button>`).join('')}</div>`;
+
+/* ---------------- render loop ---------------- */
+const NAV = [['home', '🏠', '홈'], ['stock', '📈', '주식'], ['mani', '🎁', '마니또'], ['contest', '🏆', '대회'], ['wall', '🎨', '그림'], ['plaza', '💬', '광장']];
+let rq = 0, pending = false;
+function render() { if (rq) return; rq = requestAnimationFrame(() => { rq = 0; doRender(); }); }
+function typing() { const a = document.activeElement; return a && $('#main').contains(a) && /INPUT|TEXTAREA|SELECT/.test(a.tagName) && a.type !== 'checkbox' && a.type !== 'radio'; }
+function doRender() {
+  if (typing()) { pending = true; return; } pending = false;
+  const nav = NAV.concat(U.teacher ? [['teacher', '⚙️', '선생님']] : []);
+  if (U.view === 'teacher' && !U.teacher) U.view = 'home';
+  const dots = studentTodo(); if (U.teacher) { const t = teacherTodo(); dots.teacher = t.ex + t.prop + t.rep + t.bnew + t.hid + t.aiErr; }
+  $('#dock').innerHTML = nav.map(([v, i, l]) => `<button data-a="go" data-v="${v}" aria-current="${U.view === v}"><span class="i">${i}</span>${l}${dots[v] ? `<span class="dot">${v === 'stock' || v === 'mani' ? '!' : dots[v]}</span>` : ''}</button>`).join('');
+  $('#tBtn').classList.toggle('on', U.teacher); $('#tBtn').textContent = U.teacher ? '🔑 선생님 모드' : '🔑';
+  $('#meSlot').innerHTML = U.me ? `<span class="chip-me">${esc(nm(U.me))}<span class="idle" id="idleT"></span><button data-a="logout">나가기</button></span>` : '';
+  const sc0 = $('#main .scroll')?.scrollTop;
+  $('#main').innerHTML = `<div class="view">${(V[U.view] || V.home)()}</div>`;
+  if (sc0) { const s = $('#main .scroll'); if (s) s.scrollTop = sc0; }
+  AFTER[U.view]?.();
+}
+document.addEventListener('focusout', () => setTimeout(() => { if (pending && !typing()) render(); }, 0));
+
+/* ---------------- actions ---------------- */
+const A = {};
+document.addEventListener('click', e => { const el = e.target.closest('[data-a]'); if (!el || el.disabled) return; const f = A[el.dataset.a]; if (f) { e.preventDefault(); f(el.dataset, el, e); } });
+A.closeModal = () => closeModal();
+A.go = d => { invFlush(); U.view = d.v; if (d.sub) U.sub[d.v] = d.sub; U.inv = null; if (d.cid) U.contest = d.cid; render(); };
+A.sub = d => { invFlush(); U.sub[d.k] = d.v; U.inv = null; render(); };
+A.logout = () => { invFlush(); U.me = null; U.inv = null; U.view = 'home'; render(); toast('로그아웃했어요 · 다음 친구 차례!'); }; // 공용 태블릿: 나가면 바로 이름 목록
+
+/* idle auto logout (공용 태블릿) */
+['pointerdown', 'keydown'].forEach(ev => addEventListener(ev, () => U.last = Date.now(), true));
+let attWas = null;
+setInterval(() => {
+  const idle = Date.now() - U.last;
+  if (U.me) { const left = Math.ceil((IDLE_LIMIT - idle) / 1000); const el = $('#idleT'); if (el) el.textContent = left <= 20 ? left + '초' : ''; if (left <= 0) { invFlush(); closeModal(); U.me = null; U.inv = null; U.view = 'home'; render(); toast('자리를 비워서 자동으로 나갔어요'); } }
+  if (U.teacher && idle > T_IDLE_LIMIT) { U.teacher = false; render(); }
+  const a = attOpen(); if (attWas !== null && a !== attWas) render(); attWas = a; // 신고 받기 시간이 끝나면 화면 갱신
+}, 1000);
+
+/* ---------------- login ---------------- */
+A.pick = d => pinPad(stu(d.id)?.name, async pin => {
+  const real = S.main?.pinH?.[d.id];
+  if (!real) { toast('아직 비밀번호가 없어요. 선생님께 말씀드려요'); return 'close'; }
+  if (pinHash(d.id, pin) !== real) return false;
+  // 공용 태블릿: 선생님 모드가 켜진 채로 학생이 들어오면 학생이 운영 권한을 갖게 되므로 끔
+  const wasT = U.teacher; U.teacher = false; if (U.view === 'teacher') U.view = 'home';
+  U.me = d.id; U.inv = null; U.last = Date.now(); render(); toast(`${nm(d.id)}, 어서 와요! ✈️${wasT ? ' (선생님 모드는 꺼졌어요)' : ''}`); return 'close';
+}, 6);
+A.teacherToggle = () => {
+  if (U.teacher) { U.teacher = false; if (U.view === 'teacher') U.view = 'home'; render(); toast('선생님 모드를 껐어요'); return; }
+  pinPad('선생님', async pin => {
+    if (pin !== String(S.secret?.tpin || '1234')) return false;
+    if (U.me) { invFlush(); U.me = null; U.inv = null; } // 학생 화면 위에서 선생님 모드를 켜면 학생은 나가게
+    U.teacher = true; U.last = Date.now(); if (U.view === 'home') { U.view = 'teacher'; U.sub.teacher = 'todo'; } render();
+    toast(S.secret?.tpin ? '선생님 모드 켜짐' : '처음 PIN 1234 — ⚙ 선생님 > 비밀번호에서 바꿔 주세요'); return 'close';
+  });
+};
+function pinPad(who, check, len = 4) {
+  let v = '';
+  const m = modal(`${mHead('비밀번호')}<div class="mb"><div class="pin"><div class="who">${esc(who || '')}</div><div class="dots">${'<i></i>'.repeat(len)}</div>
+  <div class="pad">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => `<button data-k="${n}">${n}</button>`).join('')}<button data-k="c">⌫</button><button data-k="0">0</button><button data-k="x">✕</button></div>
+  <p class="muted small" style="margin:0">숫자 ${len}자리를 눌러요${len === 6 ? ' · 🎂 내 생일 4자리 앞이나 뒤에 2자리가 붙어 있어요' : ''}</p></div></div>`);
+  const paint = () => m.querySelectorAll('.dots i').forEach((i, k) => i.classList.toggle('on', k < v.length));
+  const press = async k => {
+    if (k === 'x') return closeModal(); if (k === 'c') { v = v.slice(0, -1); return paint(); }
+    if (v.length >= len) return; v += k; paint();
+    if (v.length === len) { const r = await check(v); if (r === 'close') closeModal(); else if (r === false) { const d = m.querySelector('.dots'); d.classList.add('shake'); setTimeout(() => { d.classList.remove('shake'); v = ''; paint(); }, 380); } }
+  };
+  m.querySelector('.pad').addEventListener('click', e => { const b = e.target.closest('[data-k]'); if (b) press(b.dataset.k); });
+  const kd = e => { if (!$('#modalRoot .pin')) return removeEventListener('keydown', kd); if (/^\d$/.test(e.key)) press(e.key); else if (e.key === 'Backspace') press('c'); };
+  addEventListener('keydown', kd);
+}
+
+/* =========================================================
+   VIEWS
+   ========================================================= */
+const V = {}, AFTER = {};
+
+/* ---------------- HOME ---------------- */
+V.home = () => {
+  const notice = S.set?.notice ? `<div class="notice">📢 ${esc(S.set.notice)}</div>` : '';
+  if (!U.me) {
+    const rs = roster();
+    return `<div class="hero"><div style="font-size:42px">🛫</div><div><h1>${esc(S.main?.cname || '우리 반')} 라운지</h1><p>👇 내 이름을 누르고 비밀번호 6자리를 눌러요. ${PHONE ? '' : '다 쓰면 꼭 <b>나가기</b>를 눌러요!'}${S.main?.sample ? ' <b>(체험 학급 비밀번호: 111111)</b>' : ''}</p></div></div>${notice}
+    ${rs.length ? `<div class="names">${rs.map(s => `<button class="${s.g}" data-a="pick" data-id="${s.id}"><small>${s.no}번</small>${esc(s.name)}</button>`).join('')}</div>` : `<div class="empty"><div class="big">📭</div>명단이 아직 없어요. 선생님이 퍼스트클래스에서 보내 주면 나타나요.</div>`}`;
+  }
+  const R = curRound(), w = myW(), M = S.mani || {}, mm = myM();
+  const openC = S.contests.filter(c => c.st === 'open'), polls = S.polls.filter(p => p.open && p.votes?.[U.me] == null);
+  const g = growth(U.me);
+  const maniTxt = { off: '아직 시작 전', survey: '친해지고 싶은 친구를 골라요', running: mm.target ? '오늘의 미션을 해 볼까요?' : '짝 맺는 중', closed: '발표를 기다려요', done: '결과가 나왔어요!' }[M.phase || 'off'];
+  const baton = relayHolder();
+  return `<div class="hero"><div style="font-size:42px">👋</div><div><h1>${esc(nm(U.me))}, 반가워요!</h1><p>${stu(U.me)?.no}번 · 오늘도 퍼스트클래스로 출발!</p></div></div>${notice}
+  <div class="tiles">
+    <button class="tile" data-a="go" data-v="stock"><span class="em">⭐</span><span class="k">내 칭찬 점수</span><span class="v">${sc(U.me)}점</span><span class="s ${cls(g)}">${R ? '이번 라운드 ' + pct(g) : '주식 라운드 준비 중'}</span></button>
+    <button class="tile" data-a="go" data-v="stock" data-sub="${R?.status === 'open' ? 'invest' : 'wallet'}"><span class="em">💰</span><span class="k">내 지갑</span><span class="v">${won(w.cash || 0)}</span><span class="s">${R ? (R.status === 'open' ? (Object.keys(w.inv?.[R.id] || {}).length ? '✅ 투자했어요 · 바꿀 수 있어요' : '👉 지금 투자할 수 있어요!') : R.status === 'closed' ? '투자 마감 · 정산 기다리는 중' : '정산 완료') : ''}</span></button>
+    <button class="tile" data-a="go" data-v="mani"><span class="em">🎁</span><span class="k">마니또</span><span class="v" style="font-size:22px">${maniTxt}</span><span class="s">${M.phase === 'running' ? `내가 한 미션 ${(mm.did || []).length}개` : ''}</span></button>
+    <button class="tile" data-a="go" data-v="contest"><span class="em">🏆</span><span class="k">신청 받는 대회</span><span class="v">${openC.length}개</span><span class="s">${esc(openC.map(c => c.title).slice(0, 2).join(' · '))}</span></button>
+    <button class="tile" data-a="go" data-v="plaza" data-sub="poll"><span class="em">🗳️</span><span class="k">아직 안 한 투표</span><span class="v">${polls.length}개</span><span class="s">${polls.length ? '👉 눌러서 투표해요' : '모두 했어요 ✅'}</span></button>
+    <button class="tile" data-a="go" data-v="plaza" data-sub="relay"><span class="em">🏃</span><span class="k">칭찬 릴레이 바통</span><span class="v" style="font-size:24px">${esc(nm(baton) || '아직 없어요')}</span><span class="s">${baton === U.me ? '🏃 바통이 나에게 왔어요! 친구를 칭찬해요' : S.relay.length + '번 이어졌어요'}</span></button>
+  </div>`;
+};
+
+/* ---------------- seat grid ---------------- */
+function seatGrid(cell) {
+  const m = S.main; if (!m || !m.layout?.seats?.length) return listGrid(cell);
+  const L = m.layout, flip = m.boardTop === false;
+  const keys = L.seats.filter(k => { const [r, x] = k.split('-').map(Number); return r < L.rows && x < L.cols; });
+  if (!keys.length) return listGrid(cell);
+  const rU = [...new Set(keys.map(k => +k.split('-')[0]))].sort((a, b) => a - b), cU = [...new Set(keys.map(k => +k.split('-')[1]))].sort((a, b) => a - b);
+  const set = new Set(keys); let rows = [], cols = [];
+  for (let r = rU[0]; r <= rU.at(-1); r++) rows.push(r);
+  for (let x = cU[0]; x <= cU.at(-1); x++) cols.push(x);
+  if (flip) { rows.reverse(); cols.reverse(); }
+  const seated = new Set(Object.values(m.current || {}));
+  let h = '';
+  for (const r of rows) for (const x of cols) { if (!cU.includes(x)) { h += '<div class="aisle"></div>'; continue; } const k = r + '-' + x; const id = set.has(k) ? m.current?.[k] : null; h += id && stu(id) ? cell(stu(id)) : '<div></div>'; }
+  const rest = roster().filter(s => !seated.has(s.id));
+  const chalk = '<div class="chalk">칠 판</div>';
+  return `<div class="board">${flip ? '' : chalk}<div class="sgrid" style="grid-template-columns:${cols.map(x => cU.includes(x) ? 'minmax(0,1fr)' : '12px').join(' ')};grid-template-rows:repeat(${rows.length},minmax(0,1fr))">${h}</div>${flip ? chalk : ''}
+  ${rest.length ? `<div class="sgrid list" style="flex:none;grid-auto-rows:52px">${rest.map(cell).join('')}</div>` : ''}</div>`;
+}
+const listGrid = cell => `<div class="board"><div class="sgrid list">${roster().map(cell).join('')}</div></div>`;
+
+/* ---------------- STOCK ---------------- */
+V.stock = () => {
+  const R = curRound(), st = ST();
+  const subs = [['board', '📊 시세판'], ['invest', '💸 투자하기'], ['wallet', '👛 내 지갑']].concat(canT() ? [['admin', '⚙ 운영']] : []);
+  if (!subs.some(s => s[0] === U.sub.stock)) U.sub.stock = 'board';
+  const rinfo = R ? `<span class="pill navy">${esc(R.title)}</span><span class="pill ${R.status === 'open' ? 'ok' : R.status === 'closed' ? 'warn' : ''}">${{ open: '투자 받는 중', closed: '투자 마감 · 진행 중', settled: '정산 완료' }[R.status]}</span>${R.end ? `<span class="small muted">~${esc(R.end)}</span>` : ''}` : '<span class="pill">라운드 없음</span>';
+  let body = '';
+  const t = U.sub.stock;
+  if (t === 'board') {
+    const tot = investTotals(R), max = Math.max(1, ...Object.values(tot));
+    const cell = s => { const g = growth(s.id, R), iv = tot[s.id] || 0; return `<div class="cell" style="--h:${(iv / max * .55).toFixed(2)}"><span class="heat"></span>${iv ? `<span class="inv">💰${iv}P</span>` : ''}<span class="n"><small>${s.no}</small>${esc(s.name)}</span><span class="m"><b>${sc(s.id)}점</b><span class="${cls(g)}">${R ? pct(g) : ''}</span></span></div>`; };
+    const totalP = Object.values(tot).reduce((a, b) => a + b, 0), who = R ? Object.values(S.wallets).filter(w => Object.keys(w.inv?.[R.id] || {}).length).length : 0;
+    body = `<div class="row legend"><div class="seg"><button data-a="seatView" data-v="seat" aria-pressed="${U.seatView === 'seat'}">좌석표</button><button data-a="seatView" data-v="no" aria-pressed="${U.seatView === 'no'}">번호순</button></div>
+      <span>💰 친구들이 투자한 포인트 (색이 진할수록 인기)</span><span><b class="up">▲</b><b class="dn">▼</b> 점수가 오른·내린 비율</span><span class="sp" style="flex:1"></span><b>투자 참여 ${who}명 · 총 ${totalP}P</b></div>
+      ${U.seatView === 'seat' ? seatGrid(cell) : listGrid(cell)}`;
+  } else if (t === 'invest') body = U.me ? investView(R) : needMe();
+  else if (t === 'wallet') body = U.me ? walletView() : needMe();
+  else body = stockAdmin(R);
+  return `<div class="vhead"><h1>📈 우리반 주식</h1>${rinfo}<button class="help" data-a="help" data-v="stock">❓ 어떻게 해요?</button><span class="sp"></span>${seg('stock', subs)}</div>${body}`;
+};
+A.seatView = d => { U.seatView = d.v; render(); };
+/** 투자 예산: 내 칭찬 점수(라운드 시작 때). 점수가 낮은 친구도 참여할 수 있게 최소 예산 보장 */
+function budgetOf(id, R) { const st = ST(); return st.budget === 'fixed' ? st.fixed : Math.max(+st.minBudget || 0, +(R.base?.[id] ?? 0)); }
+/* 도움말 — 초등학생 눈높이 설명 */
+const HELP = {
+  stock: () => { const st = ST(); return ['📈 우리반 주식, 이렇게 해요', `
+    <div><b>1.</b> 선생님이 라운드를 열면 <b>투자하기</b>에서 친구 이름 옆 <b>＋</b>를 눌러요. 누르면 바로 저장돼요.</div>
+    <div><b>2.</b> 내 예산은 <b>내 칭찬 점수</b>만큼이에요${st.budget === 'fixed' ? ` (이번엔 모두 ${st.fixed}P)` : st.minBudget ? ` (점수가 적어도 최소 ${st.minBudget}P)` : ''}. <b>1P = ${won(st.unit)}</b>! 내 칭찬 점수는 줄어들지 않아요.</div>
+    <div><b>3.</b> 라운드가 끝나면, 내가 투자한 친구의 <b>칭찬 점수가 오른 만큼</b> 돈을 벌어요. 점수가 내려가면 잃어요.</div>
+    <div class="ex">💡 예) 하준이에게 <b>3P(300만원)</b> 투자 → 하준이 점수가 <b>10점 → 12점</b> (2점 올라 <b class="up">▲20%</b>)<br>→ 300만원의 20% = <b class="up">60만원</b>을 벌어요! 🎉</div>
+    <div><b>4.</b> 모은 돈은 <b>내 지갑 → 환전</b>에서 칭찬 점수로 바꿀 수 있어요 (${won(st.rate)} = 1점).</div>
+    <div class="muted small">🔒 내가 누구에게 투자했는지는 나만 봐요. 여러 친구에게 나눠서 투자해도 돼요.</div>`]; },
+  mani: () => ['🎁 마니또, 이렇게 해요', `
+    <div><b>① 희망 조사</b> — 친해지고 싶은 친구 이름을 눌러요 (여러 명 OK). 누르면 바로 저장돼요.</div>
+    <div><b>② 마니또 활동</b> — 파란 카드를 <b>꾹 누르고 있으면</b> 내가 몰래 챙길 친구가 보여요. 손을 떼면 숨어요.</div>
+    <div>　• 친구에게 미션을 해 줬으면 <b>✋ 미션 했어요</b>를 눌러요.</div>
+    <div>　• 누가 나에게 해 줬으면 <b>💝 해 줬어요</b>를 누르고, 누구였을지 골라요.</div>
+    <div>　• <b>🔮 나의 마니또는 누구일까?</b>에서 예측을 골라요. 언제든 바꿀 수 있어요.</div>
+    <div><b>③ 발표</b> — 선생님이 한 명씩 공개해요. 내 예측이 맞았을까요? 🥁</div>
+    <div class="muted small">잘못 눌렀으면 📒 내 기록에서 ✕로 지울 수 있어요.</div>`],
+};
+A.help = d => { const [t, h] = HELP[d.v](); modal(`${mHead(t)}<div class="mb howto">${h}</div><div class="mf"><button class="btn p" data-a="closeModal">알겠어요!</button></div>`); };
+function investView(R) {
+  if (!R) return `<div class="empty"><div class="big">⏳</div>아직 주식 라운드가 열리지 않았어요.</div>`;
+  const st = ST(), saved = myW().inv?.[R.id] || {}, open = R.status === 'open';
+  if (!U.inv) U.inv = { ...saved };
+  const d = open ? U.inv : saved, used = Object.values(d).reduce((a, b) => a + (+b || 0), 0), B = budgetOf(U.me, R), left = B - used;
+  const list = roster().filter(s => st.allowSelf || s.id !== U.me);
+  const dirty = invDirty(saved);
+  const cells = list.map(s => { const n = +d[s.id] || 0, g = growth(s.id, R); return `<div class="icell ${n ? 'on' : ''}"><div class="nm">${s.no}. ${esc(s.name)}</div><div class="bot"><div class="sub">${sc(s.id)}점<br><span class="${cls(g)}">${pct(g)}</span></div>
+    ${open ? `<div class="stp"><button data-a="inv" data-id="${s.id}" data-d="-1">−</button><b>${n}</b><button data-a="inv" data-id="${s.id}" data-d="1" ${left <= 0 ? 'disabled' : ''}>+</button></div>` : `<b>${n || ''}</b>`}</div></div>`; }).join('');
+  return `<div class="ibar"><div><div class="small muted">내 투자 예산</div><div class="bud">${B}P = ${won(B * st.unit)}</div></div>
+    <div class="meter"><i style="width:${B ? Math.min(100, used / B * 100) : 0}%"></i></div>
+    <div><b>${used}P</b> 투자 · <b>${left}P</b> 남음</div>
+    ${open ? `<div class="seg"><button data-a="step" data-v="1" aria-pressed="${U.step === 1}">1씩</button><button data-a="step" data-v="5" aria-pressed="${U.step === 5}">5씩</button></div>
+    ${used ? '<button class="btn sm ghost" data-a="invReset">모두 빼기</button>' : ''}<span class="saved ${dirty || U.invSaving ? 'ing' : ''}">${dirty || U.invSaving ? '⏳ 저장 중…' : used ? '✅ 자동 저장됨' : ''}</span>` : '<span class="pill warn">투자 마감 — 바꿀 수 없어요</span>'}</div>
+    <p class="small muted" style="margin:0">🔒 내 투자는 나만 봐요 · 친구 칭찬 점수가 오르면 벌고, 내리면 잃어요 · ＋를 누르면 바로 저장돼요</p>
+    <div class="igrid scroll">${cells}</div>`;
+}
+/* 투자는 누를 때마다 자동 저장 (저장 버튼을 깜빡하고 나가는 일이 없게) */
+const invClean = o => Object.fromEntries(Object.entries(o || {}).filter(e => e[1] > 0).sort());
+const invDirty = saved => !!U.inv && JSON.stringify(invClean(U.inv)) !== JSON.stringify(invClean(saved));
+let invT = 0;
+function invFlush() {
+  clearTimeout(invT); invT = 0;
+  const R = curRound(), me = U.me; if (!me || !U.inv || !R || R.status !== 'open') return;
+  const saved = S.wallets[me]?.inv?.[R.id] || {}; if (!invDirty(saved)) return;
+  const clean = invClean(U.inv); U.invSaving = true;
+  DB.update('wallets/' + me, { ['inv.' + R.id]: clean, name: nm(me) }).catch(e => { console.error(e); toast('저장하지 못했어요. 다시 눌러 주세요'); }).finally(() => { U.invSaving = false; render(); });
+}
+A.step = d => { U.step = +d.v; render(); };
+A.inv = d => { const R = curRound(); if (!R || R.status !== 'open') return; const B = budgetOf(U.me, R); const used = Object.values(U.inv).reduce((a, b) => a + b, 0); let n = (+U.inv[d.id] || 0) + (+d.d) * U.step; if (+d.d > 0) n = Math.min(n, (+U.inv[d.id] || 0) + (B - used)); U.inv[d.id] = Math.max(0, n); if (!U.inv[d.id]) delete U.inv[d.id]; clearTimeout(invT); invT = setTimeout(invFlush, 700); render(); };
+A.invReset = () => { U.inv = {}; clearTimeout(invT); invT = setTimeout(invFlush, 300); render(); };
+function walletView() {
+  const w = myW(), st = ST(), ex = (w.ex || []), pendingWon = ex.filter(e => e.st === 'req').reduce((a, e) => a + e.cost, 0);
+  const log = (w.log || []).slice().reverse();
+  return `<div class="body"><div class="col" style="flex:1"><div class="card"><h2>👛 내 지갑</h2><div style="font-family:var(--f-d);font-size:40px">${won(w.cash || 0)}</div><p class="small muted" style="margin:4px 0 0">정산 때마다 번 돈(또는 잃은 돈)이 쌓여요. ${won(st.rate)} = 칭찬 점수 1점으로 바꿀 수 있어요.</p></div>
+    <div class="card"><h2>💱 환전 신청</h2><div class="row"><input type="number" id="exPts" min="1" value="1" style="width:110px"> 점으로 바꾸기 <button class="btn g" data-a="exReq">신청</button></div><p class="small muted" style="margin:6px 0 0">선생님이 확인하면 칭찬 점수로 들어가요. 신청 중: ${won(pendingWon)}</p>
+    <div class="log" style="margin-top:6px">${ex.slice(-5).reverse().map(e => `<div><time>${fmtT(e.at)}</time><span>${e.pts}점 (${won(e.cost)})</span><span class="pill ${e.st === 'ok' ? 'ok' : e.st === 'no' ? 'bad' : 'warn'}">${{ req: '확인 중', ok: '완료', no: '반려' }[e.st]}</span></div>`).join('')}</div></div></div>
+    <div class="card col fill" style="flex:1.4"><h2>📜 정산 기록</h2><div class="scroll fill"><table class="t"><tr><th>라운드</th><th class="r">투자</th><th class="r">수익률</th><th class="r">번 돈</th></tr>
+    ${log.map(l => `<tr><td>${esc(l.title)}</td><td class="r">${won(l.principal)}</td><td class="r ${cls(l.profit)}">${pct(l.principal ? l.profit / l.principal : 0)}</td><td class="r ${cls(l.profit)}"><b>${won(l.profit)}</b></td></tr>`).join('') || '<tr><td colspan="4" class="muted">아직 정산 기록이 없어요</td></tr>'}</table>
+    ${(() => { const R = curRound(), m = R && w.inv?.[R.id]; return m && Object.keys(m).length ? `<h2 style="margin-top:14px">🔒 이번 라운드 내 투자 (나만 보여요)</h2><table class="t">${Object.entries(m).map(([k, v]) => `<tr><td>${esc(nm(k))}</td><td class="r">${v}P</td><td class="r ${cls(growth(k, R))}">${pct(growth(k, R))}</td><td class="r ${cls(growth(k, R))}">${won(v * st.unit * (growth(k, R) || 0))}</td></tr>`).join('')}</table>` : ''; })()}</div></div></div>`;
+}
+A.exReq = async () => {
+  const pts = Math.floor(+$('#exPts').value); if (!(pts > 0)) return toast('1점 이상 적어요');
+  const w = myW(), st = ST(), cost = pts * st.rate, pend = (w.ex || []).filter(e => e.st === 'req').reduce((a, e) => a + e.cost, 0);
+  if (cost > (w.cash || 0) - pend) return toast('지갑에 돈이 모자라요');
+  await DB.update('wallets/' + U.me, { ex: [...(w.ex || []), { id: uid(), pts, cost, at: Date.now(), st: 'req' }], name: nm(U.me) }); toast('환전을 신청했어요'); render();
+};
+function stockAdmin(R) {
+  const st = ST(), reqs = [];
+  for (const [sid, w] of Object.entries(S.wallets)) (w.ex || []).forEach(e => { if (e.st === 'req') reqs.push({ sid, ...e }); });
+  const rounds = Object.values(S.stock?.rounds || {}).sort((a, b) => b.at - a.at);
+  return `<div class="body"><div class="col" style="flex:1">
+    <div class="card"><h2>🔁 라운드</h2>${R ? `<p class="small" style="margin:0 0 8px">현재: <b>${esc(R.title)}</b> · 시작 ${fmtT(R.at)}${R.end ? ' · 마감 예정 ' + esc(R.end) : ''}</p>` : ''}
+      <div class="row">${!R || R.status === 'settled' ? '<button class="btn p" data-a="roundNew">새 라운드 열기</button>' : ''}
+      ${R?.status === 'open' ? '<button class="btn" data-a="roundClose">투자 마감</button>' : ''}
+      ${R && R.status !== 'settled' ? '<button class="btn g" data-a="roundSettle">지금 점수로 정산</button>' : ''}</div>
+      <p class="small muted" style="margin:8px 0 0">새 라운드를 열면 그 순간의 칭찬 점수(태도 감점 포함)를 시작 점수로 기록해요. 정산하면 성장률만큼 지갑에 돈이 들어가요.</p></div>
+    <div class="card"><h2>⚙ 설정</h2><div class="row">
+      <label class="f">투자 예산<select id="stBudget"><option value="score" ${st.budget === 'score' ? 'selected' : ''}>내 칭찬 점수만큼</option><option value="fixed" ${st.budget === 'fixed' ? 'selected' : ''}>모두 같은 포인트</option></select></label>
+      <label class="f">같은 포인트<input type="number" id="stFixed" value="${st.fixed}" style="width:90px"></label>
+      <label class="f">최소 예산(P)<input type="number" id="stMin" value="${st.minBudget}" min="0" style="width:90px"></label>
+      <label class="f">성장률 최소 분모<input type="number" id="stFloor" value="${st.floor}" style="width:90px"></label>
+      <label class="f">1점 환전 금액(만원)<input type="number" id="stRate" value="${st.rate / 10000}" style="width:110px"></label>
+      <label class="f">자기 투자<select id="stSelf"><option value="0">금지</option><option value="1" ${st.allowSelf ? 'selected' : ''}>허용</option></select></label>
+      <button class="btn sm p" data-a="stSave">저장</button></div></div>
+    <div class="card col fill"><h2>💱 환전 신청 ${reqs.length ? `<span class="pill warn">${reqs.length}</span>` : ''}</h2><div class="scroll fill">
+      ${reqs.map(r => `<div class="row" style="padding:6px 0;border-bottom:1px solid var(--line)"><b>${esc(nm(r.sid))}</b> ${r.pts}점 (${won(r.cost)}) <span class="small muted">${fmtT(r.at)}</span><span class="sp" style="flex:1"></span><button class="btn sm" data-a="exDo" data-sid="${r.sid}" data-id="${r.id}" data-ok="0">반려</button><button class="btn sm p" data-a="exDo" data-sid="${r.sid}" data-id="${r.id}" data-ok="1">승인</button></div>`).join('') || '<p class="muted small">신청이 없어요</p>'}
+      <p class="small muted">승인하면 지갑에서 돈이 빠지고, 칭찬 점수는 <b>퍼스트클래스에 자동으로 +</b>돼요 (퍼스트클래스가 켜져 있을 때 반영, 그 전에도 라운지 점수에는 바로 보여요).</p></div></div></div>
+    <div class="card col fill" style="flex:1"><h2>📚 지난 라운드</h2><div class="scroll fill"><table class="t"><tr><th>라운드</th><th>상태</th><th class="r">최고 성장</th></tr>
+    ${rounds.map(r => { const top = r.rate ? Object.entries(r.rate).sort((a, b) => b[1] - a[1])[0] : null; return `<tr><td>${esc(r.title)}<div class="tiny muted">${fmtT(r.at)}</div></td><td>${{ open: '투자 중', closed: '진행 중', settled: '정산' }[r.status]}</td><td class="r">${top ? esc(nm(top[0])) + ' ' + pct(top[1]) : ''}</td></tr>`; }).join('')}</table></div></div></div>`;
+}
+A.stSave = async () => { await DB.set('app/settings', { stock: { budget: $('#stBudget').value, fixed: +$('#stFixed').value || 20, minBudget: Math.max(0, Math.floor(+$('#stMin').value || 0)), floor: Math.max(1, +$('#stFloor').value || 10), rate: Math.max(1, +$('#stRate').value || 100) * 10000, allowSelf: $('#stSelf').value === '1', unit: 1000000 } }); toast('저장했어요'); };
+A.roundNew = () => {
+  const n = Object.keys(S.stock?.rounds || {}).length + 1, end = new Date(Date.now() + 7 * DAY).toLocaleDateString('sv');
+  const m = modal(`${mHead('새 주식 라운드')}<div class="mb"><label class="f">라운드 이름<input type="text" id="rT" value="${n}회차 주식 (${new Date().getMonth() + 1}월)"></label><label class="f">마감 예정일<input type="date" id="rE" value="${end}"></label><p class="small muted" style="margin:0">지금 칭찬 점수가 시작 점수로 기록돼요.</p></div><div class="mf"><button class="btn" data-a="closeModal">취소</button><button class="btn p" id="rOk">열기</button></div>`);
+  m.querySelector('#rOk').onclick = async () => {
+    const id = uid(), base = Object.fromEntries(roster().map(s => [s.id, sc(s.id)]));
+    await DB.set('app/stock', { cur: id, rounds: { [id]: { id, title: $('#rT').value || '주식 라운드', end: $('#rE').value, at: Date.now(), status: 'open', base } } });
+    closeModal(); toast('새 라운드를 열었어요');
+  };
+};
+A.roundClose = () => confirmBox('투자를 마감할까요? 학생들은 더 이상 투자를 바꿀 수 없어요.', async () => { await DB.update('app/stock', { [`rounds.${S.stock.cur}.status`]: 'closed' }); });
+A.roundSettle = () => {
+  const R = curRound(); confirmBox(`'${R.title}'을(를) 지금 점수로 정산할까요?\n성장률만큼 학생 지갑에 돈이 들어가고 되돌릴 수 없어요.`, async () => {
+    const st = ST(), final = {}, rate = {};
+    for (const s of roster()) { final[s.id] = sc(s.id); rate[s.id] = (final[s.id] - (+R.base?.[s.id] || 0)) / Math.max(+R.base?.[s.id] || 0, st.floor); }
+    const jobs = [];
+    for (const [sid, w] of Object.entries(S.wallets)) {
+      const m = w.inv?.[R.id]; if (!m || !Object.keys(m).length) continue;
+      let principal = 0, profit = 0; for (const [t, p] of Object.entries(m)) { principal += p * st.unit; profit += p * st.unit * (rate[t] || 0); }
+      profit = Math.round(profit / 10000) * 10000;
+      jobs.push(DB.update('wallets/' + sid, { cash: (w.cash || 0) + profit, log: [...(w.log || []), { rid: R.id, title: R.title, principal, profit, at: Date.now() }] }));
+    }
+    jobs.push(DB.update('app/stock', { [`rounds.${R.id}.status`]: 'settled', [`rounds.${R.id}.final`]: final, [`rounds.${R.id}.rate`]: rate, [`rounds.${R.id}.settledAt`]: Date.now() }));
+    await Promise.all(jobs); toast(`정산 완료! ${jobs.length - 1}명의 지갑에 반영했어요`);
+  }, '정산하기');
+};
+A.exDo = async d => {
+  const w = S.wallets[d.sid], e = (w.ex || []).find(e => e.id === d.id); if (!e || e.st !== 'req') return;
+  const ok = d.ok === '1', ex = (w.ex || []).map(x => x.id === d.id ? { ...x, st: ok ? 'ok' : 'no', done: Date.now() } : x), f = { ex };
+  if (ok) f.cash = (w.cash || 0) - e.cost;
+  await DB.update('wallets/' + d.sid, f);
+  // 칭찬 점수 가산은 태도 감점과 같은 통로(app/attitude)로 퍼스트클래스에 보냄. pts가 음수 = 가산
+  if (ok) await DB.update('app/attitude', { ['pen.ex' + e.id]: { sid: d.sid, pts: -e.pts, at: Date.now(), applied: false, kind: 'ex', reason: `주식 환전 ${won(e.cost)}` } });
+  toast(ok ? `${nm(d.sid)} 칭찬 +${e.pts}점 — 퍼스트클래스에 자동으로 들어가요` : '반려했어요');
+};
+
+/* ---------------- MANITO ---------------- */
+const DEF_MISSIONS = ['아침에 먼저 반갑게 인사하기', '몰래 칭찬 쪽지 남기기', '책상·사물함 정리 몰래 돕기', '필요한 학용품 빌려주기', '응원의 한마디 해 주기', '같이 놀자고 먼저 말 걸기', '급식 시간에 옆에 앉기', '모르는 문제 도와주기', '손편지 쓰기'];
+const DEF_RULES = ['선물은 손편지나 간단한 것으로 (돈·비싼 선물 금지)', '마니또인 척 나쁜 편지 보내기 절대 금지', '들키지 않게 몰래, 하지만 꾸준히', '짝이 마음에 안 들어도 끝까지 친절하게'];
+const PH = [['survey', '① 희망 조사'], ['running', '② 마니또 활동'], ['closed', '③ 예측 마감'], ['done', '④ 발표 완료']];
+V.mani = () => {
+  const M = S.mani || { phase: 'off' }, ph = M.phase || 'off', idx = PH.findIndex(p => p[0] === ph);
+  const steps = `<div class="steps">${PH.map((p, i) => `<span class="${i === idx ? 'on' : i < idx ? 'done' : ''}">${p[1]}</span>`).join('')}</div>`;
+  const head = `<div class="vhead"><h1>🎁 마니또</h1>${M.title ? `<span class="pill navy">${esc(M.title)}</span>` : ''}${steps}<button class="help" data-a="help" data-v="mani">❓ 어떻게 해요?</button><span class="sp"></span>${canT() ? '<button class="btn sm" data-a="maniAdmin">⚙ 마니또 운영</button>' : ''}</div>`;
+  const rules = `<div class="card"><h2>🤝 우리의 약속</h2><ul class="rules">${(M.rules || DEF_RULES).map(r => `<li>${esc(r)}</li>`).join('')}</ul></div>`;
+  if (ph === 'off') return head + `<div class="body"><div class="empty"><div class="big">🎁</div><b>마니또가 곧 시작돼요!</b><span>제비뽑기로 친구 한 명을 뽑아 몰래 도와주고, 마지막 날 누구였는지 밝혀요.</span>${canT() ? '<button class="btn p" data-a="maniAdmin">희망 조사 시작하기</button>' : ''}</div><div class="col" style="width:380px">${rules}</div></div>`;
+  if (!U.me) return head + (canT() && (ph === 'closed' || ph === 'done') ? `<div class="body"><div class="card" style="flex:1"><h2>📊 결과</h2>${maniStatsHtml()}</div><div class="col"><button class="btn g" data-a="showStart">🎉 발표쇼 ${ph === 'done' ? '다시 보기' : '시작'}</button></div></div>` : needMe());
+  const mm = myM();
+  if (ph === 'survey') {
+    const wish = new Set(mm.wish || []);
+    return head + `<div class="body"><div class="col fill" style="flex:1"><div class="card"><b>친해지고 싶은 친구를 여러 명 골라 주세요.</b> <span class="muted small">선생님이 참고해서 짝을 맺어요. (반전이 있을지도…? 🤫) 고른 친구는 나만 봐요.</span></div>
+      <div class="pick scroll fill">${others().map(s => `<button data-a="wish" data-id="${s.id}" aria-pressed="${wish.has(s.id)}">${esc(s.name)}</button>`).join('')}</div>
+      <div class="row"><b>${wish.size}명 골랐어요</b>${mm.wishAt ? `<span class="pill ok">제출됨 ${fmtT(mm.wishAt)}</span>` : '<span class="pill warn">아직 저장 안 함</span>'}</div></div><div class="col" style="width:360px">${rules}</div></div>`;
+  }
+  const missions = M.missions || DEF_MISSIONS;
+  if (ph === 'running') {
+    const didN = m => (mm.did || []).filter(x => x.m === m).length;
+    return head + `<div class="body"><div class="col" style="width:330px">
+      <div class="secret" id="secret"><div class="q">내가 몰래 챙겨 줄 친구는…</div><div class="nm" id="secretNm">👆 꾹 눌러서 보기</div><div class="q">🤫 주변에 아무도 없을 때 확인해요</div></div>
+      <div class="card"><h2>🔮 나의 마니또는 누구일까?</h2><select id="guessSel" data-a2="guess"><option value="">아직 모르겠어요</option>${others().map(s => `<option value="${s.id}" ${mm.guess === s.id ? 'selected' : ''}>${esc(s.name)}</option>`).join('')}</select><p class="tiny muted" style="margin:6px 0 0">예측 마감 전까지 언제든 바꿀 수 있어요.</p></div>
+      ${rules}</div>
+      <div class="col fill" style="flex:1"><div class="card col fill"><h2>✅ 미션 했어요 <span class="tiny muted">한 번 할 때마다 눌러요 · 시간이 기록돼요</span></h2><div class="mis scroll">${missions.map((m, i) => `<button class="mi" data-a="did" data-i="${i}">✋ ${esc(m)}${didN(m) ? `<b>${didN(m)}</b>` : ''}</button>`).join('')}</div>
+      <h2 style="margin-top:8px">💌 누군가 나에게 해 줬어요 <span class="tiny muted">받은 미션을 누르고, 누가 했을지 짐작해요</span></h2><div class="mis scroll">${missions.map((m, i) => `<button class="mi" data-a="got" data-i="${i}">💝 ${esc(m)}</button>`).join('')}</div></div>
+      <div class="card" style="max-height:28%;display:flex;flex-direction:column"><h2>📒 내 기록</h2><div class="log scroll">${[...(mm.did || []).map(x => ({ ...x, k: 'did' })), ...(mm.got || []).map(x => ({ ...x, k: 'got' }))].sort((a, b) => b.at - a.at).map(x => `<div><time>${fmtT(x.at)}</time><span style="flex:1">${x.k === 'did' ? '✋ 내가 함' : '💝 받음'} · ${esc(x.m)}${x.k === 'got' && x.from ? ` <span class="muted">(짐작: ${esc(nm(x.from))})</span>` : ''}</span><button class="btn sm ghost" style="min-height:26px;padding:0 8px" data-a="recDel" data-k="${x.k}" data-at="${x.at}" title="잘못 눌렀으면 지워요">✕</button></div>`).join('') || '<span class="muted">아직 기록이 없어요</span>'}</div></div></div></div>`;
+  }
+  if (ph === 'closed') return head + `<div class="empty"><div class="big">🥁</div><b>예측이 마감됐어요! 발표를 기다려요.</b><span>내 예측: <b>${esc(nm(mm.guess) || '없음')}</b></span>${canT() ? '<button class="btn g" data-a="showStart">🎉 발표쇼 시작</button>' : ''}</div>`;
+  // done
+  const giver = Object.keys(M.pairs || {}).find(g => M.pairs[g] === U.me), ok = giver && mm.guess === giver, cross = crossCheck(giver, U.me);
+  return head + `<div class="body"><div class="col" style="flex:1"><div class="secret"><div class="q">나의 마니또는</div><div class="nm">${esc(nm(giver) || '?')}</div><div class="q">${mm.guess ? (ok ? '🎯 예측 성공!' : `내 예측은 ${esc(nm(mm.guess))} — 아쉬워요!`) : '예측하지 않았어요'}</div></div>
+    <div class="card"><h2>🧾 서로 확인한 미션</h2><div class="log">${cross.rows.map(r => `<div><time>${fmtT(r.at)}</time>${r.ok ? '✅' : '✋'} ${esc(r.m)} ${r.ok ? `<span class="muted">· 나도 ${fmtT(r.gotAt)}에 받았다고 체크</span>` : ''}</div>`).join('') || '<span class="muted">기록이 없어요</span>'}</div></div></div>
+    <div class="col" style="width:360px"><div class="card"><h2>📊 우리 반 결과</h2>${maniStatsHtml()}</div>${canT() ? '<button class="btn g" data-a="showStart">🎉 발표쇼 다시 보기</button>' : ''}</div></div>`;
+};
+AFTER.mani = () => {
+  const s = $('#secret'); if (s) {
+    const show = e => { e.preventDefault(); $('#secretNm').textContent = nm(myM().target) || '짝이 없어요 · 선생님께 물어봐요'; }, hide = () => { const n = $('#secretNm'); if (n) n.textContent = '👆 꾹 눌러서 보기'; };
+    s.addEventListener('pointerdown', show); ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => s.addEventListener(ev, hide)); s.addEventListener('contextmenu', e => e.preventDefault());
+  }
+  const g = $('#guessSel'); if (g) g.onchange = async () => { await DB.update('mani/' + U.me, { guess: g.value || null, guessAt: Date.now() }); toast(g.value ? `예측: ${nm(g.value)} 🔮` : '예측을 지웠어요'); g.blur(); };
+};
+A.wish = async d => { const w = new Set(myM().wish || []); w.has(d.id) ? w.delete(d.id) : w.add(d.id); await DB.update('mani/' + U.me, { wish: [...w], wishAt: Date.now() }); };
+A.did = async d => { const m = (S.mani.missions || DEF_MISSIONS)[+d.i]; await DB.update('mani/' + U.me, { did: [...(myM().did || []), { m, at: Date.now() }] }); toast(`✋ '${m}' 기록했어요`); };
+A.recDel = d => confirmBox('이 기록을 지울까요?', async () => { const k = d.k === 'got' ? 'got' : 'did'; await DB.update('mani/' + U.me, { [k]: (myM()[k] || []).filter(x => String(x.at) !== d.at) }); toast('지웠어요'); }, '지우기');
+A.got = d => {
+  const m = (S.mani.missions || DEF_MISSIONS)[+d.i];
+  const md = modal(`${mHead('💝 ' + esc(m))}<div class="mb"><b>누가 해 줬을까요? 짐작해서 골라요</b><div class="pick">${others().map(s => `<button data-id="${s.id}">${esc(s.name)}</button>`).join('')}<button data-id="">모르겠어요</button></div></div>`);
+  md.querySelector('.pick').onclick = async e => { const b = e.target.closest('[data-id]'); if (!b) return; await DB.update('mani/' + U.me, { got: [...(myM().got || []), { m, at: Date.now(), from: b.dataset.id || null }] }); closeModal(); toast('받은 미션을 기록했어요 💝'); };
+};
+/** 마니또가 '했어요' 한 미션과 받은 친구가 '받았어요' 한 미션을 같은 미션·같은 날로 짝지어 확인 */
+function crossCheck(giver, recv) {
+  const did = (S.manis[giver]?.did || []).slice().sort((a, b) => a.at - b.at), got = (S.manis[recv]?.got || []).slice(); const used = new Set();
+  const rows = did.map(x => { const i = got.findIndex((g, k) => !used.has(k) && g.m === x.m && todayKey(g.at) === todayKey(x.at) && g.at >= x.at - 3600000); if (i >= 0) used.add(i); return { ...x, ok: i >= 0, gotAt: i >= 0 ? got[i].at : null, guessed: i >= 0 && got[i].from === giver }; });
+  return { rows, ok: rows.filter(r => r.ok).length, did: did.length, got: got.length };
+}
+function maniStatsHtml() {
+  const P = S.mani?.pairs || {}, recvs = Object.values(P); if (!recvs.length) return '<span class="muted">짝이 없어요</span>';
+  const giverOf = r => Object.keys(P).find(g => P[g] === r);
+  const hit = recvs.filter(r => S.manis[r]?.guess && S.manis[r].guess === giverOf(r)), guessed = recvs.filter(r => S.manis[r]?.guess);
+  const king = Object.keys(P).map(g => [g, (S.manis[g]?.did || []).length]).sort((a, b) => b[1] - a[1])[0];
+  return `<div style="font-family:var(--f-d);font-size:34px">${hit.length} / ${guessed.length}명 정답</div><p class="small muted" style="margin:2px 0 8px">예측한 ${guessed.length}명 중 ${guessed.length ? Math.round(hit.length / guessed.length * 100) : 0}%가 맞췄어요</p>
+  <div class="small"><b>🎯 맞춘 친구</b> ${hit.map(r => esc(nm(r))).join(', ') || '-'}</div>${king && king[1] ? `<div class="small" style="margin-top:6px"><b>🏅 미션왕</b> ${esc(nm(king[0]))} (${king[1]}번)</div>` : ''}`;
+}
+/* manito admin */
+A.maniAdmin = () => {
+  const M = S.mani || { phase: 'off' }, ph = M.phase || 'off', ppl = roster();
+  const wishN = ppl.filter(s => (S.manis[s.id]?.wish || []).length).length, guessN = ppl.filter(s => S.manis[s.id]?.guess).length;
+  let body = '', foot = '';
+  if (ph === 'off' || ph === 'done') {
+    body = `<label class="f">마니또 이름<input type="text" id="mT" value="${esc(M.title && ph !== 'done' ? M.title : (new Date().getMonth() + 1) + '월 마니또')}"></label>
+    <label class="f">미션 (한 줄에 하나)<textarea id="mMis" rows="7">${esc((M.missions || DEF_MISSIONS).join('\n'))}</textarea></label>
+    <label class="f">우리의 약속 (한 줄에 하나)<textarea id="mRules" rows="4">${esc((M.rules || DEF_RULES).join('\n'))}</textarea></label>${ph === 'done' ? '<p class="small" style="color:var(--bad);margin:0">새로 시작하면 지난 마니또의 짝·기록이 지워져요.</p>' : ''}`;
+    foot = `<button class="btn p" id="mGo">희망 조사 시작</button>`;
+  } else if (ph === 'survey') {
+    body = `<p style="margin:0">희망 조사 응답: <b>${wishN} / ${ppl.length}명</b></p>
+    <label class="f">짝 맺는 방법<select id="mMode"><option value="wish">💗 희망한 친구 중에서</option><option value="reverse">🔄 반전! 희망하지 않은 친구로</option><option value="random">🎲 완전 랜덤</option></select></label>
+    <label class="row small"><input type="checkbox" id="mMutual" checked> 서로가 서로의 마니또(A↔B)가 되지 않게</label>
+    <b class="small">빠지는 학생 (결석 등) — 누르면 빠져요</b><div class="pick" id="mOut">${ppl.map(s => `<button data-id="${s.id}" aria-pressed="false">${esc(s.name)}</button>`).join('')}</div>
+    <div id="mRes" class="small"></div>`;
+    foot = `<button class="btn" id="mBack">조사 취소</button><button class="btn" id="mTry">짝 맺어 보기</button><button class="btn p" id="mOk" disabled>이 짝으로 시작</button>`;
+  } else if (ph === 'running') {
+    body = `<p style="margin:0">예측한 학생 <b>${guessN} / ${Object.keys(M.pairs || {}).length}명</b></p><label class="f">미션 (한 줄에 하나)<textarea id="mMis" rows="7">${esc((M.missions || DEF_MISSIONS).join('\n'))}</textarea></label>
+    <details><summary class="small">🔐 짝 확인표 (선생님만)</summary><table class="t">${Object.entries(M.pairs || {}).map(([g, r]) => { const c = crossCheck(g, r); return `<tr><td>${esc(nm(g))} → ${esc(nm(r))}</td><td class="r">미션 ${c.did} · 확인 ${c.ok}</td></tr>`; }).join('')}</table></details>`;
+    foot = `<button class="btn" id="mMisSave">미션 저장</button><button class="btn p" id="mClose">예측 마감하기</button>`;
+  } else if (ph === 'closed') { body = `<p style="margin:0">예측한 학생 <b>${guessN}명</b>. 이제 발표쇼를 시작하세요!</p>`; foot = `<button class="btn" id="mReopen">다시 활동 중으로</button><button class="btn g" id="mShow">🎉 발표쇼 시작</button>`; }
+  const m = modal(`${mHead('⚙ 마니또 운영')}<div class="mb">${body}</div><div class="mf">${foot}</div>`, { wide: ph === 'survey' });
+  const lines = id => m.querySelector(id).value.split('\n').map(s => s.trim()).filter(Boolean);
+  m.querySelector('#mGo')?.addEventListener('click', async () => {
+    const ids = roster().map(s => s.id); await Promise.all(ids.map(id => DB.set('mani/' + id, { wish: [], target: null, guess: null, did: [], got: [] }, false)));
+    await DB.set('app/manito', { phase: 'survey', title: $('#mT').value, missions: lines('#mMis'), rules: lines('#mRules'), pairs: {}, at: Date.now() }, false); closeModal(); toast('희망 조사를 시작했어요');
+  });
+  let result = null;
+  m.querySelector('#mOut')?.addEventListener('click', e => { const b = e.target.closest('[data-id]'); if (b) b.setAttribute('aria-pressed', b.getAttribute('aria-pressed') !== 'true'); });
+  m.querySelector('#mTry')?.addEventListener('click', () => {
+    const out = new Set($$('#mOut [aria-pressed=true]', m).map(b => b.dataset.id)), ids = roster().map(s => s.id).filter(id => !out.has(id));
+    if (ids.length < 3) return toast('3명 이상 있어야 해요');
+    const wishes = Object.fromEntries(ids.map(id => [id, S.manis[id]?.wish || []]));
+    result = matchManito(ids, wishes, $('#mMode').value, $('#mMutual').checked);
+    const label = { wish: '희망한 친구와 맺어짐', reverse: '희망하지 않은 친구와 맺어짐', random: '' }[$('#mMode').value];
+    $('#mRes').innerHTML = `✅ ${ids.length}명 짝 완성 ${label ? `· ${label}: <b>${result.good}명</b>` : ''} · 서로 마니또: ${result.mutual}쌍<br><span class="muted">마음에 안 들면 "짝 맺어 보기"를 다시 누르면 새로 섞여요. 짝은 학생 본인만 볼 수 있어요.</span>`;
+    m.querySelector('#mOk').disabled = false;
+  });
+  m.querySelector('#mOk')?.addEventListener('click', async () => {
+    const P = result.pairs; await Promise.all(Object.entries(P).map(([g, r]) => DB.update('mani/' + g, { target: r })));
+    await DB.update('app/manito', { phase: 'running', pairs: P, mode: $('#mMode').value, startAt: Date.now() }); closeModal(); toast('마니또 시작! 🎁');
+  });
+  m.querySelector('#mBack')?.addEventListener('click', async () => { await DB.update('app/manito', { phase: 'off' }); closeModal(); });
+  m.querySelector('#mMisSave')?.addEventListener('click', async () => { await DB.update('app/manito', { missions: lines('#mMis') }); toast('미션을 저장했어요'); });
+  m.querySelector('#mClose')?.addEventListener('click', async () => { await DB.update('app/manito', { phase: 'closed', closedAt: Date.now() }); closeModal(); });
+  m.querySelector('#mReopen')?.addEventListener('click', async () => { await DB.update('app/manito', { phase: 'running' }); closeModal(); });
+  m.querySelector('#mShow')?.addEventListener('click', () => { closeModal(); A.showStart(); });
+};
+/** 순환 짝(모두 정확히 한 명을 챙기고 한 명에게 챙김받음). 선호 간선을 먼저 최대 매칭하고 나머지는 아무 간선으로 채움. 여러 번 섞어서 가장 좋은 결과 */
+function matchManito(ids, wishes, mode, noMutual) {
+  const pref = (g, r) => mode === 'wish' ? wishes[g].includes(r) : mode === 'reverse' ? !wishes[g].includes(r) : true;
+  let best = null;
+  for (let t = 0; t < 400; t++) {
+    const order = shuffle(ids), mR = {};
+    const tryK = (g, seen, ok) => { for (const r of shuffle(ids)) { if (r === g || seen.has(r) || !ok(g, r)) continue; seen.add(r); if (!mR[r] || tryK(mR[r], seen, ok)) { mR[r] = g; return true; } } return false; };
+    for (const g of order) tryK(g, new Set(), pref);
+    const matched = () => new Set(Object.values(mR));
+    for (const g of order) if (!matched().has(g)) tryK(g, new Set(), () => true);
+    const pairs = {}; for (const r in mR) pairs[mR[r]] = r; if (Object.keys(pairs).length !== ids.length) continue;
+    const good = ids.filter(g => pref(g, pairs[g])).length, mutual = ids.filter(g => pairs[pairs[g]] === g).length / 2;
+    const score = good * 10 - (noMutual ? mutual * 100 : 0);
+    if (!best || score > best.score) best = { pairs, good, mutual, score };
+    if (best.good === ids.length && (!noMutual || !best.mutual)) break;
+  }
+  return best;
+}
+/* reveal show */
+A.showStart = () => {
+  const P = S.mani?.pairs || {}; const order = shuffle(Object.values(P)); if (!order.length) return toast('짝이 없어요');
+  let i = 0, step = 0, hits = 0;
+  const host = document.createElement('div'); host.className = 'show'; document.body.appendChild(host);
+  const giverOf = r => Object.keys(P).find(g => P[g] === r);
+  const draw = () => {
+    if (i >= order.length) {
+      host.innerHTML = `<button class="btn close" data-x>닫기</button><div class="q">🎉 마니또 발표 끝!</div><div class="ans pop" style="font-size:clamp(48px,8vw,96px)">${hits} / ${order.length}</div><div class="res">명이 자기 마니또를 맞췄어요</div><div class="card" style="color:var(--ink);max-width:520px;text-align:left">${maniStatsHtml()}</div>`;
+      confetti(); DB.update('app/manito', { phase: 'done', doneAt: Date.now() }); return;
+    }
+    const r = order[i], g = giverOf(r), guess = S.manis[r]?.guess, c = crossCheck(g, r);
+    host.innerHTML = `<span class="cnt">${i + 1} / ${order.length}</span><button class="btn close" data-x>닫기</button>
+      <div class="q">${esc(nm(r))}의 마니또는…?</div>
+      <div class="guess">${step >= 1 ? `🔮 ${esc(nm(r))}의 예측: <b>${guess ? esc(nm(guess)) : '예측 안 함'}</b>` : '&nbsp;'}</div>
+      <div class="ans ${step === 2 ? 'spin' : step === 3 ? 'pop' : ''}" id="ans">${step === 3 ? esc(nm(g)) : step === 2 ? '' : '?'}</div>
+      <div class="res ${step === 3 ? (guess === g ? 'o' : 'x') : ''}">${step === 3 ? (guess === g ? '🎯 정답! 맞췄어요!' : guess ? '❌ 아쉬워요!' : '') : ''}</div>
+      <div class="guess">${step === 3 ? `✋ 해 준 미션 ${c.did}번 · 💝 서로 확인된 미션 ${c.ok}번` : ''}</div>
+      <div class="btns"><button class="btn g" data-n>${step < 3 ? ['예측 보기', '두구두구 🥁', '…'][step] : '다음 친구 ▶'}</button></div>`;
+    if (step === 2) { const names = roster().map(s => s.name); const el = host.querySelector('#ans'); let k = 0; const iv = setInterval(() => { el.textContent = names[k++ % names.length]; }, 70); setTimeout(() => { clearInterval(iv); step = 3; if (guess === g) { hits++; confetti(); } draw(); }, 1800); }
+  };
+  host.addEventListener('click', e => { if (e.target.closest('[data-x]')) { host.remove(); return; } if (e.target.closest('[data-n]')) { if (step === 2) return; if (step === 3) { i++; step = 0; } else step++; draw(); } });
+  draw();
+};
+function confetti() { const c = ['#C9A227', '#F87171', '#4ADE80', '#60A5FA', '#F5E9C8', '#C44D6C']; for (let i = 0; i < 90; i++) { const d = document.createElement('i'); d.className = 'conf'; d.style.left = Math.random() * 100 + 'vw'; d.style.background = c[i % c.length]; d.style.animationDuration = 1.8 + Math.random() * 1.8 + 's'; d.style.animationDelay = Math.random() * .5 + 's'; document.body.appendChild(d); setTimeout(() => d.remove(), 4200); } }
+
+/* ---------------- 도트 이모지 ----------------
+   해시 워드워 Px.gd와 같은 방식: 이모지를 32px로 그림 → 16px로 픽셀화 → 색 단계 줄이기·파스텔 보정
+   → 1px 잉크 외곽선 → 18px 그림. 화면에 나오는 모든 이모지를 이 그림으로 바꿈(입력칸·선택상자 안은 그대로) */
+const PX_RE = /\p{Extended_Pictographic}/u, PX_NOT = /^[©®™‼⁉]$/, PX_SKIP = 'script,style,textarea,input,select,option,title,[data-nopx]';
+const pxCache = new Map(), pxSeg = Intl.Segmenter ? new Intl.Segmenter('ko', { granularity: 'grapheme' }) : null;
+function rgb2hsv(r, g, b) { r /= 255; g /= 255; b /= 255; const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn; let h = 0; if (d) h = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; return [(h * 60 + 360) % 360, mx ? d / mx : 0, mx]; }
+function hsv2rgb(h, s, v) { const f = n => { const k = (n + h / 60) % 6; return v - v * s * Math.max(0, Math.min(k, 4 - k, 1)); }; return [f(5) * 255, f(3) * 255, f(1) * 255]; }
+function pxBake(e) {
+  if (pxCache.has(e)) return pxCache.get(e);
+  let url = '';
+  try {
+    const SRC = 32, P = 16, W = P + 2, a = document.createElement('canvas'); a.width = a.height = SRC;
+    const g = a.getContext('2d', { willReadFrequently: true });
+    g.font = '28px "Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(e, SRC / 2, SRC / 2 + 1);
+    const b = document.createElement('canvas'); b.width = b.height = P; const bg = b.getContext('2d', { willReadFrequently: true }); bg.imageSmoothingEnabled = false; bg.drawImage(a, 0, 0, P, P);
+    const src = bg.getImageData(0, 0, P, P).data, o = document.createElement('canvas'); o.width = o.height = W;
+    const og = o.getContext('2d'), out = og.createImageData(W, W), D = out.data, solid = new Uint8Array(W * W), snap = (x, s) => Math.round(x / s) * s;
+    let n = 0;
+    for (let y = 0; y < P; y++) for (let x = 0; x < P; x++) {
+      const i = (y * P + x) * 4; if (src[i + 3] < 51) continue;
+      const [h, s, v] = rgb2hsv(src[i], src[i + 1], src[i + 2]);
+      let [r, gg, bb] = hsv2rgb(h, Math.min(1, snap(s * .75, .15)), Math.min(1, snap(Math.min(1, Math.max(.3, v * 1.08)), .15)));
+      r += (255 - r) * .18; gg += (229.5 - gg) * .18; bb += (237 - bb) * .18; // 종이 틴트 18%
+      const j = (y + 1) * W + x + 1; solid[j] = 1; D.set([r, gg, bb, 255], j * 4); n++;
+    }
+    for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) { if (!solid[y * W + x]) continue; for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const nx = x + dx, ny = y + dy; if (nx < 0 || ny < 0 || nx >= W || ny >= W) continue; const k = ny * W + nx; if (!solid[k]) D.set([51, 28, 69, 255], k * 4); } } // 잉크 외곽선
+    if (n) { og.putImageData(out, 0, 0); url = o.toDataURL(); }
+  } catch (err) { }
+  pxCache.set(e, url); return url;
+}
+function pxText(t) {
+  const s = t.nodeValue; if (!s || !PX_RE.test(s)) return;
+  const p = t.parentElement; if (!p || p.closest(PX_SKIP)) return;
+  const parts = pxSeg ? [...pxSeg.segment(s)].map(x => x.segment) : Array.from(s);
+  const f = document.createDocumentFragment(); let buf = '', hit = false;
+  for (const gph of parts) {
+    const url = PX_RE.test(gph) && !PX_NOT.test(gph) ? pxBake(gph) : '';
+    if (!url) { buf += gph; continue; }
+    if (buf) { f.append(buf); buf = ''; }
+    const im = document.createElement('img'); im.className = 'px'; im.src = url; im.alt = gph; im.draggable = false; f.append(im); hit = true;
+  }
+  if (!hit) return; if (buf) f.append(buf); t.replaceWith(f);
+}
+function pxify(root) {
+  if (root.nodeType === 3) return pxText(root);
+  if (root.nodeType !== 1 || root.closest?.(PX_SKIP)) return;
+  const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT), list = []; let t; while ((t = w.nextNode())) if (PX_RE.test(t.nodeValue)) list.push(t);
+  list.forEach(pxText);
+}
+new MutationObserver(ms => { for (const m of ms) { if (m.type === 'characterData') pxText(m.target); else m.addedNodes.forEach(pxify); } }).observe(document.body, { childList: true, subtree: true, characterData: true });
+pxify(document.body);
+
+/* ---------------- CONTEST ---------------- */
+const LV = { 1: '처음이에요', 2: '조금 해요', 3: '자신 있어요' };
+const PRESETS = [
+  { emoji: '✋', title: '공기놀이 토너먼트', desc: '모둠 예선부터 결승까지! 도전한 모두에게 박수를', how: '모둠별 예선 → 사다리타기로 진출 모둠 → 결승\n1단부터 도전해도 OK, 규칙은 시작 전에 다 같이 정해요', prize: '1·2·3등 스페셜 선물', style: 'pop', by: '박준우' },
+  { emoji: '♟️', title: '학급 체스 대회', desc: '스마트폰 대신 체스! 집중력 쑥쑥', how: '실력이 비슷한 친구끼리 겨뤄요 (취미반·선수반)\n한 판 승부, 무승부면 다시', prize: '체스왕 인증서', style: 'classic', by: '정세민' },
+  { emoji: '🎤', title: '끼 넘치는 장기 자랑', desc: '노래, 댄스, 마술, 공기 기술 무엇이든!', how: '하고 싶은 사람만 신청해요\n반 전체 현장 투표로 1·2·3등', prize: '무대의 주인공 상', style: 'pop', by: '김비채' },
+  { emoji: '❓', title: '우리 반 퀴즈 대회', desc: '모두 다 같이 어울리는 퀴즈 한 판', how: '모둠별로 문제를 풀어요\n외로운 친구 없이 모두 참여!', prize: '퀴즈왕 칭찬 점수', style: 'field', by: '김도아' },
+];
+V.contest = () => {
+  const list = S.contests.slice().sort((a, b) => (a.st === 'done') - (b.st === 'done') || b.at - a.at);
+  if (!list.find(c => c.id === U.contest)) U.contest = list[0]?.id || null;
+  const C = list.find(c => c.id === U.contest);
+  const stL = { proposed: ['승인 대기', 'warn'], open: ['신청 받는 중', 'ok'], closed: ['신청 마감', ''], done: ['끝', ''] };
+  const items = list.map(c => `<button class="citem" data-a="cSel" data-id="${c.id}" aria-current="${c.id === U.contest}"><span class="e">${c.emoji || '🏆'}</span><span style="min-width:0;flex:1"><div class="tt">${esc(c.title)}</div><div class="row" style="gap:5px"><span class="pill ${stL[c.st]?.[1]}">${stL[c.st]?.[0]}</span><span class="tiny muted">${Object.keys(c.entries || {}).length}명 · ${esc(c.date || '')}</span></span></span></button>`).join('');
+  return `<div class="vhead"><h1>🏆 우리반 대회</h1><span class="sp"></span><button class="btn g" data-a="cNew">＋ 대회 제안하기</button></div>
+  <div class="body"><div class="clist scroll">${items || '<div class="empty"><div class="big">🏟️</div>아직 대회가 없어요.<br>첫 대회를 제안해 볼까요?</div>'}</div>
+  <div class="cdetail">${C ? contestDetail(C) : '<div class="empty"><div class="big">📣</div>왼쪽에서 대회를 고르거나 새 대회를 제안해요</div>'}</div></div>`;
+};
+const isHost = C => canT() || (U.me && C.host === U.me);
+function contestDetail(C) {
+  const t = U.sub.contest, ent = C.entries || {}, mine = U.me && ent[U.me];
+  let tools = '';
+  if (canT()) tools += C.st === 'proposed' ? '<button class="btn sm p" data-a="cSt" data-v="open">✅ 승인 (신청 열기)</button>' : '';
+  if (isHost(C)) tools += (C.st === 'open' ? '<button class="btn sm" data-a="cSt" data-v="closed">신청 마감</button>' : '') + (C.st === 'closed' ? '<button class="btn sm" data-a="cSt" data-v="open">신청 다시 열기</button>' : '') + `<button class="btn sm" data-a="cEdit">✏️ 고치기</button>`;
+  if (canT()) tools += '<button class="btn sm ghost" data-a="cDel">삭제</button>';
+  let body = '';
+  if (t === 'poster') body = `<div class="pwrap" id="pwrap"><div class="pscale" id="pscale">${posterHtml(C)}</div></div>`;
+  else if (t === 'entry') {
+    const byLv = [3, 2, 1].map(l => [l, Object.entries(ent).filter(e => e[1].lv === l)]);
+    body = `<div class="card">${C.st === 'open' ? (U.me ? `<div class="row"><b>${mine ? '신청했어요! 수준 바꾸기:' : '내 수준을 고르고 신청해요:'}</b>${[1, 2, 3].map(l => `<button class="btn ${mine?.lv === l ? 'p' : ''}" data-a="cJoin" data-lv="${l}">${'⭐'.repeat(l)} ${LV[l]}</button>`).join('')}${mine ? '<button class="btn ghost" data-a="cLeave">신청 취소</button>' : ''}</div>` : needMe().replace('class="empty"', 'class="row"')) : `<b>${C.st === 'proposed' ? '선생님 승인을 기다리는 중이에요' : '신청이 마감됐어요'}</b>`}</div>
+    <div class="body scroll">${byLv.map(([l, es]) => `<div class="card col" style="flex:1"><h2>${'⭐'.repeat(l)} ${LV[l]} <span class="pill">${es.length}</span></h2>${es.map(([sid]) => `<div>${esc(nm(sid))}</div>`).join('')}</div>`).join('')}</div>`;
+  } else body = bracketView(C);
+  return `<div class="row"><span style="font-size:30px">${C.emoji || '🏆'}</span><b style="font-size:19px">${esc(C.title)}</b><span class="small muted">주최 ${esc(nm(C.host) || '선생님')}</span><span class="sp" style="flex:1"></span>${tools}</div>
+  <div class="row">${seg('contest', [['poster', '🖼 포스터'], ['entry', `🙋 신청 (${Object.keys(ent).length})`], ['bracket', '🧩 대진표']])}${t === 'poster' ? '<button class="btn sm" data-a="cPrint">🖨 A4 인쇄 / PDF</button><span class="tiny muted">인쇄 창에서 "PDF로 저장"을 고르면 파일이 돼요</span>' : ''}</div>${body}`;
+}
+AFTER.contest = () => {
+  const w = $('#pwrap'), s = $('#pscale'); if (w && s) { const k = Math.min((w.clientHeight - 20) / 1123, (w.clientWidth - 20) / 794); s.style.transform = `scale(${k})`; s.style.height = 1123 * k + 'px'; s.style.width = 794 * k + 'px'; drawQR(s); }
+};
+/* 해시브라운 코딩기록소(GitHub hash2n → Vercel)에 올라간 라운지 주소 */
+const HOSTED = 'https://hash2n.vercel.app/vibe-apps/first-class-lounge.html';
+function appUrl() { return S.set?.appUrl || (location.protocol.startsWith('http') ? location.origin + location.pathname : HOSTED); }
+function drawQR(root) { $$('[data-qr]', root).forEach(el => { el.innerHTML = ''; const txt = el.dataset.qr; if (!txt) return; try { new QRCode(el, { text: txt, width: +el.dataset.s || 150, height: +el.dataset.s || 150, correctLevel: QRCode.CorrectLevel.M }); } catch (e) { } }); }
+function posterHtml(C) {
+  const u = appUrl();
+  const rows = [['📅 언제', C.date], ['📍 어디서', C.place], ['🙋 누가', C.who || `${S.main?.cname || '우리 반'} 누구나`], ['📋 방법', C.how], ['🎁 상품', C.prize]].filter(r => r[1]);
+  return `<div class="poster ${C.style || 'classic'}"><div class="ph"><span class="tag">${esc(S.main?.cname || '우리 반')} 대회</span><div class="em">${C.emoji || '🏆'}</div><h1>${esc(C.title)}</h1>${C.desc ? `<div class="ds">${esc(C.desc)}</div>` : ''}</div>
+  <div class="pinfo">${rows.map(r => `<div class="k">${r[0]}</div><div>${esc(r[1])}</div>`).join('')}</div>
+  <div class="pf"><div class="how">신청은 학생 라운지 → 🏆 대회 탭에서!<small>주최: ${esc(nm(C.host) || '선생님')} · 실력에 맞춰 대진표를 짜요</small></div>${u ? `<div class="qr" data-qr="${esc(u)}" data-s="150"></div>` : ''}</div></div>`;
+}
+A.cSel = d => { U.contest = d.id; render(); };
+A.cPrint = () => { const C = S.contests.find(c => c.id === U.contest); const p = $('#printArea'); p.innerHTML = posterHtml(C); drawQR(p); setTimeout(() => window.print(), 300); };
+A.cNew = () => { if (!U.me && !canT()) { toast('먼저 내 이름으로 들어와요'); return; } contestForm(null); };
+A.cEdit = () => contestForm(S.contests.find(c => c.id === U.contest));
+function contestForm(C) {
+  const v = C || { emoji: '🏆', style: 'classic' };
+  const emojis = ['🏆', '✋', '♟️', '🎤', '🕵️', '🏐', '🎲', '❓', '🏃', '🧩', '🎨', '📚'];
+  const m = modal(`${mHead(C ? '대회 고치기' : '📣 대회 제안하기')}<div class="mb">
+    ${C ? '' : `<div class="row"><span class="small muted">신문에 나온 대회로 채우기:</span>${PRESETS.map((p, i) => `<button class="btn sm" data-p="${i}">${p.emoji} ${p.title}</button>`).join('')}</div>`}
+    <div class="row" id="emo">${emojis.map(e => `<button class="btn sm ${v.emoji === e ? 'p' : ''}" data-e="${e}" style="font-size:20px">${e}</button>`).join('')}</div>
+    <label class="f">대회 이름<input type="text" id="cT" value="${esc(v.title || '')}" maxlength="24"></label>
+    <label class="f">한 줄 소개<input type="text" id="cD" value="${esc(v.desc || '')}" maxlength="40"></label>
+    <div class="row"><label class="f" style="flex:1">언제<input type="text" id="cW" value="${esc(v.date || '')}" placeholder="예: 10월 15일(수) 점심시간"></label><label class="f" style="flex:1">어디서<input type="text" id="cP" value="${esc(v.place || '')}" placeholder="예: 5학년 1반 교실"></label></div>
+    <label class="f">방법·규칙<textarea id="cH" rows="3">${esc(v.how || '')}</textarea></label>
+    <label class="f">상품<input type="text" id="cZ" value="${esc(v.prize || '')}"></label>
+    <label class="f">포스터 디자인<select id="cS"><option value="classic">✈️ 퍼스트클래스 (네이비·골드)</option><option value="pop" ${v.style === 'pop' ? 'selected' : ''}>💥 팝 (노랑·빨강)</option><option value="field" ${v.style === 'field' ? 'selected' : ''}>🌿 운동장 (초록)</option></select></label>
+    ${C ? '' : '<p class="small muted" style="margin:0">선생님이 승인하면 친구들이 신청할 수 있어요. 제안한 사람이 주최자가 돼요.</p>'}</div>
+    <div class="mf"><button class="btn" data-a="closeModal">취소</button><button class="btn p" id="cOk">${C ? '저장' : '제안하기'}</button></div>`);
+  let emoji = v.emoji;
+  m.querySelector('#emo').onclick = e => { const b = e.target.closest('[data-e]'); if (!b) return; emoji = b.dataset.e; $$('#emo [data-e]', m).forEach(x => x.classList.toggle('p', x === b)); };
+  m.querySelectorAll('[data-p]').forEach(b => b.onclick = () => { const p = PRESETS[+b.dataset.p]; $('#cT').value = p.title; $('#cD').value = p.desc; $('#cH').value = p.how; $('#cZ').value = p.prize; $('#cS').value = p.style; emoji = p.emoji; $$('#emo [data-e]', m).forEach(x => x.classList.toggle('p', x.dataset.e === emoji)); });
+  m.querySelector('#cOk').onclick = async () => {
+    const title = $('#cT').value.trim(); if (!title) return toast('대회 이름을 적어요');
+    const data = { title, emoji, desc: $('#cD').value.trim(), date: $('#cW').value.trim(), place: $('#cP').value.trim(), how: $('#cH').value.trim(), prize: $('#cZ').value.trim(), style: $('#cS').value };
+    if (C) await DB.set('contests/' + C.id, data);
+    else { const id = uid(); await DB.set('contests/' + id, { ...data, id, host: U.me || null, st: canT() ? 'open' : 'proposed', entries: {}, br: null, at: Date.now() }, false); U.contest = id; U.sub.contest = 'poster'; }
+    closeModal(); toast(C ? '저장했어요' : canT() ? '대회를 열었어요' : '제안했어요! 선생님이 확인하면 열려요'); render();
+  };
+}
+A.cSt = async d => { await DB.update('contests/' + U.contest, { st: d.v }); };
+A.cDel = () => confirmBox('이 대회를 삭제할까요?', async () => { await DB.del('contests/' + U.contest); U.contest = null; });
+A.cJoin = async d => { await DB.update('contests/' + U.contest, { ['entries.' + U.me]: { lv: +d.lv, at: Date.now() } }); toast('신청했어요! 🙋'); };
+A.cLeave = async () => { await DB.update('contests/' + U.contest, { ['entries.' + U.me]: DEL }); toast('신청을 취소했어요'); };
+/* bracket */
+function seedOrder(n) { let a = [1]; while (a.length < n) { const m = a.length * 2; a = a.flatMap(s => [s, m + 1 - s]); } return a; }
+function makeBracket(players) {
+  let size = 1; while (size < players.length) size *= 2; size = Math.max(size, 2);
+  const slots = seedOrder(size).map(s => players[s - 1] || null), rounds = [];
+  rounds.push({ m: Array.from({ length: size / 2 }, (_, i) => ({ a: slots[2 * i], b: slots[2 * i + 1], w: null })) });
+  for (let n = size / 4; n >= 1; n /= 2) rounds.push({ m: Array.from({ length: n }, () => ({ a: null, b: null, w: null })) });
+  return propagate({ rounds });
+}
+function propagate(div) {
+  const R = div.rounds;
+  R[0].m.forEach(x => { if (!x.a || !x.b) x.w = x.a || x.b; else if (x.w !== x.a && x.w !== x.b) x.w = null; });
+  for (let k = 1; k < R.length; k++) R[k].m.forEach((x, i) => { x.a = R[k - 1].m[2 * i].w || null; x.b = R[k - 1].m[2 * i + 1].w || null; if (!x.a || !x.b || (x.w !== x.a && x.w !== x.b)) x.w = null; });
+  return div;
+}
+function rankedPlayers(entries) { return shuffle(Object.entries(entries)).sort((a, b) => b[1].lv - a[1].lv).map(e => e[0]); }
+function bracketView(C) {
+  const n = Object.keys(C.entries || {}).length, host = isHost(C);
+  const gen = host ? `<div class="row"><b class="small">대진표 만들기:</b><button class="btn sm p" data-a="cGen" data-v="seed" ${n < 2 ? 'disabled' : ''}>🎯 시드 토너먼트</button><button class="btn sm" data-a="cGen" data-v="split" ${n < 4 ? 'disabled' : ''}>🪜 수준별 리그 (상위·도전)</button><span class="tiny muted">시드: 자신 있는 친구끼리 초반에 안 만나요 · 수준별: 비슷한 실력끼리 따로 겨뤄요</span></div>` : '';
+  if (!C.br) return gen + `<div class="empty"><div class="big">🧩</div>${n < 2 ? '신청한 친구가 2명 이상이면 대진표를 만들 수 있어요' : '주최자나 선생님이 대진표를 만들면 여기에 나와요'}</div>`;
+  const rn = k => k === 1 ? '결승' : k === 2 ? '준결승' : (k * 2) + '강';
+  const lvOf = id => C.entries?.[id]?.lv;
+  const divs = C.br.divs.map((dv, di) => {
+    const fin = dv.rounds.at(-1).m[0], champ = fin.w;
+    return `<div class="card" style="min-width:max-content"><h2>${esc(dv.name)} ${champ ? `<span class="champ">🏆 ${esc(nm(champ))}</span>` : ''}</h2><div class="bk">${dv.rounds.map((r, k) => `<div class="rd"><h4>${rn(r.m.length)}</h4>${r.m.map((x, i) => `<div class="mt">${['a', 'b'].map(s => { const id = x[s]; const can = host && x.a && x.b; return `<button data-a="cWin" data-d="${di}" data-r="${k}" data-i="${i}" data-s="${s}" class="${id && x.w === id ? 'w' : x.w && id ? 'l' : ''}" ${can ? '' : 'disabled'}>${id ? `${esc(nm(id))} ${lvOf(id) ? `<span class="lv">${'⭐'.repeat(lvOf(id))}</span>` : ''}` : (k === 0 ? '<span class="muted">부전승</span>' : '<span class="muted">?</span>')}</button>`; }).join('')}</div>`).join('')}</div>`).join('')}</div></div>`;
+  }).join('');
+  return gen + (host ? '<p class="tiny muted" style="margin:0">이긴 친구 이름을 누르면 다음 판으로 올라가요.</p>' : '') + `<div class="scroll fill" style="display:flex;gap:10px;flex-wrap:wrap;align-content:flex-start">${divs}</div>`;
+}
+A.cGen = d => {
+  const C = S.contests.find(c => c.id === U.contest), go = async () => {
+    const ps = rankedPlayers(C.entries || {}); let divs;
+    if (d.v === 'split') { const h = Math.ceil(ps.length / 2); divs = [{ name: '🔥 상위 리그', ...makeBracket(ps.slice(0, h)) }, { name: '🌱 도전 리그', ...makeBracket(ps.slice(h)) }]; }
+    else divs = [{ name: '🏆 토너먼트', ...makeBracket(ps) }];
+    await DB.update('contests/' + C.id, { br: { mode: d.v, divs, at: Date.now() }, st: C.st === 'open' ? 'closed' : C.st }); toast('대진표를 만들었어요');
+  };
+  C.br ? confirmBox('대진표를 새로 만들까요? 지금까지 입력한 결과가 지워져요.', go) : go();
+};
+A.cWin = async d => {
+  const C = S.contests.find(c => c.id === U.contest), br = clone(C.br), dv = br.divs[+d.d], x = dv.rounds[+d.r].m[+d.i];
+  const id = x[d.s]; x.w = x.w === id ? null : id; propagate(dv);
+  const champ = dv.rounds.at(-1).m[0].w, allDone = br.divs.every(v => v.rounds.at(-1).m[0].w);
+  await DB.update('contests/' + C.id, { br, ...(allDone ? { st: 'done' } : C.st === 'done' ? { st: 'closed' } : {}) }); // 결승 결과를 취소하면 '끝'에서 되돌림
+  if (champ && +d.r === dv.rounds.length - 1 && x.w) { confetti(); toast(`🏆 ${nm(champ)} 우승!`); }
+};
+
+addEventListener('resize', () => AFTER[U.view]?.());
+
+/* ---------------- 그림 담벼락 ----------------
+   wall/{id}    : 작은 썸네일(목록용) · 제목 · 올린 학생 · 칭찬 도장 · 댓글 · 선생님 감상(ai) · 숨김
+   wallimg/{id} : 크게 볼 그림(긴 변 800px JPEG). 눌러서 열 때만 내려받아 데이터 사용량을 줄임
+   Firebase Storage(유료)는 쓰지 않고 Firestore 문서(최대 1MB)에 축소 JPEG로 저장 */
+const WALL_FULL = 800, WALL_THUMB = 280;
+const wallDaily = () => +(S.set?.wall?.daily ?? 3);
+const WSTAMP = [['wow', '💯 참 잘했어요'], ['star', '🌟 최고예요'], ['love', '❤️ 좋아요']];
+const yymmdd = t => { const d = new Date(t), p = n => String(n).padStart(2, '0'); return `'${String(d.getFullYear()).slice(2)} ${p(d.getMonth() + 1)} ${p(d.getDate())}`; };
+const wallBy = w => w.by ? nm(w.by) : '선생님';
+const wallList = () => S.wall.filter(w => !w.hidden || canT() || (U.me && w.by === U.me)).sort((a, b) => b.at - a.at);
+const wallToday = () => U.me ? S.wall.filter(w => w.by === U.me && todayKey(w.at) === todayKey()).length : 0;
+const wallImg = new Map(); // 크게 볼 그림 캐시
+V.wall = () => {
+  if (!['all', 'mine'].includes(U.sub.wall)) U.sub.wall = 'all';
+  const list = wallList().filter(w => U.sub.wall === 'all' || w.by === U.me), left = wallDaily() - wallToday();
+  const up = canT() ? '<button class="btn g" data-a="wUp">📷 그림 올리기 (선생님)</button>' : U.me ? `<button class="btn g" data-a="wUp" ${left > 0 ? '' : 'disabled'}>📷 내 그림 올리기 <span class="small">(오늘 ${Math.max(0, left)}장 더)</span></button>` : '';
+  const card = w => {
+    const rot = ([...w.id].reduce((a, c) => a + c.charCodeAt(0), 0) % 5 - 2) * .8, st = Object.keys(w.likes || {}).length, cm = Object.keys(w.cm || {}).length;
+    const badge = w.hidden ? '🔒 선생님 확인 중' : w.ai?.st === 'done' ? '' : '✍️ 선생님 감상 준비 중';
+    return `<button class="pola" data-a="wOpen" data-id="${w.id}" style="--rot:${rot}deg"><div class="ph"><img src="${esc(w.thumb)}" alt="">${badge ? `<span class="badge">${badge}</span>` : ''}<span class="stamp">${yymmdd(w.at)}</span></div>
+      <div class="tt">${esc(w.title || '제목 없는 작품')}</div><div class="meta"><b style="color:var(--ink)">${esc(wallBy(w))}</b><span>💯 ${st}</span><span>💬 ${cm}</span>${w.ai?.st === 'done' && !w.hidden ? '<span>🍎 감상</span>' : ''}</div></button>`;
+  };
+  return `<div class="vhead"><h1>🎨 그림 담벼락</h1>${U.me ? seg('wall', [['all', '모두'], ['mine', '내 그림']]) : ''}<span class="sp"></span>${up}</div>
+  ${!U.me && !canT() ? '<div class="notice">🔒 그림을 올리거나 도장·댓글을 남기려면 홈에서 내 이름으로 들어와요. 구경은 누구나!</div>' : ''}
+  ${list.length ? `<div class="wgrid scroll fill">${list.map(card).join('')}</div>` : `<div class="empty"><div class="big">🖼️</div><b>${U.sub.wall === 'mine' ? '아직 올린 그림이 없어요' : '첫 그림을 기다려요!'}</b><span>그림을 사진으로 찍어 올리면 선생님이 감상을 써 줘요.</span></div>`}`;
+};
+/* 업로드: 사진 → 긴 변 800px JPEG(약 100KB) + 280px 썸네일 */
+async function loadPic(file) {
+  try { return await createImageBitmap(file, { imageOrientation: 'from-image' }); } catch (e) { }
+  return await new Promise((ok, no) => { const im = new Image(); im.onload = () => ok(im); im.onerror = () => no(new Error('그림을 열 수 없어요')); im.src = URL.createObjectURL(file); });
+}
+function shrinkPic(pic, max, q, limit) {
+  const W0 = pic.width || pic.naturalWidth, H0 = pic.height || pic.naturalHeight, k = Math.min(1, max / Math.max(W0, H0));
+  const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(W0 * k)); c.height = Math.max(1, Math.round(H0 * k));
+  const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(pic, 0, 0, c.width, c.height);
+  let url = c.toDataURL('image/jpeg', q); while (limit && url.length > limit && q > .35) { q -= .1; url = c.toDataURL('image/jpeg', q); }
+  return { url, w: c.width, h: c.height };
+}
+A.wUp = () => {
+  if (!U.me && !canT()) return toast('먼저 내 이름으로 들어와요');
+  if (!canT() && wallToday() >= wallDaily()) return toast('오늘은 다 올렸어요. 내일 또 올려요!');
+  let pic = null;
+  const m = modal(`${mHead('📷 그림 올리기')}<div class="mb">
+    <label class="btn p" style="min-height:54px;font-size:17px">📷 사진 찍기 · 고르기<input type="file" accept="image/*" id="wFile" hidden></label>
+    <div id="wPrev" class="empty" style="min-height:150px;background:var(--surface-2);border-radius:12px;flex:none"><span class="small">그림 전체가 잘 보이게, 밝은 곳에서 위에서 찍어요</span></div>
+    ${canT() ? `<label class="f">누구 그림인가요?<select id="wWho"><option value="">선생님</option>${roster().map(s => `<option value="${s.id}">${s.no}. ${esc(s.name)}</option>`).join('')}</select></label>` : ''}
+    <label class="f">제목 (없어도 돼요)<input type="text" id="wTitle" maxlength="30" placeholder="예: 우리 동네 가을 풍경"></label>
+    <p class="small muted" style="margin:0">🙅 그림·만들기 작품만 올려요 (친구 얼굴 사진은 안 돼요). 휴대폰 화면에 잘 보이는 크기로 줄여서 올라가요.</p></div>
+    <div class="mf"><button class="btn" data-a="closeModal">취소</button><button class="btn g" id="wGo" disabled>올리기</button></div>`);
+  m.querySelector('#wFile').onchange = async e => {
+    const f = e.target.files[0]; if (!f) return;
+    try { pic = await loadPic(f); const t = shrinkPic(pic, 360, .7); m.querySelector('#wPrev').innerHTML = `<img src="${t.url}" style="max-height:220px;max-width:100%;border-radius:8px">`; m.querySelector('#wGo').disabled = false; }
+    catch (err) { toast(err.message || '그림을 열 수 없어요'); }
+  };
+  m.querySelector('#wGo').onclick = async () => {
+    if (!pic) return; const b = m.querySelector('#wGo'); b.disabled = true; b.textContent = '올리는 중…';
+    try {
+      const full = shrinkPic(pic, WALL_FULL, .72, 380000), th = shrinkPic(pic, WALL_THUMB, .6, 40000), id = uid();
+      const by = canT() ? ($('#wWho').value || null) : U.me;
+      await DB.set('wallimg/' + id, { img: full.url }, false);
+      await DB.set('wall/' + id, { id, by, title: $('#wTitle').value.trim(), at: Date.now(), thumb: th.url, w: full.w, h: full.h, size: full.url.length + th.url.length, likes: {}, cm: {}, ai: { st: 'wait' } }, false);
+      wallImg.set(id, full.url); closeModal(); U.view = 'wall'; render(); toast('올렸어요! 선생님 감상을 기다려요 🎨');
+    } catch (err) { console.error(err); toast('올리지 못했어요: ' + (err.code || err.message)); b.disabled = false; b.textContent = '올리기'; }
+  };
+};
+/* 크게 보기 */
+A.wOpen = d => {
+  U.wallOpen = d.id; const w = S.wall.find(x => x.id === d.id); if (!w) return;
+  modal(`<div class="mh"><h3 id="wHead"></h3><button class="x" data-a="closeModal">✕</button></div><div class="mb"><div class="wview">
+    <div class="big"><img id="wBig" src="${esc(wallImg.get(w.id) || w.thumb)}" alt=""><span class="stamp" style="font-size:16px">${yymmdd(w.at)}</span></div>
+    <div class="side"><div id="wTcm"></div><div id="wSt"></div><b class="small">💬 친구들의 한마디</b><div class="cms" id="wCms"></div>
+      ${U.me || canT() ? `<div class="row" style="flex-wrap:nowrap"><input type="text" id="wCm" maxlength="80" placeholder="따뜻한 한마디를 남겨요"><button class="btn p" data-a="wCmAdd">남기기</button></div>` : '<span class="small muted">이름으로 들어오면 도장과 댓글을 남길 수 있어요</span>'}
+      <div class="row" id="wTools"></div></div></div></div>`, { wide: true, onClose: () => { U.wallOpen = null; } });
+  wallRefresh();
+  if (!wallImg.has(w.id)) DB.get('wallimg/' + w.id).then(r => { if (r?.img) { wallImg.set(w.id, r.img); const b = $('#wBig'); if (b && U.wallOpen === w.id) b.src = r.img; } }).catch(() => { });
+};
+function wallRefresh() {
+  const w = S.wall.find(x => x.id === U.wallOpen); if (!w || !$('#wTcm')) return;
+  const mine = U.me && w.by === U.me, ai = w.ai || {};
+  $('#wHead').innerHTML = `${esc(w.title || '제목 없는 작품')} <span class="small muted">· ${esc(wallBy(w))} · ${fmtT(w.at)}</span>`;
+  $('#wTcm').innerHTML = w.hidden && !canT() ? '<div class="tcm"><div class="who">🔒 선생님이 확인하고 있어요</div>그림 작품이 맞는지 선생님이 보고 나서 친구들에게 보여요.</div>'
+    : `<div class="tcm"><div class="who">🍎 선생님의 감상 ${ai.st === 'done' ? '<button class="btn sm ghost" data-a="wSay" style="min-height:26px">🔊 읽어 주기</button>' : ''}</div>${ai.st === 'done' ? esc(ai.t) : ai.st === 'err' && canT() ? `<span style="color:var(--bad)">자동 코멘트 실패: ${esc(ai.msg || '')}</span>` : '<span class="muted">선생님이 곧 감상을 써 줄 거예요 ✍️</span>'}</div>`;
+  $('#wSt').innerHTML = `<div class="stamps">${WSTAMP.map(([k, l]) => { const n = Object.values(w.likes || {}).filter(v => v === k).length; return `<button data-a="wStamp" data-k="${k}" class="${w.likes?.[U.me] === k ? 'on' : ''}">${l} ${n || ''}</button>`; }).join('')}</div>`;
+  const cms = Object.entries(w.cm || {}).sort((a, b) => a[1].at - b[1].at);
+  $('#wCms').innerHTML = cms.map(([id, c]) => `<div><b>${esc(c.by ? nm(c.by) : '선생님')}</b>${esc(c.t)}${canT() || (U.me && c.by === U.me) ? ` <button class="btn sm ghost" style="min-height:22px;padding:0 6px" data-a="wCmDel" data-id="${id}">✕</button>` : ''}</div>`).join('') || '<span class="small muted">첫 한마디를 남겨 볼까요?</span>';
+  $('#wTools').innerHTML = (canT() ? `${w.hidden ? '<button class="btn sm p" data-a="wHide" data-v="0">✅ 친구들에게 보이기</button>' : '<button class="btn sm" data-a="wHide" data-v="1">🔒 숨기기</button>'}<button class="btn sm" data-a="wAiEdit">✏️ 감상 고치기</button><button class="btn sm" data-a="wAiRe">🔄 감상 다시 쓰기</button>` : '') + (canT() || mine ? '<button class="btn sm ghost" data-a="wDel">🗑 지우기</button>' : '');
+}
+const wCur = () => S.wall.find(x => x.id === U.wallOpen);
+A.wStamp = async d => { if (!U.me) return toast('먼저 내 이름으로 들어와요'); const w = wCur(); await DB.update('wall/' + w.id, { ['likes.' + U.me]: w.likes?.[U.me] === d.k ? DEL : d.k }); };
+A.wCmAdd = async () => { const t = $('#wCm').value.trim(); if (!t) return; const w = wCur(); await DB.update('wall/' + w.id, { ['cm.' + uid()]: { by: canT() ? null : U.me, t, at: Date.now() } }); $('#wCm').value = ''; toast('한마디를 남겼어요 💬'); };
+A.wCmDel = d => { const id = U.wallOpen; confirmBox('이 댓글을 지울까요?', async () => { await DB.update('wall/' + id, { ['cm.' + d.id]: DEL }); A.wOpen({ id }); }); };
+A.wDel = () => { const id = U.wallOpen; confirmBox('이 그림을 지울까요? 되돌릴 수 없어요.', async () => { await DB.del('wallimg/' + id); await DB.del('wall/' + id); wallImg.delete(id); toast('지웠어요'); }, '지우기'); };
+A.wHide = async d => { await DB.update('wall/' + U.wallOpen, { hidden: d.v === '1' }); toast(d.v === '1' ? '숨겼어요' : '친구들에게 보여요'); };
+A.wAiRe = async () => { await DB.update('wall/' + U.wallOpen, { ai: { st: 'wait' } }); toast(aiCfg().key && !aiCfg().off ? '감상을 다시 쓰고 있어요' : '이 기기에 Gemini 키가 없어요 — ⚙ 선생님 > 그림·AI'); };
+A.wAiEdit = () => {
+  const id = U.wallOpen, w = wCur();
+  const m = modal(`${mHead('✏️ 선생님 감상 고치기')}<div class="mb"><textarea id="wAiT" rows="5" maxlength="300">${esc(w.ai?.t || '')}</textarea></div><div class="mf"><button class="btn" data-a="closeModal">취소</button><button class="btn p" id="wAiOk">저장</button></div>`);
+  m.querySelector('#wAiOk').onclick = async () => { await DB.update('wall/' + id, { ai: { st: 'done', t: $('#wAiT').value.trim(), at: Date.now(), by: 'teacher' } }); A.wOpen({ id }); toast('감상을 저장했어요'); };
+};
+A.wSay = () => {
+  const t = (wCur()?.ai?.t || '').replace(/\p{Extended_Pictographic}/gu, ''); if (!t || !('speechSynthesis' in window)) return toast('이 기기는 읽어 주기를 못 해요');
+  speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(t); u.lang = 'ko-KR'; u.rate = .95; const v = speechSynthesis.getVoices().find(v => /ko/i.test(v.lang)); if (v) u.voice = v; speechSynthesis.speak(u);
+};
+
+/* 선생님 자동 감상 (Google Gemini 무료 API)
+   키는 이 기기 브라우저에만 저장(공개 저장소·Firestore에 올리지 않음). 키가 있는 기기가 켜져 있으면
+   '감상 기다림' 그림을 하나씩 가져가서(busy 표시로 다른 기기와 겹치지 않게) 감상을 써 넣음 */
+const AI_KEY = 'fclounge.ai', DEV = uid();
+const aiCfg = () => { try { return JSON.parse(localStorage.getItem(AI_KEY) || '{}'); } catch (e) { return {}; } };
+let gemModels = null, aiBusy = false;
+async function gemDiscover(key) {
+  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(key)}`);
+  if (res.status === 400 || res.status === 401 || res.status === 403) throw new Error('키가 맞지 않아요 (' + res.status + ')');
+  if (!res.ok) return ['gemini-2.5-flash', 'gemini-2.0-flash'];
+  const data = await res.json(), sc = n => (parseFloat((n.match(/gemini-(\d+(?:\.\d+)?)/i) || [])[1]) || 0) + (/flash/i.test(n) ? 4 : 0) + (/-latest$/.test(n) ? 2 : 0) - (/lite/i.test(n) ? 1 : 0) - (/preview|exp/i.test(n) ? 3 : 0);
+  const ms = (data.models || []).filter(m => (m.supportedGenerationMethods || []).includes('generateContent')).map(m => m.name.replace(/^models\//, '')).filter(n => /gemini/i.test(n) && !/tts|embed|aqa|image|live|audio|thinking/i.test(n)).sort((a, b) => sc(b) - sc(a));
+  return ms.length ? ms : ['gemini-2.5-flash', 'gemini-2.0-flash'];
+}
+async function geminiPraise(key, b64, w) {
+  if (!gemModels) gemModels = await gemDiscover(key);
+  const full = w.by ? nm(w.by) : '', first = full.length >= 3 ? full.slice(1) : full; // 성은 빼고 이름만 보냄
+  const prompt = `너는 ${S.main?.cname || '초등학교'} 담임 선생님이야. ${first ? `학생 '${first}'` : '선생님'}이(가) 학급 그림 담벼락에 올린 작품${w.title ? ` (제목: "${w.title}")` : ''} 사진을 보고 감상 댓글을 써 줘.
+[지침]
+1. 그림에서 실제로 보이는 것(색깔, 그린 대상, 선과 모양, 구도, 재미있는 아이디어) 중 2가지 이상을 구체적으로 짚어서 칭찬해.
+2. 다정한 선생님 말투(예: "~했구나!", "~이 정말 멋지다")로, 초등학생이 읽고 뿌듯해지게 2~3문장, 150자 이내로 써. 이모지는 1개까지.
+3. 점수 매기기, 다른 친구와 비교, 고칠 점 지적은 하지 마.
+4. 사진이 그림·만들기 작품이 아니고 사람 얼굴, 교실 풍경, 글씨만 있는 화면 같은 것이면 art를 false로 하고 praise는 "그림이나 만들기 작품을 올려 주면 선생님이 감상을 써 줄게!"로 해.
+반드시 JSON으로만 답해: {"art": true, "praise": "감상"}`;
+  let last;
+  for (const m of gemModels.slice(0, 4)) {
+    try {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${encodeURIComponent(key)}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ role: 'user', parts: [{ inline_data: { mime_type: 'image/jpeg', data: b64 } }, { text: prompt }] }], generationConfig: { responseMimeType: 'application/json', temperature: .9 } }) });
+      if (res.status === 401 || res.status === 403) throw Object.assign(new Error('키가 맞지 않아요 (' + res.status + ')'), { fatal: 1 });
+      if (!res.ok) { last = new Error(`${m} 응답 ${res.status}${res.status === 429 ? ' (무료 사용량 초과 — 잠시 뒤 다시)' : ''}`); continue; }
+      const data = await res.json(), raw = (data.candidates?.[0]?.content?.parts || []).map(p => p.text || '').join('');
+      const j = JSON.parse(raw.replace(/```json|```/g, '').trim()), o = Array.isArray(j) ? j[0] : j;
+      if (o && (o.praise || o.art === false)) return { art: o.art !== false, praise: String(o.praise || '').trim().slice(0, 300) };
+      last = new Error('감상이 비어 있어요');
+    } catch (e) { last = e; if (e.fatal) break; }
+  }
+  throw last || new Error('응답 없음');
+}
+async function aiWork() {
+  const c = aiCfg(); if (!c.key || c.off || aiBusy || !DB) return;
+  const now = Date.now(), w = S.wall.slice().sort((a, b) => a.at - b.at).find(x => x.ai?.st === 'wait' || (x.ai?.st === 'busy' && now - (x.ai.at || 0) > 180000));
+  if (!w) return; aiBusy = true;
+  try {
+    await DB.update('wall/' + w.id, { ai: { st: 'busy', at: now, dev: DEV } });
+    const im = wallImg.get(w.id) ? { img: wallImg.get(w.id) } : await DB.get('wallimg/' + w.id); if (!im?.img) throw new Error('그림 파일이 없어요');
+    const r = await geminiPraise(c.key, im.img.split(',')[1], w);
+    await DB.update('wall/' + w.id, { ai: { st: 'done', t: r.praise, at: Date.now() }, ...(r.art ? {} : { hidden: true }) });
+  } catch (e) { console.warn('자동 감상 실패', e); await DB.update('wall/' + w.id, { ai: { st: 'err', msg: String(e.message || e).slice(0, 120), at: Date.now() } }).catch(() => { }); }
+  aiBusy = false; setTimeout(aiWork, 1500);
+}
+setInterval(aiWork, 60000);
+
+/* ---------------- PLAZA ---------------- */
+const REASONS = ['떠들어요', '돌아다녀요', '장난쳐요', '기타'];
+V.plaza = () => {
+  const subs = [['board', '📮 건의함'], ['poll', '🗳 투표'], ['relay', '🏃 칭찬 릴레이'], ['report', '🤫 태도 신고']];
+  const t = U.sub.plaza; let body = '';
+  if (t === 'board') body = boardView(); else if (t === 'poll') body = pollView(); else if (t === 'relay') body = relayView(); else body = canT() ? reportAdmin() : reportView();
+  return `<div class="vhead"><h1>💬 우리반 광장</h1><span class="sp"></span>${seg('plaza', subs)}</div>${body}`;
+};
+/* 건의함 */
+const BST = { new: ['접수', ''], talk: ['토의 예정', 'warn'], done: ['반영됨', 'ok'], no: ['어려워요', 'bad'] };
+function boardView() {
+  const list = S.board.slice().sort((a, b) => (b.pin ? 1 : 0) - (a.pin ? 1 : 0) || b.at - a.at);
+  return `<div class="body"><div class="col" style="width:340px"><div class="card"><h2>📮 불편한 점, 고칠 점을 적어요</h2>${U.me ? `<textarea id="bTx" rows="5" maxlength="300" placeholder="예: 아침 활동 시간에 조용히 하는 규칙을 새로 만들면 좋겠어요"></textarea><label class="row small" style="margin:6px 0"><input type="checkbox" id="bAnon" checked> 친구들에게는 이름 숨기기 (선생님은 봐요)</label><button class="btn p" data-a="bAdd" style="width:100%">넣기</button>` : needMe()}</div>
+    <div class="card small muted">💡 김준민 학생의 제안: 2주에 한 번 함께 읽고 토의해서 규칙을 정해요. 공감 ♥이 많은 건의부터!</div></div>
+    <div class="col fill scroll" style="flex:1">${list.map(p => `<div class="post"><div class="tx">${p.pin ? '📌 ' : ''}${esc(p.text)}</div><div class="meta"><span>${p.anon && !canT() ? '익명' : esc(nm(p.by))}${p.anon && canT() ? ' (익명)' : ''}</span><span>${fmtT(p.at)}</span><span class="pill ${BST[p.st || 'new'][1]}">${BST[p.st || 'new'][0]}</span><span style="flex:1"></span>
+      ${canT() ? `<select data-bst="${p.id}" style="width:auto;min-height:30px;padding:2px 6px">${Object.entries(BST).map(([k, v]) => `<option value="${k}" ${(p.st || 'new') === k ? 'selected' : ''}>${v[0]}</option>`).join('')}</select><button class="btn sm ghost" data-a="bPin" data-id="${p.id}">${p.pin ? '고정 해제' : '📌'}</button><button class="btn sm ghost" data-a="bDel" data-id="${p.id}">삭제</button>` : U.me && p.by === U.me ? `<button class="btn sm ghost" data-a="bDel" data-id="${p.id}">내 글 지우기</button>` : ''}
+      <button class="like ${p.likes?.[U.me] ? 'on' : ''}" data-a="bLike" data-id="${p.id}">♥ ${Object.keys(p.likes || {}).length}</button></div></div>`).join('') || '<div class="empty"><div class="big">📮</div>아직 건의가 없어요</div>'}</div></div>`;
+}
+AFTER.plaza = () => { $$('[data-bst]').forEach(s => s.onchange = () => DB.update('board/' + s.dataset.bst, { st: s.value })); };
+A.bAdd = async () => { const t = $('#bTx').value.trim(); if (!t) return; const id = uid(); await DB.set('board/' + id, { text: t, by: U.me, anon: $('#bAnon').checked, at: Date.now(), st: 'new', likes: {} }, false); $('#bTx').value = ''; toast('건의함에 넣었어요 📮'); };
+A.bLike = async d => { if (!U.me) return toast('먼저 내 이름으로 들어와요'); const p = S.board.find(x => x.id === d.id); await DB.update('board/' + d.id, { ['likes.' + U.me]: p.likes?.[U.me] ? DEL : true }); };
+A.bPin = async d => { const p = S.board.find(x => x.id === d.id); await DB.update('board/' + d.id, { pin: !p.pin }); };
+A.bDel = d => confirmBox('이 건의를 지울까요?', () => DB.del('board/' + d.id));
+/* 투표 */
+function pollView() {
+  const list = S.polls.slice().sort((a, b) => (b.open ? 1 : 0) - (a.open ? 1 : 0) || b.at - a.at);
+  return `<div class="row">${canT() ? '<button class="btn p" data-a="pNew">＋ 투표 만들기</button><button class="btn" data-a="pNew" data-preset="1">📅 1반의 날 행사 투표</button>' : ''}<span class="small muted">황다현 학생의 제안: 매달 1일은 '1반의 날'! 하고 싶은 행사를 다수결로 골라요.</span></div>
+  <div class="scroll fill" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:10px;align-content:start">${list.map(p => {
+    const votes = Object.values(p.votes || {}), tot = votes.length, my = p.votes?.[U.me];
+    return `<div class="card col" style="gap:6px"><h2>${esc(p.q)} ${p.open ? '<span class="pill ok">진행 중</span>' : '<span class="pill">마감</span>'}</h2>${p.opts.map((o, i) => { const n = votes.filter(v => v === i).length; return `<button class="opt ${my === i ? 'me' : ''}" data-a="pVote" data-id="${p.id}" data-i="${i}" ${p.open ? '' : 'disabled'}><i style="width:${tot ? n / tot * 100 : 0}%"></i><span>${my === i ? '✔ ' : ''}${esc(o)}</span><b>${n}</b></button>`; }).join('')}
+      <div class="row small muted">${tot}명 투표 ${!U.me && p.open ? '· 이름으로 들어와야 투표할 수 있어요' : ''}<span style="flex:1"></span>${canT() ? `<button class="btn sm" data-a="pTog" data-id="${p.id}">${p.open ? '마감' : '다시 열기'}</button><button class="btn sm ghost" data-a="pDel" data-id="${p.id}">삭제</button>` : ''}</div></div>`;
+  }).join('') || '<div class="empty"><div class="big">🗳</div>진행 중인 투표가 없어요</div>'}</div>`;
+}
+A.pNew = d => {
+  const pre = d.preset ? { q: `${new Date().getMonth() + 2}월 1일 '1반의 날'에 무엇을 할까요?`, o: '칭찬 릴레이\n가가볼\n보드게임\n퀴즈 대회\n운동회\n만들기 활동\n마피아 게임' } : { q: '', o: '' };
+  const m = modal(`${mHead('투표 만들기')}<div class="mb"><label class="f">질문<input type="text" id="pQ" value="${esc(pre.q)}"></label><label class="f">보기 (한 줄에 하나)<textarea id="pO" rows="7">${esc(pre.o)}</textarea></label></div><div class="mf"><button class="btn" data-a="closeModal">취소</button><button class="btn p" id="pOk">만들기</button></div>`);
+  m.querySelector('#pOk').onclick = async () => { const q = $('#pQ').value.trim(), opts = $('#pO').value.split('\n').map(s => s.trim()).filter(Boolean); if (!q || opts.length < 2) return toast('질문과 보기 2개 이상'); const id = uid(); await DB.set('polls/' + id, { q, opts, votes: {}, open: true, at: Date.now() }, false); closeModal(); };
+};
+A.pVote = async d => { if (!U.me) return toast('먼저 내 이름으로 들어와요'); await DB.update('polls/' + d.id, { ['votes.' + U.me]: +d.i }); toast('투표했어요 🗳'); };
+A.pTog = async d => { const p = S.polls.find(x => x.id === d.id); await DB.update('polls/' + d.id, { open: !p.open }); };
+A.pDel = d => confirmBox('이 투표를 지울까요?', () => DB.del('polls/' + d.id));
+/* 칭찬 릴레이 */
+function relayHolder() { const l = S.relay.slice().sort((a, b) => b.at - a.at)[0]; return l ? l.to : S.set?.baton || null; }
+function relayView() {
+  const list = S.relay.slice().sort((a, b) => b.at - a.at), h = relayHolder(), done = new Set(S.relay.map(r => r.to)), mine = U.me && U.me === h;
+  return `<div class="body"><div class="col" style="width:380px"><div class="baton"><span class="b">🏃</span><div><div class="small muted">지금 바통을 가진 친구</div><div style="font-family:var(--f-d);font-size:28px">${h ? esc(nm(h)) : '아직 없어요'}</div><div class="small muted">바통을 받은 친구가 다음 친구를 칭찬해요 · 지금까지 ${list.length}번</div></div></div>
+    ${mine ? `<div class="card col"><h2>💛 다음 친구를 칭찬해요</h2><select id="rTo"><option value="">누구를 칭찬할까요?</option>${others().map(s => `<option value="${s.id}">${done.has(s.id) ? '' : '✨ '}${esc(s.name)}</option>`).join('')}</select><textarea id="rTx" rows="3" maxlength="120" placeholder="예: 체육 시간에 넘어진 친구를 일으켜 줬어요"></textarea><button class="btn g" data-a="rAdd">바통 넘기기 🏃</button><span class="tiny muted">✨ = 아직 바통을 받지 않은 친구</span></div>` : `<div class="card small muted">${U.me ? '바통이 오면 여기에서 칭찬을 쓸 수 있어요.' : '이름으로 들어오면 바통을 받았는지 확인할 수 있어요.'}</div>`}
+    ${canT() ? `<div class="card"><h2>⚙ 바통 정하기</h2><div class="row"><select id="rSet" style="flex:1">${roster().map(s => `<option value="${s.id}" ${s.id === h ? 'selected' : ''}>${esc(s.name)}</option>`).join('')}</select><button class="btn sm p" data-a="rSet">이 친구에게</button><button class="btn sm ghost" data-a="rReset">릴레이 새로</button></div></div>` : ''}</div>
+    <div class="col scroll fill" style="flex:1">${list.map(r => `<div class="post"><div class="meta"><b style="color:var(--ink)">${esc(nm(r.from))}</b> → <b style="color:var(--ink)">${esc(nm(r.to))}</b><span>${fmtT(r.at)}</span>${canT() ? `<button class="btn sm ghost" data-a="rDel" data-id="${r.id}" style="margin-left:auto">삭제</button>` : ''}</div><div class="tx">💛 ${esc(r.text)}</div></div>`).join('') || '<div class="empty"><div class="big">🏃</div>선생님이 첫 바통을 정하면 시작돼요</div>'}</div></div>`;
+}
+A.rAdd = async () => { const to = $('#rTo').value, tx = $('#rTx').value.trim(); if (!to || !tx) return toast('친구와 칭찬을 모두 적어요'); if (relayHolder() !== U.me) return toast('바통이 다른 친구에게 갔어요'); const id = uid(); await DB.set('relay/' + id, { from: U.me, to, text: tx, at: Date.now() }, false); toast(`${nm(to)}에게 바통을 넘겼어요 🏃`); };
+A.rSet = async () => { const v = $('#rSet').value; await DB.set('app/settings', { baton: v }); if (S.relay.length) { const id = uid(); await DB.set('relay/' + id, { from: null, to: v, text: '(선생님이 바통을 넘겨줬어요)', at: Date.now() }, false); } toast('바통을 정했어요'); };
+A.rReset = () => confirmBox('칭찬 릴레이 기록을 모두 지울까요?', async () => { await Promise.all(S.relay.map(r => DB.del('relay/' + r.id))); });
+A.rDel = d => DB.del('relay/' + d.id);
+/* 태도 신고 (학생) */
+const REP_GAP = 30 * 60000;
+function reportView() {
+  if (!U.me) return needMe();
+  const open = attOpen(), mine = S.reports.filter(r => r.by === U.me).sort((a, b) => b.at - a.at);
+  const lastTo = id => mine.find(r => r.to === id)?.at || 0;
+  if (!open) return `<div class="empty"><div class="big">🤫</div><b>지금은 신고 시간이 아니에요</b><span>선생님이 자리를 비울 때 열려요.</span></div>`;
+  return `<div class="card small">🤫 <b>선생님이 안 계실 때 수업을 방해하는 친구</b>를 알려 주세요 (<b>${fmtT(S.set.attUntil).split(' ')[1]}까지</b>). 누가 신고했는지는 친구들에게 비밀이에요. 신고만으로 점수가 바뀌지 않고 <b>선생님이 보고 판단</b>해요. 같은 친구는 30분에 한 번만! 장난 신고는 선생님이 다 알아요.</div>
+  <div class="body"><div class="pgrid scroll" style="flex:1">${others().map(s => { const w = Date.now() - lastTo(s.id) < REP_GAP; return `<button data-a="repPick" data-id="${s.id}" ${w ? 'disabled' : ''}>${esc(s.name)}${w ? '<div class="tiny">✓ 신고함</div>' : ''}</button>`; }).join('')}</div>
+  <div class="card col" style="width:280px"><h2>📒 내가 한 신고 (오늘)</h2><div class="log scroll">${mine.filter(r => todayKey(r.at) === todayKey()).map(r => `<div><time>${fmtT(r.at)}</time>${esc(nm(r.to))} · ${esc(r.why)}</div>`).join('') || '<span class="muted">없어요</span>'}</div></div></div>`;
+}
+A.repPick = d => {
+  const m = modal(`${mHead('🤫 ' + esc(nm(d.id)) + ' 신고')}<div class="mb"><b>어떤 행동이었나요?</b><div class="pick">${REASONS.map(r => `<button data-r="${r}">${r}</button>`).join('')}</div></div>`);
+  m.querySelector('.pick').onclick = async e => { const b = e.target.closest('[data-r]'); if (!b) return; if (!attOpen()) { closeModal(); return toast('신고 시간이 끝났어요'); } const id = uid(); await DB.set('reports/' + id, { by: U.me, to: d.id, why: b.dataset.r, at: Date.now(), h: null }, false); closeModal(); toast('신고를 받았어요. 선생님이 확인할게요'); };
+};
+/* 태도 신고 (교사 통계) */
+function repStats() {
+  const start = U.repPeriod === 'today' ? new Date().setHours(0, 0, 0, 0) : U.repPeriod === 'week' ? Date.now() - 7 * DAY : 0;
+  const rs = S.reports.filter(r => !r.h && r.at >= start), ids = roster().map(s => s.id);
+  const rows = ids.map(id => { const mine = rs.filter(r => r.to === id), by = {}; mine.forEach(r => by[r.by] = (by[r.by] || 0) + 1); const top = Object.entries(by).sort((a, b) => b[1] - a[1])[0]; const why = {}; mine.forEach(r => why[r.why] = (why[r.why] || 0) + 1); return { id, n: mine.length, u: Object.keys(by).length, top, share: mine.length ? top[1] / mine.length : 0, why, list: mine }; });
+  const xs = rows.map(r => r.u), mu = xs.reduce((a, b) => a + b, 0) / Math.max(1, xs.length), sd = Math.sqrt(xs.reduce((a, b) => a + (b - mu) ** 2, 0) / Math.max(1, xs.length));
+  rows.forEach(r => { r.z = sd ? (r.u - mu) / sd : 0; r.flag = r.z >= 2 && r.u >= 3 ? 'high' : r.z >= 1.5 && r.u >= 2 ? 'warn' : ''; r.conc = r.n >= 3 && r.share >= .6; });
+  return { rows: rows.sort((a, b) => b.u - a.u || b.n - a.n), mu, sd, total: rs.length };
+}
+function reportAdmin() {
+  const open = attOpen(), st = repStats(), pens = Object.entries(S.att?.pen || {}).filter(e => e[1].kind !== 'ex').sort((a, b) => b[1].at - a[1].at);
+  for (const id of [...U.repSel]) if (!st.rows.find(r => r.id === id && r.n)) U.repSel.delete(id);
+  return `<div class="row">${attToggleHtml()}
+    <div class="seg">${[['today', '오늘'], ['week', '7일'], ['all', '전체']].map(([v, l]) => `<button data-a="repPer" data-v="${v}" aria-pressed="${U.repPeriod === v}">${l}</button>`).join('')}</div>
+    <span class="small muted">처리 안 된 신고 ${st.total}건 · 평균 신고한 친구 수 ${st.mu.toFixed(1)}명 (표준편차 ${st.sd.toFixed(1)})</span></div>
+  <div class="body"><div class="card col fill" style="flex:1.6"><div class="scroll fill"><table class="t"><tr><th></th><th>학생</th><th class="r">신고</th><th class="r">신고한 친구</th><th class="r">z</th><th>판단</th><th>이유</th></tr>
+    ${st.rows.filter(r => r.n).map(r => `<tr><td><input type="checkbox" data-rsel="${r.id}" ${U.repSel.has(r.id) ? 'checked' : ''}></td><td><b>${esc(nm(r.id))}</b></td><td class="r">${r.n}</td><td class="r">${r.u}명</td><td class="r">${r.z.toFixed(1)}</td>
+    <td>${r.flag === 'high' ? '<span class="pill bad flag">유의미하게 높음</span>' : r.flag === 'warn' ? '<span class="pill warn">주의</span>' : '<span class="muted small">보통</span>'}${r.conc ? `<div class="tiny" style="color:var(--warn)">⚠ ${esc(nm(r.top[0]))}의 신고가 ${Math.round(r.share * 100)}%</div>` : ''}</td>
+    <td class="small">${Object.entries(r.why).map(([k, v]) => `${k} ${v}`).join(' · ')} <button class="btn sm ghost" data-a="repDetail" data-id="${r.id}">기록</button></td></tr>`).join('') || '<tr><td colspan="7" class="muted">이 기간에 처리 안 된 신고가 없어요</td></tr>'}</table></div>
+    <div class="row"><b>${U.repSel.size}명 선택</b><span>칭찬 점수</span><input type="number" id="penPts" value="2" min="1" style="width:80px"><span>점 내리기</span><button class="btn red" data-a="penApply" ${U.repSel.size ? '' : 'disabled'}>⬇ 감점 적용 (주식에 반영)</button><button class="btn ghost" data-a="repClear" ${U.repSel.size ? '' : 'disabled'}>감점 없이 처리 완료</button></div>
+    <p class="tiny muted" style="margin:0">판단 기준: '신고한 친구 수'의 z점수 ≥ 2 이고 3명 이상 → 유의미하게 높음, z ≥ 1.5 → 주의. 한 친구의 신고가 60% 이상이면 ⚠ (보복·장난 신고 확인). 감점하면 그 학생의 신고는 '처리됨'이 돼요.</p></div>
+  <div class="card col fill" style="flex:1"><h2>⬇ 적용한 감점</h2><div class="scroll fill">${pens.map(([id, p]) => `<div class="row" style="padding:5px 0;border-bottom:1px solid var(--line)"><b>${esc(nm(p.sid))}</b> −${p.pts}점 <span class="tiny muted">${fmtT(p.at)} · ${esc(p.reason || '')}</span><span style="flex:1"></span>${p.applied ? '<span class="pill ok">퍼스트클래스 반영</span>' : `<span class="pill warn">반영 대기</span><button class="btn sm ghost" data-a="penUndo" data-id="${id}">취소</button>`}</div>`).join('') || '<p class="muted small">아직 없어요</p>'}</div>
+  <p class="tiny muted" style="margin:0">'반영 대기' 감점은 주식 점수에 바로 들어가요. 퍼스트클래스가 연동 중이면 자동으로 <b>머쓱 −</b>로 기록되고 '반영'으로 바뀌어요.</p></div></div>`;
+}
+document.addEventListener('change', e => { const c = e.target.closest('[data-rsel]'); if (c) { c.checked ? U.repSel.add(c.dataset.rsel) : U.repSel.delete(c.dataset.rsel); render(); } });
+/* 신고 받기: 켤 때 시간을 정하면 저절로 꺼짐 (끄는 걸 깜빡해도 안전) */
+function attToggleHtml() {
+  if (attOpen()) return `<button class="btn red" data-a="attSet" data-m="0">🔴 신고 받는 중 (${fmtT(S.set.attUntil).split(' ')[1]}까지) — 끄기</button>`;
+  return `<span class="small"><b>⚪ 신고 꺼짐</b> — 켜기:</span>${[[20, '20분'], [40, '40분 (한 교시)'], [120, '2시간']].map(([m, l]) => `<button class="btn sm" data-a="attSet" data-m="${m}">${l}</button>`).join('')}`;
+}
+A.attSet = async d => { const m = +d.m; await DB.set('app/settings', { attUntil: m ? Date.now() + m * 60000 : 0 }); toast(m ? `신고 받기를 켰어요 (${m}분 뒤 저절로 꺼져요)` : '신고 받기를 껐어요'); };
+A.repPer = d => { U.repPeriod = d.v; U.repSel.clear(); render(); };
+A.repDetail = d => { const r = repStats().rows.find(x => x.id === d.id); modal(`${mHead('🤫 ' + esc(nm(d.id)) + ' 신고 기록')}<div class="mb"><table class="t"><tr><th>시각</th><th>신고한 친구</th><th>이유</th></tr>${r.list.sort((a, b) => b.at - a.at).map(x => `<tr><td>${fmtT(x.at)}</td><td>${esc(nm(x.by))}</td><td>${esc(x.why)}</td></tr>`).join('')}</table></div>`); };
+A.penApply = () => {
+  const pts = Math.max(1, Math.floor(+$('#penPts').value || 1)), st = repStats(), sel = [...U.repSel];
+  confirmBox(`${sel.map(nm).join(', ')}\n칭찬 점수를 ${pts}점씩 내릴까요? 주식 성장률에 바로 반영돼요.`, async () => {
+    const jobs = [];
+    for (const sid of sel) {
+      const r = st.rows.find(x => x.id === sid), id = uid();
+      jobs.push(DB.update('app/attitude', { ['pen.' + id]: { sid, pts, at: Date.now(), applied: false, reason: `태도 신고 ${r?.n || 0}건(${r?.u || 0}명)` } }));
+      (r?.list || []).forEach(x => jobs.push(DB.update('reports/' + x.id, { h: id })));
+    }
+    await Promise.all(jobs); U.repSel.clear(); toast('감점을 적용했어요'); render();
+  }, '감점 적용');
+};
+A.repClear = () => { const st = repStats(); confirmBox('선택한 학생의 신고를 감점 없이 처리 완료할까요?', async () => { const jobs = []; for (const sid of U.repSel) (st.rows.find(x => x.id === sid)?.list || []).forEach(x => jobs.push(DB.update('reports/' + x.id, { h: 'skip' }))); await Promise.all(jobs); U.repSel.clear(); render(); }); };
+A.penUndo = d => confirmBox('이 감점을 취소할까요? (관련 신고는 다시 미처리로 돌아가요)', async () => { await DB.update('app/attitude', { ['pen.' + d.id]: DEL }); await Promise.all(S.reports.filter(r => r.h === d.id).map(r => DB.update('reports/' + r.id, { h: null }))); });
+
+/* ---------------- TEACHER ---------------- */
+V.teacher = () => {
+  const subs = [['todo', '✅ 오늘 할 일'], ['art', '🎨 그림·AI'], ['conn', '🔌 연결·배포'], ['pins', '🔐 비밀번호'], ['etc', '📢 공지']];
+  const t = U.sub.teacher; let body = '';
+  if (t === 'todo') body = todoView();
+  else if (t === 'art') body = artAdmin();
+  else if (t === 'conn') {
+    const link = appUrl(), qr = studentLink();
+    body = `<div class="body"><div class="card col" style="flex:1"><h2>🔌 연결 상태: ${DB.kind === 'cloud' ? '<span class="pill ok">Firestore 연결됨</span>' : '<span class="pill warn">체험 모드 (이 브라우저에만 저장)</span>'}</h2>
+      <label class="f">학급 코드 (퍼스트클래스와 같게)<input type="text" id="cfCode" value="${esc(CFG.code)}"></label>
+      <label class="f">Firebase 설정 (firebaseConfig를 통째로 붙여 넣기)<textarea id="cfFb" rows="7" placeholder="const firebaseConfig = { apiKey: ..., projectId: ... }">${CFG.fb ? esc(JSON.stringify(CFG.fb, null, 1)) : ''}</textarea></label>
+      <div class="row"><button class="btn p" data-a="cfSave">저장하고 다시 열기</button>${DB.kind === 'demo' ? '<button class="btn ghost" data-a="demoWipe">체험 데이터 지우기</button>' : ''}</div>
+      <p class="small muted" style="margin:0">명단·좌석·칭찬 점수는 퍼스트클래스 → 규칙·백업 → 학생 라운지 연동에서 보내요. 체험 모드에서는 같은 브라우저의 퍼스트클래스 데이터를 바로 읽어요.</p></div>
+      <div class="card col" style="flex:1"><h2>🌐 태블릿·폰에서 열기</h2>
+      <p class="small" style="margin:0">라운지는 <b>해시브라운 코딩기록소</b>(GitHub → Vercel)에 올라가 있어요.<br><a href="${HOSTED}" target="_blank" rel="noopener">${HOSTED.replace('https://', '')}</a></p>
+      ${DB.kind === 'cloud' ? '<p class="small" style="margin:0">아래 QR을 학생 폰이나 교실 태블릿으로 <b>한 번</b> 찍으면 우리 반 연결 설정까지 들어가요. (설정은 QR에만 있고 공개 저장소에는 올리지 않아요)</p>' : '<p class="small muted" style="margin:0">먼저 왼쪽에 Firebase 설정을 넣어 Firestore에 연결해야 다른 기기에서 같은 데이터를 써요.</p>'}
+      <label class="f">라운지 웹 주소 (보통 그대로 두면 돼요)<input type="url" id="cfUrl" value="${esc(S.set?.appUrl || '')}" placeholder="${HOSTED}"></label><button class="btn sm" data-a="cfUrlSave">주소 저장</button>
+      ${qr && DB.kind === 'cloud' ? `<div class="row" style="align-items:flex-start"><div data-qr="${esc(qr)}" data-s="210"></div><div class="small">폰 카메라로 찍으면 바로 들어와요.<br>폰은 15분 동안 로그인 유지.<br><button class="btn sm g" data-a="qrBig" style="margin-top:8px">크게 보기 (TV·인쇄)</button></div></div>` : ''}
+      ${DB.kind === 'cloud' ? `<details class="small"><summary>다른 사이트(Netlify 등)에 직접 올리고 싶을 때</summary><p style="margin:6px 0">연결 설정을 넣은 파일을 만들어요. <b>공개 저장소(GitHub)에는 올리지 마세요</b> — 설정이 다 보여요.</p><button class="btn sm" data-a="deploy">📦 설정 넣은 index.html 내려받기</button></details>` : ''}</div></div>`;
+  } else if (t === 'pins') {
+    const H = S.main?.pinH || {}, n = roster().filter(s => H[s.id]).length;
+    body = `<div class="card"><h2>🔐 학생 비밀번호 <span class="pill ${n === roster().length ? 'ok' : 'warn'}">${n} / ${roster().length}명 준비됨</span></h2>
+      <p class="small" style="margin:0">학생 비밀번호는 <b>퍼스트클래스 → 규칙·백업 → 🔐 학생 라운지 비밀번호</b>에서 만들고 라벨지로 인쇄해요.<br>규칙: 숫자 6자리 = 🎂 생일 4자리(월일) 앞이나 뒤에 <b>출석번호 2자리</b> 또는 <b>태어난 해 2자리</b>가 무작위로 붙어요. (예: 3월 12일생 7번 → 070312, 031207, 150312, 031215 중 하나)<br><span class="muted">생일과 실제 비밀번호는 선생님 PC에만 저장되고, 여기에는 알아볼 수 없게 바꾼 값(해시)만 올라와요.</span></p></div>
+    <div class="scroll fill" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;align-content:start">${roster().map(s => `<div class="card row" style="padding:8px 10px"><b style="flex:1">${s.no}. ${esc(s.name)}</b>${H[s.id] ? '<span class="pill ok">✓</span>' : '<span class="pill bad">없음</span>'}</div>`).join('')}</div>
+    <div class="row">교사 PIN (4자리) <input type="password" id="tpin" maxlength="4" inputmode="numeric" placeholder="새 4자리" style="width:120px"><button class="btn sm" data-a="tpinSave">바꾸기</button></div>`;
+  } else {
+    body = `<div class="body"><div class="card col" style="flex:1"><h2>📢 홈 공지</h2><textarea id="ntx" rows="3">${esc(S.set?.notice || '')}</textarea><button class="btn p" data-a="ntSave">저장</button></div></div>`;
+  }
+  return `<div class="vhead"><h1>⚙️ 선생님</h1><span class="sp"></span>${seg('teacher', subs)}</div>${body}`;
+};
+AFTER.teacher = () => drawQR($('#main'));
+const ago = t => { const m = Math.round((Date.now() - t) / 60000); return m < 1 ? '방금' : m < 60 ? m + '분 전' : m < 1440 ? Math.round(m / 60) + '시간 전' : Math.round(m / 1440) + '일 전'; };
+/** 흩어진 운영 기능을 한 화면에: 지금 처리할 것 + 바로 가기 */
+function todoView() {
+  const T = teacherTodo(), R = curRound(), M = S.mani || {}, ph = M.phase || 'off', ppl = roster(), N = ppl.length;
+  const H = S.main?.pinH || {}, pinN = ppl.filter(s => H[s.id]).length;
+  const invN = R ? Object.values(S.wallets).filter(w => Object.keys(w.inv?.[R.id] || {}).length).length : 0;
+  const wishN = ppl.filter(s => (S.manis[s.id]?.wish || []).length).length, guessN = ppl.filter(s => S.manis[s.id]?.guess).length;
+  const pendFC = Object.values(S.att?.pen || {}).filter(p => !p.applied).length;
+  const row = (ic, title, sub, btn, hot) => `<div class="todo ${hot ? 'hot' : ''}"><span class="ic">${ic}</span><div class="tx"><b>${title}</b><span class="small muted">${sub}</span></div>${btn || ''}</div>`;
+  const go = (v, sub, l, extra = '') => `<button class="btn sm ${extra}" data-a="go" data-v="${v}" ${sub ? `data-sub="${sub}"` : ''}>${l}</button>`;
+  const stockRow = !R || R.status === 'settled'
+    ? row('📈', R ? `주식: '${esc(R.title)}' 정산 끝` : '주식: 라운드 없음', '새 라운드를 열면 지금 점수가 시작 점수가 돼요', go('stock', 'admin', '새 라운드 열기 ▶', 'p'))
+    : R.status === 'open' ? row('📈', `주식: 투자 받는 중 — ${invN} / ${N}명 참여`, `마감 예정 ${esc(R.end || '-')} · 투자를 마감하고 며칠 뒤 정산해요`, go('stock', 'admin', '운영 ▶'))
+      : row('📈', '주식: 투자 마감 · 진행 중', `마감 예정 ${esc(R.end || '-')}이 되면 정산해요`, go('stock', 'admin', '정산하러 ▶', 'g'), R.end && R.end <= todayKey());
+  const maniNext = { off: ['아직 시작 전', '희망 조사 시작'], survey: [`희망 조사 중 — ${wishN} / ${N}명 응답`, '짝 맺기'], running: [`활동 중 — 예측 ${guessN}명`, '예측 마감'], closed: ['예측 마감 — 발표만 남았어요', '발표쇼'], done: ['발표 완료', '새 마니또'] }[ph];
+  const hot = T.ex || T.prop || T.rep || T.bnew;
+  return `<div class="body"><div class="card col fill" style="flex:1.3"><h2>✅ 지금 처리할 일 ${hot ? '' : '<span class="pill ok">모두 처리했어요</span>'}</h2><div class="scroll fill">
+    ${T.ex ? row('💱', `환전 신청 ${T.ex}건`, '승인하면 칭찬 점수가 퍼스트클래스에 자동으로 들어가요', go('stock', 'admin', '처리 ▶', 'p'), 1) : ''}
+    ${T.prop ? row('🏆', `대회 승인 대기 ${T.prop}건`, esc(S.contests.filter(c => c.st === 'proposed').map(c => c.title).join(', ')), `<button class="btn sm p" data-a="go" data-v="contest" data-sub="poster" data-cid="${S.contests.find(c => c.st === 'proposed')?.id}">보러 가기 ▶</button>`, 1) : ''}
+    ${T.rep ? row('🤫', `처리 안 된 태도 신고 ${T.rep}건`, '통계를 보고 감점하거나 처리 완료해요', go('plaza', 'report', '보러 가기 ▶', 'p'), 1) : ''}
+    ${T.bnew ? row('📮', `새 건의 ${T.bnew}건`, '읽고 상태(토의 예정·반영됨)를 바꿔 주세요', go('plaza', 'board', '보러 가기 ▶', 'p'), 1) : ''}
+    ${T.hid ? row('🔒', `그림 확인 필요 ${T.hid}건`, 'AI가 그림 작품이 아닌 사진으로 본 것이에요. 보고 보이기·지우기', go('wall', 'all', '보러 가기 ▶', 'p'), 1) : ''}
+    ${T.aiErr ? row('🍎', `그림 감상 실패 ${T.aiErr}건`, '키·무료 사용량을 확인하고 다시 시도해요', go('teacher', 'art', '확인 ▶', 'p'), 1) : ''}
+    ${stockRow}
+    ${row('🎁', '마니또: ' + maniNext[0], '단계마다 버튼 하나로 넘어가요', `<button class="btn sm" data-a="maniGo">${maniNext[1]} ▶</button>`)}
+    ${row('🤫', '태도 신고 받기', '자리를 비울 때 켜면 정한 시간 뒤 저절로 꺼져요', `<span class="row">${attToggleHtml()}</span>`)}
+  </div></div>
+  <div class="col" style="flex:1"><div class="card"><h2>🔌 연결 상태</h2>
+    <div class="todo">${DB.kind === 'cloud' ? '<span class="ic">🟢</span><div class="tx"><b>Firestore 연결됨</b>' : '<span class="ic">🟡</span><div class="tx"><b>체험 모드 (이 브라우저에만 저장)</b>'}<span class="small muted">학급 코드 ${esc(CFG.code)}</span></div></div>
+    <div class="todo"><span class="ic">🛫</span><div class="tx"><b>퍼스트클래스에서 받은 명단·점수: ${S.main?.at ? ago(S.main.at) : '없음'}</b><span class="small muted">칭찬 점수를 주면 1~2초 뒤 자동으로 와요${pendFC ? ` · 퍼스트클래스 반영 대기 ${pendFC}건 (퍼스트클래스를 켜면 반영)` : ''}</span></div></div>
+    <div class="todo"><span class="ic">🍎</span><div class="tx"><b>그림 자동 감상: ${aiCfg().key && !aiCfg().off ? '이 기기에서 켜짐' : '이 기기에는 꺼짐'}</b><span class="small muted">감상 기다리는 그림 ${T.aiWait}장${aiCfg().key ? '' : ' · ⚙ 그림·AI에서 Gemini 키를 넣은 기기가 켜져 있어야 써져요'}</span></div></div>
+    <div class="todo"><span class="ic">🔐</span><div class="tx"><b>학생 비밀번호 ${pinN} / ${N}명</b><span class="small muted">${pinN < N ? '퍼스트클래스 → 규칙·백업 → 학생 라운지 비밀번호에서 만들어요' : '모두 준비됐어요'}</span></div></div>
+  </div>
+  <div class="card small muted">💡 칭찬 점수는 늘 <b>퍼스트클래스</b>에서 줘요. 라운지는 점수를 읽기만 하고, 태도 감점·환전만 퍼스트클래스로 보내요.</div></div></div>`;
+}
+/* 그림 담벼락·자동 감상 설정 */
+function artAdmin() {
+  const c = aiCfg(), T = teacherTodo(), bytes = S.wall.reduce((a, w) => a + (+w.size || 0), 0) * .75, mb = bytes / 1048576;
+  return `<div class="body"><div class="card col" style="flex:1.2"><h2>🍎 선생님 자동 감상 (Google Gemini 무료)</h2>
+    <p class="small" style="margin:0">학생이 그림을 올리면 AI가 그림을 보고 <b>선생님 말투로 감상</b>을 써 줘요. 그림이 아닌 사진(얼굴 등)은 자동으로 숨기고 여기 '확인 필요'로 보내요.</p>
+    <ol class="small" style="margin:0;padding-left:18px;line-height:1.7"><li><a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>에서 구글 계정으로 <b>Create API key</b> (무료, 카드 등록 없음)</li><li>나온 키(AIza…)를 아래에 붙여 넣고 저장 → <b>시험</b></li><li>교실 태블릿에도 넣어 두면 선생님 PC가 꺼져 있어도 감상이 바로 써져요</li></ol>
+    <div class="row" style="flex-wrap:nowrap"><input type="password" id="aiKey" placeholder="${c.key ? '저장됨 (바꾸려면 새 키 입력)' : 'AIza로 시작하는 키'}" autocomplete="off"><button class="btn p" data-a="aiSave">저장</button><button class="btn" data-a="aiTest" ${c.key ? '' : 'disabled'}>시험</button></div>
+    <div class="row"><span class="pill ${c.key && !c.off ? 'ok' : 'warn'}">${c.key ? (c.off ? '이 기기: 키 있음 · 꺼짐' : '이 기기: 자동 감상 켜짐') : '이 기기: 키 없음'}</span>${c.key ? `<button class="btn sm" data-a="aiOnOff">${c.off ? '켜기' : '끄기'}</button><button class="btn sm ghost" data-a="aiForget">이 기기에서 키 지우기</button>` : ''}</div>
+    <p class="tiny muted" style="margin:0">🔒 키는 <b>이 기기 브라우저에만</b> 저장돼요 (해시브라운 저장소·Firestore·학생 기기에 올라가지 않음). 학생 이름은 성을 뺀 이름만 함께 보내요.</p>
+    <div class="row"><b>감상 기다림 ${T.aiWait}장 · 실패 ${T.aiErr}장</b>${T.aiErr ? '<button class="btn sm p" data-a="aiRetry">실패한 것 다시 시도</button>' : ''}</div>
+    ${S.wall.filter(w => w.ai?.st === 'err').slice(0, 3).map(w => `<div class="tiny" style="color:var(--bad)">· ${esc(w.title || wallBy(w))}: ${esc(w.ai.msg || '')}</div>`).join('')}</div>
+  <div class="col" style="flex:1"><div class="card"><h2>🎨 담벼락 설정</h2>
+    <div class="row"><label class="f">학생 1명이 하루에 올릴 수 있는 그림<input type="number" id="wDaily" min="1" max="20" value="${wallDaily()}" style="width:100px"></label><button class="btn sm p" data-a="wallSave">저장</button></div>
+    <p class="small" style="margin:8px 0 0">지금 <b>${S.wall.length}장</b> · 약 <b>${mb.toFixed(1)}MB</b> 사용 <span class="muted">(Firestore 무료 1,024MB — 그림 1장 약 0.1MB라 수천 장 가능)</span></p>
+    <p class="tiny muted" style="margin:4px 0 0">그림은 올릴 때 긴 변 ${WALL_FULL}px로 줄여서 저장하고, 목록에는 작은 썸네일만 내려받아요.</p></div>
+    <div class="card col"><h2>🔒 확인 필요 ${T.hid ? `<span class="pill warn">${T.hid}</span>` : ''}</h2>${S.wall.filter(w => w.hidden).map(w => `<div class="row"><img src="${esc(w.thumb)}" style="width:48px;height:48px;object-fit:cover;border-radius:6px"><span style="flex:1">${esc(wallBy(w))} · ${esc(w.title || '제목 없음')}</span><button class="btn sm" data-a="wOpen" data-id="${w.id}">보기</button></div>`).join('') || '<span class="small muted">없어요</span>'}</div></div></div>`;
+}
+A.aiSave = () => { const k = $('#aiKey').value.trim(); if (!k) return toast('키를 붙여 넣어 주세요'); localStorage.setItem(AI_KEY, JSON.stringify({ key: k, off: false })); gemModels = null; toast('이 기기에 키를 저장했어요'); render(); aiWork(); };
+A.aiTest = async () => { toast('확인하는 중…'); try { gemModels = await gemDiscover(aiCfg().key); toast(`✅ 키 확인 완료 · 사용할 모델: ${gemModels[0]}`); } catch (e) { toast('❌ ' + e.message); } };
+A.aiOnOff = () => { const c = aiCfg(); c.off = !c.off; localStorage.setItem(AI_KEY, JSON.stringify(c)); render(); aiWork(); };
+A.aiForget = () => confirmBox('이 기기에서 Gemini 키를 지울까요?', () => { localStorage.removeItem(AI_KEY); render(); });
+A.aiRetry = async () => { await Promise.all(S.wall.filter(w => w.ai?.st === 'err').map(w => DB.update('wall/' + w.id, { ai: { st: 'wait' } }))); toast('다시 시도해요'); };
+A.wallSave = async () => { await DB.set('app/settings', { wall: { daily: Math.max(1, Math.min(20, Math.floor(+$('#wDaily').value || 3))) } }); toast('저장했어요'); };
+/* 마니또 다음 단계 바로 가기 */
+A.maniGo = () => { U.view = 'mani'; render(); const ph = S.mani?.phase || 'off'; if (ph === 'closed') A.showStart(); else A.maniAdmin(); };
+A.cfSave = () => { const fb = parseFb($('#cfFb').value); if ($('#cfFb').value.trim() && !fb) return toast('Firebase 설정을 읽지 못했어요'); localStorage.setItem(CFG_KEY, JSON.stringify({ code: $('#cfCode').value.trim() || 'demo', fb })); location.reload(); };
+A.cfUrlSave = async () => { await DB.set('app/settings', { appUrl: $('#cfUrl').value.trim() }); toast('저장했어요'); };
+A.demoWipe = () => confirmBox('체험 모드에 저장된 라운지 데이터(주식·마니또·대회 등)를 모두 지울까요?', () => DB.wipe());
+/** 학생 폰용 주소. 배포용 파일(설정 내장)이면 짧은 주소, 아니면 설정을 #c=에 담음(QR이 촘촘해짐) */
+function studentLink() {
+  const link = appUrl(); if (!link) return '';
+  if (FILE_CONFIG.firebase) return link + (link.includes('?') ? '&' : '?') + 'phone';
+  // QR이 촘촘해지지 않게 Firestore에 꼭 필요한 값만 담음
+  const fb = CFG.fb ? Object.fromEntries(['apiKey', 'authDomain', 'projectId'].filter(k => CFG.fb[k]).map(k => [k, CFG.fb[k]])) : null;
+  return link + '#c=' + encodeURIComponent(b64e(JSON.stringify({ code: CFG.code, fb }))) + '&phone';
+}
+/** 지금 열린 라운지에 연결 설정(학급 코드·Firebase)을 넣은 index.html을 만들어 내려받기 → Netlify Drop에 올리면 끝 */
+A.deploy = () => {
+  if (!CFG.fb) return toast('Firestore 연결 후에 만들 수 있어요');
+  const root = document.documentElement.cloneNode(true);
+  root.querySelectorAll('#main,#dock,#meSlot,#modalRoot,#printArea').forEach(e => e.innerHTML = '');
+  root.querySelectorAll('body > :not(#app):not(#modalRoot):not(#printArea):not(script)').forEach(e => e.remove());
+  const cn = root.querySelector('#conn'); cn.className = 'conn'; cn.textContent = '연결 중…';
+  const tb = root.querySelector('#tBtn'); tb.className = 'tbtn'; tb.textContent = '🔑';
+  const sc = root.querySelector('script[type=module]');
+  const line = `const FILE_CONFIG = { code: ${JSON.stringify(CFG.code)}, firebase: ${JSON.stringify(CFG.fb)} };`;
+  if (!/const FILE_CONFIG = \{[^\n]*\};/.test(sc.textContent)) return toast('파일을 만들지 못했어요');
+  sc.textContent = sc.textContent.replace(/const FILE_CONFIG = \{[^\n]*\};/, () => line);
+  const blob = new Blob(['<!doctype html>' + root.outerHTML], { type: 'text/html' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'index.html'; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000); toast('index.html을 내려받았어요 → Netlify Drop에 끌어다 놓아요');
+};
+A.qrBig = () => { const link = studentLink(); const m = modal(`${mHead('📱 학생 라운지 접속')}<div class="mb" style="align-items:center"><div data-qr="${esc(link)}" data-s="380"></div><b>폰 카메라로 찍어요</b></div>`, { wide: true }); drawQR(m); };
+A.tpinSave = async () => { const v = $('#tpin').value.replace(/\D/g, ''); if (v.length !== 4) return toast('숫자 4자리'); await DB.set('app/secret', { tpin: v }); $('#tpin').value = ''; toast('교사 PIN을 바꿨어요'); };
+A.ntSave = async () => { await DB.set('app/settings', { notice: $('#ntx').value.trim() }); toast('공지를 저장했어요'); };
+
+/* ---------------- boot ---------------- */
+async function boot() {
+  try { DB = CFG.fb ? await makeCloud(CFG) : makeLocal(CFG.code); }
+  catch (e) { console.error(e); toast('Firestore 연결 실패 — 체험 모드로 열어요'); DB = makeLocal(CFG.code); }
+  setConn(DB.kind === 'cloud' ? 'cloud' : 'demo', DB.kind === 'cloud' ? `연결됨 · ${CFG.code}` : '체험 모드');
+  const docs = { main: 'app/main', secret: 'app/secret', set: 'app/settings', stock: 'app/stock', mani: 'app/manito', att: 'app/attitude' };
+  for (const [k, p] of Object.entries(docs)) DB.watchDoc(p, v => { S[k] = v; render(); });
+  DB.watchCol('wallets', l => { S.wallets = Object.fromEntries(l.map(d => [d.id, d])); render(); });
+  DB.watchCol('mani', l => { S.manis = Object.fromEntries(l.map(d => [d.id, d])); render(); });
+  for (const c of ['contests', 'board', 'polls', 'relay', 'reports']) DB.watchCol(c, l => { S[c] = l; render(); });
+  DB.watchCol('wall', l => { S.wall = l; render(); if (U.wallOpen) { if (S.wall.some(w => w.id === U.wallOpen)) wallRefresh(); else closeModal(); } aiWork(); });
+  render();
+}
+boot();
+</script>
+</body></html>

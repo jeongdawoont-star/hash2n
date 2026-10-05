@@ -1,8 +1,10 @@
-<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body><title>퍼스트클래스</title>
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>퍼스트클래스</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E✈️%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=Gaegu:wght@700&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head><body>
 <style>
 /* Layout: airline cabin. Navy cockpit (= board) up front, seat rows below, gold trim; scoreboard is the main screen. */
 :root{
@@ -289,6 +291,93 @@ legend{font-weight:600;margin-bottom:6px;font-size:13.5px;padding:0}
 .sb-bulk-bar .amt{display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:14px}
 .sb-bulk-bar input[type=number]{width:74px;height:38px;font-size:20px;font-weight:700;text-align:center;border-radius:8px}
 .sb-bulk-actions{display:flex;gap:8px;align-items:center;margin-left:auto}
+
+/* ==================== CLASS TOOLS (수업 도구 스타일) ==================== */
+.tools-dock{position:fixed;right:14px;top:50%;transform:translateY(-50%);z-index:75;display:flex;flex-direction:column;gap:8px;background:var(--surface);padding:8px 6px;border-radius:18px;border:1.5px solid var(--line);box-shadow:0 10px 28px -4px rgba(20,33,61,.22);transition:transform .25s cubic-bezier(.2,.8,.2,1),opacity .2s;user-select:none}
+.tools-dock.collapsed{transform:translateY(-50%) translateX(calc(100% - 12px));opacity:.65}
+.tools-dock.collapsed:hover{opacity:1}
+.tool-dock-btn{width:46px;height:46px;border-radius:12px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:19px;transition:all .16s ease;position:relative}
+.tool-dock-btn:hover{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);transform:scale(1.08)}
+.tool-dock-btn .dock-label{font-size:9.5px;font-weight:700;line-height:1}
+.dock-toggle{width:46px;height:22px;border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:11px;border-radius:6px;display:grid;place-items:center}
+.dock-toggle:hover{background:var(--surface-2);color:var(--ink)}
+
+/* 수업 도구 공통 모달 */
+.ct-modal{border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:20px;padding:24px;box-shadow:0 22px 64px rgba(12,19,32,.4);margin:auto;max-height:92vh;overflow-y:auto}
+.ct-modal::backdrop{background:rgba(12,19,32,.65);backdrop-filter:blur(4px)}
+.ct-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.ct-head h2{font-size:20px;font-family:var(--f-display);display:flex;align-items:center;gap:8px;margin:0}
+.ct-close{border:none;background:transparent;font-size:20px;color:var(--muted);cursor:pointer;width:34px;height:34px;border-radius:8px;display:grid;place-items:center}
+.ct-close:hover{background:var(--surface-2);color:var(--ink)}
+
+/* 1. 타이머 */
+.timer-wrap{display:flex;flex-direction:column;align-items:center;gap:16px;width:min(480px,100%)}
+.timer-ring-box{position:relative;width:230px;height:230px;display:grid;place-items:center}
+.timer-svg{transform:rotate(-90deg);width:230px;height:230px}
+.timer-bg-circle{stroke:var(--surface-2);stroke-width:12;fill:transparent}
+.timer-prog-circle{stroke:var(--accent);stroke-width:12;stroke-linecap:round;fill:transparent;transition:stroke-dashoffset .25s linear,stroke .3s}
+.timer-prog-circle.urgent{stroke:var(--bad)}
+.timer-digital{position:absolute;font-family:var(--f-display);font-size:56px;font-variant-numeric:tabular-nums;color:var(--ink);letter-spacing:.03em;user-select:none}
+.timer-quick-grid{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;max-width:440px}
+.timer-quick-btn{padding:6px 12px;border-radius:9px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);font-weight:700;font-size:13px;cursor:pointer;transition:all .15s}
+.timer-quick-btn:hover{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.timer-slider-row{display:flex;align-items:center;gap:12px;width:100%;max-width:420px;padding:0 8px;font-size:13px;font-weight:600}
+.timer-slider{flex:1;height:8px;accent-color:var(--accent);cursor:pointer}
+.timer-ctrls{display:flex;gap:10px;align-items:center}
+.timer-main-btn{height:46px;padding:0 26px;font-size:16px;font-weight:700;border-radius:12px;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+
+/* 2. 주사위 (3D Dice) */
+.dice-wrap{display:flex;flex-direction:column;align-items:center;gap:18px;width:min(540px,100%)}
+.dice-scene{display:flex;flex-wrap:wrap;justify-content:center;gap:26px;min-height:140px;perspective:900px;align-items:center;padding:20px 0}
+.dice-cube{position:relative;width:76px;height:76px;transform-style:preserve-3d;transition:transform 1.1s cubic-bezier(.2,.8,.25,1);cursor:pointer}
+.dice-cube.rolling{animation:diceRollAnim 1s ease-out}
+@keyframes diceRollAnim{
+  0%{transform:rotateX(0deg) rotateY(0deg) rotateZ(0deg) scale(.9)}
+  50%{transform:rotateX(720deg) rotateY(540deg) rotateZ(360deg) scale(1.15) translateY(-25px)}
+  100%{transform:rotateX(1440deg) rotateY(1080deg) rotateZ(720deg) scale(1)}
+}
+.dice-face{position:absolute;width:76px;height:76px;background:var(--surface);border:2px solid var(--desk-edge);border-radius:14px;display:grid;place-items:center;font-size:26px;font-weight:800;color:var(--accent);box-shadow:inset 0 0 10px rgba(0,0,0,.08);user-select:none}
+.dice-face.f-1{transform:translateZ(38px)}
+.dice-face.f-6{transform:rotateY(180deg) translateZ(38px)}
+.dice-face.f-2{transform:rotateY(-90deg) translateZ(38px)}
+.dice-face.f-5{transform:rotateY(90deg) translateZ(38px)}
+.dice-face.f-3{transform:rotateX(90deg) translateZ(38px)}
+.dice-face.f-4{transform:rotateX(-90deg) translateZ(38px)}
+.dot-grid{width:100%;height:100%;padding:8px;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr)}
+.dice-pip{width:12px;height:12px;background:var(--ink);border-radius:50%;margin:auto}
+.dice-pip.red{background:var(--bad)}
+.dice-result-banner{background:var(--surface-2);border:1.5px solid var(--line);border-radius:14px;padding:10px 18px;font-size:15px;font-weight:700;display:flex;align-items:center;gap:12px;text-align:center}
+.dice-result-banner b{font-size:26px;color:var(--accent);font-family:var(--f-display)}
+
+/* 3. 멀티 돌림판 */
+.wheel-wrap{display:flex;flex-direction:column;gap:16px;width:min(860px,94vw)}
+.wheel-bar-top{display:flex;flex-wrap:wrap;align-items:center;gap:10px;justify-content:space-between}
+.wheel-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:18px;align-items:start}
+.wheel-card{background:var(--surface-2);border:1px solid var(--line);border-radius:16px;padding:16px;display:flex;flex-direction:column;align-items:center;gap:12px;position:relative}
+.wheel-card-head{width:100%;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.wheel-card-head input{font-weight:700;font-size:14.5px;border:none;background:transparent;border-bottom:1.5px dashed var(--line);padding:2px 4px;width:100%}
+.wheel-canvas-box{position:relative;width:240px;height:240px}
+.wheel-canvas-box canvas{border-radius:50%;box-shadow:0 6px 20px rgba(0,0,0,.15);cursor:pointer}
+.wheel-pointer{position:absolute;right:-6px;top:50%;transform:translateY(-50%);width:0;height:0;border-top:13px solid transparent;border-bottom:13px solid transparent;border-right:22px solid var(--bad);filter:drop-shadow(-2px 0 2px rgba(0,0,0,.3));z-index:5}
+.wheel-inputs{width:100%;display:flex;flex-direction:column;gap:6px}
+
+/* 4. QR 코드 */
+.qr-wrap{display:flex;flex-direction:column;align-items:center;gap:16px;width:min(500px,100%)}
+.qr-canvas-box{background:#ffffff;padding:16px;border-radius:16px;border:2px solid var(--line);box-shadow:0 6px 20px rgba(0,0,0,.08);display:grid;place-items:center;min-width:220px;min-height:220px}
+.qr-fullscreen{position:fixed;inset:0;background:rgba(12,19,32,.94);backdrop-filter:blur(10px);z-index:110;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:24px}
+.qr-fullscreen .qr-canvas-box{padding:28px;background:#fff;border-radius:24px;box-shadow:0 24px 70px rgba(0,0,0,.6)}
+.qr-fullscreen .qr-fs-title{color:#fff;font-family:var(--f-display);font-size:38px;text-align:center;letter-spacing:.02em}
+.qr-fullscreen .qr-fs-url{color:var(--chalk);font-size:20px;font-weight:600;max-width:85%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qr-timer-badge{background:var(--board);color:var(--chalk);font-family:var(--f-display);font-size:32px;padding:6px 24px;border-radius:999px;border:2px solid var(--chalk);display:flex;align-items:center;gap:10px}
+.qr-floating{position:fixed;right:80px;bottom:24px;z-index:85;background:var(--surface);border:2px solid var(--accent);border-radius:16px;padding:12px;box-shadow:0 12px 36px rgba(0,0,0,.25);display:flex;flex-direction:column;align-items:center;gap:8px;cursor:grab;user-select:none}
+.qr-floating:active{cursor:grabbing}
+
+/* 화면 중앙 대형 종료/당첨 알림 팝업 */
+.center-popup{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%) scale(.85);opacity:0;pointer-events:none;background:var(--surface);color:var(--ink);border:3px solid var(--chalk);border-radius:24px;padding:32px 40px;box-shadow:0 24px 80px rgba(0,0,0,.45);z-index:125;display:flex;flex-direction:column;align-items:center;text-align:center;gap:16px;min-width:320px;transition:all .3s cubic-bezier(.18,.89,.32,1.28)}
+.center-popup.active{transform:translate(-50%,-50%) scale(1);opacity:1;pointer-events:auto}
+.popup-backdrop{position:fixed;inset:0;background:rgba(12,19,32,.6);backdrop-filter:blur(4px);z-index:124;opacity:0;pointer-events:none;transition:opacity .25s}
+.popup-backdrop.active{opacity:1;pointer-events:auto}
+@media print{.tools-dock,.ct-modal,.center-popup,.popup-backdrop,.qr-fullscreen,.qr-floating{display:none!important}}
 </style>
 <div class="app" id="app">
   <header class="top">
@@ -501,6 +590,22 @@ legend{font-weight:600;margin-bottom:6px;font-size:13.5px;padding:0}
             <p class="muted" data-i18n="backupDesc">명단과 기록은 지금 쓰는 브라우저에만 저장됩니다. 다른 컴퓨터에서 이어 쓰거나 새 학기 전에 보관하려면 백업 파일로 내보내세요.</p>
             <div class="row"><button id="bkExport" class="btn sm" data-i18n="bkExport">백업 파일 내보내기</button><label class="btn sm" for="bkFile"><span data-i18n="bkImport">백업 파일 불러오기</span></label><input type="file" id="bkFile" accept=".json,application/json" class="sr"></div>
           </div>
+          <div class="card" id="lpCard">
+            <h2>🔐 학생 라운지 비밀번호</h2>
+            <p class="muted">숫자 6자리 = 생일 4자리(월일) 앞이나 뒤에 <b>출석번호 2자리</b> 또는 <b>태어난 해 2자리</b>가 무작위로 붙습니다. 외우기 쉽고 친구가 짐작하기는 어렵게. 생일과 비밀번호는 이 컴퓨터에만 저장되고, 학생 라운지에는 알아볼 수 없게 바꾼 값(해시)만 보냅니다.</p>
+            <p id="lpSum" style="margin:0;font-weight:600"></p>
+            <div class="row"><button id="lpOpen" class="btn sm primary">생일 입력·비밀번호 만들기</button><button id="lpLabel" class="btn sm">🖨 라벨지 인쇄</button></div>
+          </div>
+          <div class="card" id="lgCard">
+            <h2>🛫 학생 라운지 연동</h2>
+            <p class="muted">명단(번호·이름·성별)·좌석·칭찬 점수를 Firestore로 보내 학생 라운지(주식·마니또·대회·광장)와 이어 줍니다. 라운지에서 선생님이 적용한 태도 감점은 <b>머쓱 −</b>로, 주식 환전 승인은 <b>칭찬 +</b>로 자동 기록합니다. 처음 한 번 여기에만 붙여 넣고 "학생 라운지 열기"를 누르면 라운지에도 설정이 들어갑니다.</p>
+            <label class="inl" style="flex-direction:column;align-items:stretch;gap:4px"><span>학급 코드</span><input type="text" id="lgCode" placeholder="예: kis5-1-2026"></label>
+            <label class="inl" style="flex-direction:column;align-items:stretch;gap:4px"><span>Firebase 설정 (firebaseConfig 통째로 붙여 넣기)</span><textarea id="lgFb" rows="4" style="font:12px monospace;border:1px solid var(--line);border-radius:8px;padding:8px"></textarea></label>
+            <label class="inl" style="flex-direction:column;align-items:stretch;gap:4px"><span>학생 라운지 주소 (비우면 같은 폴더의 파일)</span><input type="text" id="lgUrl" placeholder="1St클래스_학생라운지.html"></label>
+            <label class="check"><input type="checkbox" id="lgOn"> <span>점수가 바뀌면 자동으로 보내기</span></label>
+            <div class="row"><button id="lgSave" class="btn sm primary">저장</button><button id="lgPush" class="btn sm">지금 보내기</button><button id="lgOpen" class="btn sm ghost">학생 라운지 열기 ↗</button></div>
+            <p class="muted" id="lgStatus" style="margin:0"></p>
+          </div>
           <div class="card">
             <h2 data-i18n="scoreResetTitle">점수 초기화</h2>
             <p class="muted" data-i18n="scoreResetDesc">지금 학급의 칭찬·머쓱 점수를 모두 0으로 돌립니다. 명단과 자리는 그대로 남습니다.</p>
@@ -539,6 +644,197 @@ legend{font-weight:600;margin-bottom:6px;font-size:13.5px;padding:0}
       </div>
     </div>
   </dialog>
+
+  <!-- CLASS TOOLS SIDE DOCK -->
+  <aside class="tools-dock" id="toolsDock" aria-label="수업 도구 모음">
+    <button type="button" class="tool-dock-btn" id="dockBtnTimer" title="타이머">
+      <span aria-hidden="true">⏱️</span><span class="dock-label">타이머</span>
+    </button>
+    <button type="button" class="tool-dock-btn" id="dockBtnDice" title="3D 주사위">
+      <span aria-hidden="true">🎲</span><span class="dock-label">주사위</span>
+    </button>
+    <button type="button" class="tool-dock-btn" id="dockBtnWheel" title="멀티 돌림판">
+      <span aria-hidden="true">🎯</span><span class="dock-label">돌림판</span>
+    </button>
+    <button type="button" class="tool-dock-btn" id="dockBtnQr" title="QR 코드">
+      <span aria-hidden="true">📱</span><span class="dock-label">QR코드</span>
+    </button>
+    <button type="button" class="dock-toggle" id="dockToggle" title="접기/펼치기" aria-label="사이드바 접기">▶</button>
+  </aside>
+
+  <!-- 1. TIMER MODAL -->
+  <dialog id="toolTimerModal" class="ct-modal" aria-labelledby="timerTitle">
+    <div class="ct-head">
+      <h2 id="timerTitle">⏱️ 수업 집중 타이머</h2>
+      <button type="button" class="ct-close" data-close="toolTimerModal" aria-label="닫기">✕</button>
+    </div>
+    <div class="timer-wrap">
+      <div class="timer-ring-box">
+        <svg class="timer-svg" viewBox="0 0 240 240">
+          <circle class="timer-bg-circle" cx="120" cy="120" r="102" />
+          <circle class="timer-prog-circle" id="timerProgCircle" cx="120" cy="120" r="102" stroke-dasharray="640.88" stroke-dashoffset="0" />
+        </svg>
+        <div class="timer-digital" id="timerDigital">03:00</div>
+      </div>
+      <div class="timer-quick-grid">
+        <button type="button" class="timer-quick-btn" data-sec="30">30초</button>
+        <button type="button" class="timer-quick-btn" data-sec="60">1분</button>
+        <button type="button" class="timer-quick-btn" data-sec="120">2분</button>
+        <button type="button" class="timer-quick-btn" data-sec="180">3분</button>
+        <button type="button" class="timer-quick-btn" data-sec="300">5분</button>
+        <button type="button" class="timer-quick-btn" data-sec="600">10분</button>
+        <button type="button" class="timer-quick-btn" data-adj="10">+10초</button>
+        <button type="button" class="timer-quick-btn" data-adj="60">+1분</button>
+        <button type="button" class="timer-quick-btn" data-adj="-10">−10초</button>
+      </div>
+      <div class="timer-slider-row">
+        <span>10초</span>
+        <input type="range" class="timer-slider" id="timerSlider" min="10" max="3600" step="10" value="180">
+        <span id="timerSliderVal">03:00</span>
+      </div>
+      <div class="timer-ctrls">
+        <button type="button" class="timer-main-btn primary" id="timerStartBtn">▶ 시작</button>
+        <button type="button" class="timer-main-btn btn" id="timerResetBtn">↺ 초기화</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- 2. 3D DICE MODAL -->
+  <dialog id="toolDiceModal" class="ct-modal" aria-labelledby="diceTitle">
+    <div class="ct-head">
+      <h2 id="diceTitle">🎲 3D 입체 주사위 굴리기</h2>
+      <button type="button" class="ct-close" data-close="toolDiceModal" aria-label="닫기">✕</button>
+    </div>
+    <div class="dice-wrap">
+      <div class="row" style="justify-content:center;gap:14px;width:100%;">
+        <label class="inl"><b>주사위 개수</b>
+          <select id="diceCountSel" style="padding:4px 10px;font-weight:700;">
+            <option value="1">1개</option>
+            <option value="2" selected>2개</option>
+            <option value="3">3개</option>
+            <option value="4">4개</option>
+            <option value="5">5개</option>
+            <option value="6">6개</option>
+          </select>
+        </label>
+        <label class="inl"><b>주사위 종류</b>
+          <select id="diceTypeSel" style="padding:4px 10px;font-weight:700;">
+            <option value="6" selected>6면체 (점 도트/일반)</option>
+            <option value="4">4면체 (1~4)</option>
+            <option value="8">8면체 (1~8)</option>
+            <option value="10">10면체 (1~10)</option>
+            <option value="12">12면체 (1~12)</option>
+            <option value="20">20면체 (1~20)</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="dice-scene" id="diceScene"></div>
+
+      <div class="dice-result-banner" id="diceResultBanner">
+        <span>주사위 굴리기 준비 완료</span>
+      </div>
+
+      <div class="row" style="justify-content:center;gap:12px;">
+        <button type="button" class="give p" id="diceRollBtn" style="height:44px;padding:0 30px;font-size:16px;">🎲 주사위 던지기!</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- 3. MULTI WHEEL MODAL -->
+  <dialog id="toolWheelModal" class="ct-modal" aria-labelledby="wheelTitle">
+    <div class="ct-head">
+      <h2 id="wheelTitle">🎯 멀티 돌림판</h2>
+      <button type="button" class="ct-close" data-close="toolWheelModal" aria-label="닫기">✕</button>
+    </div>
+    <div class="wheel-wrap">
+      <div class="wheel-bar-top">
+        <div class="row" style="gap:8px;">
+          <button type="button" class="btn primary sm" id="wheelSpinAllBtn">🚀 전체 돌림판 한 번에 돌리기</button>
+          <button type="button" class="btn sm" id="wheelAddBtn">＋ 돌림판 추가</button>
+        </div>
+        <div class="row" style="gap:6px;">
+          <select id="wheelPresetSel" style="height:32px;font-size:13px;max-width:180px;">
+            <option value="">-- 프리셋 불러오기 --</option>
+            <option value="students">우리 반 학생 명단</option>
+            <option value="groups">모둠 순서 (1~6조)</option>
+            <option value="missions">즐거운 수업 미션</option>
+            <option value="activity">활동 형태 (개별/짝/모둠/전체)</option>
+          </select>
+          <button type="button" class="btn sm" id="wheelSavePresetBtn">현재 메뉴 저장</button>
+        </div>
+      </div>
+
+      <div class="wheel-grid" id="wheelGrid"></div>
+    </div>
+  </dialog>
+
+  <!-- 4. QR CODE MODAL -->
+  <dialog id="toolQrModal" class="ct-modal" aria-labelledby="qrTitle">
+    <div class="ct-head">
+      <h2 id="qrTitle">📱 수업용 QR코드 생성기</h2>
+      <button type="button" class="ct-close" data-close="toolQrModal" aria-label="닫기">✕</button>
+    </div>
+    <div class="qr-wrap">
+      <div class="stack" style="width:100%;gap:8px;">
+        <label style="font-weight:700;font-size:13.5px;">안내 제목 / 설명</label>
+        <input type="text" id="qrTitleInput" placeholder="예: 국어 3단원 패들렛 과제 제출" value="수업 활동 접속 링크">
+        <label style="font-weight:700;font-size:13.5px;margin-top:4px;">접속 URL 또는 텍스트 입력</label>
+        <div class="row" style="gap:6px;">
+          <input type="text" id="qrUrlInput" placeholder="https://..." style="flex:1;" value="https://padlet.com">
+          <button type="button" class="btn primary sm" id="qrGenBtn">QR 생성</button>
+        </div>
+      </div>
+
+      <div class="qr-canvas-box" id="qrCanvasBox"></div>
+
+      <div class="row" style="justify-content:center;gap:10px;width:100%;">
+        <button type="button" class="btn primary" id="qrFullscreenBtn" style="font-size:14.5px;">🖥️ 화면 전체 크게 보기</button>
+        <button type="button" class="btn" id="qrFloatBtn" style="font-size:14.5px;">📌 플로팅 미니창으로 띄우기</button>
+      </div>
+
+      <div class="row" style="justify-content:center;gap:8px;font-size:13px;color:var(--muted);">
+        <label class="check"><input type="checkbox" id="qrAttachTimerChk" checked> <span>⏱️ 타이머 시간과 함께 띄우기</span></label>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- QR FULLSCREEN OVERLAY -->
+  <div class="qr-fullscreen" id="qrFsOverlay" hidden>
+    <div style="position:absolute;top:20px;right:24px;display:flex;gap:12px;">
+      <button type="button" class="btn ghost" id="qrFsFloatBtn" style="color:#fff;border-color:rgba(255,255,255,.4);">📌 플로팅으로</button>
+      <button type="button" class="ct-close" id="qrFsCloseBtn" style="color:#fff;font-size:26px;" aria-label="닫기">✕</button>
+    </div>
+    <div class="qr-fs-title" id="qrFsTitle">수업 활동 접속 링크</div>
+    <div class="qr-canvas-box" id="qrFsCanvasBox"></div>
+    <div class="qr-fs-url" id="qrFsUrl">https://padlet.com</div>
+    <div class="qr-timer-badge" id="qrFsTimerBadge" hidden>
+      <span>⏱️ 남은 시간:</span> <b id="qrFsTimerTime">03:00</b>
+    </div>
+  </div>
+
+  <!-- QR FLOATING WIDGET -->
+  <div class="qr-floating" id="qrFloatWidget" hidden>
+    <div style="display:flex;justify-content:space-between;align-items:center;width:100%;gap:8px;">
+      <span style="font-size:11px;font-weight:700;color:var(--muted);white-space:nowrap;" id="qrFloatTitle">QR코드</span>
+      <button type="button" class="ct-close" id="qrFloatExpandBtn" style="width:20px;height:20px;font-size:12px;" title="크게 보기">⛶</button>
+      <button type="button" class="ct-close" id="qrFloatCloseBtn" style="width:20px;height:20px;font-size:14px;" title="닫기">✕</button>
+    </div>
+    <div id="qrFloatCanvasBox" style="background:#fff;padding:6px;border-radius:8px;"></div>
+    <div style="font-size:13px;font-weight:800;color:var(--accent);font-family:var(--f-display);" id="qrFloatTimer" hidden>⏱️ 03:00</div>
+  </div>
+
+  <!-- CENTER RESULT POPUP -->
+  <div class="popup-backdrop" id="popupBackdrop"></div>
+  <div class="center-popup" id="centerPopup" role="dialog" aria-modal="true">
+    <div style="font-size:52px;" id="popupIcon">⏰</div>
+    <h3 style="font-size:26px;font-family:var(--f-display);margin:0;" id="popupTitle">시간이 종료되었습니다!</h3>
+    <p style="font-size:16px;color:var(--muted);margin:0;" id="popupDesc">설정하신 수업 시간이 모두 지났습니다.</p>
+    <div class="row" style="gap:10px;margin-top:6px;" id="popupActions">
+      <button type="button" class="btn primary" id="popupConfirmBtn" style="padding:0 22px;height:42px;font-size:15px;">확인</button>
+    </div>
+  </div>
+
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </div>
 <script>
@@ -692,7 +988,7 @@ function load(){try{const s=localStorage.getItem(STORE_KEY);if(!s)return null;co
 function valid(d){return d&&Array.isArray(d.classes)&&d.classes.length&&d.classes.every(c=>c&&c.id&&Array.isArray(c.students)&&c.layout);}
 function migrate(d){d.classes.forEach(c=>{c.avoid=c.avoid||[];c.current=c.current||{};c.locks=c.locks||{};c.history=c.history||[];c.settings=Object.assign(defSettings(),c.settings||{});c.settings.m=Object.assign(defSettings().m,c.settings.m||{});c.scores=c.scores||{};for(const k in c.scores){const v=c.scores[k];if(v&&typeof v==='object')c.scores[k]=(+v.p||0)-(+v.m||0);}c.scoreLog=(c.scoreLog||[]).filter(u=>u&&u.sids&&typeof u.d==='number');});if(!d.classes.some(c=>c.id===d.activeId))d.activeId=d.classes[0].id;d.tab=d.tab||'score';d.sb=Object.assign({step:1,view:'seat'},d.sb||{});delete d.sb.kind;return d;}
 let pTimer;function persist(){clearTimeout(pTimer);pTimer=setTimeout(flushPersist,120);}
-function flushPersist(){clearTimeout(pTimer);pTimer=null;try{localStorage.setItem(STORE_KEY,JSON.stringify(DB));}catch(e){}}
+function flushPersist(){clearTimeout(pTimer);pTimer=null;try{localStorage.setItem(STORE_KEY,JSON.stringify(DB));}catch(e){}if(typeof lgSchedule==='function')lgSchedule();}
 addEventListener('pagehide',()=>{if(pTimer)flushPersist();});
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&pTimer)flushPersist();});
 
@@ -1614,9 +1910,846 @@ async function initCaps(){
   }
   capsReady=true;renderImgCard();
 }
+/* ==================== CLASS TOOLS SCRIPT (수업 도구 모음) ==================== */
+// 1. 공통 사운드 (Web Audio API)
+let audioCtx = null;
+function getAudioCtx() {
+  if (!audioCtx) {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (AudioContext) audioCtx = new AudioContext();
+  }
+  if (audioCtx && audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+  return audioCtx;
+}
+
+function playTone(freq, duration, type = 'sine', delay = 0) {
+  try {
+    const ctx = getAudioCtx();
+    if (!ctx) return;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const startTime = ctx.currentTime + delay;
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, startTime);
+    gain.gain.setValueAtTime(0.2, startTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(startTime);
+    osc.stop(startTime + duration);
+  } catch (e) {}
+}
+
+function playChimeSound() {
+  const notes = [523.25, 659.25, 783.99, 1046.50];
+  notes.forEach((freq, idx) => playTone(freq, 0.45, 'triangle', idx * 0.16));
+}
+
+function playDiceSound() {
+  for (let i = 0; i < 7; i++) {
+    playTone(180 + Math.random() * 260, 0.06, 'sawtooth', i * 0.05);
+  }
+}
+
+function playWinFanfare() {
+  [523.25, 659.25, 783.99, 1046.50, 1318.51].forEach((freq, idx) => {
+    playTone(freq, 0.35, 'triangle', idx * 0.1);
+  });
+}
+
+// 2. 화면 중앙 종료/당첨 알림 팝업
+const popupEl = $('#centerPopup');
+const backdropEl = $('#popupBackdrop');
+function showCenterPopup(icon, title, desc, buttons) {
+  $('#popupIcon').textContent = icon;
+  $('#popupTitle').textContent = title;
+  $('#popupDesc').innerHTML = desc;
+  const actionsEl = $('#popupActions');
+  actionsEl.innerHTML = '';
+  (buttons || [{ text: '확인', primary: true, onClick: hideCenterPopup }]).forEach(b => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = `btn ${b.primary ? 'primary' : 'ghost'}`;
+    btn.style.height = '42px';
+    btn.style.padding = '0 20px';
+    btn.style.fontSize = '15px';
+    btn.textContent = b.text;
+    btn.onclick = () => {
+      if (b.onClick) b.onClick();
+      hideCenterPopup();
+    };
+    actionsEl.appendChild(btn);
+  });
+  popupEl.classList.add('active');
+  backdropEl.classList.add('active');
+}
+function hideCenterPopup() {
+  popupEl.classList.remove('active');
+  backdropEl.classList.remove('active');
+}
+backdropEl.onclick = hideCenterPopup;
+
+// 3. 독(Dock) 버튼 및 모달 열기/닫기
+const dockEl = $('#toolsDock');
+$('#dockToggle').onclick = () => {
+  dockEl.classList.toggle('collapsed');
+  $('#dockToggle').textContent = dockEl.classList.contains('collapsed') ? '◀' : '▶';
+};
+
+$('#dockBtnTimer').onclick = () => $('#toolTimerModal').showModal();
+$('#dockBtnDice').onclick = () => {
+  $('#toolDiceModal').showModal();
+  renderDiceCubes();
+};
+$('#dockBtnWheel').onclick = () => {
+  $('#toolWheelModal').showModal();
+  renderAllWheels();
+};
+$('#dockBtnQr').onclick = () => {
+  $('#toolQrModal').showModal();
+  renderQrCode();
+};
+
+$$('.ct-close[data-close]').forEach(btn => {
+  btn.onclick = () => {
+    const dlg = $(`#${btn.dataset.close}`);
+    if (dlg) dlg.close();
+  };
+});
+
+$$('.ct-modal').forEach(dlg => {
+  dlg.addEventListener('click', e => {
+    if (e.target === dlg) dlg.close();
+  });
+});
+
+// ==================== [도구 1] 타이머 ====================
+let timerTotal = 180;
+let timerRemain = 180;
+let timerRunning = false;
+let timerTimer = null;
+const progCircle = $('#timerProgCircle');
+const digitalEl = $('#timerDigital');
+const sliderEl = $('#timerSlider');
+const sliderValEl = $('#timerSliderVal');
+const startBtn = $('#timerStartBtn');
+const CIRCLE_LEN = 640.88;
+
+function fmtTime(sec) {
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+}
+
+function updateTimerUI() {
+  digitalEl.textContent = fmtTime(timerRemain);
+  const ratio = timerTotal > 0 ? (timerRemain / timerTotal) : 0;
+  progCircle.style.strokeDashoffset = CIRCLE_LEN * (1 - ratio);
+  progCircle.classList.toggle('urgent', timerRemain <= 10 && timerRemain > 0);
+
+  $('#qrFsTimerTime').textContent = fmtTime(timerRemain);
+  $('#qrFloatTimer').textContent = `⏱️ ${fmtTime(timerRemain)}`;
+}
+
+function setTimerSeconds(sec, updateSlider = true) {
+  timerTotal = Math.max(10, Math.min(3600, sec));
+  timerRemain = timerTotal;
+  if (updateSlider) {
+    sliderEl.value = timerTotal;
+    sliderValEl.textContent = fmtTime(timerTotal);
+  }
+  updateTimerUI();
+}
+
+function startTimer() {
+  if (timerRunning) {
+    pauseTimer();
+    return;
+  }
+  if (timerRemain <= 0) timerRemain = timerTotal;
+  timerRunning = true;
+  startBtn.textContent = '⏸ 일시정지';
+  startBtn.className = 'timer-main-btn give m';
+  getAudioCtx();
+
+  clearInterval(timerTimer);
+  timerTimer = setInterval(() => {
+    timerRemain--;
+    updateTimerUI();
+    if (timerRemain <= 0) {
+      clearInterval(timerTimer);
+      timerRunning = false;
+      startBtn.textContent = '▶ 시작';
+      startBtn.className = 'timer-main-btn primary';
+      playChimeSound();
+      showCenterPopup('⏰', '수업 시간이 종료되었습니다!', `${fmtTime(timerTotal)} 타이머가 완료되었습니다. 수고하셨습니다!`, [
+        { text: '＋ 1분 연장', primary: true, onClick: () => { setTimerSeconds(60); startTimer(); } },
+        { text: '↺ 다시 시작', primary: false, onClick: () => { setTimerSeconds(timerTotal); startTimer(); } },
+        { text: '확인', primary: false, onClick: hideCenterPopup }
+      ]);
+    }
+  }, 1000);
+}
+
+function pauseTimer() {
+  clearInterval(timerTimer);
+  timerRunning = false;
+  startBtn.textContent = '▶ 계속';
+  startBtn.className = 'timer-main-btn primary';
+}
+
+function resetTimer() {
+  clearInterval(timerTimer);
+  timerRunning = false;
+  startBtn.textContent = '▶ 시작';
+  startBtn.className = 'timer-main-btn primary';
+  setTimerSeconds(timerTotal);
+}
+
+startBtn.onclick = startTimer;
+$('#timerResetBtn').onclick = resetTimer;
+
+$$('.timer-quick-btn').forEach(btn => {
+  btn.onclick = () => {
+    if (btn.dataset.sec) {
+      setTimerSeconds(+btn.dataset.sec);
+    } else if (btn.dataset.adj) {
+      setTimerSeconds(timerRemain + (+btn.dataset.adj));
+    }
+  };
+});
+
+sliderEl.addEventListener('input', e => {
+  const v = Math.round(+e.target.value / 10) * 10;
+  sliderValEl.textContent = fmtTime(v);
+  if (!timerRunning) setTimerSeconds(v, false);
+});
+
+// ==================== [도구 2] 3D 입체 주사위 ====================
+const rotations = {
+  1: { x: 0, y: 0 },
+  6: { x: 0, y: 180 },
+  2: { x: 0, y: 90 },
+  5: { x: 0, y: -90 },
+  3: { x: -90, y: 0 },
+  4: { x: 90, y: 0 }
+};
+
+function renderDiceCubes() {
+  const count = +$('#diceCountSel').value || 2;
+  const type = +$('#diceTypeSel').value || 6;
+  const scene = $('#diceScene');
+  scene.innerHTML = '';
+
+  for (let i = 0; i < count; i++) {
+    const cube = document.createElement('div');
+    cube.className = 'dice-cube';
+    cube.dataset.index = i;
+
+    if (type === 6) {
+      cube.innerHTML = `
+        <div class="dice-face f-1"><div class="dot-grid"><div class="dice-pip red" style="grid-area:2/2;"></div></div></div>
+        <div class="dice-face f-2"><div class="dot-grid"><div class="dice-pip" style="grid-area:1/1;"></div><div class="dice-pip" style="grid-area:3/3;"></div></div></div>
+        <div class="dice-face f-3"><div class="dot-grid"><div class="dice-pip" style="grid-area:1/1;"></div><div class="dice-pip" style="grid-area:2/2;"></div><div class="dice-pip" style="grid-area:3/3;"></div></div></div>
+        <div class="dice-face f-4"><div class="dot-grid"><div class="dice-pip red" style="grid-area:1/1;"></div><div class="dice-pip red" style="grid-area:1/3;"></div><div class="dice-pip red" style="grid-area:3/1;"></div><div class="dice-pip red" style="grid-area:3/3;"></div></div></div>
+        <div class="dice-face f-5"><div class="dot-grid"><div class="dice-pip" style="grid-area:1/1;"></div><div class="dice-pip" style="grid-area:1/3;"></div><div class="dice-pip" style="grid-area:2/2;"></div><div class="dice-pip" style="grid-area:3/1;"></div><div class="dice-pip" style="grid-area:3/3;"></div></div></div>
+        <div class="dice-face f-6"><div class="dot-grid"><div class="dice-pip" style="grid-area:1/1;"></div><div class="dice-pip" style="grid-area:2/1;"></div><div class="dice-pip" style="grid-area:3/1;"></div><div class="dice-pip" style="grid-area:1/3;"></div><div class="dice-pip" style="grid-area:2/3;"></div><div class="dice-pip" style="grid-area:3/3;"></div></div></div>
+      `;
+    } else {
+      const step = Math.floor(type / 6);
+      cube.innerHTML = [1, 2, 3, 4, 5, 6].map((faceNum, idx) => {
+        const val = Math.min(type, (idx * step) + 1);
+        return `<div class="dice-face f-${faceNum}">${val}</div>`;
+      }).join('');
+    }
+    cube.onclick = rollDice;
+    scene.appendChild(cube);
+  }
+}
+
+function rollDice() {
+  const cubes = $$('.dice-cube');
+  if (!cubes.length) return;
+  const count = +$('#diceCountSel').value || 2;
+  const type = +$('#diceTypeSel').value || 6;
+  playDiceSound();
+
+  const results = [];
+  cubes.forEach((cube) => {
+    cube.classList.remove('rolling');
+    void cube.offsetWidth;
+    cube.classList.add('rolling');
+
+    const rollVal = Math.floor(Math.random() * type) + 1;
+    results.push(rollVal);
+
+    const faceKey = (type === 6) ? rollVal : (((rollVal - 1) % 6) + 1);
+    const targetRot = rotations[faceKey] || { x: 0, y: 0 };
+    const extraX = (Math.floor(Math.random() * 3) + 3) * 360;
+    const extraY = (Math.floor(Math.random() * 3) + 3) * 360;
+
+    cube.style.transform = `rotateX(${extraX + targetRot.x}deg) rotateY(${extraY + targetRot.y}deg)`;
+  });
+
+  setTimeout(() => {
+    cubes.forEach(c => c.classList.remove('rolling'));
+    playWinFanfare();
+    const sum = results.reduce((a, b) => a + b, 0);
+    const banner = $('#diceResultBanner');
+    if (count === 1) {
+      banner.innerHTML = `주사위 눈: <b>${results[0]}</b>`;
+      showCenterPopup('🎲', `주사위 결과: ${results[0]}!`, `선택된 주사위 값: ${results[0]}`);
+    } else {
+      const formula = results.map(r => `[ ${r} ]`).join(' + ');
+      banner.innerHTML = `결과: ${formula} = 🎲 합계: <b>${sum}</b>`;
+      showCenterPopup('🎲', `주사위 합계: ${sum}!`, `개별 결과: ${formula} (총합: <b>${sum}</b>)`);
+    }
+  }, 1100);
+}
+
+$('#diceRollBtn').onclick = rollDice;
+$('#diceCountSel').onchange = renderDiceCubes;
+$('#diceTypeSel').onchange = renderDiceCubes;
+
+// ==================== [도구 3] 멀티 돌림판 ====================
+let wheelsData = [
+  { id: uid(), title: '1번 돌림판', items: '김하준, 이서윤, 박도윤, 최지우, 정시우, 강하은', rot: 0, isSpinning: false }
+];
+const WHEEL_COLORS = ['#FF6B6B', '#4ECDC4', '#FFE66D', '#1A535C', '#FF9F1C', '#2EC4B6', '#845EC2', '#D65DB1', '#FF9671', '#008F7A', '#C34A36', '#4B4453'];
+
+function drawSingleWheel(canvas, items, rot = 0) {
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const size = 240;
+  canvas.width = size * dpr;
+  canvas.height = size * dpr;
+  canvas.style.width = size + 'px';
+  canvas.style.height = size + 'px';
+  ctx.scale(dpr, dpr);
+
+  const L = items.length;
+  if (!L) return;
+  const arc = (Math.PI * 2) / L;
+  const cx = 120, cy = 120, r = 114;
+
+  ctx.clearRect(0, 0, size, size);
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(rot);
+
+  for (let i = 0; i < L; i++) {
+    const item = items[i];
+    ctx.beginPath();
+    ctx.fillStyle = WHEEL_COLORS[i % WHEEL_COLORS.length];
+    ctx.moveTo(0, 0);
+    ctx.arc(0, 0, r, i * arc, (i + 1) * arc);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    ctx.save();
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 12.5px "IBM Plex Sans KR", sans-serif';
+    ctx.shadowColor = 'rgba(0,0,0,0.5)';
+    ctx.shadowBlur = 3;
+    const textAngle = i * arc + arc / 2;
+    ctx.rotate(textAngle);
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(item.slice(0, 8), r - 12, 0);
+    ctx.restore();
+  }
+
+  ctx.beginPath();
+  ctx.arc(0, 0, 18, 0, Math.PI * 2);
+  ctx.fillStyle = '#ffffff';
+  ctx.fill();
+  ctx.strokeStyle = '#C9A227';
+  ctx.lineWidth = 3;
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+function renderAllWheels() {
+  const grid = $('#wheelGrid');
+  grid.innerHTML = '';
+  wheelsData.forEach((w, idx) => {
+    const card = document.createElement('div');
+    card.className = 'wheel-card';
+    card.dataset.id = w.id;
+    card.innerHTML = `
+      <div class="wheel-card-head">
+        <input type="text" class="wheel-title-input" value="${esc(w.title)}" placeholder="돌림판 이름">
+        ${wheelsData.length > 1 ? `<button type="button" class="btn sm ghost danger wheel-del-btn" style="padding:0 6px;">✕</button>` : ''}
+      </div>
+      <div class="wheel-canvas-box">
+        <canvas id="wheel-canvas-${w.id}"></canvas>
+        <div class="wheel-pointer"></div>
+      </div>
+      <div class="wheel-inputs">
+        <input type="text" class="wheel-items-input" value="${esc(w.items)}" placeholder="항목들을 쉼표(,)로 구분해 적으세요">
+        <div class="row" style="justify-content:center;gap:6px;margin-top:4px;">
+          <button type="button" class="btn primary sm wheel-spin-btn">🎯 돌리기</button>
+          <button type="button" class="btn ghost sm wheel-students-btn" title="우리 반 학생 명단 채우기">👥 우리반</button>
+        </div>
+      </div>
+    `;
+
+    const canvas = card.querySelector(`#wheel-canvas-${w.id}`);
+    const items = w.items.split(/[,;\n]+/).map(s => s.trim()).filter(Boolean);
+    drawSingleWheel(canvas, items, w.rot);
+
+    card.querySelector('.wheel-title-input').onchange = e => { w.title = e.target.value.trim() || `돌림판 ${idx + 1}`; };
+    const itemsInput = card.querySelector('.wheel-items-input');
+    itemsInput.oninput = e => {
+      w.items = e.target.value;
+      const curItems = w.items.split(/[,;\n]+/).map(s => s.trim()).filter(Boolean);
+      drawSingleWheel(canvas, curItems, w.rot);
+    };
+
+    card.querySelector('.wheel-students-btn').onclick = () => {
+      const names = cls().students.map(s => s.name).join(', ');
+      if (names) {
+        itemsInput.value = names;
+        w.items = names;
+        drawSingleWheel(canvas, names.split(', '), w.rot);
+        toast('우리 반 학생 명단을 돌림판에 반영했습니다.');
+      } else {
+        toast('현재 학급에 등록된 학생이 없습니다.');
+      }
+    };
+
+    const spinBtn = card.querySelector('.wheel-spin-btn');
+    spinBtn.onclick = () => spinSingleWheel(w, canvas);
+    canvas.onclick = () => spinSingleWheel(w, canvas);
+
+    const delBtn = card.querySelector('.wheel-del-btn');
+    if (delBtn) {
+      delBtn.onclick = () => {
+        wheelsData = wheelsData.filter(x => x.id !== w.id);
+        renderAllWheels();
+      };
+    }
+
+    grid.appendChild(card);
+  });
+}
+
+function spinSingleWheel(w, canvas, onDone) {
+  if (w.isSpinning) return;
+  const items = w.items.split(/[,;\n]+/).map(s => s.trim()).filter(Boolean);
+  if (items.length < 2) {
+    toast('돌림판 항목을 2개 이상 입력하세요.');
+    return;
+  }
+  w.isSpinning = true;
+  playDiceSound();
+
+  const extraRot = (Math.PI * 2 * (Math.floor(Math.random() * 4) + 6)) + (Math.random() * Math.PI * 2);
+  const startRot = w.rot;
+  const duration = 3200;
+  const startTime = performance.now();
+
+  function animate(now) {
+    const elapsed = now - startTime;
+    const progress = Math.min(1, elapsed / duration);
+    const ease = 1 - Math.pow(1 - progress, 3);
+    w.rot = startRot + extraRot * ease;
+    drawSingleWheel(canvas, items, w.rot);
+
+    if (progress < 1) {
+      requestAnimationFrame(animate);
+    } else {
+      w.isSpinning = false;
+      playWinFanfare();
+      const arc = (Math.PI * 2) / items.length;
+      const normalizedRot = (w.rot % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
+      const winningIdx = Math.floor(((Math.PI * 2) - normalizedRot) / arc) % items.length;
+      const winner = items[winningIdx];
+      if (onDone) onDone(winner);
+      else {
+        showCenterPopup('🎉', `당첨: ${winner}!`, `${w.title} 당첨 결과는 [<b>${winner}</b>] 입니다!`);
+      }
+    }
+  }
+  requestAnimationFrame(animate);
+}
+
+$('#wheelAddBtn').onclick = () => {
+  if (wheelsData.length >= 4) {
+    toast('돌림판은 최대 4개까지 추가할 수 있습니다.');
+    return;
+  }
+  wheelsData.push({
+    id: uid(),
+    title: `${wheelsData.length + 1}번 돌림판`,
+    items: '1조, 2조, 3조, 4조, 5조, 6조',
+    rot: 0,
+    isSpinning: false
+  });
+  renderAllWheels();
+};
+
+$('#wheelSpinAllBtn').onclick = () => {
+  if (wheelsData.some(w => w.isSpinning)) return;
+  const results = [];
+  let doneCount = 0;
+  wheelsData.forEach((w, idx) => {
+    const canvas = $(`#wheel-canvas-${w.id}`);
+    setTimeout(() => {
+      spinSingleWheel(w, canvas, winner => {
+        results.push(`<b>${w.title}</b>: [${winner}]`);
+        doneCount++;
+        if (doneCount === wheelsData.length) {
+          playWinFanfare();
+          showCenterPopup('🎯', '전체 돌림판 당첨 결과!', results.join('<br>'));
+        }
+      });
+    }, idx * 180);
+  });
+};
+
+$('#wheelPresetSel').onchange = e => {
+  const val = e.target.value;
+  if (!val) return;
+  if (val === 'students') {
+    const list = cls().students.map(s => s.name);
+    wheelsData = [{ id: uid(), title: '우리 반 학생 명단', items: list.join(', ') || '김하준, 이서윤, 박도윤', rot: 0, isSpinning: false }];
+  } else if (val === 'groups') {
+    wheelsData = [{ id: uid(), title: '모둠 발표 순서', items: '1조, 2조, 3조, 4조, 5조, 6조', rot: 0, isSpinning: false }];
+  } else if (val === 'missions') {
+    wheelsData = [
+      { id: uid(), title: '발표자 뽑기', items: cls().students.slice(0, 8).map(s => s.name).join(', ') || '1조, 2조, 3조', rot: 0, isSpinning: false },
+      { id: uid(), title: '수업 미션', items: '문제 풀기, 노래 한 소절, 자리 정하기, 간식 획득, 친구 칭찬하기', rot: 0, isSpinning: false }
+    ];
+  } else if (val === 'activity') {
+    wheelsData = [{ id: uid(), title: '활동 형태', items: '개별 활동, 짝 토론, 모둠 협동, 전체 발표', rot: 0, isSpinning: false }];
+  } else {
+    try {
+      const presets = JSON.parse(localStorage.getItem('classWheelPresets') || '{}');
+      if (presets[val]) wheelsData = presets[val];
+    } catch (err) {}
+  }
+  renderAllWheels();
+  e.target.value = '';
+};
+
+$('#wheelSavePresetBtn').onclick = () => {
+  const name = prompt('현재 돌림판 구성을 저장할 이름을 입력하세요:', '수업 돌림판 세트');
+  if (!name || !name.trim()) return;
+  try {
+    const presets = JSON.parse(localStorage.getItem('classWheelPresets') || '{}');
+    presets[name.trim()] = wheelsData.map(w => ({ id: uid(), title: w.title, items: w.items, rot: 0, isSpinning: false }));
+    localStorage.setItem('classWheelPresets', JSON.stringify(presets));
+    toast(`'${name}' 프리셋으로 저장했습니다.`);
+  } catch (err) {
+    toast('저장하지 못했습니다.');
+  }
+};
+
+// ==================== [도구 4] QR 코드 ====================
+function renderQrCode() {
+  const url = $('#qrUrlInput').value.trim() || 'https://padlet.com';
+  const title = $('#qrTitleInput').value.trim() || '수업 활동 접속 링크';
+
+  const box = $('#qrCanvasBox');
+  box.innerHTML = '';
+  if (window.QRCode) {
+    new QRCode(box, { text: url, width: 200, height: 200, correctLevel: QRCode.CorrectLevel.M });
+  } else {
+    box.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}" alt="QR" width="200" height="200">`;
+  }
+
+  $('#qrFsTitle').textContent = title;
+  $('#qrFsUrl').textContent = url;
+  const fsBox = $('#qrFsCanvasBox');
+  fsBox.innerHTML = '';
+  if (window.QRCode) {
+    new QRCode(fsBox, { text: url, width: 360, height: 360, correctLevel: QRCode.CorrectLevel.M });
+  } else {
+    fsBox.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=360x360&data=${encodeURIComponent(url)}" alt="QR" width="360" height="360">`;
+  }
+
+  $('#qrFloatTitle').textContent = title.slice(0, 10);
+  const floatBox = $('#qrFloatCanvasBox');
+  floatBox.innerHTML = '';
+  if (window.QRCode) {
+    new QRCode(floatBox, { text: url, width: 120, height: 120, correctLevel: QRCode.CorrectLevel.M });
+  } else {
+    floatBox.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(url)}" alt="QR" width="120" height="120">`;
+  }
+
+  const showTimer = $('#qrAttachTimerChk').checked;
+  $('#qrFsTimerBadge').hidden = !showTimer;
+  $('#qrFloatTimer').hidden = !showTimer;
+}
+
+$('#qrGenBtn').onclick = renderQrCode;
+$('#qrUrlInput').addEventListener('keydown', e => { if (e.key === 'Enter') renderQrCode(); });
+
+$('#qrFullscreenBtn').onclick = () => {
+  renderQrCode();
+  $('#toolQrModal').close();
+  $('#qrFsOverlay').hidden = false;
+  $('#qrFloatWidget').hidden = true;
+};
+$('#qrFsCloseBtn').onclick = () => { $('#qrFsOverlay').hidden = true; };
+$('#qrFsFloatBtn').onclick = () => {
+  $('#qrFsOverlay').hidden = true;
+  $('#qrFloatWidget').hidden = false;
+};
+
+$('#qrFloatBtn').onclick = () => {
+  renderQrCode();
+  $('#toolQrModal').close();
+  $('#qrFloatWidget').hidden = false;
+  $('#qrFsOverlay').hidden = true;
+};
+$('#qrFloatCloseBtn').onclick = () => { $('#qrFloatWidget').hidden = true; };
+$('#qrFloatExpandBtn').onclick = () => {
+  $('#qrFloatWidget').hidden = true;
+  $('#qrFsOverlay').hidden = false;
+};
+
+(function makeDraggable(el) {
+  let ox = 0, oy = 0, startX = 0, startY = 0;
+  el.addEventListener('pointerdown', e => {
+    if (e.target.closest('button')) return;
+    startX = e.clientX;
+    startY = e.clientY;
+    const r = el.getBoundingClientRect();
+    ox = startX - r.left;
+    oy = startY - r.top;
+    function onMove(ev) {
+      el.style.left = (ev.clientX - ox) + 'px';
+      el.style.top = (ev.clientY - oy) + 'px';
+      el.style.right = 'auto';
+      el.style.bottom = 'auto';
+    }
+    function onUp() {
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup', onUp);
+    }
+    document.addEventListener('pointermove', onMove);
+    document.addEventListener('pointerup', onUp);
+  });
+})($('#qrFloatWidget'));
+
+setTimerSeconds(180);
+
+/* ---------------- 학생 라운지 연동 (Firestore) ---------------- */
+const LG_KEY='firstclass.lounge',LG_FB='10.12.2';
+const lg={cfg:{},F:null,db:null,unsub:null,timer:null,pen:{}};
+try{lg.cfg=JSON.parse(localStorage.getItem(LG_KEY)||'{}');}catch(e){lg.cfg={};}
+const lgOnOf=c=>c.on!==false; // 자동 보내기는 기본 켜짐 (체크를 깜빡해서 점수가 안 가는 일 방지)
+/* 연동은 저장할 때 고른 학급으로 고정 (다른 학급을 보고 있어도 엉뚱한 명단이 가지 않게) */
+const lgCls=()=>DB?(DB.classes.find(c=>c.id===lg.cfg.cid)||cls()):null;
+function lgParse(txt){if(!txt)return null;const m=String(txt).match(/\{[\s\S]*\}/);if(!m)return null;try{return JSON.parse(m[0]);}catch(e){}try{return JSON.parse(m[0].replace(/\/\/.*$/gm,'').replace(/([{,]\s*)([A-Za-z_]\w*)\s*:/g,'$1"$2":').replace(/'/g,'"').replace(/,\s*}/g,'}'));}catch(e){return null;}}
+function lgStatus(m){const el=$('#lgStatus');if(el)el.textContent=m;}
+function lgFill(){const c=lg.cfg;$('#lgCode').value=c.code||'';$('#lgFb').value=c.fb?JSON.stringify(c.fb,null,1):'';$('#lgUrl').value=c.url||'';$('#lgOn').checked=lgOnOf(c);lgStatus(c.fb&&c.code?(lgOnOf(c)?`자동 보내기 켜짐${lgCls()?` (${lgCls().name})`:''} —점수가 바뀌면 1~2초 뒤 라운지로 갑니다`:'연결 정보 저장됨 (자동 보내기 꺼짐 — "지금 보내기"를 눌러야 갑니다)'):'Firebase 설정이 없으면 학생 라운지는 "체험 모드"로 이 브라우저 데이터만 씁니다.');}
+async function lgConnect(){
+  const c=lg.cfg;if(!c.fb||!c.code)return false;if(lg.db)return true;
+  const {initializeApp}=await import(`https://www.gstatic.com/firebasejs/${LG_FB}/firebase-app.js`);
+  lg.F=await import(`https://www.gstatic.com/firebasejs/${LG_FB}/firebase-firestore.js`);
+  lg.db=lg.F.getFirestore(initializeApp(c.fb,'fc-lounge'));
+  lgWatch();return true;
+}
+const lgRef=p=>lg.F.doc(lg.db,'fc',lg.cfg.code,...p.split('/'));
+function lgPayload(){const c=lgCls(),ptOf=sid=>+c.scores[sid]||0,stuById=id=>c.students.find(s=>s.id===id);return{cname:c.name,at:Date.now(),roster:c.students.map(s=>({id:s.id,no:s.no,name:s.name,g:s.gender||''})),layout:{rows:c.layout.rows,cols:c.layout.cols,seats:c.layout.seats||[]},current:Object.fromEntries(Object.entries(c.current||{}).filter(e=>e[1])),boardTop:c.settings.boardTop!==false,scores:Object.fromEntries(c.students.map(s=>[s.id,ptOf(s.id)])),pinH:Object.fromEntries(Object.entries(c.lpins||{}).filter(e=>e[1]&&e[1].pin&&stuById(e[0])).map(([id,v])=>[id,pinHash(id,v.pin)]))};}
+async function lgPush(manual){
+  try{if(!(await lgConnect())){if(manual)toast('학급 코드와 Firebase 설정을 먼저 저장하세요');return;}
+    /* 점수와 '반영 완료' 표시를 한 번에(batch) 보냄 → 라운지에서 잠깐이라도 두 번 빠져 보이지 않게 */
+    const done=lgCls().lgDone||{},ids=Object.keys(lg.pen).filter(id=>done[id]&&!lg.pen[id].applied);
+    const b=lg.F.writeBatch(lg.db);b.set(lgRef('app/main'),lgPayload());
+    if(ids.length){const f={};ids.forEach(id=>f[`pen.${id}.applied`]=true);b.update(lgRef('app/attitude'),f);}
+    await b.commit();
+    lgStatus('보냄 ✓ '+new Date().toLocaleTimeString());if(manual)toast('학생 라운지로 보냈습니다');
+  }catch(e){console.error(e);lgStatus('보내기 실패: '+(e.code||e.message));}
+}
+function lgSchedule(){try{if(!lgOnOf(lg.cfg)||!lg.cfg.fb)return;clearTimeout(lg.timer);lg.timer=setTimeout(()=>lgPush(false),1500);}catch(e){}}
+/* 라운지가 보낸 점수 조정(app/attitude.pen)을 받아 기록. pts>0 태도 감점 → 머쓱 −, pts<0 주식 환전 → 칭찬 +.
+   반영한 id는 학급 데이터(lgDone)에 저장해서, 보내기 전에 창을 닫아도 다음에 다시 빼지 않음 (이중 차감 방지) */
+function lgWatch(){
+  if(lg.unsub)lg.unsub();
+  lg.unsub=lg.F.onSnapshot(lgRef('app/attitude'),snap=>{
+    const pen=(snap.exists()&&snap.data().pen)||{};lg.pen=pen;if(!lgOnOf(lg.cfg))return;
+    const c=lgCls();c.lgDone=c.lgDone||{};let nMinus=0,nPlus=0,resend=false;
+    for(const [id,p] of Object.entries(pen)){
+      if(p.applied)continue;if(c.lgDone[id]){resend=true;continue;}
+      if(!c.students.some(s=>s.id===p.sid))continue;const d=-(+p.pts||0);if(!d)continue;
+      c.scores[p.sid]=(+c.scores[p.sid]||0)+d;c.scoreLog.push({sids:[p.sid],d,at:Date.now()});if(c.scoreLog.length>300)c.scoreLog.shift();
+      c.lgDone[id]=Date.now();d<0?nMinus++:nPlus++;}
+    for(const id in c.lgDone)if(!pen[id])delete c.lgDone[id];
+    if(nMinus||nPlus){persist();if(DB.tab==='score'&&c===cls())renderScore();toast('학생 라운지에서 받음: '+[nMinus?`태도 감점 ${nMinus}건(머쓱 −)`:'',nPlus?`주식 환전 ${nPlus}건(칭찬 +)`:''].filter(Boolean).join(', '));}
+    if(nMinus||nPlus||resend){clearTimeout(lg.timer);lg.timer=setTimeout(()=>lgPush(false),300);}
+  },e=>lgStatus('감점 받기 오류: '+(e.code||e.message)));
+}
+$('#lgSave').onclick=()=>{const fbTxt=$('#lgFb').value.trim(),fb=lgParse(fbTxt);if(fbTxt&&!fb){toast('Firebase 설정을 읽지 못했습니다');return;}
+  const old=JSON.stringify([lg.cfg.code,lg.cfg.fb]);lg.cfg={code:$('#lgCode').value.trim(),fb,url:$('#lgUrl').value.trim(),on:$('#lgOn').checked,cid:cls().id};
+  localStorage.setItem(LG_KEY,JSON.stringify(lg.cfg));if(old!==JSON.stringify([lg.cfg.code,lg.cfg.fb])){if(lg.unsub)lg.unsub();lg.db=null;lg.unsub=null;}
+  lgFill();toast('저장했습니다');if(lgOnOf(lg.cfg)&&fb)lgPush(false);};
+$('#lgPush').onclick=()=>lgPush(true);
+/* 해시브라운 코딩기록소(vibe-apps/first-class.html)에서는 같은 폴더의 first-class-lounge.html, 내 PC 폴더에서는 1St클래스_학생라운지.html */
+$('#lgOpen').onclick=()=>{const c=lg.cfg,u=c.url||(/first-class\.html$/i.test(decodeURIComponent(location.pathname))?'first-class-lounge.html':'1St클래스_학생라운지.html'),enc=btoa(unescape(encodeURIComponent(JSON.stringify({code:c.code||'demo',fb:c.fb||null}))));window.open(u+'#c='+encodeURIComponent(enc),'_blank');};
+lgFill();
+/* ---------------- 학생 라운지 비밀번호 (생일 기반 6자리) ---------------- */
+/* 학생 라운지와 같은 해시 함수. 생일·비밀번호 원문은 이 브라우저(cls().lpins)에만 저장 */
+const sha256 = (() => {
+  const K = [], H0 = []; let n = 2, c = 0; const frac = x => (x - Math.floor(x)) * 4294967296 | 0;
+  outer: while (c < 64) { for (let i = 2; i * i <= n; i++) if (n % i === 0) { n++; continue outer; } if (c < 8) H0[c] = frac(Math.pow(n, 1 / 2)); K[c++] = frac(Math.pow(n, 1 / 3)); n++; }
+  return str => {
+    const s = unescape(encodeURIComponent(str)), l = s.length, nW = (((l + 8) >> 6) + 1) * 16, w = new Array(nW).fill(0);
+    for (let i = 0; i < l; i++) w[i >> 2] |= s.charCodeAt(i) << (24 - (i % 4) * 8);
+    w[l >> 2] |= 0x80 << (24 - (l % 4) * 8); w[nW - 1] = l * 8;
+    let H = H0.slice(); const W = [];
+    for (let j = 0; j < nW; j += 16) {
+      let [a, b, c2, d, e, f, g, h] = H;
+      for (let i = 0; i < 64; i++) {
+        if (i < 16) W[i] = w[j + i] | 0;
+        else { const x = W[i - 15], y = W[i - 2]; W[i] = (W[i - 16] + ((x >>> 7 | x << 25) ^ (x >>> 18 | x << 14) ^ (x >>> 3)) + W[i - 7] + ((y >>> 17 | y << 15) ^ (y >>> 19 | y << 13) ^ (y >>> 10))) | 0; }
+        const t1 = (h + ((e >>> 6 | e << 26) ^ (e >>> 11 | e << 21) ^ (e >>> 25 | e << 7)) + ((e & f) ^ (~e & g)) + K[i] + W[i]) | 0;
+        const t2 = (((a >>> 2 | a << 30) ^ (a >>> 13 | a << 19) ^ (a >>> 22 | a << 10)) + ((a & b) ^ (a & c2) ^ (b & c2))) | 0;
+        h = g; g = f; f = e; e = (d + t1) | 0; d = c2; c2 = b; b = a; a = (t1 + t2) | 0;
+      }
+      const v = [a, b, c2, d, e, f, g, h]; H = H.map((x, k) => (x + v[k]) | 0);
+    }
+    return H.map(x => (x >>> 0).toString(16).padStart(8, '0')).join('');
+  };
+})();
+const pinHash=(sid,pin)=>sha256('fc-lounge:'+sid+':'+pin);
+const lpOf=()=>{const c=cls();c.lpins=c.lpins||{};return c.lpins;};
+function parseBirth(t){
+  t=String(t||'').trim();let m=t.match(/(\d{4})\s*[.\-\/년]\s*(\d{1,2})\s*[.\-\/월]\s*(\d{1,2})/);let y,mo,d;
+  if(m){y=+m[1];mo=+m[2];d=+m[3];}
+  else if((m=t.match(/(?:^|\D)(\d{8})(?:\D|$)/))){y=+m[1].slice(0,4);mo=+m[1].slice(4,6);d=+m[1].slice(6);}
+  else if((m=t.match(/(?:^|\D)(\d{6})(?:\D|$)/))){y=+m[1].slice(0,2);y+=y<50?2000:1900;mo=+m[1].slice(2,4);d=+m[1].slice(4);}
+  else return null;
+  if(mo<1||mo>12||d<1||d>31||y<1990||y>2030)return null;
+  return String(y)+String(mo).padStart(2,'0')+String(d).padStart(2,'0');
+}
+const fmtBirth=b=>b?`${b.slice(0,4)}.${b.slice(4,6)}.${b.slice(6)}`:'';
+/** 생일 4자리 앞/뒤에 출석번호 2자리 또는 생년 2자리. 4가지 중 반에서 겹치지 않는 것을 무작위로 */
+function makePin(s,birth,used){
+  const md=birth.slice(4),yy=birth.slice(2,4),nn=String(s.no%100).padStart(2,'0');
+  const opts=[nn+md,md+nn,yy+md,md+yy].filter((v,i,a)=>a.indexOf(v)===i);
+  for(let i=opts.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[opts[i],opts[j]]=[opts[j],opts[i]];}
+  return opts.find(p=>!used.has(p))||null;
+}
+function lpGen(all){
+  const L=lpOf(),list=cls().students.slice().sort(byNo);let made=0;const fail=[];
+  const used=new Set(list.map(s=>!all&&L[s.id]&&L[s.id].pin).filter(Boolean));
+  for(const s of list){const v=L[s.id];if(!v||!v.birth)continue;if(!all&&v.pin)continue;const p=makePin(s,v.birth,used);if(p){v.pin=p;used.add(p);made++;}else{v.pin='';fail.push(s.name);}}
+  persist();lpRender();lpSum();toast(`비밀번호 ${made}명 만듦`+(fail.length?` · 겹쳐서 못 만듦: ${fail.join(', ')}`:''));
+}
+function lpSum(){const c=cls(),L=c.lpins||{},n=c.students.filter(s=>L[s.id]&&L[s.id].pin).length,b=c.students.filter(s=>L[s.id]&&L[s.id].birth).length;$('#lpSum').textContent=`생일 ${b}명 · 비밀번호 ${n} / ${c.students.length}명`;}
+(function lpStyle(){const st=document.createElement('style');st.textContent=`
+.lp-dlg{border:0;border-radius:14px;padding:0;width:min(760px,96vw);max-height:92vh;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.lp-dlg::backdrop{background:rgba(10,18,36,.5)}
+.lp-in{display:flex;flex-direction:column;max-height:92vh}
+.lp-hd{padding:16px 18px 6px;display:flex;align-items:center;gap:8px}.lp-hd h2{margin:0;font-size:18px;flex:1}
+.lp-bd{padding:6px 18px;overflow:auto;display:flex;flex-direction:column;gap:10px}
+.lp-ft{padding:10px 18px 16px;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;border-top:1px solid var(--line)}
+.lp-tb{width:100%;border-collapse:collapse;font-size:13.5px}.lp-tb th,.lp-tb td{padding:5px 8px;border-bottom:1px solid var(--line);text-align:left}
+.lp-tb th{position:sticky;top:0;background:var(--surface);font-size:12px;color:var(--muted)}
+.lp-tb input{width:130px;height:30px;border:1px solid var(--line);border-radius:7px;padding:0 8px}
+.lp-tb .pin{font:700 16px/1 ui-monospace,Consolas,monospace;letter-spacing:2px}
+.lp-tb .bad{color:var(--bad);font-size:12px}
+.lp-paste{width:100%;min-height:70px;border:1px solid var(--line);border-radius:8px;padding:8px;font:12.5px monospace}
+.lp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.lp-grid label{display:flex;flex-direction:column;gap:4px;font-size:12.5px;font-weight:600;color:var(--muted)}
+.lp-grid select,.lp-grid input{height:34px;border:1px solid var(--line);border-radius:8px;padding:0 8px}`;document.head.appendChild(st);})();
+function lpDialog(id,title,body,foot){
+  let d=document.getElementById(id);if(d)d.remove();d=document.createElement('dialog');d.id=id;d.className='lp-dlg';
+  d.innerHTML=`<div class="lp-in"><div class="lp-hd"><h2>${title}</h2><button class="btn sm ghost" data-close>닫기</button></div><div class="lp-bd">${body}</div><div class="lp-ft">${foot}</div></div>`;
+  document.body.appendChild(d);d.addEventListener('click',e=>{if(e.target===d||e.target.closest('[data-close]'))d.close();});d.addEventListener('close',()=>d.remove());d.showModal();return d;
+}
+function lpRender(){
+  const tb=document.getElementById('lpRows');if(!tb)return;const L=lpOf();
+  tb.innerHTML=cls().students.slice().sort(byNo).map(s=>{const v=L[s.id]||{};return `<tr><td>${s.no}</td><td><b>${esc(s.name)}</b></td><td><input data-lpb="${s.id}" value="${esc(fmtBirth(v.birth))}" placeholder="2015.03.12"></td><td class="pin">${v.pin?esc(v.pin):(v.birth?'<span class="bad">겹침·미생성</span>':'<span class="muted">—</span>')}</td><td>${v.birth?`<button class="btn sm ghost" data-lpre="${s.id}">다시</button>`:''}</td></tr>`;}).join('');
+}
+$('#lpOpen').onclick=()=>{
+  const d=lpDialog('lpDlg','🔐 학생 라운지 비밀번호',`
+    <p class="muted" style="margin:0">생년월일을 넣으면 6자리 비밀번호가 만들어집니다. 예) 2015년 3월 12일생 7번 → <b>070312 · 031207 · 150312 · 031215</b> 중 하나 (반에서 겹치지 않게 무작위)</p>
+    <details><summary style="cursor:pointer;font-weight:600">📋 엑셀에서 한꺼번에 붙여넣기</summary><p class="muted" style="margin:6px 0">명부에서 <b>번호(또는 이름)</b>와 <b>생년월일</b> 두 열을 복사해 붙여 넣으세요. 2015-03-12, 2015.3.12, 20150312, 150312 모두 됩니다.</p><textarea class="lp-paste" id="lpPaste" placeholder="1&#9;2015-03-12&#10;강수빈&#9;2015.7.3"></textarea><div class="row" style="margin-top:6px"><button class="btn sm" id="lpPasteGo">붙여넣기 적용</button></div></details>
+    <table class="lp-tb"><thead><tr><th>번호</th><th>이름</th><th>생년월일</th><th>비밀번호</th><th></th></tr></thead><tbody id="lpRows"></tbody></table>`,
+    `<button class="btn" id="lpGenNew">빈 학생만 만들기</button><button class="btn" id="lpGenAll">모두 새로 만들기</button><button class="btn primary" id="lpPrint2">🖨 라벨지 인쇄</button>`);
+  lpRender();
+  d.addEventListener('change',e=>{const i=e.target.closest('[data-lpb]');if(!i)return;const L=lpOf(),id=i.dataset.lpb,b=i.value.trim()?parseBirth(i.value):'';
+    if(b===null){toast('날짜를 읽지 못했습니다 (예: 2015.03.12)');i.focus();return;}
+    const old=L[id]||{};if(!b){delete L[id];}else if(old.birth!==b){const used=new Set(Object.entries(L).filter(e=>e[0]!==id&&e[1].pin).map(e=>e[1].pin));L[id]={birth:b,pin:makePin(stuById(id),b,used)||''};}
+    persist();lpRender();lpSum();});
+  d.addEventListener('click',e=>{const r=e.target.closest('[data-lpre]');if(!r)return;const L=lpOf(),id=r.dataset.lpre,used=new Set(Object.entries(L).filter(e=>e[0]!==id&&e[1].pin).map(e=>e[1].pin));used.add(L[id].pin);const p=makePin(stuById(id),L[id].birth,used);if(p){L[id].pin=p;persist();lpRender();lpSum();}else toast('다른 조합이 없습니다');});
+  $('#lpPasteGo').onclick=()=>{
+    const L=lpOf(),list=cls().students;let ok=0;const bad=[];
+    for(const line of $('#lpPaste').value.split(/\r?\n/)){if(!line.trim())continue;
+      const b=parseBirth(line);if(!b){bad.push(line.trim());continue;}
+      const rest=line.replace(/(\d{4})\s*[.\-\/년]\s*(\d{1,2})\s*[.\-\/월]\s*(\d{1,2})\s*[일.]?|\d{8}|\d{6}/,' ');
+      let s=list.filter(x=>rest.includes(x.name)).sort((a,b2)=>b2.name.length-a.name.length)[0];
+      if(!s){const n=(rest.match(/(?:^|\D)(\d{1,2})(?:\D|$)/)||[])[1];if(n)s=list.find(x=>x.no===+n);}
+      if(!s){bad.push(line.trim());continue;}
+      if(!L[s.id]||L[s.id].birth!==b)L[s.id]={birth:b,pin:''};ok++;}
+    persist();lpGen(false);toast(`${ok}명 생일 입력`+(bad.length?` · 못 읽은 줄 ${bad.length}개: ${bad.slice(0,3).join(' / ')}`:''));};
+  $('#lpGenNew').onclick=()=>lpGen(false);
+  $('#lpGenAll').onclick=()=>{if(confirm('모든 학생의 비밀번호를 새로 만들까요? 이미 나눠 준 라벨은 못 쓰게 됩니다.'))lpGen(true);};
+  $('#lpPrint2').onclick=()=>{d.close();lpLabelDlg();};
+};
+/* 라벨지 인쇄 (A4, mm 단위). 보정값으로 프린터 오차를 맞춤 */
+const LP_FMT={
+  '21':{name:'21칸 (3×7) · 63.5×38.1mm',cols:3,rows:7,w:63.5,h:38.1,top:15.15,left:7.21,gx:2.54,gy:0},
+  '24':{name:'24칸 (3×8) · 64×33.9mm',cols:3,rows:8,w:64,h:33.9,top:12.9,left:7,gx:2,gy:0},
+  '14':{name:'14칸 (2×7) · 99.1×38.1mm',cols:2,rows:7,w:99.1,h:38.1,top:15.15,left:4.65,gx:2.5,gy:0},
+  '10':{name:'10칸 (2×5) · 99.1×57mm',cols:2,rows:5,w:99.1,h:57,top:6,left:4.65,gx:2.5,gy:0},
+};
+function lpLabelDlg(){
+  const c=cls(),L=c.lpins||{},has=c.students.filter(s=>L[s.id]&&L[s.id].pin);
+  if(!has.length){toast('먼저 비밀번호를 만들어 주세요');return;}
+  let pref={};try{pref=JSON.parse(localStorage.getItem('firstclass.lplabel')||'{}');}catch(e){}
+  const d=lpDialog('lpLbl','🖨 비밀번호 라벨지 인쇄',`
+    <p class="muted" style="margin:0">비밀번호가 있는 <b>${has.length}명</b>을 번호순으로 인쇄합니다. 인쇄 창에서 <b>배율 100%(실제 크기)</b>, 여백 없음으로 맞춰 주세요. 처음엔 일반 종이에 <b>칸 테두리</b>를 켜고 시험 인쇄해 라벨지와 겹쳐 보세요.</p>
+    <div class="lp-grid">
+      <label>라벨지 규격<select id="lpF">${Object.entries(LP_FMT).map(([k,f])=>`<option value="${k}" ${(pref.f||'21')===k?'selected':''}>${f.name}</option>`).join('')}</select></label>
+      <label>시작 칸 (쓰다 남은 라벨지)<input type="number" id="lpStart" min="1" value="1"></label>
+      <label>위 보정 (mm, +는 아래로)<input type="number" id="lpDy" step="0.5" value="${pref.dy||0}"></label>
+      <label>왼쪽 보정 (mm, +는 오른쪽)<input type="number" id="lpDx" step="0.5" value="${pref.dx||0}"></label>
+      <label>칸 테두리<select id="lpBorder"><option value="0">없음 (라벨지)</option><option value="1">있음 (시험 인쇄·종이 카드)</option></select></label>
+      <label>생일 힌트 문구<select id="lpHint"><option value="1" ${pref.hint===0?'':'selected'}>넣기</option><option value="0" ${pref.hint===0?'selected':''}>빼기</option></select></label>
+    </div>`,`<button class="btn" data-close>취소</button><button class="btn primary" id="lpGo">인쇄 창 열기</button>`);
+  $('#lpGo').onclick=()=>{
+    const f=LP_FMT[$('#lpF').value],start=Math.max(1,+$('#lpStart').value||1)-1,dx=+$('#lpDx').value||0,dy=+$('#lpDy').value||0,border=$('#lpBorder').value==='1',hint=$('#lpHint').value==='1';
+    try{localStorage.setItem('firstclass.lplabel',JSON.stringify({f:$('#lpF').value,dx,dy,hint:hint?1:0}));}catch(e){}
+    const w=window.open('','_blank');if(!w){toast('팝업이 막혔습니다. 팝업을 허용해 주세요');return;}
+    w.document.open();w.document.write(lpLabelHtml(c,L,has.slice().sort(byNo),f,{start,dx,dy,border,hint}));w.document.close();d.close();
+  };
+}
+function lpLabelHtml(c,L,list,f,o){
+  const per=f.cols*f.rows,items=[...Array(o.start).fill(null),...list];let pages='';
+  for(let p=0;p<items.length;p+=per){let h='';items.slice(p,p+per).forEach((s,i)=>{if(!s)return;const r=Math.floor(i/f.cols),k=i%f.cols;
+    const x=f.left+o.dx+k*(f.w+f.gx),y=f.top+o.dy+r*(f.h+f.gy),fs=f.h>=50?'30pt':f.w>90?'24pt':'20pt';
+    h+=`<div class="lb" style="left:${x.toFixed(2)}mm;top:${y.toFixed(2)}mm;width:${f.w}mm;height:${f.h}mm"><div class="t">🛫 ${esc(c.name)} 학생 라운지</div><div class="n">${s.no}번 ${esc(s.name)}</div><div class="p" style="font-size:${fs}">${esc(L[s.id].pin)}</div>${o.hint?'<div class="h">🎂 내 생일 + 번호·생년 · 친구에게 비밀!</div>':''}</div>`;});
+    pages+=`<section class="pg">${h}</section>`;}
+  return `<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>라운지 비밀번호 라벨</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=IBM+Plex+Sans+KR:wght@500;700&display=swap"><style>
+    @page{size:A4;margin:0}*{box-sizing:border-box}html,body{margin:0;background:#888}
+    .pg{position:relative;width:210mm;height:297mm;background:#fff;margin:0 auto 6mm;overflow:hidden;break-after:page}
+    .lb{position:absolute;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.2mm;text-align:center;font-family:"IBM Plex Sans KR","Malgun Gothic",sans-serif;color:#14213D;${o.border?'outline:0.2mm dashed #999;outline-offset:-0.1mm;':''}}
+    .t{font-size:7.5pt;color:#56647E;font-weight:500}.n{font-size:11pt;font-weight:700}
+    .p{font-family:"Do Hyeon",Consolas,monospace;letter-spacing:1.5mm;line-height:1;border:0.4mm solid #C9A227;border-radius:2mm;padding:1.2mm 3mm 0.6mm;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .h{font-size:6.5pt;color:#56647E}
+    @media print{html,body{background:#fff}.pg{margin:0}}
+  </style></head><body>${pages}<script>document.fonts.ready.then(()=>setTimeout(()=>print(),250));<\/script></body></html>`;
+}
+$('#lpLabel').onclick=lpLabelDlg;
+
+if(lgOnOf(lg.cfg)&&lg.cfg.fb)lgConnect().then(()=>lgPush(false)).catch(e=>lgStatus('연결 실패: '+(e.code||e.message)));
+
 DB=load();DB=migrate(DB||seed());DB.tab='score';persist();
-renderAll();initCaps();
+renderAll();initCaps();lpSum();lgFill();
 window.__seat={optimize,buildCtx,cost,explain,parseRoster,gridFromText,get DB(){return DB;}};
 })();
+
 </script>
 </body></html>
