@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>개인정보처리방침 - 회원님 · 회원님FREE</title>
+  <style>
+    :root {
+      --bg: #f4f1ec;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #4b5563;
+      --accent: #b84332;
+      --line: #e5e7eb;
+    }
+    body {
+      margin: 0;
+      font-family: "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+      background: radial-gradient(circle at 0% 0%, #f8e9e5 0, var(--bg) 45%);
+      color: var(--text);
+    }
+    main {
+      max-width: 860px;
+      margin: 40px auto;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 28px;
+      box-sizing: border-box;
+    }
+    @media (max-width: 900px) { main { margin: 16px; padding: 20px; } }
+    h1, h2 { color: var(--accent); }
+    p, li { line-height: 1.7; color: var(--muted); }
+    .meta { font-size: 0.95rem; color: #6b7280; }
+    code { background: #f3f4f6; padding: 2px 6px; border-radius: 6px; word-break: break-all; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>개인정보처리방침</h1>
+    <p class="meta">
+      시행일: 2026-10-06<br>
+      적용 앱: 회원님 - AI 가상 PT 트레이너 (<code>com.hoewonnim.trainer</code>),
+      회원님FREE - AI 가상 PT 트레이너 무료판 (<code>com.hoewonnim.trainer.free</code>)
+    </p>
+
+    <p>
+      본 방침은 Android 앱 <strong>회원님</strong>과 무료판 <strong>회원님FREE</strong>(이하 "앱")가 이용자 정보를 어떻게 다루는지 설명합니다.
+      앱은 회원가입·로그인이 없고, <strong>광고가 없으며, 개인정보를 수집하거나 외부 서버로 전송하지 않습니다.</strong>
+    </p>
+
+    <h2>1. 수집하는 개인정보</h2>
+    <p>
+      앱은 이름·이메일·전화번호·위치·연락처 등 어떠한 개인정보도 수집하지 않으며, 개발자가 운영하는 서버도 없습니다.
+      분석(analytics)·광고·추적 SDK도 포함되어 있지 않습니다.
+    </p>
+
+    <h2>2. 기기 안에만 저장되는 정보</h2>
+    <p>코칭을 위해 이용자가 직접 입력한 다음 정보는 <strong>이용자의 휴대폰 안에만</strong> 저장되며, 개발자를 포함한 외부로 전송되지 않습니다.</p>
+    <ul>
+      <li>프로필: 운동 목표, 성별(선택), 운동 경력, 키·체중, 사용 가능한 운동 기구, 운동 요일</li>
+      <li>운동 성향 테스트 답변과 추천 결과</li>
+      <li>운동 기록(세트별 무게·횟수), 수면 시간·컨디션 체크, 단백질 섭취 기록, 신체 체크인 기록</li>
+      <li>코치와의 대화 내역 및 앱 설정</li>
+    </ul>
+    <p>
+      앱을 삭제하거나 휴대폰 설정 &gt; 애플리케이션 &gt; 회원님 &gt; 저장공간 &gt; [데이터 삭제]를 누르면 위 정보는 모두 삭제됩니다.
+    </p>
+
+    <h2>3. 백업 파일 내보내기·불러오기</h2>
+    <p>
+      이용자가 직접 [백업 내보내기]를 누르면 위 데이터가 파일로 만들어지고, 이용자가 고른 위치(기기 저장소 또는 공유 대상 앱)로만 저장·전달됩니다.
+      개발자는 이 파일에 접근할 수 없습니다. 불러오기 역시 이용자가 고른 파일을 기기 안에서만 읽습니다.
+    </p>
+
+    <h2>4. 앱 권한</h2>
+    <ul>
+      <li><code>INTERNET</code> — 앱 화면을 구성하는 글꼴(Google Fonts)을 불러오기 위해 사용합니다. 이 과정에서 이용자 데이터는 전송되지 않으며, 글꼴 요청 시 일반적인 웹 요청과 같이 기기의 IP 주소가 Google에 전달될 수 있습니다.</li>
+      <li><code>POST_NOTIFICATIONS</code> — 코치 메시지, 운동 완료 리포트, 세트 휴식 종료 알림을 보여주기 위해 사용합니다. 알림 내용은 기기 안에서 만들어집니다.</li>
+      <li><code>SCHEDULE_EXACT_ALARM</code> · <code>WAKE_LOCK</code> — 세트 휴식 타이머 알림이 정확한 시각에 울리도록 사용합니다.</li>
+      <li><code>RECEIVE_BOOT_COMPLETED</code> — 휴대폰을 다시 켠 뒤 예약된 코치 알림을 복구하기 위해 사용합니다.</li>
+    </ul>
+    <p>알림은 앱 설정 또는 휴대폰 설정에서 언제든 끌 수 있습니다.</p>
+
+    <h2>5. 제3자 제공 및 광고</h2>
+    <p>
+      수집하는 정보가 없으므로 제3자에게 제공하는 정보도 없습니다. 앱(정식판·무료판 모두)에는 광고가 표시되지 않으며, 앱 내 결제도 없습니다.
+    </p>
+
+    <h2>6. 건강 정보에 관한 안내</h2>
+    <p>
+      앱이 제공하는 운동 루틴·코칭 문구는 일반적인 운동 정보이며 의료적 진단이나 처방이 아닙니다.
+      키·체중·컨디션 등 이용자가 입력한 정보는 운동량 계산에만 기기 안에서 사용됩니다.
+    </p>
+
+    <h2>7. 아동의 개인정보</h2>
+    <p>
+      앱은 성인을 주 대상으로 하며, 아동을 포함한 어떤 이용자의 개인정보도 수집하지 않습니다.
+    </p>
+
+    <h2>8. 방침의 변경</h2>
+    <p>
+      기능 추가 등으로 처리하는 정보가 생기면 본 방침을 갱신하고 상단의 시행일을 변경합니다.
+    </p>
+
+    <h2>9. 문의</h2>
+    <p>
+      개인정보 관련 문의: <code>doldown@naver.com</code>
+    </p>
+  </main>
+</body>
+</html>
