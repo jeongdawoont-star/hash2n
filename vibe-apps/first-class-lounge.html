@@ -1429,11 +1429,41 @@ V.teacher = () => {
       ${qr && DB.kind === 'cloud' ? `<div class="row" style="align-items:flex-start"><div data-qr="${esc(qr)}" data-s="210"></div><div class="small">폰 카메라로 찍으면 바로 들어와요.<br>폰은 15분 동안 로그인 유지.<br><button class="btn sm g" data-a="qrBig" style="margin-top:8px">크게 보기 (TV·인쇄)</button></div></div>` : ''}
       ${DB.kind === 'cloud' ? `<details class="small"><summary>다른 사이트(Netlify 등)에 직접 올리고 싶을 때</summary><p style="margin:6px 0">연결 설정을 넣은 파일을 만들어요. <b>공개 저장소(GitHub)에는 올리지 마세요</b> — 설정이 다 보여요.</p><button class="btn sm" data-a="deploy">📦 설정 넣은 index.html 내려받기</button></details>` : ''}</div></div>`;
   } else if (t === 'pins') {
-    const H = S.main?.pinH || {}, n = roster().filter(s => H[s.id]).length;
-    body = `<div class="card"><h2>🔐 학생 비밀번호 <span class="pill ${n === roster().length ? 'ok' : 'warn'}">${n} / ${roster().length}명 준비됨</span></h2>
-      <p class="small" style="margin:0">학생 비밀번호는 <b>퍼스트클래스 → 규칙·백업 → 🔐 학생 라운지 비밀번호</b>에서 만들고 라벨지로 인쇄해요.<br>규칙: 숫자 6자리 = 🎂 생일 4자리(월일) 앞이나 뒤에 <b>출석번호 2자리</b> 또는 <b>태어난 해 2자리</b>가 무작위로 붙어요. (예: 3월 12일생 7번 → 070312, 031207, 150312, 031215 중 하나)<br><span class="muted">생일과 실제 비밀번호는 선생님 PC에만 저장되고, 여기에는 알아볼 수 없게 바꾼 값(해시)만 올라와요.</span></p></div>
-    <div class="scroll fill" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;align-content:start">${roster().map(s => `<div class="card row" style="padding:8px 10px"><b style="flex:1">${s.no}. ${esc(s.name)}</b>${H[s.id] ? '<span class="pill ok">✓</span>' : '<span class="pill bad">없음</span>'}</div>`).join('')}</div>
-    <div class="row">교사 PIN (4자리) <input type="password" id="tpin" maxlength="4" inputmode="numeric" placeholder="새 4자리" style="width:120px"><button class="btn sm" data-a="tpinSave">바꾸기</button></div>`;
+    const H = S.main?.pinH || {}, local = getStoredPins(), r = roster();
+    const n = r.filter(s => H[s.id]).length;
+    body = `<div class="card col" style="gap:10px">
+      <div class="row" style="justify-content:space-between;align-items:center;flex-wrap:wrap">
+        <h2>🔐 학생 비밀번호 <span class="pill ${n === r.length && n > 0 ? 'ok' : 'warn'}">${n} / ${r.length}명 준비됨</span></h2>
+        <div class="row" style="gap:6px">
+          <button class="btn sm p" data-a="stuPinAuto">🎲 미설정 학생 6자리 자동생성</button>
+          <button class="btn sm" data-a="stuPinAll">전원 새로 생성</button>
+          <button class="btn sm g" data-a="stuPinList">📋 비번 명단 보기</button>
+        </div>
+      </div>
+      <p class="small muted" style="margin:0">💡 라운지에서 바로 <b>[미설정 학생 6자리 자동생성]</b>을 누르거나 각 학생별로 6자리 숫자를 입력해 [설정]할 수 있습니다. (출석번호 기반으로 기억하기 쉬운 조합이 자동 생성됩니다.)<br>
+      ※ 퍼스트클래스 교사 PC가 있다면 [규칙·백업 > 학생 라운지 비밀번호]에서 생년월일 기반 생성 및 라벨지 인쇄도 가능합니다.</p>
+    </div>
+    <div class="scroll fill" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px;align-content:start">
+      ${r.map(s => {
+        const has = !!H[s.id];
+        const knownPin = local[s.id] || (S.main?.sample ? '111111' : '');
+        return `<div class="card col" style="padding:10px;gap:6px">
+          <div class="row" style="justify-content:space-between;align-items:center">
+            <b>${s.no}. ${esc(s.name)}</b>
+            <span class="pill ${has ? 'ok' : 'bad'}">${has ? '✓ 설정됨' : '미설정'}</span>
+          </div>
+          <div class="row" style="gap:4px">
+            <input type="text" data-spin="${s.id}" maxlength="6" inputmode="numeric" placeholder="6자리" value="${esc(knownPin)}" style="font-family:ui-monospace,Consolas,monospace;font-weight:700;letter-spacing:1px;text-align:center;width:90px;padding:4px">
+            <button class="btn sm p" data-a="stuPinSave" data-id="${s.id}" style="padding:4px 8px">설정</button>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div class="card row" style="align-items:center;gap:8px">
+      <b>교사 PIN (4자리)</b>
+      <input type="password" id="tpin" maxlength="4" inputmode="numeric" placeholder="새 4자리" style="width:110px">
+      <button class="btn sm" data-a="tpinSave">PIN 변경</button>
+    </div>`;
   } else {
     body = `<div class="body"><div class="card col" style="flex:1"><h2>📢 홈 공지</h2><textarea id="ntx" rows="3">${esc(S.set?.notice || '')}</textarea><button class="btn p" data-a="ntSave">저장</button></div></div>`;
   }
@@ -1567,6 +1597,116 @@ A.deploy = () => {
   setTimeout(() => URL.revokeObjectURL(a.href), 5000); toast('index.html을 내려받았어요 → Netlify Drop에 끌어다 놓아요');
 };
 A.qrBig = () => { const link = studentLink(); const m = modal(`${mHead('📱 학생 라운지 접속')}<div class="mb" style="align-items:center"><div data-qr="${esc(link)}" data-s="380"></div><b>폰 카메라로 찍어요</b></div>`, { wide: true }); drawQR(m); };
+const PINS_STORE_KEY = 'fclounge.pins.' + (CFG.code || 'demo');
+function getStoredPins() {
+  try { return JSON.parse(localStorage.getItem(PINS_STORE_KEY) || '{}'); } catch (e) { return {}; }
+}
+function saveStoredPins(obj) {
+  try { localStorage.setItem(PINS_STORE_KEY, JSON.stringify(obj)); } catch (e) {}
+  try {
+    const fcRaw = localStorage.getItem('firstclass.v1');
+    if (fcRaw) {
+      const fcData = JSON.parse(fcRaw);
+      const c = fcData.classes?.find(x => x.id === fcData.activeId) || fcData.classes?.[0];
+      if (c) {
+        c.lpins = c.lpins || {};
+        for (const [id, pin] of Object.entries(obj)) {
+          c.lpins[id] = Object.assign(c.lpins[id] || {}, { pin });
+        }
+        localStorage.setItem('firstclass.v1', JSON.stringify(fcData));
+      }
+    }
+  } catch (e) {}
+}
+function gen6Pin(s, used) {
+  const nn = String((s?.no || 1) % 100).padStart(2, '0');
+  const candidates = [nn + nn + nn, '00' + nn + nn, nn + '00' + nn, '10' + nn + nn, '20' + nn + nn];
+  for (const c of candidates) { if (!used.has(c)) return c; }
+  for (let t = 0; t < 60; t++) {
+    const rnd = String(Math.floor(100000 + Math.random() * 900000));
+    if (!used.has(rnd)) return rnd;
+  }
+  return String(Math.floor(100000 + Math.random() * 900000));
+}
+A.stuPinSave = async d => {
+  const sid = d.id;
+  const input = document.querySelector(`input[data-spin="${sid}"]`);
+  if (!input) return;
+  const pin = input.value.trim().replace(/\D/g, '');
+  const curH = Object.assign({}, S.main?.pinH || {});
+  const local = getStoredPins();
+  if (!pin) {
+    if (!confirm(`${nm(sid)} 학생의 비밀번호를 삭제할까요?`)) return;
+    delete curH[sid];
+    delete local[sid];
+    await DB.update('app/main', { pinH: curH });
+    saveStoredPins(local);
+    toast(`${nm(sid)} 비밀번호 삭제됨`);
+    return;
+  }
+  if (pin.length !== 6) return toast('비밀번호는 숫자 6자리여야 해요');
+  curH[sid] = pinHash(sid, pin);
+  local[sid] = pin;
+  await DB.update('app/main', { pinH: curH });
+  saveStoredPins(local);
+  toast(`${nm(sid)} 비밀번호를 '${pin}'(으)로 저장했어요`);
+};
+A.stuPinAuto = async () => {
+  const r = roster();
+  const curH = Object.assign({}, S.main?.pinH || {});
+  const local = getStoredPins();
+  const used = new Set(Object.values(local));
+  let count = 0;
+  for (const s of r) {
+    if (curH[s.id] && local[s.id]) continue;
+    const pin = gen6Pin(s, used);
+    used.add(pin);
+    local[s.id] = pin;
+    curH[s.id] = pinHash(s.id, pin);
+    count++;
+  }
+  if (!count) return toast('이미 모든 학생의 비밀번호가 설정되어 있어요');
+  await DB.update('app/main', { pinH: curH });
+  saveStoredPins(local);
+  toast(`${count}명의 6자리 비밀번호를 생성했어요!`);
+};
+A.stuPinAll = async () => {
+  if (!confirm('모든 학생의 비밀번호를 새로 생성할까요?\n(기존 비밀번호가 변경됩니다)')) return;
+  const r = roster();
+  const curH = {};
+  const local = {};
+  const used = new Set();
+  for (const s of r) {
+    const pin = gen6Pin(s, used);
+    used.add(pin);
+    local[s.id] = pin;
+    curH[s.id] = pinHash(s.id, pin);
+  }
+  await DB.update('app/main', { pinH: curH });
+  saveStoredPins(local);
+  toast(`학생 ${r.length}명 전원 새 비밀번호를 생성했어요!`);
+};
+A.stuPinList = () => {
+  const r = roster();
+  const local = getStoredPins();
+  const H = S.main?.pinH || {};
+  const lines = r.map(s => {
+    const p = local[s.id] || (S.main?.sample ? '111111' : (H[s.id] ? '(설정됨)' : '(미설정)'));
+    return `${s.no}번 ${s.name}: ${p}`;
+  });
+  const text = lines.join('\n');
+  const m = modal(`${mHead('📋 학생 비밀번호 명단')}<div class="mb">
+    <p class="small muted" style="margin:0">학생들에게 나누어 주거나 안내할 수 있는 6자리 비밀번호 명단입니다.</p>
+    <textarea rows="11" readonly style="font-family:ui-monospace,Consolas,monospace;font-size:13px;padding:8px;border-radius:8px;border:1px solid var(--line);width:100%">${esc(text)}</textarea>
+    <div class="row" style="justify-content:flex-end">
+      <button class="btn p sm" id="copyPinListBtn">클립보드에 복사</button>
+    </div>
+  </div>`);
+  const btn = $('#copyPinListBtn');
+  if (btn) btn.onclick = () => {
+    navigator.clipboard.writeText(text).then(() => toast('명단을 클립보드에 복사했어요!')).catch(() => toast('복사에 실패했습니다'));
+  };
+};
 A.tpinSave = async () => { const v = $('#tpin').value.replace(/\D/g, ''); if (v.length !== 4) return toast('숫자 4자리'); await DB.set('app/secret', { tpin: v }); $('#tpin').value = ''; toast('교사 PIN을 바꿨어요'); };
 A.ntSave = async () => { await DB.set('app/settings', { notice: $('#ntx').value.trim() }); toast('공지를 저장했어요'); };
 

@@ -494,11 +494,11 @@ legend{font-weight:600;margin-bottom:6px;font-size:13.5px;padding:0}
           <h2><span data-i18n="roster">학생 명단</span> <small id="stCount"></small></h2>
           <div class="table-scroll">
             <table class="st-table">
-              <thead><tr><th data-i18n="thNo">번호</th><th data-i18n="thName">이름</th><th data-i18n="thEn">영문 이름</th><th data-i18n="thGender">성별</th><th data-i18n="thHeight">키(cm)</th><th data-i18n="thFront">앞자리</th><th></th></tr></thead>
+              <thead><tr><th data-i18n="thNo">번호</th><th data-i18n="thName">이름</th><th data-i18n="thBirth">생년월일</th><th data-i18n="thEn">영문 이름</th><th data-i18n="thGender">성별</th><th data-i18n="thHeight">키(cm)</th><th data-i18n="thFront">앞자리</th><th></th></tr></thead>
               <tbody id="stBody"></tbody>
             </table>
           </div>
-          <div class="row"><button id="stAdd" class="btn sm" data-i18n="addOne">학생 한 명 추가</button></div>
+          <div class="row"><button id="stAdd" class="btn sm" data-i18n="addOne">학생 한 명 추가</button><button id="stBirthBulkBtn" class="btn sm" style="gap:4px"><span>🎂</span> 생년월일 일괄 입력</button></div>
         </div>
         <div class="stack">
           <div class="card">
@@ -602,9 +602,9 @@ legend{font-weight:600;margin-bottom:6px;font-size:13.5px;padding:0}
           </div>
           <div class="card" id="lpCard">
             <h2>🔐 학생 라운지 비밀번호</h2>
-            <p class="muted">숫자 6자리 = 생일 4자리(월일) 앞이나 뒤에 <b>출석번호 2자리</b> 또는 <b>태어난 해 2자리</b>가 무작위로 붙습니다. 외우기 쉽고 친구가 짐작하기는 어렵게. 생일과 비밀번호는 이 컴퓨터에만 저장되고, 학생 라운지에는 알아볼 수 없게 바꾼 값(해시)만 보냅니다.</p>
+            <p class="muted">숫자 6자리 = 생일 4자리(월일) 앞이나 뒤에 <b>출석번호 2자리</b> 또는 <b>태어난 해 2자리</b>가 무작위로 붙습니다. (생년월일 등록·일괄 입력은 <b>탑승객 명단</b> 탭에서 관리할 수 있습니다.)</p>
             <p id="lpSum" style="margin:0;font-weight:600"></p>
-            <div class="row"><button id="lpOpen" class="btn sm primary">생일 입력·비밀번호 만들기</button><button id="lpLabel" class="btn sm">🖨 라벨지 인쇄</button></div>
+            <div class="row"><button id="lpOpen" class="btn sm primary">비밀번호 만들기·관리</button><button id="lpLabel" class="btn sm">🖨 라벨지 인쇄</button></div>
           </div>
           <div class="card" id="lgCard">
             <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
@@ -975,7 +975,7 @@ class:'학급',rename:'이름 바꾸기',newClass:'새 학급',
  auto:'자동 배치',undo:'되돌리기',saveRecord:'이 배치 기록하기',exportPng:'이미지로 저장',exportXlsx:'엑셀로 저장',xlsxBtn:'엑셀',xlsxCurrent:'현재 자리 {0}',print:'인쇄',clearAll:'모두 비우기',
  recName:'기록 이름',date:'날짜',save:'저장',cancel:'취소',board:'칠판',podium:'교탁',busy:'자리를 맞춰 보는 중…',
  hint:'학생 카드를 끌어다 다른 자리에 놓으면 서로 바뀝니다. 끌기 어려우면 한 명을 누른 뒤 바꿀 자리를 누르세요. 자물쇠를 누르면 자동 배치 때 그 자리에 고정됩니다.',
- roster:'학생 명단',thNo:'번호',thName:'이름',thEn:'영문 이름',thGender:'성별',thHeight:'키(cm)',thFront:'앞자리',addOne:'학생 한 명 추가',
+ roster:'학생 명단',thNo:'번호',thName:'이름',thBirth:'생년월일',thEn:'영문 이름',thGender:'성별',thHeight:'키(cm)',thFront:'앞자리',addOne:'학생 한 명 추가',
  bulkTitle:'명단 한 번에 붙여넣기',bulkDesc:'한 줄에 한 명씩 번호, 이름, 성별, 키 순서로 적습니다. 엑셀에서 복사해 붙여도 됩니다. 영문 이름은 괄호에 넣으세요. 이미 있는 이름은 정보만 바뀌고 기록은 그대로 남습니다.',
  bulkApply:'명단에 반영',bulkReplace:'붙여넣은 목록에 없는 학생은 삭제',avoidTitle:'떨어져 앉혀야 할 사이',add:'추가',
  layoutTitle:'좌석 모양 만들기',layoutDesc:'점을 누르거나 끌어서 책상을 놓고 뺍니다. 가로로 붙은 책상끼리 짝이 되고(2명씩, 끝에 한 명이 남으면 3명), 빈 칸은 통로입니다. 맨 위 줄이 칠판 쪽입니다.',
@@ -1030,7 +1030,7 @@ class:'Class',rename:'Rename',newClass:'New class',
  auto:'Auto-arrange',undo:'Undo',saveRecord:'Save to history',exportPng:'Save as image',exportXlsx:'Save as Excel',xlsxBtn:'Excel',xlsxCurrent:'Seats {0}',print:'Print',clearAll:'Clear all',
  recName:'Name',date:'Date',save:'Save',cancel:'Cancel',board:'Board',podium:'Teacher’s desk',busy:'Working out seats…',
  hint:'Drag a student card onto another seat to swap them. If dragging is awkward, tap one student and then tap the seat to swap with. The lock keeps a student in place during auto-arrange.',
- roster:'Students',thNo:'No.',thName:'Name',thEn:'English name',thGender:'Gender',thHeight:'Height (cm)',thFront:'Front',addOne:'Add a student',
+ roster:'Students',thNo:'No.',thName:'Name',thBirth:'Birthday',thEn:'English name',thGender:'Gender',thHeight:'Height (cm)',thFront:'Front',addOne:'Add a student',
  bulkTitle:'Paste a class list',bulkDesc:'One student per line: number, name, gender, height. Copying from a spreadsheet works. Put the English name in brackets. Existing names are updated and keep their history.',
  bulkApply:'Apply list',bulkReplace:'Remove students not in the pasted list',avoidTitle:'Keep apart',add:'Add',
  layoutTitle:'Desk layout',layoutDesc:'Tap or drag over the dots to add or remove desks. Desks touching side by side become partners (pairs, or a group of three at the end of a row). Gaps are aisles. The top row is nearest the board.',
@@ -1097,7 +1097,7 @@ function presetLayout(kind,rows,cols){
 }
 function load(){try{const s=localStorage.getItem(STORE_KEY);if(!s)return null;const d=JSON.parse(s);return valid(d)?d:null;}catch(e){return null;}}
 function valid(d){return d&&Array.isArray(d.classes)&&d.classes.length&&d.classes.every(c=>c&&c.id&&Array.isArray(c.students)&&c.layout);}
-function migrate(d){d.classes.forEach(c=>{c.avoid=c.avoid||[];c.current=c.current||{};c.locks=c.locks||{};c.history=c.history||[];c.settings=Object.assign(defSettings(),c.settings||{});c.settings.m=Object.assign(defSettings().m,c.settings.m||{});c.scores=c.scores||{};for(const k in c.scores){const v=c.scores[k];if(v&&typeof v==='object')c.scores[k]=(+v.p||0)-(+v.m||0);}c.scoreLog=(c.scoreLog||[]).filter(u=>u&&u.sids&&typeof u.d==='number');});if(!d.classes.some(c=>c.id===d.activeId))d.activeId=d.classes[0].id;d.tab=d.tab||'score';d.sb=Object.assign({step:1,view:'seat'},d.sb||{});delete d.sb.kind;return d;}
+function migrate(d){d.classes.forEach(c=>{c.avoid=c.avoid||[];c.current=c.current||{};c.locks=c.locks||{};c.history=c.history||[];c.settings=Object.assign(defSettings(),c.settings||{});c.settings.m=Object.assign(defSettings().m,c.settings.m||{});c.scores=c.scores||{};for(const k in c.scores){const v=c.scores[k];if(v&&typeof v==='object')c.scores[k]=(+v.p||0)-(+v.m||0);}c.scoreLog=(c.scoreLog||[]).filter(u=>u&&u.sids&&typeof u.d==='number');c.lpins=c.lpins||{};c.students.forEach(s=>{s.birth=s.birth||(c.lpins[s.id]&&c.lpins[s.id].birth)||'';if(s.birth&&c.lpins[s.id])c.lpins[s.id].birth=s.birth;});});if(!d.classes.some(c=>c.id===d.activeId))d.activeId=d.classes[0].id;d.tab=d.tab||'score';d.sb=Object.assign({step:1,view:'seat'},d.sb||{});delete d.sb.kind;return d;}
 let pTimer;function persist(){clearTimeout(pTimer);pTimer=setTimeout(flushPersist,120);}
 function flushPersist(){clearTimeout(pTimer);pTimer=null;try{localStorage.setItem(STORE_KEY,JSON.stringify(DB));}catch(e){}if(typeof lgSchedule==='function')lgSchedule();}
 addEventListener('pagehide',()=>{if(pTimer)flushPersist();});
@@ -1318,13 +1318,15 @@ function renderStudents(){
   const c=cls(),list=c.students.slice().sort(byNo);
   $('#stCount').textContent=t('nPeople',list.length);
   $('#stBody').innerHTML=list.length?list.map(s=>{const g=s.gender==='M'?'m':s.gender==='F'?'f':'';
+    const bVal=s.birth||(c.lpins&&c.lpins[s.id]&&c.lpins[s.id].birth)||'';
     return `<tr data-id="${s.id}"><td class="no"><input type="number" data-f="no" value="${esc(s.no??'')}" aria-label="${t('thNo')}"></td>
     <td><input type="text" data-f="name" value="${esc(s.name)}" aria-label="${t('thName')}"></td>
+    <td><input type="text" data-f="birth" value="${esc(fmtBirth(bVal))}" placeholder="2015.03.12" style="width:105px;font-family:ui-monospace,Consolas,monospace;font-weight:600" aria-label="${t('thBirth')}"></td>
     <td><input type="text" data-f="en" value="${esc(s.en||'')}" aria-label="${t('thEn')}"></td>
     <td><button type="button" class="gbtn ${g}" data-f="gender">${t(g==='m'?'gM':g==='f'?'gF':'gU')}</button></td>
     <td><input type="number" step="0.1" data-f="height" value="${esc(s.height??'')}" aria-label="${t('thHeight')}"></td>
     <td><input type="checkbox" data-f="front"${s.front?' checked':''} aria-label="${t('thFront')}"></td>
-    <td><button type="button" class="btn sm ghost danger" data-del>${t('del')}</button></td></tr>`;}).join(''):`<tr><td colspan="7" class="muted">${t('noClassStudents')}</td></tr>`;
+    <td><button type="button" class="btn sm ghost danger" data-del>${t('del')}</button></td></tr>`;}).join(''):`<tr><td colspan="8" class="muted">${t('noClassStudents')}</td></tr>`;
   const opts=`<option value="">${t('selectA')}</option>`+list.map(s=>`<option value="${s.id}">${esc((s.no!=null&&s.no!==''?s.no+'. ':'')+dname(s))}</option>`).join('');
   $('#avA').innerHTML=opts;$('#avB').innerHTML=opts;
   $('#avoidDesc').textContent=t('avoidDesc',t(+c.settings.radius===2?'rad2':'rad1'));
@@ -1698,6 +1700,17 @@ $('#stBody').addEventListener('change',e=>{
   else if(f==='front'){s.front=e.target.checked;}
   else if(f==='name'){const v=e.target.value.trim();if(v)s.name=v;else e.target.value=s.name;}
   else if(f==='en'){s.en=e.target.value.trim();}
+  else if(f==='birth'){
+    const raw=e.target.value.trim();
+    const b=raw?parseBirth(raw):'';
+    if(raw&&b===null){toast('생년월일 형식을 확인해 주세요 (예: 2015.03.12)');e.target.focus();return;}
+    s.birth=b||'';
+    const L=lpOf();L[s.id]=L[s.id]||{};L[s.id].birth=s.birth;
+    e.target.value=fmtBirth(s.birth);
+    persist();
+    if(typeof lgSchedule==='function')lgSchedule();
+    toast(s.birth?`${s.name} 생년월일: ${fmtBirth(s.birth)}`:'생년월일을 비웠습니다');
+  }
   persist();renderRoom();
 });
 $('#stBody').addEventListener('click',e=>{
@@ -1713,12 +1726,14 @@ function removeStudents(ids){
   for(const k of Object.keys(c.current))if(set.has(c.current[k])){delete c.current[k];delete c.locks[k];}
   if(set.has(sel))sel=null;
 }
-$('#stAdd').onclick=()=>{const c=cls(),no=Math.max(0,...c.students.map(s=>+s.no||0))+1;c.students.push({id:uid(),no,name:(lang()==='en'?'Student ':'학생')+no,en:'',gender:'',height:null,front:false});persist();renderStudents();renderRoom();const ins=$$('#stBody input[data-f=name]');const last=$(`#stBody tr:last-child input[data-f=name]`);(last||ins[ins.length-1])&&(last||ins[ins.length-1]).select();};
+$('#stAdd').onclick=()=>{const c=cls(),no=Math.max(0,...c.students.map(s=>+s.no||0))+1;c.students.push({id:uid(),no,name:(lang()==='en'?'Student ':'학생')+no,birth:'',en:'',gender:'',height:null,front:false});persist();renderStudents();renderRoom();const ins=$$('#stBody input[data-f=name]');const last=$(`#stBody tr:last-child input[data-f=name]`);(last||ins[ins.length-1])&&(last||ins[ins.length-1]).select();};
 function normName(s){return String(s||'').replace(/\s+/g,'').toLowerCase();}
 function parseRoster(text){
   const out=[];
   for(let line of text.split(/\r?\n/)){
-    line=line.trim();if(!line)continue;let en='';
+    line=line.trim();if(!line)continue;let en='',birth='';
+    const bFound=parseBirth(line);
+    if(bFound){birth=bFound;line=line.replace(/(\d{4})\s*[.\-\/년\s]\s*(\d{1,2})\s*[.\-\/월\s]\s*(\d{1,2})\s*[일.]?|\d{8}|\d{6}/g,' ');}
     line=line.replace(/[(（]([^)）]*)[)）]/,(_,x)=>{en=x.trim();return' ';});
     const toks=line.split(/[\t,;]+|\s+/).map(x=>x.trim()).filter(Boolean);
     let no=null,gender='',height=null;const rest=[];
@@ -1730,7 +1745,7 @@ function parseRoster(text){
       rest.push(tk);
     }
     const name=rest.join(' ');if(!name||/^(이름|성명|name)$/i.test(name)||/이름|성별/.test(name))continue;
-    out.push({no,name,gender,height,en});
+    out.push({no,name,birth,gender,height,en});
   }
   return out;
 }
@@ -1739,12 +1754,148 @@ $('#bulkMerge').onclick=()=>{
   let added=0,upd=0;const seen=new Set();
   for(const r of rows){
     let s=c.students.find(x=>normName(x.name)===normName(r.name));
-    if(s){if(r.no!=null)s.no=r.no;if(r.gender)s.gender=r.gender;if(r.height!=null)s.height=r.height;if(r.en)s.en=r.en;upd++;}
-    else{s={id:uid(),no:r.no,name:r.name,en:r.en||'',gender:r.gender||'',height:r.height,front:false};c.students.push(s);added++;}
+    if(s){
+      if(r.no!=null)s.no=r.no;
+      if(r.birth){s.birth=r.birth;const L=lpOf();L[s.id]=L[s.id]||{};L[s.id].birth=r.birth;}
+      if(r.gender)s.gender=r.gender;
+      if(r.height!=null)s.height=r.height;
+      if(r.en)s.en=r.en;
+      upd++;
+    } else {
+      s={id:uid(),no:r.no,name:r.name,birth:r.birth||'',en:r.en||'',gender:r.gender||'',height:r.height,front:false};
+      if(r.birth){const L=lpOf();L[s.id]={birth:r.birth};}
+      c.students.push(s);added++;
+    }
     seen.add(s.id);
   }
   if($('#bulkReplace').checked)removeStudents(c.students.filter(s=>!seen.has(s.id)).map(s=>s.id));
   persist();renderStudents();renderRoom();renderLayout();toast(t('rosterMerged',added,upd));$('#bulkText').value='';
+};
+/* ---------------- 생년월일 찰떡 일괄 입력 ---------------- */
+function parseSmartBirthdays(text, students){
+  const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  const byNo = students.slice().sort((a,b)=>(a.no||0)-(b.no||0));
+  const matched = new Map(); // studentId -> { birth, matchType }
+  const unassigned = [];
+
+  for(let i=0; i<lines.length; i++){
+    const line = lines[i];
+    const b = parseBirth(line);
+    if(!b) continue;
+    const rest = line.replace(/(\d{4})\s*[.\-\/년\s]\s*(\d{1,2})\s*[.\-\/월\s]\s*(\d{1,2})\s*[일.]?|\d{8}|\d{6}/g, ' ');
+    const sortedByName = students.slice().sort((x,y)=>y.name.length - x.name.length);
+    let target = sortedByName.find(s => rest.includes(s.name));
+    let matchType = '이름 일치';
+    if(!target){
+      const numMatch = rest.match(/(?:^|\D)(\d{1,2})(?:\D|$)/);
+      if(numMatch){
+        const no = +numMatch[1];
+        target = students.find(s => s.no === no);
+        if(target) matchType = '번호 일치';
+      }
+    }
+    if(target && !matched.has(target.id)){
+      matched.set(target.id, { birth: b, matchType });
+    } else {
+      unassigned.push(b);
+    }
+  }
+
+  let unIdx = 0;
+  for(const s of byNo){
+    if(!matched.has(s.id) && unIdx < unassigned.length){
+      matched.set(s.id, { birth: unassigned[unIdx++], matchType: '순서대로 자동 배정' });
+    }
+  }
+
+  return byNo.map(s => ({
+    student: s,
+    res: matched.get(s.id) || null
+  }));
+}
+
+if($('#stBirthBulkBtn')) $('#stBirthBulkBtn').onclick = () => {
+  const c = cls(), list = c.students.slice().sort(byNo);
+  if(!list.length){ toast('먼저 학생 명단을 등록해 주세요'); return; }
+  const d = lpDialog('stBirthDlg', '🎂 생년월일 찰떡 일괄 입력', `
+    <p class="muted" style="margin:0 0 8px">
+      💡 <b>어떤 형태의 자료든 그대로 복사해 붙여넣으세요!</b><br>
+      • <b>순서대로 생일만 있는 경우</b> (1줄 1명) → 1번부터 차례대로 자동 입력<br>
+      • <b>이름과 생일이 섞인 자료</b> (키·영문 등이 함께 있어도) → 이름을 찾아 자동 매칭<br>
+      • <b>번호와 생일</b> (예: 1 2015-03-12) → 출석번호를 찾아 자동 매칭<br>
+      <span class="small muted">※ 2015.03.12, 2015-3-12, 150312, 20150312, 2015년 3월 12일 모두 인식합니다.</span>
+    </p>
+    <textarea id="stBirthInput" rows="7" class="lp-paste" placeholder="명단에서 복사한 내용을 여기에 붙여넣으세요.&#10;예시 1 (생일만 순서대로):&#10;2015.03.12&#10;2015.05.01&#10;&#10;예시 2 (이름+생일+키 등):&#10;김하준 135 2015.03.12&#10;이서윤 여 2015-5-1"></textarea>
+    <div style="margin-top:8px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <b id="stBirthCount" style="font-size:13.5px">인식 결과 미리보기: 0명</b>
+        <span class="small muted">확인 후 아래 [명단에 반영하기]를 누르세요</span>
+      </div>
+      <div id="stBirthPreview" style="max-height:220px;overflow-y:auto;border:1px solid var(--line);border-radius:8px;padding:6px;display:flex;flex-wrap:wrap;gap:6px;background:var(--sel-bg, rgba(0,0,0,0.02))">
+        <span class="muted small" style="padding:4px">내용을 붙여넣으면 학생별 매칭 결과가 여기에 표시됩니다.</span>
+      </div>
+    </div>
+  `, `
+    <button class="btn" data-close>취소</button>
+    <button class="btn primary" id="stBirthApplyBtn">✨ 명단에 반영하기</button>
+  `);
+
+  const input = $('#stBirthInput');
+  const preview = $('#stBirthPreview');
+  const countEl = $('#stBirthCount');
+  let lastParsed = [];
+
+  const updatePreview = () => {
+    const val = input.value.trim();
+    if(!val){
+      preview.innerHTML = '<span class="muted small" style="padding:4px">내용을 붙여넣으면 학생별 매칭 결과가 여기에 표시됩니다.</span>';
+      countEl.textContent = '인식 결과 미리보기: 0명';
+      lastParsed = [];
+      return;
+    }
+    lastParsed = parseSmartBirthdays(val, list);
+    const matchedCount = lastParsed.filter(x => x.res).length;
+    countEl.textContent = `인식 결과 미리보기: ${matchedCount} / ${list.length}명 인식됨`;
+    preview.innerHTML = lastParsed.map(item => {
+      const s = item.student, res = item.res;
+      if(res){
+        return `<span class="chip" style="font-size:12.5px;padding:4px 8px;border:1px solid var(--ok);background:rgba(35,132,90,0.08)">
+          <b>${s.no}. ${esc(s.name)}</b>: <span style="font-family:monospace;font-weight:700;color:var(--ok)">${fmtBirth(res.birth)}</span>
+          <small class="muted">(${res.matchType})</small>
+        </span>`;
+      } else {
+        const cur = s.birth || '';
+        return `<span class="chip" style="font-size:12.5px;padding:4px 8px;opacity:0.6">
+          ${s.no}. ${esc(s.name)}: <span class="muted">${cur ? fmtBirth(cur) + ' (기존유지)' : '미인식'}</span>
+        </span>`;
+      }
+    }).join('');
+  };
+
+  input.addEventListener('input', updatePreview);
+  input.addEventListener('paste', () => setTimeout(updatePreview, 50));
+
+  $('#stBirthApplyBtn').onclick = () => {
+    if(!lastParsed.length || !lastParsed.some(x => x.res)){
+      toast('인식된 생년월일이 없습니다');
+      return;
+    }
+    const L = lpOf();
+    let applied = 0;
+    lastParsed.forEach(item => {
+      if(item.res && item.res.birth){
+        item.student.birth = item.res.birth;
+        L[item.student.id] = L[item.student.id] || {};
+        L[item.student.id].birth = item.res.birth;
+        applied++;
+      }
+    });
+    persist();
+    renderStudents();
+    if(typeof lgSchedule === 'function') lgSchedule();
+    d.close();
+    toast(`생년월일 ${applied}명 명단에 찰떡 반영 완료! 🎉`);
+  };
 };
 $('#avAdd').onclick=()=>{
   const c=cls(),a=$('#avA').value,b=$('#avB').value;if(!a||!b||a===b){toast(t('avoidSame'));return;}
@@ -2783,27 +2934,57 @@ const sha256 = (() => {
 const pinHash=(sid,pin)=>sha256('fc-lounge:'+sid+':'+pin);
 const lpOf=()=>{const c=cls();c.lpins=c.lpins||{};return c.lpins;};
 function parseBirth(t){
-  t=String(t||'').trim();let m=t.match(/(\d{4})\s*[.\-\/년]\s*(\d{1,2})\s*[.\-\/월]\s*(\d{1,2})/);let y,mo,d;
+  t=String(t||'').trim().replace(/일$/, '').trim();
+  let m=t.match(/(\d{4})\s*[.\-\/년\s]\s*(\d{1,2})\s*[.\-\/월\s]\s*(\d{1,2})/);let y,mo,d;
   if(m){y=+m[1];mo=+m[2];d=+m[3];}
+  else if((m=t.match(/(?:^|\D)(\d{2})\s*[.\-\/년\s]\s*(\d{1,2})\s*[.\-\/월\s]\s*(\d{1,2})/))){
+    y=+m[1];y+=y<50?2000:1900;mo=+m[2];d=+m[3];
+  }
   else if((m=t.match(/(?:^|\D)(\d{8})(?:\D|$)/))){y=+m[1].slice(0,4);mo=+m[1].slice(4,6);d=+m[1].slice(6);}
   else if((m=t.match(/(?:^|\D)(\d{6})(?:\D|$)/))){y=+m[1].slice(0,2);y+=y<50?2000:1900;mo=+m[1].slice(2,4);d=+m[1].slice(4);}
   else return null;
-  if(mo<1||mo>12||d<1||d>31||y<1990||y>2030)return null;
+  if(mo<1||mo>12||d<1||d>31||y<1990||y>2035)return null;
   return String(y)+String(mo).padStart(2,'0')+String(d).padStart(2,'0');
 }
 const fmtBirth=b=>b?`${b.slice(0,4)}.${b.slice(4,6)}.${b.slice(6)}`:'';
-/** 생일 4자리 앞/뒤에 출석번호 2자리 또는 생년 2자리. 4가지 중 반에서 겹치지 않는 것을 무작위로 */
+/** 생일 4자리 앞/뒤에 출석번호 2자리 또는 생년 2자리. 생일이 없으면 출석번호 조합/난수 6자리로 안전하게 생성 */
 function makePin(s,birth,used){
-  const md=birth.slice(4),yy=birth.slice(2,4),nn=String(s.no%100).padStart(2,'0');
-  const opts=[nn+md,md+nn,yy+md,md+yy].filter((v,i,a)=>a.indexOf(v)===i);
-  for(let i=opts.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[opts[i],opts[j]]=[opts[j],opts[i]];}
-  return opts.find(p=>!used.has(p))||null;
+  let opts=[];
+  const nn=String((s&&s.no||1)%100).padStart(2,'0');
+  if(birth&&birth.length>=8){
+    const md=birth.slice(4),yy=birth.slice(2,4);
+    opts=[nn+md,md+nn,yy+md,md+yy].filter((v,i,a)=>a.indexOf(v)===i);
+    for(let i=opts.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[opts[i],opts[j]]=[opts[j],opts[i]];}
+    const found=opts.find(p=>!used.has(p));
+    if(found)return found;
+  }
+  // 생일이 없거나 생일 조합이 반에서 겹치는 경우
+  const candidates=[
+    nn+nn+nn,
+    '00'+nn+nn,
+    nn+'00'+nn,
+    '10'+nn+nn,
+    '20'+nn+nn
+  ];
+  for(const c of candidates){if(!used.has(c))return c;}
+  for(let tryCnt=0;tryCnt<60;tryCnt++){
+    const rnd=String(Math.floor(100000+Math.random()*900000));
+    if(!used.has(rnd))return rnd;
+  }
+  return null;
 }
 function lpGen(all){
   const L=lpOf(),list=cls().students.slice().sort(byNo);let made=0;const fail=[];
   const used=new Set(list.map(s=>!all&&L[s.id]&&L[s.id].pin).filter(Boolean));
-  for(const s of list){const v=L[s.id];if(!v||!v.birth)continue;if(!all&&v.pin)continue;const p=makePin(s,v.birth,used);if(p){v.pin=p;used.add(p);made++;}else{v.pin='';fail.push(s.name);}}
-  persist();lpRender();lpSum();toast(`비밀번호 ${made}명 만듦`+(fail.length?` · 겹쳐서 못 만듦: ${fail.join(', ')}`:''));
+  for(const s of list){
+    const v=L[s.id]||(L[s.id]={});
+    if(!all&&v.pin)continue;
+    const p=makePin(s,v.birth||'',used);
+    if(p){v.pin=p;used.add(p);made++;}else{fail.push(s.name);}
+  }
+  persist();lpRender();lpSum();
+  if(typeof lgSchedule==='function')lgSchedule();
+  toast(`비밀번호 ${made}명 생성 완료`+(fail.length?` · 겹쳐서 못 만듦: ${fail.join(', ')}`:''));
 }
 function lpSum(){const c=cls(),L=c.lpins||{},n=c.students.filter(s=>L[s.id]&&L[s.id].pin).length,b=c.students.filter(s=>L[s.id]&&L[s.id].birth).length;$('#lpSum').textContent=`생일 ${b}명 · 비밀번호 ${n} / ${c.students.length}명`;}
 (function lpStyle(){const st=document.createElement('style');st.textContent=`
@@ -2829,32 +3010,54 @@ function lpDialog(id,title,body,foot){
 }
 function lpRender(){
   const tb=document.getElementById('lpRows');if(!tb)return;const L=lpOf();
-  tb.innerHTML=cls().students.slice().sort(byNo).map(s=>{const v=L[s.id]||{};return `<tr><td>${s.no}</td><td><b>${esc(s.name)}</b></td><td><input data-lpb="${s.id}" value="${esc(fmtBirth(v.birth))}" placeholder="2015.03.12"></td><td class="pin">${v.pin?esc(v.pin):(v.birth?'<span class="bad">겹침·미생성</span>':'<span class="muted">—</span>')}</td><td>${v.birth?`<button class="btn sm ghost" data-lpre="${s.id}">다시</button>`:''}</td></tr>`;}).join('');
+  tb.innerHTML=cls().students.slice().sort(byNo).map(s=>{
+    const v=L[s.id]||{};
+    const b=v.birth||s.birth||'';
+    return `<tr>
+      <td>${s.no}</td>
+      <td><b>${esc(s.name)}</b></td>
+      <td>${b?`<span class="pill ok" style="font-size:12px;font-family:monospace">${esc(fmtBirth(b))}</span>`:'<span class="muted" style="font-size:12px">미입력</span>'}</td>
+      <td><input data-lppin="${s.id}" value="${esc(v.pin||'')}" maxlength="6" placeholder="6자리 숫자" style="width:110px;font-family:ui-monospace,Consolas,monospace;font-weight:700;letter-spacing:2px;text-align:center" inputmode="numeric"></td>
+      <td><button class="btn sm ghost" data-lpre="${s.id}" title="다른 6자리 비밀번호로 변경">🎲 재생성</button></td>
+    </tr>`;
+  }).join('');
 }
 $('#lpOpen').onclick=()=>{
   const d=lpDialog('lpDlg','🔐 학생 라운지 비밀번호',`
-    <p class="muted" style="margin:0">생년월일을 넣으면 6자리 비밀번호가 만들어집니다. 예) 2015년 3월 12일생 7번 → <b>070312 · 031207 · 150312 · 031215</b> 중 하나 (반에서 겹치지 않게 무작위)</p>
-    <details><summary style="cursor:pointer;font-weight:600">📋 엑셀에서 한꺼번에 붙여넣기</summary><p class="muted" style="margin:6px 0">명부에서 <b>번호(또는 이름)</b>와 <b>생년월일</b> 두 열을 복사해 붙여 넣으세요. 2015-03-12, 2015.3.12, 20150312, 150312 모두 됩니다.</p><textarea class="lp-paste" id="lpPaste" placeholder="1&#9;2015-03-12&#10;강수빈&#9;2015.7.3"></textarea><div class="row" style="margin-top:6px"><button class="btn sm" id="lpPasteGo">붙여넣기 적용</button></div></details>
-    <table class="lp-tb"><thead><tr><th>번호</th><th>이름</th><th>생년월일</th><th>비밀번호</th><th></th></tr></thead><tbody id="lpRows"></tbody></table>`,
-    `<button class="btn" id="lpGenNew">빈 학생만 만들기</button><button class="btn" id="lpGenAll">모두 새로 만들기</button><button class="btn primary" id="lpPrint2">🖨 라벨지 인쇄</button>`);
+    <p class="muted" style="margin:0 0 8px">
+      💡 <b>학생 라운지 로그인용 6자리 비밀번호</b>를 관리합니다.<br>
+      • [빈 학생 비밀번호 만들기]를 누르면 즉시 6자리 비밀번호가 생성됩니다.<br>
+      • 생년월일이 등록된 학생은 생일+번호 조합으로 외우기 쉽게 만들어지며, 비밀번호 칸을 눌러 직접 수정할 수도 있습니다.<br>
+      <span class="small muted">※ 생년월일 확인 및 일괄 입력은 <b>탑승객 명단</b> 탭에서 편하게 관리하실 수 있습니다.</span>
+    </p>
+    <table class="lp-tb"><thead><tr><th>번호</th><th>이름</th><th>생년월일</th><th>비밀번호(6자리)</th><th></th></tr></thead><tbody id="lpRows"></tbody></table>`,
+    `<button class="btn" id="lpGenNew">🎲 빈 학생 비밀번호 만들기</button><button class="btn" id="lpGenAll">모두 새로 만들기</button><button class="btn primary" id="lpPushNow">🛫 라운지로 지금 전송</button><button class="btn" id="lpPrint2">🖨 라벨지 인쇄</button>`);
   lpRender();
-  d.addEventListener('change',e=>{const i=e.target.closest('[data-lpb]');if(!i)return;const L=lpOf(),id=i.dataset.lpb,b=i.value.trim()?parseBirth(i.value):'';
-    if(b===null){toast('날짜를 읽지 못했습니다 (예: 2015.03.12)');i.focus();return;}
-    const old=L[id]||{};if(!b){delete L[id];}else if(old.birth!==b){const used=new Set(Object.entries(L).filter(e=>e[0]!==id&&e[1].pin).map(e=>e[1].pin));L[id]={birth:b,pin:makePin(stuById(id),b,used)||''};}
-    persist();lpRender();lpSum();});
-  d.addEventListener('click',e=>{const r=e.target.closest('[data-lpre]');if(!r)return;const L=lpOf(),id=r.dataset.lpre,used=new Set(Object.entries(L).filter(e=>e[0]!==id&&e[1].pin).map(e=>e[1].pin));used.add(L[id].pin);const p=makePin(stuById(id),L[id].birth,used);if(p){L[id].pin=p;persist();lpRender();lpSum();}else toast('다른 조합이 없습니다');});
-  $('#lpPasteGo').onclick=()=>{
-    const L=lpOf(),list=cls().students;let ok=0;const bad=[];
-    for(const line of $('#lpPaste').value.split(/\r?\n/)){if(!line.trim())continue;
-      const b=parseBirth(line);if(!b){bad.push(line.trim());continue;}
-      const rest=line.replace(/(\d{4})\s*[.\-\/년]\s*(\d{1,2})\s*[.\-\/월]\s*(\d{1,2})\s*[일.]?|\d{8}|\d{6}/,' ');
-      let s=list.filter(x=>rest.includes(x.name)).sort((a,b2)=>b2.name.length-a.name.length)[0];
-      if(!s){const n=(rest.match(/(?:^|\D)(\d{1,2})(?:\D|$)/)||[])[1];if(n)s=list.find(x=>x.no===+n);}
-      if(!s){bad.push(line.trim());continue;}
-      if(!L[s.id]||L[s.id].birth!==b)L[s.id]={birth:b,pin:''};ok++;}
-    persist();lpGen(false);toast(`${ok}명 생일 입력`+(bad.length?` · 못 읽은 줄 ${bad.length}개: ${bad.slice(0,3).join(' / ')}`:''));};
+  d.addEventListener('change',e=>{
+    const ip=e.target.closest('[data-lppin]');
+    if(ip){
+      const L=lpOf(),id=ip.dataset.lppin,raw=ip.value.trim().replace(/\D/g,'');
+      if(raw&&raw.length!==6){toast('비밀번호는 숫자 6자리여야 합니다');ip.focus();return;}
+      L[id]=L[id]||{};
+      L[id].pin=raw;
+      persist();lpRender();lpSum();if(typeof lgSchedule==='function')lgSchedule();
+      toast(raw?`${stuById(id)?.name||''} 비밀번호 설정됨`:'비밀번호가 비워졌습니다');
+    }
+  });
+  d.addEventListener('click',e=>{
+    const r=e.target.closest('[data-lpre]');if(!r)return;
+    const L=lpOf(),id=r.dataset.lpre,used=new Set(Object.entries(L).filter(e=>e[0]!==id&&e[1].pin).map(e=>e[1].pin));
+    L[id]=L[id]||{};
+    const s=stuById(id);
+    const p=makePin(s,(L[id].birth||s?.birth||''),used);
+    if(p){L[id].pin=p;persist();lpRender();lpSum();if(typeof lgSchedule==='function')lgSchedule();toast('새 비밀번호를 생성했습니다');}
+    else toast('가능한 번호 조합이 없습니다');
+  });
   $('#lpGenNew').onclick=()=>lpGen(false);
-  $('#lpGenAll').onclick=()=>{if(confirm('모든 학생의 비밀번호를 새로 만들까요? 이미 나눠 준 라벨은 못 쓰게 됩니다.'))lpGen(true);};
+  $('#lpGenAll').onclick=()=>{if(confirm('모든 학생의 비밀번호를 새로 만들까요?'))lpGen(true);};
+  $('#lpPushNow').onclick=async()=>{
+    if(typeof lgPush==='function'){await lgPush(true);}else{toast('학생 라운지 연동 설정이 필요합니다');}
+  };
   $('#lpPrint2').onclick=()=>{d.close();lpLabelDlg();};
 };
 /* 라벨지 인쇄 (A4, mm 단위). 보정값으로 프린터 오차를 맞춤 */
