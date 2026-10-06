@@ -92,18 +92,23 @@ label.f{display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:60
 .todo.hot{background:#FFFBEA}
 .saved{font-size:13px;font-weight:700;color:var(--ok);white-space:nowrap}
 .saved.ing{color:var(--warn)}
-/* name grid / login (가로형 명찰 디자인 & 태블릿 가로 화면 최적화) */
-.names{display:grid;grid-template-columns:repeat(var(--cols, 10), minmax(0, 1fr));gap:9px 7px;flex:1;min-height:0;align-content:center;padding:8px 0}
-.names button{border:1.5px solid var(--line);background:#fff;border-radius:11px;display:inline-flex;flex-direction:row;align-items:center;justify-content:center;gap:7px;font-weight:700;font-size:15.5px;min-height:44px;padding:4px 8px;box-shadow:0 1.5px 4px rgba(0,0,0,.03);transition:all .12s ease;cursor:pointer;overflow:hidden;white-space:nowrap}
-.names button .nb{font-size:11px;color:var(--muted);font-weight:700;background:var(--surface-2);padding:2px 5px;border-radius:5px;line-height:1;flex-shrink:0}
-.names button .nn{letter-spacing:-.02em;overflow:hidden;text-overflow:ellipsis}
-.names button.F{border-left:4px solid #E8A7B8}
-.names button.M{border-left:4px solid #A7C0E8}
-.names button:hover{border-color:var(--gold);transform:translateY(-1px);box-shadow:0 3px 8px rgba(0,0,0,.08)}
-.names button:active{transform:scale(.97);background:var(--gold-2)}
+/* name grid / login (도톰하고 꽉 찬 가로형 명찰 & 태블릿 가로 화면 최적화) */
+.names-board{background:var(--surface,#fff);border:1.5px solid var(--line);border-radius:18px;padding:18px 16px;box-shadow:0 4px 20px rgba(20,33,61,.04);display:flex;flex-direction:column;gap:12px;flex:1;min-height:0;justify-content:center}
+.names-head{display:flex;align-items:center;justify-content:space-between;padding:0 4px}
+.names-head .tit{font-size:14.5px;font-weight:700;color:var(--navy);display:flex;align-items:center;gap:6px}
+.names-head .cnt{font-size:12px;font-weight:700;color:var(--muted);background:var(--surface-2);padding:3px 9px;border-radius:99px;border:1px solid var(--line)}
+.names{display:grid;grid-template-columns:repeat(var(--cols, 10), minmax(0, 1fr));gap:12px 10px;width:100%}
+.names button{border:1.5px solid var(--line);background:#fff;border-radius:14px;display:inline-flex;flex-direction:row;align-items:center;justify-content:center;gap:8px;font-weight:700;font-size:16.5px;min-height:58px;padding:8px 12px;box-shadow:0 2px 6px rgba(20,33,61,.05);transition:all .15s cubic-bezier(.2,.8,.25,1);cursor:pointer;overflow:hidden;white-space:nowrap}
+.names button .nb{font-size:12px;color:var(--muted);font-weight:800;background:var(--surface-2);padding:4px 7px;border-radius:7px;line-height:1;flex-shrink:0;border:1px solid rgba(0,0,0,.06)}
+.names button .nn{letter-spacing:-.02em;overflow:hidden;text-overflow:ellipsis;font-size:16.5px}
+.names button.F{border-left:5px solid #EE93A9}
+.names button.M{border-left:5px solid #6C9CE8}
+.names button:hover{border-color:var(--gold);transform:translateY(-2px);box-shadow:0 6px 16px rgba(20,33,61,.1)}
+.names button:active{transform:scale(.96);background:var(--gold-2)}
 @media (max-width: 768px){
-  .names{grid-template-columns:repeat(auto-fill, minmax(95px, 1fr));gap:6px}
-  .names button{min-height:38px;font-size:14px;padding:3px 6px}
+  .names-board{padding:12px 10px}
+  .names{grid-template-columns:repeat(auto-fill, minmax(95px, 1fr));gap:8px 6px}
+  .names button{min-height:48px;font-size:14.5px;padding:4px 8px;border-radius:10px}
 }
 /* modal */
 .ov{position:fixed;inset:0;background:rgba(10,18,36,.55);display:flex;align-items:center;justify-content:center;z-index:50;padding:14px}
@@ -650,7 +655,16 @@ V.home = () => {
   if (!U.me) {
     const rs = roster(), cols = calcCols(rs.length);
     return `<div class="hero"><div style="font-size:42px">🛫</div><div><h1>${esc(S.main?.cname || '우리 반')} 라운지</h1><p>👇 내 이름을 누르고 비밀번호 6자리를 눌러요. ${PHONE ? '' : '다 쓰면 꼭 <b>나가기</b>를 눌러요!'}${S.main?.sample ? ' <b>(체험 학급 비밀번호: 111111)</b>' : ''}</p></div></div>${notice}
-    ${rs.length ? `<div class="names" style="--cols:${cols}">${rs.map(s => `<button class="${s.g || ''}" data-a="pick" data-id="${s.id}"><span class="nb">${s.no}</span><span class="nn">${esc(s.name)}</span></button>`).join('')}</div>` : `<div class="empty"><div class="big">📭</div>명단이 아직 없어요. 선생님이 퍼스트클래스에서 보내 주면 나타나요.</div>`}`;
+    ${rs.length ? `
+    <div class="names-board">
+      <div class="names-head">
+        <span class="tit"><span>🏷️</span> 학생 명단 (이름을 눌러 로그인)</span>
+        <span class="cnt">${rs.length}명</span>
+      </div>
+      <div class="names" style="--cols:${cols}">
+        ${rs.map(s => `<button class="${s.g || ''}" data-a="pick" data-id="${s.id}"><span class="nb">${s.no}</span><span class="nn">${esc(s.name)}</span></button>`).join('')}
+      </div>
+    </div>` : `<div class="empty"><div class="big">📭</div>명단이 아직 없어요. 선생님이 퍼스트클래스에서 보내 주면 나타나요.</div>`}`;
   }
   const R = curRound(), w = myW(), M = S.mani || {}, mm = myM();
   const openC = S.contests.filter(c => c.st === 'open'), polls = S.polls.filter(p => p.open && p.votes?.[U.me] == null);
