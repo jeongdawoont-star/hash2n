@@ -377,7 +377,17 @@ legend{font-weight:600;margin-bottom:6px;font-size:13.5px;padding:0}
 .center-popup.active{transform:translate(-50%,-50%) scale(1);opacity:1;pointer-events:auto}
 .popup-backdrop{position:fixed;inset:0;background:rgba(12,19,32,.6);backdrop-filter:blur(4px);z-index:124;opacity:0;pointer-events:none;transition:opacity .25s}
 .popup-backdrop.active{opacity:1;pointer-events:auto}
-@media print{.tools-dock,.ct-modal,.center-popup,.popup-backdrop,.qr-fullscreen,.qr-floating{display:none!important}}
+/* 학생 라운지 매뉴얼 모달 */
+.lg-guide-dlg{width:min(780px,96vw);max-height:92vh;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:20px;padding:24px;box-shadow:0 22px 64px rgba(12,19,32,.4);margin:auto;overflow-y:auto}
+.lg-guide-dlg::backdrop{background:rgba(12,19,32,.65);backdrop-filter:blur(4px)}
+.lg-guide-hero{background:linear-gradient(135deg,var(--board) 0%,#203358 100%);color:#fff;border-radius:14px;padding:18px 20px;display:flex;flex-direction:column;gap:6px;box-shadow:inset 0 -2px 0 var(--board-rail)}
+.lg-guide-hero h3{margin:0;font-family:var(--f-display);font-size:20px;color:var(--board-ink);letter-spacing:.02em}
+.lg-guide-hero p{margin:0;font-size:13px;line-height:1.5;opacity:.92}
+.lg-step{background:var(--surface-2);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px}
+.lg-step-num{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-size:13px;font-weight:700;margin-right:6px}
+.lg-step-title{font-size:15px;font-weight:700;display:flex;align-items:center;color:var(--ink)}
+.lg-tip-box{background:var(--sel-bg);border:1px solid var(--board-rail);border-radius:10px;padding:10px 14px;font-size:13px;color:var(--sel-ink);display:flex;gap:8px;align-items:flex-start}
+@media print{.tools-dock,.ct-modal,.center-popup,.popup-backdrop,.qr-fullscreen,.qr-floating,.lg-guide-dlg{display:none!important}}
 </style>
 <div class="app" id="app">
   <header class="top">
@@ -597,10 +607,15 @@ legend{font-weight:600;margin-bottom:6px;font-size:13.5px;padding:0}
             <div class="row"><button id="lpOpen" class="btn sm primary">생일 입력·비밀번호 만들기</button><button id="lpLabel" class="btn sm">🖨 라벨지 인쇄</button></div>
           </div>
           <div class="card" id="lgCard">
-            <h2>🛫 학생 라운지 연동</h2>
-            <p class="muted">명단(번호·이름·성별)·좌석·칭찬 점수를 Firestore로 보내 학생 라운지(주식·마니또·대회·광장)와 이어 줍니다. 라운지에서 선생님이 적용한 태도 감점은 <b>머쓱 −</b>로, 주식 환전 승인은 <b>칭찬 +</b>로 자동 기록합니다. 처음 한 번 여기에만 붙여 넣고 "학생 라운지 열기"를 누르면 라운지에도 설정이 들어갑니다.</p>
-            <label class="inl" style="flex-direction:column;align-items:stretch;gap:4px"><span>학급 코드</span><input type="text" id="lgCode" placeholder="예: kis5-1-2026"></label>
-            <label class="inl" style="flex-direction:column;align-items:stretch;gap:4px"><span>Firebase 설정 (firebaseConfig 통째로 붙여 넣기)</span><textarea id="lgFb" rows="4" style="font:12px monospace;border:1px solid var(--line);border-radius:8px;padding:8px"></textarea></label>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
+              <h2 style="margin:0">🛫 학생 라운지 연동</h2>
+              <button type="button" id="lgHelpBtn" class="btn sm" style="gap:5px;border-color:var(--chalk);background:var(--sel-bg);color:var(--sel-ink);font-weight:700">
+                <span aria-hidden="true">ℹ️</span> <span>연동 매뉴얼</span>
+              </button>
+            </div>
+            <p class="muted">명단(번호·이름·성별)·좌석·칭찬 점수를 Firestore로 보내 학생 라운지(주식·마니또·대회·담벼락)와 이어 줍니다. 라운지에서 선생님이 적용한 태도 감점은 <b>머쓱 −</b>로, 주식 환전 승인은 <b>칭찬 +</b>로 자동 기록합니다. 처음 한 번 여기에만 붙여 넣고 "학생 라운지 열기"를 누르면 라운지에도 설정이 들어갑니다.</p>
+            <label class="inl" style="flex-direction:column;align-items:stretch;gap:4px"><span>학급 코드</span><input type="text" id="lgCode" placeholder="예: firstclass-lounge 또는 kis5-1"></label>
+            <label class="inl" style="flex-direction:column;align-items:stretch;gap:4px"><span>Firebase 설정 (콘솔 코드 통째로 붙여 넣기 가능)</span><textarea id="lgFb" rows="5" placeholder="// Firebase 웹 앱 코드(import 포함 전체)를 그대로 붙여넣으셔도 자동으로 필요한 설정만 쏙 추출합니다." style="font:12px monospace;border:1px solid var(--line);border-radius:8px;padding:8px"></textarea></label>
             <label class="inl" style="flex-direction:column;align-items:stretch;gap:4px"><span>학생 라운지 주소 (비우면 같은 폴더의 파일)</span><input type="text" id="lgUrl" placeholder="1St클래스_학생라운지.html"></label>
             <label class="check"><input type="checkbox" id="lgOn"> <span>점수가 바뀌면 자동으로 보내기</span></label>
             <div class="row"><button id="lgSave" class="btn sm primary">저장</button><button id="lgPush" class="btn sm">지금 보내기</button><button id="lgOpen" class="btn sm ghost">학생 라운지 열기 ↗</button></div>
@@ -834,6 +849,102 @@ legend{font-weight:600;margin-bottom:6px;font-size:13.5px;padding:0}
       <button type="button" class="btn primary" id="popupConfirmBtn" style="padding:0 22px;height:42px;font-size:15px;">확인</button>
     </div>
   </div>
+
+  <!-- 5. LOUNGE CONNECTION HELP MODAL -->
+  <dialog id="lgHelpDialog" class="lg-guide-dlg" aria-labelledby="lgHelpTitle">
+    <div class="ct-head" style="margin-bottom:14px;padding-bottom:10px;">
+      <h2 id="lgHelpTitle" style="font-size:21px;"><span aria-hidden="true">🛫</span> 학생 라운지 연동 가이드 & 매뉴얼</h2>
+      <button type="button" class="ct-close" id="lgHelpCloseBtn" aria-label="닫기">✕</button>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <!-- Hero Banner -->
+      <div class="lg-guide-hero">
+        <h3>✨ 자리배치와 학생 라운지가 실시간으로 연결됩니다!</h3>
+        <p>선생님이 자리배치에서 주는 <b>칭찬 점수</b>와 <b>머쓱 점수</b>가 구글 Firebase(Firestore)를 통해 학생들의 폰/태블릿 라운지(주식·마니또·대회·담벼락)로 실시간 전달됩니다. 반대로 라운지에서 선생님이 승인한 주식 환전이나 태도 감점도 자리배치 점수판에 자동으로 기록됩니다.</p>
+      </div>
+
+      <!-- Step 1 -->
+      <div class="lg-step">
+        <div class="lg-step-title">
+          <span class="lg-step-num">1</span> Firebase 프로젝트 & Firestore 무료 생성 (1분 소요)
+        </div>
+        <p class="muted" style="margin:2px 0 6px 0;">구글 무료 계정만 있으면 신용카드 등록 없이 1분 만에 데이터베이스를 만들 수 있습니다.</p>
+        <div style="display:flex;flex-direction:column;gap:6px;font-size:13.5px;">
+          <div>① <a href="https://console.firebase.google.com" target="_blank" rel="noopener" class="btn sm primary" style="display:inline-flex;height:28px;padding:0 10px;text-decoration:none;margin-right:4px;">🔥 Firebase 콘솔 열기 ↗</a> 로 이동해 구글 로그인 후 <b>[프로젝트 만들기]</b>를 누릅니다. (이름: 예 `우리반라운지` 등 자유롭게)</div>
+          <div>② Google 애널리틱스는 체크 해제(권장)하고 만들기 완료합니다.</div>
+          <div>③ 왼쪽 메뉴 <b>[빌드] → [Firestore Database]</b>를 누르고 <b>[데이터베이스 만들기]</b>를 클릭합니다.</div>
+          <div>④ 데이터베이스 위치는 <b>asia-northeast3 (서울)</b> 또는 기본값을 선택합니다.</div>
+          <div>⑤ 보안 규칙 단계에서 <b>[테스트 모드에서 시작]</b>을 체크하고 [사용 설정]을 누르면 완성!</div>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="lg-step">
+        <div class="lg-step-title">
+          <span class="lg-step-num">2</span> 웹 앱 설정 키 복사해서 붙여넣기
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;font-size:13.5px;">
+          <div>① Firebase 콘솔 상단 <b>[프로젝트 개요]</b> 옆의 ⚙️ <b>[프로젝트 설정]</b>을 클릭합니다.</div>
+          <div>② 화면 맨 아래 '내 앱' 섹션에서 웹 아이콘 <b>&lt;/&gt;</b>을 클릭합니다.</div>
+          <div>③ 앱 닉네임(예: `라운지`)을 적고 <b>[앱 등록]</b>을 누릅니다.</div>
+          <div>④ 화면에 나타나는 코드(스니펫)를 <b>통째로 복사</b>합니다.</div>
+        </div>
+        <div class="lg-tip-box" style="margin-top:4px;">
+          <span style="font-size:16px;">💡</span>
+          <div>
+            <b>통째로 붙여넣어도 문제 없습니다!</b><br>
+            <code>import { initializeApp }...</code> 같은 영어가 섞인 전체 코드를 복사해서 퍼스트클래스 'Firebase 설정' 칸에 그대로 붙여넣으셔도 프로그램이 알아서 필요한 핵심 키(<code>apiKey</code>, <code>projectId</code> 등)만 쏙 뽑아 자동으로 정리해 드립니다.
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="lg-step">
+        <div class="lg-step-title">
+          <span class="lg-step-num">3</span> 학급 코드 정하고 [저장] 누르기
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;font-size:13.5px;">
+          <div>① <b>학급 코드</b>: 다른 학교나 학급과 겹치지 않는 고유한 영문/숫자 코드(예: <code>bupyeong5-1-2026</code>)를 입력합니다.</div>
+          <div>② <b>[저장]</b> 버튼을 누르면 설정이 보관되고, 상태창에 <b>'자동 보내기 켜짐 ✓'</b>이 뜹니다.</div>
+          <div>③ <b>[지금 보내기]</b>를 누르면 현재 자리배치와 명단, 점수가 라운지로 즉시 1차 전송됩니다.</div>
+        </div>
+      </div>
+
+      <!-- Step 4 -->
+      <div class="lg-step">
+        <div class="lg-step-title">
+          <span class="lg-step-num">4</span> 학생 라운지 열기 & 학생들에게 QR 배포
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;font-size:13.5px;">
+          <div>① <b>[학생 라운지 열기 ↗]</b>를 누르면 방금 저장한 설정이 라운지에 자동으로 연결되어 열립니다.</div>
+          <div>② 라운지 화면 우측 상단의 ⚙️(선생님 모드)에서 <b>QR코드</b>를 교실 TV 화면에 띄우거나 인쇄해 교실에 붙입니다.</div>
+          <div>③ 학생들은 스마트폰 카메라나 태블릿으로 QR을 찍고, <b>출석번호와 생일(비밀번호 6자리)</b>로 로그인하면 끝납니다!</div>
+        </div>
+      </div>
+
+      <!-- FAQ Box -->
+      <div class="card" style="background:var(--surface);border-color:var(--chalk);margin-top:2px;">
+        <h4 style="margin:0 0 8px 0;font-size:14.5px;color:var(--chalk);display:flex;align-items:center;gap:6px;">
+          <span>❓</span> 자주 묻는 질문 & 안심 팁
+        </h4>
+        <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;line-height:1.5;">
+          <div>
+            <b>Q. 혹시 요금이 청구될 위험이 있나요?</b><br>
+            <span class="muted">절대 없습니다. 구글 무료 플랜(Spark)은 하루 읽기 5만 회, 쓰기 2만 회가 매일 무료로 제공되어 학급 단위에서는 초과할 일이 전혀 없습니다. 신용카드 등록도 요구하지 않습니다.</span>
+          </div>
+          <div>
+            <b>Q. Firestore 생성 후 30일 뒤 만료 경고 메일이 와요!</b><br>
+            <span class="muted">테스트 모드로 생성하면 30일 임시 기간이 지정됩니다. 1년 내내 유지하려면 Firebase 콘솔 → Firestore → <b>[규칙(Rules)]</b> 탭에서 조건을 지우고 <code>allow read, write: if true;</code> 로 바꾼 뒤 <b>[게시]</b>를 누르시면 됩니다.</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;margin-top:6px;">
+        <button type="button" class="btn primary" id="lgHelpConfirmBtn" style="padding:0 24px;">이해했습니다 (닫기)</button>
+      </div>
+    </div>
+  </dialog>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </div>
@@ -2544,12 +2655,47 @@ setTimerSeconds(180);
 
 /* ---------------- 학생 라운지 연동 (Firestore) ---------------- */
 const LG_KEY='firstclass.lounge',LG_FB='10.12.2';
+const DEFAULT_FB = {
+  apiKey: "AIzaSyCe-4468moyhcJCUjii3el9B3a80EImvK0",
+  authDomain: "firstclass-lounge.firebaseapp.com",
+  projectId: "firstclass-lounge",
+  storageBucket: "firstclass-lounge.firebasestorage.app",
+  messagingSenderId: "66806364892",
+  appId: "1:66806364892:web:e128208bbc84d52fc71219"
+};
 const lg={cfg:{},F:null,db:null,unsub:null,timer:null,pen:{}};
 try{lg.cfg=JSON.parse(localStorage.getItem(LG_KEY)||'{}');}catch(e){lg.cfg={};}
+if(!lg.cfg.fb) lg.cfg.fb = DEFAULT_FB;
+if(!lg.cfg.code) lg.cfg.code = 'firstclass-lounge';
 const lgOnOf=c=>c.on!==false; // 자동 보내기는 기본 켜짐 (체크를 깜빡해서 점수가 안 가는 일 방지)
 /* 연동은 저장할 때 고른 학급으로 고정 (다른 학급을 보고 있어도 엉뚱한 명단이 가지 않게) */
 const lgCls=()=>DB?(DB.classes.find(c=>c.id===lg.cfg.cid)||cls()):null;
-function lgParse(txt){if(!txt)return null;const m=String(txt).match(/\{[\s\S]*\}/);if(!m)return null;try{return JSON.parse(m[0]);}catch(e){}try{return JSON.parse(m[0].replace(/\/\/.*$/gm,'').replace(/([{,]\s*)([A-Za-z_]\w*)\s*:/g,'$1"$2":').replace(/'/g,'"').replace(/,\s*}/g,'}'));}catch(e){return null;}}
+function lgParse(txt){
+  if(!txt)return null;if(typeof txt==='object')return txt;
+  const s=String(txt).trim();if(!s)return null;
+  const tryParse=str=>{
+    if(!str)return null;try{return JSON.parse(str);}catch(e){}
+    try{
+      const cl=str.replace(/\/\*[\s\S]*?\*\//g,'').replace(/\/\/.*$/gm,'')
+        .replace(/([{,]\s*)([A-Za-z0-9_]+)\s*:/g,'$1"$2":')
+        .replace(/'([^'\\]*(?:\\.[^'\\]*)*)'/g,'"$$1"')
+        .replace(/,\s*}/g,'}');
+      return JSON.parse(cl);
+    }catch(e){}return null;
+  };
+  const cfgMatch=s.match(/firebaseConfig\s*=\s*(\{[\s\S]*?\});?/);
+  if(cfgMatch){const res=tryParse(cfgMatch[1]);if(res&&res.apiKey)return res;}
+  const objMatch=s.match(/\{[^{}]*apiKey[^{}]*\}/);
+  if(objMatch){const res=tryParse(objMatch[0]);if(res&&res.apiKey)return res;}
+  const allBraces=s.match(/\{[\s\S]*\}/);
+  if(allBraces){const res=tryParse(allBraces[0]);if(res&&res.apiKey)return res;}
+  const ext=k=>{const m=s.match(new RegExp(`['"]?${k}['"]?\\s*:\\s*['"]([^'"\\s,]+)['"]`));return m?m[1]:'';};
+  const apiKey=ext('apiKey'),projectId=ext('projectId');
+  if(apiKey&&projectId){
+    return {apiKey,authDomain:ext('authDomain'),projectId,storageBucket:ext('storageBucket'),messagingSenderId:ext('messagingSenderId'),appId:ext('appId')};
+  }
+  return tryParse(s);
+}
 function lgStatus(m){const el=$('#lgStatus');if(el)el.textContent=m;}
 function lgFill(){const c=lg.cfg;$('#lgCode').value=c.code||'';$('#lgFb').value=c.fb?JSON.stringify(c.fb,null,1):'';$('#lgUrl').value=c.url||'';$('#lgOn').checked=lgOnOf(c);lgStatus(c.fb&&c.code?(lgOnOf(c)?`자동 보내기 켜짐${lgCls()?` (${lgCls().name})`:''} —점수가 바뀌면 1~2초 뒤 라운지로 갑니다`:'연결 정보 저장됨 (자동 보내기 꺼짐 — "지금 보내기"를 눌러야 갑니다)'):'Firebase 설정이 없으면 학생 라운지는 "체험 모드"로 이 브라우저 데이터만 씁니다.');}
 async function lgConnect(){
@@ -2589,13 +2735,26 @@ function lgWatch(){
     if(nMinus||nPlus||resend){clearTimeout(lg.timer);lg.timer=setTimeout(()=>lgPush(false),300);}
   },e=>lgStatus('감점 받기 오류: '+(e.code||e.message)));
 }
-$('#lgSave').onclick=()=>{const fbTxt=$('#lgFb').value.trim(),fb=lgParse(fbTxt);if(fbTxt&&!fb){toast('Firebase 설정을 읽지 못했습니다');return;}
-  const old=JSON.stringify([lg.cfg.code,lg.cfg.fb]);lg.cfg={code:$('#lgCode').value.trim(),fb,url:$('#lgUrl').value.trim(),on:$('#lgOn').checked,cid:cls().id};
-  localStorage.setItem(LG_KEY,JSON.stringify(lg.cfg));if(old!==JSON.stringify([lg.cfg.code,lg.cfg.fb])){if(lg.unsub)lg.unsub();lg.db=null;lg.unsub=null;}
-  lgFill();toast('저장했습니다');if(lgOnOf(lg.cfg)&&fb)lgPush(false);};
+$('#lgSave').onclick=()=>{
+  const fbTxt=$('#lgFb').value.trim(),fb=lgParse(fbTxt);
+  if(fbTxt&&!fb){toast('Firebase 설정을 읽지 못했습니다');return;}
+  const old=JSON.stringify([lg.cfg.code,lg.cfg.fb]);
+  lg.cfg={code:$('#lgCode').value.trim(),fb,url:$('#lgUrl').value.trim(),on:$('#lgOn').checked,cid:cls().id};
+  localStorage.setItem(LG_KEY,JSON.stringify(lg.cfg));
+  if(old!==JSON.stringify([lg.cfg.code,lg.cfg.fb])){if(lg.unsub)lg.unsub();lg.db=null;lg.unsub=null;}
+  lgFill();toast('저장했습니다');if(lgOnOf(lg.cfg)&&fb)lgPush(false);
+};
 $('#lgPush').onclick=()=>lgPush(true);
 /* 해시브라운 코딩기록소(vibe-apps/first-class.html)에서는 같은 폴더의 first-class-lounge.html, 내 PC 폴더에서는 1St클래스_학생라운지.html */
 $('#lgOpen').onclick=()=>{const c=lg.cfg,u=c.url||(/first-class\.html$/i.test(decodeURIComponent(location.pathname))?'first-class-lounge.html':'1St클래스_학생라운지.html'),enc=btoa(unescape(encodeURIComponent(JSON.stringify({code:c.code||'demo',fb:c.fb||null}))));window.open(u+'#c='+encodeURIComponent(enc),'_blank');};
+
+/* 연동 매뉴얼 모달 이벤트 */
+const lgHelpDlg=$('#lgHelpDialog');
+if($('#lgHelpBtn'))$('#lgHelpBtn').onclick=()=>{if(lgHelpDlg)lgHelpDlg.showModal();};
+if($('#lgHelpCloseBtn'))$('#lgHelpCloseBtn').onclick=()=>{if(lgHelpDlg)lgHelpDlg.close();};
+if($('#lgHelpConfirmBtn'))$('#lgHelpConfirmBtn').onclick=()=>{if(lgHelpDlg)lgHelpDlg.close();};
+if(lgHelpDlg)lgHelpDlg.addEventListener('click',e=>{if(e.target===lgHelpDlg)lgHelpDlg.close();});
+
 lgFill();
 /* ---------------- 학생 라운지 비밀번호 (생일 기반 6자리) ---------------- */
 /* 학생 라운지와 같은 해시 함수. 생일·비밀번호 원문은 이 브라우저(cls().lpins)에만 저장 */

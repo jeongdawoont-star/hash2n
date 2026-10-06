@@ -362,9 +362,29 @@ const pinHash = (sid, pin) => sha256('fc-lounge:' + sid + ':' + pin);
 const CFG_KEY = 'fclounge.cfg';
 function parseFb(txt) {
   if (!txt) return null; if (typeof txt === 'object') return txt;
-  const m = String(txt).match(/\{[\s\S]*\}/); if (!m) return null;
-  try { return JSON.parse(m[0]); } catch (e) { }
-  try { return JSON.parse(m[0].replace(/\/\/.*$/gm, '').replace(/([{,]\s*)([A-Za-z_]\w*)\s*:/g, '$1"$2":').replace(/'/g, '"').replace(/,\s*}/g, '}')); } catch (e) { return null; }
+  const s = String(txt).trim(); if (!s) return null;
+  const tryParse = str => {
+    if (!str) return null; try { return JSON.parse(str); } catch (e) { }
+    try {
+      const cl = str.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '')
+        .replace(/([{,]\s*)([A-Za-z0-9_]+)\s*:/g, '$1"$2":')
+        .replace(/'([^'\\]*(?:\\.[^'\\]*)*)'/g, '"$1"')
+        .replace(/,\s*}/g, '}');
+      return JSON.parse(cl);
+    } catch (e) { } return null;
+  };
+  const cfgMatch = s.match(/firebaseConfig\s*=\s*(\{[\s\S]*?\});?/);
+  if (cfgMatch) { const res = tryParse(cfgMatch[1]); if (res && res.apiKey) return res; }
+  const objMatch = s.match(/\{[^{}]*apiKey[^{}]*\}/);
+  if (objMatch) { const res = tryParse(objMatch[0]); if (res && res.apiKey) return res; }
+  const allBraces = s.match(/\{[\s\S]*\}/);
+  if (allBraces) { const res = tryParse(allBraces[0]); if (res && res.apiKey) return res; }
+  const ext = k => { const m = s.match(new RegExp(`['"]?${k}['"]?\\s*:\\s*['"]([^'"\\s,]+)['"]`)); return m ? m[1] : ''; };
+  const apiKey = ext('apiKey'), projectId = ext('projectId');
+  if (apiKey && projectId) {
+    return { apiKey, authDomain: ext('authDomain'), projectId, storageBucket: ext('storageBucket'), messagingSenderId: ext('messagingSenderId'), appId: ext('appId') };
+  }
+  return tryParse(s);
 }
 function loadCfg() {
   const h = location.hash.match(/[#&]c=([^&]+)/);
@@ -1397,7 +1417,7 @@ V.teacher = () => {
   else if (t === 'art') body = artAdmin();
   else if (t === 'conn') {
     const link = appUrl(), qr = studentLink();
-    body = `<div class="body"><div class="card col" style="flex:1"><h2>🔌 연결 상태: ${DB.kind === 'cloud' ? '<span class="pill ok">Firestore 연결됨</span>' : '<span class="pill warn">체험 모드 (이 브라우저에만 저장)</span>'}</h2>
+    body = `<div class="body"><div class="card col" style="flex:1"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><h2>🔌 연결 상태: ${DB.kind === 'cloud' ? '<span class="pill ok">Firestore 연결됨</span>' : '<span class="pill warn">체험 모드 (이 브라우저에만 저장)</span>'}</h2><button class="btn sm" data-a="cfGuide" style="border-color:var(--chalk);font-weight:700">ℹ️ 연동 매뉴얼</button></div>
       <label class="f">학급 코드 (퍼스트클래스와 같게)<input type="text" id="cfCode" value="${esc(CFG.code)}"></label>
       <label class="f">Firebase 설정 (firebaseConfig를 통째로 붙여 넣기)<textarea id="cfFb" rows="7" placeholder="const firebaseConfig = { apiKey: ..., projectId: ... }">${CFG.fb ? esc(JSON.stringify(CFG.fb, null, 1)) : ''}</textarea></label>
       <div class="row"><button class="btn p" data-a="cfSave">저장하고 다시 열기</button>${DB.kind === 'demo' ? '<button class="btn ghost" data-a="demoWipe">체험 데이터 지우기</button>' : ''}</div>
@@ -1483,6 +1503,45 @@ A.maniGo = () => { U.view = 'mani'; render(); const ph = S.mani?.phase || 'off';
 A.cfSave = () => { const fb = parseFb($('#cfFb').value); if ($('#cfFb').value.trim() && !fb) return toast('Firebase 설정을 읽지 못했어요'); localStorage.setItem(CFG_KEY, JSON.stringify({ code: $('#cfCode').value.trim() || 'demo', fb })); location.reload(); };
 A.cfUrlSave = async () => { await DB.set('app/settings', { appUrl: $('#cfUrl').value.trim() }); toast('저장했어요'); };
 A.demoWipe = () => confirmBox('체험 모드에 저장된 라운지 데이터(주식·마니또·대회 등)를 모두 지울까요?', () => DB.wipe());
+A.cfGuide = () => {
+  modal(`
+    ${mHead('🛫 학생 라운지 연동 가이드 & 매뉴얼')}
+    <div style="display:flex;flex-direction:column;gap:12px;padding:4px 0 10px;font-size:13.5px;max-height:75vh;overflow-y:auto">
+      <div style="background:var(--card-bg, #f3f6fa);border:1px solid var(--line, #d4dce8);border-radius:12px;padding:12px;font-size:13px">
+        <b>✨ 자리배치와 라운지가 실시간으로 연결됩니다!</b><br>
+        선생님 PC의 자리배치 점수(칭찬/머쓱)가 구글 Firebase를 통해 학생 기기(주식·마니또·대회·담벼락)로 실시간 전달됩니다.
+      </div>
+      <div style="background:var(--card-bg, #f3f6fa);border:1px solid var(--line, #d4dce8);border-radius:12px;padding:12px">
+        <b style="color:var(--p, #1b3a6b)">1️⃣ Firebase 프로젝트 & Firestore 무료 생성</b>
+        <div style="margin-top:6px;display:flex;flex-direction:column;gap:4px">
+          <div>① <a href="https://console.firebase.google.com" target="_blank" rel="noopener" style="color:var(--p, #1b3a6b);font-weight:700">Firebase 콘솔 ↗</a> 에서 [프로젝트 만들기] (이름: 자유롭게)</div>
+          <div>② [빌드] → [Firestore Database] → [데이터베이스 만들기] 클릭</div>
+          <div>③ 위치: <b>asia-northeast3 (서울)</b> 선택</div>
+          <div>④ 보안 규칙: <b>[테스트 모드에서 시작]</b> 선택 후 완료!</div>
+        </div>
+      </div>
+      <div style="background:var(--card-bg, #f3f6fa);border:1px solid var(--line, #d4dce8);border-radius:12px;padding:12px">
+        <b style="color:var(--p, #1b3a6b)">2️⃣ 웹 앱 키 복사해서 붙여넣기</b>
+        <div style="margin-top:6px;display:flex;flex-direction:column;gap:4px">
+          <div>① 프로젝트 설정 ⚙️ → 화면 아래 '내 앱' 웹(&lt;/&gt;) 아이콘 클릭 후 등록</div>
+          <div>② 화면에 뜨는 <code>firebaseConfig</code> 코드를 통째로 복사해 위 설정창에 붙여넣기</div>
+          <div class="muted" style="font-size:12px">💡 <code>import { initializeApp }...</code> 같은 전체 코드를 통째로 붙여넣으셔도 자동으로 필요한 키만 추출됩니다.</div>
+        </div>
+      </div>
+      <div style="background:var(--card-bg, #f3f6fa);border:1px solid var(--line, #d4dce8);border-radius:12px;padding:12px">
+        <b style="color:var(--p, #1b3a6b)">3️⃣ 학급 코드 일치 & 학생 배포</b>
+        <div style="margin-top:6px;display:flex;flex-direction:column;gap:4px">
+          <div>① 퍼스트클래스 자리배치와 똑같은 <b>학급 코드</b>를 적고 [저장하고 다시 열기]</div>
+          <div>② 오른쪽에 뜨는 <b>QR코드</b>를 교실 TV에 띄우거나 출력하여 학생들에게 배포!</div>
+          <div>③ 학생들은 카메라로 QR을 찍고 <b>출석번호와 생일 6자리 비밀번호</b>로 로그인합니다.</div>
+        </div>
+      </div>
+      <div style="background:var(--sel-bg, #fff3c8);border:1px solid var(--chalk, #c9a227);border-radius:10px;padding:10px;font-size:12.5px;color:var(--sel-ink, #8a6a00)">
+        <b>💡 30일 뒤 만료 방지 팁</b>: Firebase 콘솔 → Firestore → [규칙(Rules)] 탭에서 <code>allow read, write: if true;</code> 로 저장하시면 1년 내내 만료 없이 안심하고 쓰실 수 있습니다.
+      </div>
+    </div>
+  `);
+};
 /** 학생 폰용 주소. 배포용 파일(설정 내장)이면 짧은 주소, 아니면 설정을 #c=에 담음(QR이 촘촘해짐) */
 function studentLink() {
   const link = appUrl(); if (!link) return '';
