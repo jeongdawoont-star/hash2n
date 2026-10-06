@@ -1749,28 +1749,6 @@ function parseRoster(text){
   }
   return out;
 }
-$('#bulkMerge').onclick=()=>{
-  const c=cls(),rows=parseRoster($('#bulkText').value);if(!rows.length){toast(t('parseFail'));return;}
-  let added=0,upd=0;const seen=new Set();
-  for(const r of rows){
-    let s=c.students.find(x=>normName(x.name)===normName(r.name));
-    if(s){
-      if(r.no!=null)s.no=r.no;
-      if(r.birth){s.birth=r.birth;const L=lpOf();L[s.id]=L[s.id]||{};L[s.id].birth=r.birth;}
-      if(r.gender)s.gender=r.gender;
-      if(r.height!=null)s.height=r.height;
-      if(r.en)s.en=r.en;
-      upd++;
-    } else {
-      s={id:uid(),no:r.no,name:r.name,birth:r.birth||'',en:r.en||'',gender:r.gender||'',height:r.height,front:false};
-      if(r.birth){const L=lpOf();L[s.id]={birth:r.birth};}
-      c.students.push(s);added++;
-    }
-    seen.add(s.id);
-  }
-  if($('#bulkReplace').checked)removeStudents(c.students.filter(s=>!seen.has(s.id)).map(s=>s.id));
-  persist();renderStudents();renderRoom();renderLayout();toast(t('rosterMerged',added,upd));$('#bulkText').value='';
-};
 /* ---------------- 생년월일 찰떡 일괄 입력 ---------------- */
 function parseSmartBirthdays(text, students){
   const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
@@ -1813,6 +1791,74 @@ function parseSmartBirthdays(text, students){
     res: matched.get(s.id) || null
   }));
 }
+
+$('#bulkMerge').onclick=()=>{
+  const c=cls(), raw=$('#bulkText').value.trim();
+  if(!raw){ toast(t('parseFail')); return; }
+
+  // 1. 일반 명단(이름 포함)으로 파싱 시도
+  const rows=parseRoster(raw);
+
+  // 2. 만약 일반 명단으로 인식된 행이 없는데, 생년월일만 쭈루룩 들어온 경우:
+  if(!rows.length && c.students.length){
+    const smart = parseSmartBirthdays(raw, c.students);
+    const validMatches = smart.filter(x => x.res && x.res.birth);
+    if(validMatches.length){
+      const L = lpOf();
+      validMatches.forEach(item => {
+        item.student.birth = item.res.birth;
+        L[item.student.id] = L[item.student.id] || {};
+        L[item.student.id].birth = item.res.birth;
+      });
+      persist(); renderStudents(); renderRoom();
+      if(typeof lgSchedule === 'function') lgSchedule();
+      $('#bulkText').value = '';
+      toast(`기존 명단에 생년월일 ${validMatches.length}명을 차례대로 찰떡 반영했습니다! 🎉`);
+      return;
+    }
+  }
+
+  // 3. 학생이 한 명도 없는데 생년월일만 들어온 경우: 학생 자동 생성
+  if(!rows.length && !c.students.length){
+    const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    const births = lines.map(l => parseBirth(l)).filter(Boolean);
+    if(births.length){
+      const L = lpOf();
+      births.forEach((b, i) => {
+        const no = i + 1;
+        const s = { id: uid(), no, name: (lang()==='en'?'Student ':'학생')+no, birth: b, en:'', gender:'', height:null, front:false };
+        c.students.push(s);
+        L[s.id] = { birth: b };
+      });
+      persist(); renderStudents(); renderRoom(); renderLayout();
+      if(typeof lgSchedule === 'function') lgSchedule();
+      $('#bulkText').value = '';
+      toast(`학생 ${births.length}명을 생성하고 생년월일을 반영했습니다! 🎉`);
+      return;
+    }
+  }
+
+  if(!rows.length){ toast(t('parseFail')); return; }
+  let added=0,upd=0;const seen=new Set();
+  for(const r of rows){
+    let s=c.students.find(x=>normName(x.name)===normName(r.name));
+    if(s){
+      if(r.no!=null)s.no=r.no;
+      if(r.birth){s.birth=r.birth;const L=lpOf();L[s.id]=L[s.id]||{};L[s.id].birth=r.birth;}
+      if(r.gender)s.gender=r.gender;
+      if(r.height!=null)s.height=r.height;
+      if(r.en)s.en=r.en;
+      upd++;
+    } else {
+      s={id:uid(),no:r.no,name:r.name,birth:r.birth||'',en:r.en||'',gender:r.gender||'',height:r.height,front:false};
+      if(r.birth){const L=lpOf();L[s.id]={birth:r.birth};}
+      c.students.push(s);added++;
+    }
+    seen.add(s.id);
+  }
+  if($('#bulkReplace').checked)removeStudents(c.students.filter(s=>!seen.has(s.id)).map(s=>s.id));
+  persist();renderStudents();renderRoom();renderLayout();toast(t('rosterMerged',added,upd));$('#bulkText').value='';
+};
 
 if($('#stBirthBulkBtn')) $('#stBirthBulkBtn').onclick = () => {
   const c = cls(), list = c.students.slice().sort(byNo);
