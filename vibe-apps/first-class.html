@@ -60,7 +60,19 @@ code{font-size:12.5px;background:var(--surface-2);padding:1px 5px;border-radius:
 .langsw{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:var(--surface)}
 .langsw button{border:0;background:transparent;padding:5px 11px;cursor:pointer;font-weight:600;font-size:12.5px;color:var(--muted)}
 .langsw button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
-.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);overflow-x:auto;width:100%}
+.tabs-wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.tabs{display:flex;gap:2px;overflow-x:auto;flex:1;min-width:0}
+.top-flight-bar{display:inline-flex;align-items:center;gap:8px;flex-shrink:0;margin-left:auto;padding-bottom:3px}
+.btn-lounge-admin{display:inline-flex;align-items:center;gap:6px;height:38px;padding:0 14px;border-radius:9px;background:var(--board);border:1.5px solid var(--board-rail);color:#fff;font-weight:700;font-size:13px;cursor:pointer;box-shadow:0 2px 6px rgba(20,33,61,.15);transition:all .15s ease;white-space:nowrap}
+.btn-lounge-admin:hover{background:#1B2C4E;border-color:var(--chalk);transform:translateY(-1px);box-shadow:0 4px 12px rgba(20,33,61,.22)}
+.btn-lounge-admin .plane-icon{font-size:15px}
+.btn-lounge-admin .ext-arrow{font-size:12px;opacity:.8;margin-left:1px}
+.pass-top{display:inline-flex;align-items:stretch;background:var(--board);color:var(--board-ink);border-radius:9px;overflow:hidden;box-shadow:0 2px 6px rgba(20,33,61,.15);height:38px}
+.pass-top>div{padding:2px 12px;display:flex;flex-direction:column;justify-content:center;gap:0}
+.pass-top .k{font-size:9.5px;letter-spacing:.12em;opacity:.75;font-weight:700;line-height:1}
+.pass-top .v{font-family:var(--f-display);font-size:18px;line-height:1.15;font-variant-numeric:tabular-nums;font-weight:600}
+.pass-top .main{min-width:100px;border-right:1.5px dashed color-mix(in srgb,var(--board-ink) 30%,transparent)}
+.pass-top .v.p{color:#7EE0A8}
 .tab{border:0;background:none;padding:9px 14px 8px;font-family:var(--f-display);font-size:17px;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap}
 .tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--chalk)}
 .tab:focus-visible,.btn:focus-visible,.stu:focus-visible{outline:3px solid var(--chalk);outline-offset:2px}
@@ -93,8 +105,11 @@ textarea{width:100%;resize:vertical;font-family:ui-monospace,Menlo,monospace;fon
 .room{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:16px;position:relative;min-width:0}
 .front{display:flex;flex-direction:column;align-items:center;gap:6px}
 .front.flip{flex-direction:column-reverse}
-.board{width:min(70%,560px);height:46px;background:var(--board);color:var(--board-ink);border-radius:120px 120px 8px 8px;border-bottom:5px solid var(--board-rail);display:grid;place-items:center;font-family:var(--f-chalk);font-size:22px;letter-spacing:.35em;padding-left:.35em}
+.board{width:min(70%,560px);height:44px;background:var(--board);color:var(--board-ink);border-radius:120px 120px 8px 8px;border-bottom:5px solid var(--board-rail);display:flex;align-items:center;justify-content:center;font-family:var(--f-chalk);font-size:21px;letter-spacing:.3em;padding-left:.3em;cursor:pointer;user-select:none;-webkit-user-select:none;transition:transform .12s,box-shadow .15s,background .15s}
+.board:hover{background:#1B2C4E;transform:scale(1.015);box-shadow:0 4px 14px rgba(20,33,61,.22)}
+.board:active{transform:scale(.985)}
 .front.flip .board{border-bottom:0;border-top:5px solid var(--board-rail);border-radius:8px 8px 120px 120px}
+.board-flip-arrow{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.16);font-size:13px;letter-spacing:0;margin-left:8px;line-height:1;box-shadow:inset 0 0 0 1px rgba(255,255,255,.2);vertical-align:middle}
 .podium{font-size:11.5px;color:var(--muted);border:1px solid var(--line);border-radius:5px;padding:1px 12px;background:var(--surface-2)}
 .grid-scroll{overflow-x:auto;padding-bottom:4px}
 .seatgrid{display:grid;row-gap:12px;column-gap:0;min-width:min-content}
@@ -211,34 +226,28 @@ fieldset{border:0;padding:0;margin:0;display:flex;flex-direction:column;gap:8px}
 legend{font-weight:600;margin-bottom:6px;font-size:13.5px;padding:0}
 
 /* scoreboard */
-.sb{display:flex;flex-direction:column;gap:12px}
-.pass{display:flex;flex-wrap:wrap;align-items:stretch;background:var(--board);color:var(--board-ink);border-radius:14px;overflow:hidden}
-.pass>div{padding:10px 18px;display:flex;flex-direction:column;justify-content:center;gap:2px}
-.pass .k{font-size:11px;letter-spacing:.16em;opacity:.7;font-weight:600}
-.pass .v{font-family:var(--f-display);font-size:26px;line-height:1.1;font-variant-numeric:tabular-nums}
-.pass .main{flex:1;min-width:200px;border-right:2px dashed color-mix(in srgb,var(--board-ink) 30%,transparent)}
-.pass .v.p{color:#7EE0A8}
-.sb-tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-.sb-tools .spacer{flex:1}
-.seg{display:inline-flex;border:1px solid var(--line);border-radius:11px;overflow:hidden;background:var(--surface)}
-.seg button{border:0;background:transparent;padding:0 14px;height:40px;cursor:pointer;font-weight:700;font-size:14.5px;color:var(--muted);white-space:nowrap}
-.seg button+button{border-left:1px solid var(--line)}
-.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
-.seg button:focus-visible{outline:3px solid var(--chalk);outline-offset:-3px}
-.sbbar{position:sticky;top:8px;z-index:6;display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;background:var(--surface);border:1.5px solid var(--line);border-radius:14px;padding:10px 12px;box-shadow:0 6px 18px -12px rgba(20,33,61,.5);transition:border-color .15s}
+.sb{display:flex;flex-direction:column;gap:10px}
+.sbbar{position:sticky;top:8px;z-index:6;display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;justify-content:space-between;background:var(--surface);border:1.5px solid var(--line);border-radius:14px;padding:8px 12px;box-shadow:0 6px 18px -12px rgba(20,33,61,.5);transition:border-color .15s}
 .sbbar.live{border-color:var(--chalk)}
-.sbbar .cnt{display:inline-flex;align-items:baseline;gap:4px;font-weight:700;min-width:74px}
-.sbbar .cnt b{font-family:var(--f-display);font-weight:400;font-size:26px;line-height:1;color:var(--accent);font-variant-numeric:tabular-nums}
-.sbbar .sep{height:28px}
-.sbbar .amt{display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:14px}
-.sbbar input[type=number]{width:78px;height:42px;font-size:22px;font-weight:700;text-align:center;border-radius:10px;font-variant-numeric:tabular-nums}
-.qk{display:inline-flex;gap:4px}
-.qk button{border:1px solid var(--line);background:var(--surface-2);border-radius:8px;height:34px;min-width:34px;font-weight:700;cursor:pointer;color:var(--muted)}
+.sbbar-main{display:inline-flex;align-items:center;gap:6px 10px;flex-wrap:wrap}
+.sbbar-side{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap;margin-left:auto}
+.sbbar .cnt{display:inline-flex;align-items:baseline;gap:3px;font-weight:700;min-width:64px}
+.sbbar .cnt b{font-family:var(--f-display);font-weight:400;font-size:24px;line-height:1;color:var(--accent);font-variant-numeric:tabular-nums}
+.sbbar .sep{height:24px;width:1px;background:var(--line);margin:0 2px}
+.sbbar .amt{display:inline-flex;align-items:center;gap:5px;font-weight:700;font-size:13.5px}
+.sbbar input[type=number]{width:70px;height:36px;font-size:20px;font-weight:700;text-align:center;border-radius:8px;font-variant-numeric:tabular-nums}
+.qk{display:inline-flex;gap:3px}
+.qk button{border:1px solid var(--line);background:var(--surface-2);border-radius:7px;height:30px;min-width:30px;font-weight:700;cursor:pointer;color:var(--muted);font-size:12px;padding:0 4px}
 .qk button:hover{color:var(--ink);border-color:var(--muted)}
-.give{height:44px;padding:0 18px;border-radius:11px;border:0;font-weight:700;font-size:16px;cursor:pointer;color:#fff;white-space:nowrap}
+.give{height:38px;padding:0 16px;border-radius:9px;border:0;font-weight:700;font-size:15px;cursor:pointer;color:#fff;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center}
 .give.p{background:var(--praise)} .give.m{background:var(--oops)}
 .give[disabled]{opacity:.35;cursor:not-allowed}
 .give:focus-visible{outline:3px solid var(--chalk);outline-offset:2px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:var(--surface)}
+.seg button{border:0;background:transparent;padding:0 11px;height:32px;cursor:pointer;font-weight:700;font-size:13px;color:var(--muted);white-space:nowrap}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.seg button:focus-visible{outline:3px solid var(--chalk);outline-offset:-3px}
 .cabin{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:14px;min-width:0}
 .cabin.flip{flex-direction:column-reverse}
 .cabin.flip .board{border-bottom:0;border-top:5px solid var(--board-rail);border-radius:8px 8px 120px 120px}
@@ -402,49 +411,56 @@ legend{font-weight:600;margin-bottom:6px;font-size:13.5px;padding:0}
         <button id="langKo" aria-pressed="true">한국어</button><button id="langEn" aria-pressed="false">English</button>
       </div>
     </div>
-    <nav class="tabs" role="tablist">
-      <button class="tab" role="tab" data-tab="score" data-i18n="tabScore">점수판</button>
-      <button class="tab" role="tab" data-tab="arrange" data-i18n="tabArrange">자리 배치</button>
-      <button class="tab" role="tab" data-tab="students" data-i18n="tabStudents">학생 명단</button>
-      <button class="tab" role="tab" data-tab="layout" data-i18n="tabLayout">좌석 모양</button>
-      <button class="tab" role="tab" data-tab="history" data-i18n="tabHistory">배치 기록</button>
-      <button class="tab" role="tab" data-tab="settings" data-i18n="tabSettings">규칙·백업</button>
-    </nav>
+    <div class="tabs-wrap">
+      <nav class="tabs" role="tablist">
+        <button class="tab" role="tab" data-tab="score" data-i18n="tabScore">점수판</button>
+        <button class="tab" role="tab" data-tab="arrange" data-i18n="tabArrange">자리 배치</button>
+        <button class="tab" role="tab" data-tab="students" data-i18n="tabStudents">학생 명단</button>
+        <button class="tab" role="tab" data-tab="layout" data-i18n="tabLayout">좌석 모양</button>
+        <button class="tab" role="tab" data-tab="history" data-i18n="tabHistory">배치 기록</button>
+        <button class="tab" role="tab" data-tab="settings" data-i18n="tabSettings">규칙·백업</button>
+      </nav>
+      <div class="top-flight-bar">
+        <button type="button" class="btn-lounge-admin" id="btnTopLoungeAdmin" title="비밀번호 없이 학생 라운지 교사 관리 모드로 바로 접속">
+          <span class="plane-icon">🛫</span> 라운지 관리 <span class="ext-arrow">↗</span>
+        </button>
+        <div class="pass-top">
+          <div class="main"><span class="k" data-i18n="passK">FLIGHT</span><span class="v" id="sbClass"></span></div>
+          <div><span class="k" data-i18n="totP">칭찬 합계</span><span class="v p" id="sbTotP">0</span></div>
+        </div>
+      </div>
+    </div>
   </header>
 
   <main>
     <!-- SCOREBOARD -->
     <section class="panel" id="tab-score" hidden>
       <div class="sb">
-        <div class="pass">
-          <div class="main"><span class="k" data-i18n="passK">FLIGHT</span><span class="v" id="sbClass"></span></div>
-          <div><span class="k" data-i18n="totP">칭찬 점수 합계</span><span class="v p" id="sbTotP">0</span></div>
-        </div>
-        <div class="sb-tools">
-          <button type="button" id="sbFlip" class="btn"></button>
-          <div class="seg" id="sbView" role="group" aria-label="view"><button type="button" data-view="seat" data-i18n="vSeat">좌석으로</button><button type="button" data-view="no" data-i18n="vNo">번호순</button></div>
-          <button type="button" id="sbBulkOpen" class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M9 14l2 2 4-4"/></svg><span data-i18n="sbBulkMenu">수동 일괄 입력</span></button>
-          <span class="spacer"></span>
-          <button type="button" id="sbUndo" class="btn" data-i18n="undo">되돌리기</button>
-          <button type="button" id="sbFull" class="btn ghost" data-i18n="fullscreen">전체 화면</button>
-        </div>
         <div class="sbbar" id="sbBar">
-          <span class="cnt"><b id="sbSelN">0</b><span id="sbSelK">명 선택</span></span>
-          <button type="button" id="sbSelAll" class="btn sm ghost" data-i18n="selAll">전체 선택</button>
-          <button type="button" id="sbSelNone" class="btn sm ghost" data-i18n="selNone">선택 해제</button>
-          <span class="sep"></span>
-          <label class="amt"><span data-i18n="amt">점수</span><input type="number" id="sbAmt" min="1" max="999" step="1" value="1" inputmode="numeric"></label>
-          <span class="qk"><button type="button" data-amt="1">1</button><button type="button" data-amt="2">2</button><button type="button" data-amt="3">3</button><button type="button" data-amt="5">5</button><button type="button" data-amt="10">10</button></span>
-          <span class="spacer" style="flex:1"></span>
-          <button type="button" id="sbGiveP" class="give p" data-i18n="giveP">칭찬 +</button>
-          <button type="button" id="sbGiveM" class="give m" data-i18n="giveM">머쓱 −</button>
+          <div class="sbbar-main">
+            <span class="cnt"><b id="sbSelN">0</b><span id="sbSelK">명 선택</span></span>
+            <button type="button" id="sbSelAll" class="btn sm ghost" data-i18n="selAll">전체 선택</button>
+            <button type="button" id="sbSelNone" class="btn sm ghost" data-i18n="selNone">선택 해제</button>
+            <span class="sep"></span>
+            <label class="amt"><span data-i18n="amt">점수</span><input type="number" id="sbAmt" min="1" max="999" step="1" value="1" inputmode="numeric"></label>
+            <span class="qk"><button type="button" data-amt="1">1</button><button type="button" data-amt="2">2</button><button type="button" data-amt="3">3</button><button type="button" data-amt="5">5</button><button type="button" data-amt="10">10</button></span>
+            <button type="button" id="sbGiveP" class="give p" data-i18n="giveP">칭찬 +</button>
+            <button type="button" id="sbGiveM" class="give m" data-i18n="giveM">머쓱 −</button>
+          </div>
+          <div class="sbbar-side">
+            <div class="seg" id="sbView" role="group" aria-label="view"><button type="button" data-view="seat" data-i18n="vSeat">좌석으로</button><button type="button" data-view="no" data-i18n="vNo">번호순</button></div>
+            <button type="button" id="sbBulkOpen" class="btn sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M9 14l2 2 4-4"/></svg><span data-i18n="sbBulkMenu">수동 일괄</span></button>
+            <button type="button" id="sbUndo" class="btn sm" data-i18n="undo">되돌리기</button>
+            <button type="button" id="sbFull" class="btn sm ghost" data-i18n="fullscreen">전체 화면</button>
+          </div>
         </div>
         <div class="cabin" id="sbCabin">
-          <div class="front" id="sbFront"><div class="board" data-i18n="board">칠판</div></div>
+          <div class="front" id="sbFront">
+            <div class="board" id="sbBoard" role="button" tabindex="0" title="클릭하여 칠판 위치 변경 (교사 ⇄ 학생 시점 전환)"><span data-i18n="board">칠판</span><span class="board-flip-arrow" aria-hidden="true">⇅</span></div>
+          </div>
           <div class="grid-scroll"><div class="sbgrid" id="sbGrid"></div></div>
         </div>
         <div class="sb-rest" id="sbRest" hidden><div class="tray-head" id="sbRestHead"></div><div class="sbgrid list" id="sbRestGrid"></div></div>
-        <p class="hint" id="sbHint"></p>
       </div>
     </section>
 
@@ -470,7 +486,7 @@ legend{font-weight:600;margin-bottom:6px;font-size:13.5px;padding:0}
             <button id="saveCancel" class="btn ghost sm" data-i18n="cancel">취소</button>
           </div>
           <div class="room" id="room">
-            <div class="front" id="front"><div class="board" data-i18n="board">칠판</div><div class="podium" data-i18n="podium">교탁</div></div>
+            <div class="front" id="front"><div class="board" id="roomBoard" role="button" tabindex="0" title="클릭하여 칠판 위치 변경 (교사 ⇄ 학생 시점 전환)"><span data-i18n="board">칠판</span><span class="board-flip-arrow" aria-hidden="true">⇅</span></div><div class="podium" data-i18n="podium">교탁</div></div>
             <div class="grid-scroll"><div class="seatgrid" id="seatgrid"></div></div>
             <div class="busy" id="busy" hidden data-i18n="busy">자리를 맞춰 보는 중…</div>
           </div>
@@ -618,7 +634,12 @@ legend{font-weight:600;margin-bottom:6px;font-size:13.5px;padding:0}
             <label class="inl" style="flex-direction:column;align-items:stretch;gap:4px"><span>Firebase 설정 (콘솔 코드 통째로 붙여 넣기 가능)</span><textarea id="lgFb" rows="5" placeholder="// Firebase 웹 앱 코드(import 포함 전체)를 그대로 붙여넣으셔도 자동으로 필요한 설정만 쏙 추출합니다." style="font:12px monospace;border:1px solid var(--line);border-radius:8px;padding:8px"></textarea></label>
             <label class="inl" style="flex-direction:column;align-items:stretch;gap:4px"><span>학생 라운지 주소 (비우면 같은 폴더의 파일)</span><input type="text" id="lgUrl" placeholder="1St클래스_학생라운지.html"></label>
             <label class="check"><input type="checkbox" id="lgOn"> <span>점수가 바뀌면 자동으로 보내기</span></label>
-            <div class="row"><button id="lgSave" class="btn sm primary">저장</button><button id="lgPush" class="btn sm">지금 보내기</button><button id="lgOpen" class="btn sm ghost">학생 라운지 열기 ↗</button></div>
+            <div class="row" style="flex-wrap:wrap;gap:6px">
+              <button id="lgSave" class="btn sm primary">저장</button>
+              <button id="lgPush" class="btn sm">지금 보내기</button>
+              <button id="lgAdminOpen" class="btn sm" style="background:var(--board);color:#fff;font-weight:700">🛫 라운지 관리 (비번 없이 바로가기) ↗</button>
+              <button id="lgOpen" class="btn sm ghost">학생 라운지 열기 ↗</button>
+            </div>
             <p class="muted" id="lgStatus" style="margin:0"></p>
           </div>
           <div class="card">
@@ -1386,8 +1407,13 @@ function renderScore(){
   const c=cls(),sb=DB.sb,grid=$('#sbGrid'),flip=!c.settings.boardTop;
   for(const id of [...sbSel])if(!stuById(id))sbSel.delete(id);
   $$('#sbView [data-view]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.view===sb.view));
-  $('#sbClass').textContent=c.name;$('#sbHint').textContent=t('sbHint');
-  $('#sbFlip').textContent=flip?t('flipStudent'):t('flipTeacher');
+  if($('#sbClass')) $('#sbClass').textContent=c.name;
+  if($('#sbHint')) $('#sbHint').textContent=t('sbHint');
+  if($('#sbFlip')) $('#sbFlip').textContent=flip?t('flipStudent'):t('flipTeacher');
+  const sbBoard = $('#sbBoard');
+  if(sbBoard){
+    sbBoard.title = flip ? '클릭하면 칠판이 위로 바뀝니다 (교사 시점 전환)' : '클릭하면 칠판이 아래로 바뀝니다 (학생 시점 전환)';
+  }
   $('#sbUndo').disabled=!c.scoreLog.length;
   $('#sbFull').hidden=!(document.fullscreenEnabled&&$('#tab-score').requestFullscreen);
   if(document.activeElement!==$('#sbAmt'))$('#sbAmt').value=sb.step;
@@ -1461,7 +1487,21 @@ $('#sbGiveP').onclick=()=>give(1);
 $('#sbGiveM').onclick=()=>give(-1);
 $('#sbSelAll').onclick=()=>{cls().students.forEach(s=>sbSel.add(s.id));$$('.sc[data-sid]').forEach(el=>paintCard(el.dataset.sid));renderSelBar();};
 $('#sbSelNone').onclick=()=>{const ids=[...sbSel];sbSel.clear();ids.forEach(id=>paintCard(id));renderSelBar();};
-$('#sbFlip').onclick=()=>{const s=cls().settings;s.boardTop=!s.boardTop;persist();renderScore();renderRoom();};
+const flipScoreBoard=()=>{
+  const s=cls().settings;s.boardTop=!s.boardTop;persist();renderScore();renderRoom();
+  toast(s.boardTop?'칠판을 위로 옮겼습니다 (교사 시점)':'칠판을 아래로 옮겼습니다 (학생 시점)');
+};
+if($('#sbFlip'))$('#sbFlip').onclick=flipScoreBoard;
+const sbBoardEl=$('#sbBoard');
+if(sbBoardEl){
+  sbBoardEl.onclick=flipScoreBoard;
+  sbBoardEl.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();flipScoreBoard();}};
+}
+const roomBoardEl=$('#roomBoard');
+if(roomBoardEl){
+  roomBoardEl.onclick=flipScoreBoard;
+  roomBoardEl.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();flipScoreBoard();}};
+}
 $('#sbUndo').onclick=()=>{
   const c=cls(),u=c.scoreLog.pop();if(!u){toast(t('sbNoUndo'));return;}
   const ids=(u.sids||[u.sid]).filter(id=>stuById(id));ids.forEach(id=>{c.scores[id]=ptOf(id)-u.d;paintCard(id);});
@@ -2942,8 +2982,20 @@ $('#lgSave').onclick=()=>{
   lgFill();toast('저장했습니다');if(lgOnOf(lg.cfg)&&fb)lgPush(false);
 };
 $('#lgPush').onclick=()=>lgPush(true);
-/* 해시브라운 코딩기록소(vibe-apps/first-class.html)에서는 같은 폴더의 first-class-lounge.html, 내 PC 폴더에서는 1St클래스_학생라운지.html */
-$('#lgOpen').onclick=()=>{const c=lg.cfg,u=c.url||(/first-class\.html$/i.test(decodeURIComponent(location.pathname))?'first-class-lounge.html':'1St클래스_학생라운지.html'),enc=btoa(unescape(encodeURIComponent(JSON.stringify({code:c.code||'demo',fb:c.fb||null}))));window.open(u+'#c='+encodeURIComponent(enc),'_blank');};
+function getLoungeUrlAndConfig() {
+  const c = lg.cfg;
+  const u = c.url || (/first-class\.html$/i.test(decodeURIComponent(location.pathname)) ? 'first-class-lounge.html' : '1St클래스_학생라운지.html');
+  const enc = btoa(unescape(encodeURIComponent(JSON.stringify({ code: c.code || 'demo', fb: c.fb || null }))));
+  return { u, enc };
+}
+function openLounge(teacher = false) {
+  const { u, enc } = getLoungeUrlAndConfig();
+  const targetUrl = u + '#c=' + encodeURIComponent(enc) + (teacher ? '&teacher=1' : '');
+  window.open(targetUrl, '_blank');
+}
+$('#lgOpen').onclick = () => openLounge(false);
+if ($('#lgAdminOpen')) $('#lgAdminOpen').onclick = () => openLounge(true);
+if ($('#btnTopLoungeAdmin')) $('#btnTopLoungeAdmin').onclick = () => openLounge(true);
 
 /* 연동 매뉴얼 모달 이벤트 */
 const lgHelpDlg=$('#lgHelpDialog');

@@ -419,6 +419,14 @@ function loadCfg() {
   if (FILE_CONFIG.code) c.code = FILE_CONFIG.code; if (FILE_CONFIG.firebase) c.fb = FILE_CONFIG.firebase;
   c.code = (c.code || 'demo').trim(); return c;
 }
+// 교사 직통 관리 판정: 퍼스트클래스(교사 PC)에서 바로가기 시 비밀번호 없이 선생님 관리 모드로 접속
+const TEACHER_AUTO = (() => {
+  const on = /[?&](teacher|admin)\b/i.test(location.search) || /[#&](teacher|admin)\b/i.test(location.hash);
+  try {
+    if (on) sessionStorage.setItem('fclounge.teacher_auto', '1');
+    return on || sessionStorage.getItem('fclounge.teacher_auto') === '1';
+  } catch (e) { return on; }
+})();
 // 폰 모드 판정은 loadCfg가 주소의 #c=…&phone을 지우기 전에 해야 함 (새로고침해도 유지되게 sessionStorage에도 기억)
 const PHONE = (() => { const on = /[?&]phone\b/.test(location.search) || /[#&]phone\b/.test(location.hash); try { if (on) sessionStorage.setItem('fclounge.phone', '1'); return on || sessionStorage.getItem('fclounge.phone') === '1'; } catch (e) { return on; } })();
 const CFG = loadCfg();
@@ -1957,6 +1965,14 @@ async function boot() {
   DB.watchCol('mani', l => { S.manis = Object.fromEntries(l.map(d => [d.id, d])); render(); });
   for (const c of ['contests', 'board', 'polls', 'relay', 'reports']) DB.watchCol(c, l => { S[c] = l; render(); });
   DB.watchCol('wall', l => { S.wall = l; render(); if (U.wallOpen) { if (S.wall.some(w => w.id === U.wallOpen)) wallRefresh(); else closeModal(); } aiWork(); });
+  if (TEACHER_AUTO) {
+    U.teacher = true;
+    U.view = 'teacher';
+    U.sub.teacher = 'todo';
+    U.last = Date.now();
+    try { sessionStorage.removeItem('fclounge.teacher_auto'); } catch (e) { }
+    setTimeout(() => toast('🔑 선생님 관리 모드로 바로 접속했습니다'), 400);
+  }
   render();
 }
 boot();
