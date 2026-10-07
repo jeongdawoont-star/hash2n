@@ -447,7 +447,7 @@ async function buildGroupsForJsExport() {
 async function saveSongsAsJs() {
   const exportGroups = await buildGroupsForJsExport();
   const apiKey = getYoutubeDataApiKey();
-  const js = `window.YOUTUBE_DATA_API_KEY = ${JSON.stringify(apiKey)};\n` +
+  const js = `window.YOUTUBE_DATA_API_KEY = \"\"; // 키는 넣지 않음 (공개 저장소)\n` +
              'window.BAND_SONGBOOK_DEFAULT_GROUPS = ' + JSON.stringify(exportGroups, null, 2) + ';\n';
   const blob = new Blob([js], { type:'text/javascript;charset=utf-8' });
   if (window.showSaveFilePicker) {
@@ -1570,7 +1570,15 @@ const YOUTUBE_DATA_API_KEY = '';
 const YOUTUBE_SEARCH_MAX_RESULTS = 8;
 let lastYoutubeSearchError = '';
 
+function setYoutubeKey() {
+  const cur = (() => { try { return localStorage.getItem('songbook.ytKey') || ''; } catch (e) { return ''; } })();
+  const v = prompt('YouTube Data API 키를 붙여넣으세요. 이 기기 브라우저에만 저장되고 데이터 파일(.js)에는 들어가지 않아요. (비우고 확인하면 지워져요)', cur);
+  if (v === null) return;
+  try { v.trim() ? localStorage.setItem('songbook.ytKey', v.trim()) : localStorage.removeItem('songbook.ytKey'); } catch (e) {}
+  alert(v.trim() ? 'YouTube 키를 이 기기에 저장했어요.' : 'YouTube 키를 지웠어요.');
+}
 function getYoutubeDataApiKey() {
+  try { const k = localStorage.getItem('songbook.ytKey'); if (k) return k.trim(); } catch (e) {} // 키는 코드·데이터 파일에 두지 않고 이 기기에만
   return (window.YOUTUBE_DATA_API_KEY || YOUTUBE_DATA_API_KEY || '').trim();
 }
 
@@ -1792,7 +1800,7 @@ async function searchYoutubeForSong(prefix) {
   const hasApiKey = !!getYoutubeDataApiKey();
   suggestions.innerHTML = hasApiKey
     ? '<div class="suggestion-error">검색 후보가 없거나 후보 영상이 모두 퍼가기 제한입니다. 검색어를 바꿔 보세요.</div>'
-    : '<div class="suggestion-error">검색 결과를 가져오지 못했습니다. 잠시 후 다시 시도해 주세요.</div>';
+    : '<div class="suggestion-error">검색 결과를 가져오지 못했습니다. 잠시 후 다시 시도해 주세요. <button type="button" class="topbar-btn" onclick="setYoutubeKey()" style="margin-top:6px">🔑 YouTube 키 입력</button></div>';
 }
 
 function renderYoutubeSuggestions(prefix, videos) {

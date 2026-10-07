@@ -1,4 +1,4 @@
-window.YOUTUBE_DATA_API_KEY = "AIzaSyB7_sFriURP6feBOPA2IpTk4lKTibn7BOs";
+window.YOUTUBE_DATA_API_KEY = ""; // 키는 이 기기에만 저장 (악보 화면 🔑 YouTube 키 입력)
 window.BAND_SONGBOOK_DEFAULT_GROUPS = {
   "연습곡": {
     "songs": [
