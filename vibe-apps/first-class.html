@@ -2141,10 +2141,15 @@ async function saveBlob(name,blob){
   setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);
 }
 const safeName=s=>String(s).replace(/[\\/:*?"<>|]+/g,'').replace(/\s+/g,'_');
-$('#bkExport').onclick=()=>saveBlob(`firstclass_backup_${today()}.json`,new Blob([JSON.stringify(DB,null,1)],{type:'application/json'}));
+/* 백업 파일에는 이 브라우저의 Gemini 키(라운지 ⚙ 그림·AI에서 입력, 같은 사이트라 저장 공간 공유)도 함께 담음 → 코드·저장소에는 키를 두지 않음 */
+const GEM_LS='fclounge.ai';
+const gemLocal=()=>{try{return (JSON.parse(localStorage.getItem(GEM_LS)||'{}').key)||'';}catch(e){return '';}};
+$('#bkExport').onclick=()=>{const g=gemLocal(),out=g?Object.assign({},DB,{keys:{gemini:g}}):DB;
+  saveBlob(`firstclass_backup_${today()}.json`,new Blob([JSON.stringify(out,null,1)],{type:'application/json'}));
+  if(g)setTimeout(()=>toast('백업에 Gemini 키도 들어 있습니다 — 파일을 공유하거나 저장소에 올리지 마세요'),1200);};
 $('#bkFile').onchange=async e=>{
   const f=e.target.files[0];if(!f)return;
-  try{const d=JSON.parse(await f.text());if(!valid(d))throw 0;DB=migrate(d);DB.tab='score';sel=null;sbSel.clear();undoStack=[];persist();renderAll();toast(t('bkLoaded'));}
+  try{const d=JSON.parse(await f.text());if(!valid(d))throw 0;const g=d.keys&&d.keys.gemini;delete d.keys;if(g){let o={};try{o=JSON.parse(localStorage.getItem(GEM_LS)||'{}');}catch(e){}localStorage.setItem(GEM_LS,JSON.stringify(Object.assign(o,{key:g,off:false})));}DB=migrate(d);DB.tab='score';sel=null;sbSel.clear();undoStack=[];persist();renderAll();toast(t('bkLoaded'));}
   catch(err){toast(t('bkBad'));}
   e.target.value='';
 };

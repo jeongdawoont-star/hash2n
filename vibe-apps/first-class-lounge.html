@@ -1525,12 +1525,12 @@ A.wSay = () => {
    키는 이 기기 브라우저에만 저장(공개 저장소·Firestore에 올리지 않음). 키가 있는 기기가 켜져 있으면
    '감상 기다림' 그림을 하나씩 가져가서(busy 표시로 다른 기기와 겹치지 않게) 감상을 써 넣음 */
 const AI_KEY = 'fclounge.ai', DEV = uid();
-const DEFAULT_GEM_KEY = 'AIzaSyAq8RN3VzWVm70bIOgSyu8ZNTSmahDTiiQ';
+// Gemini 키는 코드에 넣지 않음 (공개 저장소). 이 기기(⚙ 그림·AI 입력 또는 퍼스트클래스 백업 불러오기)나 학급 설정에서만 읽음
 const aiCfg = () => {
   let local = {};
   try { local = JSON.parse(localStorage.getItem(AI_KEY) || '{}'); } catch (e) {}
   const cloudKey = S.set?.gemKey || '';
-  const key = local.key || cloudKey || DEFAULT_GEM_KEY;
+  const key = local.key || cloudKey || '';
   const off = local.off === true || S.set?.gemOff === true;
   return { key, off };
 };
