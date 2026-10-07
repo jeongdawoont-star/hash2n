@@ -17,10 +17,11 @@
 *{box-sizing:border-box}html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--ink);font-family:var(--f-b);-webkit-tap-highlight-color:transparent}
 button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer}
-#app{position:fixed;inset:0;display:grid;grid-template-rows:var(--top) 1fr var(--dock)}
+#app{position:fixed;inset:0;display:grid;grid-template-rows:var(--top) 1fr var(--dock);grid-template-columns:minmax(0,1fr)} /* 폰: 위·아래 막대가 화면보다 넓어지지 않게 */
 /* top */
-.top{display:flex;align-items:center;gap:10px;padding:0 14px;background:var(--navy);color:#fff;border-bottom:3px solid var(--gold)}
+.top{display:flex;align-items:center;gap:10px;padding:0 14px;min-width:0;overflow:hidden;background:var(--navy);color:#fff;border-bottom:3px solid var(--gold)}
 .brand{display:flex;align-items:center;gap:8px;font-family:var(--f-d);font-size:22px;letter-spacing:.5px;white-space:nowrap}
+.brand{min-width:0;overflow:hidden;flex-shrink:1}.top>*:not(.brand):not(.sp){flex-shrink:0}
 .brand small{font-family:var(--f-b);font-size:11px;opacity:.7;letter-spacing:1px}
 .top .sp{flex:1}
 .conn{font-size:11.5px;padding:3px 8px;border-radius:99px;background:rgba(255,255,255,.12);white-space:nowrap}
@@ -62,7 +63,7 @@ label.f{display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:60
 .empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;color:var(--muted);padding:20px}
 .empty .big{font-size:52px}
 /* dock */
-.dock{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;background:var(--surface);border-top:1px solid var(--line);padding:6px 8px calc(6px + env(safe-area-inset-bottom))}
+.dock{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);background:var(--surface);border-top:1px solid var(--line);padding:6px 8px calc(6px + env(safe-area-inset-bottom))}
 .dock button{border:0;background:transparent;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-weight:700;font-size:13px;color:var(--muted)}
 .dock button .i{font-size:25px;line-height:1}
 .dock button[aria-current=true]{background:var(--navy);color:#fff}
@@ -132,6 +133,7 @@ label.f{display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:60
 .hero{display:flex;align-items:center;gap:14px;background:var(--navy);color:#fff;border-radius:var(--r);padding:14px 18px;border-bottom:4px solid var(--gold)}
 .hero h1{margin:0;font-family:var(--f-d);font-weight:400;font-size:28px}
 .hero p{margin:2px 0 0;opacity:.8;font-size:14px}
+.hero .gbtn{background:var(--gold);color:var(--navy);border-color:var(--gold)}
 .notice{background:var(--gold-2);border:1px solid #E6D49A;border-radius:12px;padding:9px 13px;font-weight:600;font-size:14px}
 .tiles{display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:1fr;gap:10px;flex:1;min-height:0}
 .tile{border:1px solid var(--line);background:#fff;border-radius:16px;padding:14px;text-align:left;display:flex;flex-direction:column;gap:4px;min-height:0;overflow:hidden}
@@ -167,6 +169,8 @@ label.f{display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:60
 .icell .sub{font-size:11px;color:var(--muted)}
 .stp{display:flex;align-items:center;gap:3px}
 .stp button{width:30px;height:30px;border-radius:8px;border:1px solid var(--line);background:var(--surface-2);font-size:18px;font-weight:700;line-height:1}
+.stp button:disabled{opacity:.35;cursor:not-allowed}
+.stp b{white-space:nowrap;font-size:13px}
 .stp b{min-width:24px;text-align:center;font-size:15px}
 table.t{width:100%;border-collapse:collapse;font-size:13.5px}
 table.t th,table.t td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:left}
@@ -306,6 +310,7 @@ img.px{display:inline-block;width:1.2em;height:1.2em;vertical-align:-.24em;image
   .body{flex-direction:column}
   .clist{width:auto;max-height:30%}
   .tiles{grid-template-columns:repeat(2,1fr)}
+  .hero{flex-wrap:wrap}.hero .sp{display:none}.hero .gbtn{width:100%}
   .kwrap{flex-direction:column}
   .vhead h1{font-size:22px}
   .names{grid-template-columns:repeat(auto-fill,minmax(84px,1fr))}
@@ -356,6 +361,7 @@ const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { c
 const DAY = 86400000, todayKey = (t = Date.now()) => new Date(t).toLocaleDateString('sv');
 const fmtT = t => { const d = new Date(t); return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
 const won = n => { n = Math.round(n / 10000); const s = n < 0 ? '-' : ''; n = Math.abs(n); const e = Math.floor(n / 10000), m = n % 10000; return s + (e ? e.toLocaleString() + '억' + (m ? ' ' : '') : '') + (m || !e ? m.toLocaleString() + '만' : '') + '원'; };
+const wonS = n => won(n).replace(/원$/, ''); // 좁은 칸용 (500만)
 const pct = r => r == null || !isFinite(r) ? '–' : (r > 0 ? '▲' : r < 0 ? '▼' : '') + Math.abs(r * 100).toFixed(1) + '%';
 const cls = r => r > 0 ? 'up' : r < 0 ? 'dn' : '';
 const b64e = s => btoa(unescape(encodeURIComponent(s))), b64d = s => decodeURIComponent(escape(atob(s)));
@@ -455,6 +461,8 @@ async function makeCloud(cfg) {
       catch (e) { if (e.code !== 'not-found') throw e; const o = {}; for (const k in fields) if (fields[k] !== DEL) setPath(o, k, san(fields[k])); await F.setDoc(ref(p), o, { merge: true }); }
     },
     del: p => F.deleteDoc(ref(p)),
+    /** 여러 문서를 한 번에 merge 저장 (지갑 + 점수 조정처럼 반쪽만 저장되면 안 되는 것) */
+    async multi(list) { const b = F.writeBatch(db); for (const [p, o] of list) b.set(ref(p), san(o), { merge: true }); await b.commit(); },
     get: async p => { const s = await F.getDoc(ref(p)); return s.exists() ? s.data() : null; },
   };
 }
@@ -479,6 +487,7 @@ function makeLocal(code) {
     async set(p, d, merge = true) { data[p] = merge && data[p] ? deepMerge(data[p], san(d)) : san(d); save(); },
     async update(p, fields) { data[p] = data[p] || {}; for (const k in fields) setPath(data[p], k, san(fields[k])); save(); },
     async del(p) { delete data[p]; save(); },
+    async multi(list) { for (const [p, o] of list) data[p] = data[p] ? deepMerge(data[p], san(o)) : san(o); save(); },
     async get(p) { return clone(getDoc(p)); },
     wipe() { data = {}; save(); },
   };
@@ -501,7 +510,7 @@ function SAMPLE_MAIN() {
 }
 
 /* ---------------- state ---------------- */
-const S = { main: null, secret: null, set: null, stock: null, mani: null, att: null, wallets: {}, manis: {}, contests: [], board: [], polls: [], relay: [], reports: [], wall: [] };
+const S = { main: null, secret: null, set: null, stock: null, mani: null, att: null, gacc: null, wallets: {}, manis: {}, contests: [], board: [], polls: [], relay: [], reports: [], wall: [] };
 const U = { view: 'home', me: null, teacher: false, sub: { stock: 'board', contest: 'poster', plaza: 'board', teacher: 'todo', wall: 'all' }, wallOpen: null, seatView: innerWidth < 760 ? 'no' : 'seat', inv: null, invSaving: false, step: 1, contest: null, repPeriod: 'today', repSel: new Set(), last: Date.now() };
 let DB;
 
@@ -509,16 +518,26 @@ const roster = () => (S.main?.roster || []).slice().sort((a, b) => a.no - b.no);
 const stu = id => (S.main?.roster || []).find(s => s.id === id);
 const nm = id => stu(id)?.name || (id ? '(알 수 없음)' : '');
 const others = () => roster().filter(s => s.id !== U.me);
-const ST = () => Object.assign({ floor: 10, unit: 1000000, rate: 1000000, fee: 10, allowSelf: false, budget: 'score', fixed: 20, minBudget: 5 }, S.set?.stock || {});
+/** 주식 설정. unit = 투자 한 칸(100만원), rate = 1P의 가치, buyFee = 포인트→돈 수수료%, fee = 돈→포인트 수수료%, div = 배당률% */
+const ST = () => Object.assign({ floor: 10, unit: 1000000, rate: 1000000, buyFee: 10, fee: 10, div: 10, allowSelf: false, minBudget: 5 }, S.set?.stock || {});
 /** app/attitude.pen = 퍼스트클래스로 보낼 점수 조정. pts > 0 감점(태도 신고), pts < 0 가산(환전 승인, kind:'ex') */
 const pendingPen = id => Object.values(S.att?.pen || {}).filter(p => p.sid === id && !p.applied).reduce((a, p) => a + (+p.pts || 0), 0);
 /** 주식에 쓰는 점수 = 퍼스트클래스 칭찬 점수 − 아직 퍼스트클래스에 반영되지 않은 조정(감점·환전) */
 const sc = id => (+(S.main?.scores?.[id]) || 0) - pendingPen(id);
 const curRound = () => S.stock?.cur ? S.stock.rounds?.[S.stock.cur] : null;
+/** 포인트↔주식 돈 교환으로 빠져나간 포인트 합 (buy +, sell −, 예전 방식 승인된 환전 −) */
+function xNet(id) { const w = S.wallets[id] || {}; let n = 0; for (const x of w.xl || []) n += x.dir === 'buy' ? +x.pts : -x.pts; for (const e of w.ex || []) if (e.st === 'ok') n -= +e.pts; return n; }
+/** 주가 = 칭찬 점수 + 교환으로 오간 포인트 → 포인트를 주식 돈으로 바꿔도 내 주가는 떨어지지 않음 (실제로 받은 칭찬·머쓱만 반영) */
+const stockSc = id => sc(id) + xNet(id);
+const priceOf = (id, R = curRound()) => R?.v >= 2 ? stockSc(id) : sc(id);
 function growth(id, R = curRound()) {
-  if (!R) return null; const b = +(R.base?.[id] ?? 0); const e = R.status === 'settled' ? +(R.final?.[id] ?? 0) : sc(id);
-  return (e - b) / Math.max(b, ST().floor);
+  if (!R) return null; const b = +(R.base?.[id] ?? 0); const e = R.status === 'settled' ? +(R.final?.[id] ?? 0) : priceOf(id, R);
+  return Math.max(-1, (e - b) / Math.max(b, ST().floor)); // 손실은 투자금까지만
 }
+const unitsOf = m => Object.values(m || {}).reduce((a, b) => a + (+b || 0), 0);
+/** 이번 라운드에 투자해서 정산 때까지 묶인 돈 (예전 방식 라운드는 포인트 예산이라 묶이지 않음) */
+function lockedOf(id) { const R = curRound(); if (!R || R.status === 'settled' || !(R.v >= 2)) return 0; return unitsOf(id === U.me && U.inv && R.status === 'open' ? U.inv : S.wallets[id]?.inv?.[R.id]) * ST().unit; }
+const freeCash = id => (+S.wallets[id]?.cash || 0) - lockedOf(id);
 function investTotals(R = curRound()) { const t = {}; if (!R) return t; for (const w of Object.values(S.wallets)) { const m = w.inv?.[R.id] || {}; for (const k in m) t[k] = (t[k] || 0) + (+m[k] || 0); } return t; }
 const myW = () => S.wallets[U.me] || {};
 const myM = () => S.manis[U.me] || {};
@@ -598,14 +617,14 @@ document.addEventListener('click', e => { const el = e.target.closest('[data-a]'
 A.closeModal = () => closeModal();
 A.go = d => { invFlush(); U.view = d.v; if (d.sub) U.sub[d.v] = d.sub; U.inv = null; if (d.cid) U.contest = d.cid; render(); };
 A.sub = d => { invFlush(); U.sub[d.k] = d.v; U.inv = null; render(); };
-A.logout = () => { invFlush(); U.me = null; U.inv = null; U.view = 'home'; render(); toast('로그아웃했어요 · 다음 친구 차례!'); }; // 공용 태블릿: 나가면 바로 이름 목록
+A.logout = () => { invFlush(); U.me = null; U.pin = null; U.inv = null; U.view = 'home'; render(); toast('로그아웃했어요 · 다음 친구 차례!'); }; // 공용 태블릿: 나가면 바로 이름 목록
 
 /* idle auto logout (공용 태블릿) */
 ['pointerdown', 'keydown'].forEach(ev => addEventListener(ev, () => U.last = Date.now(), true));
 let attWas = null;
 setInterval(() => {
   const idle = Date.now() - U.last;
-  if (U.me) { const left = Math.ceil((IDLE_LIMIT - idle) / 1000); const el = $('#idleT'); if (el) el.textContent = left <= 20 ? left + '초' : ''; if (left <= 0) { invFlush(); closeModal(); U.me = null; U.inv = null; U.view = 'home'; render(); toast('자리를 비워서 자동으로 나갔어요'); } }
+  if (U.me) { const left = Math.ceil((IDLE_LIMIT - idle) / 1000); const el = $('#idleT'); if (el) el.textContent = left <= 20 ? left + '초' : ''; if (left <= 0) { invFlush(); closeModal(); U.me = null; U.pin = null; U.inv = null; U.view = 'home'; render(); toast('자리를 비워서 자동으로 나갔어요'); } }
   if (U.teacher && idle > T_IDLE_LIMIT) { U.teacher = false; render(); }
   const a = attOpen(); if (attWas !== null && a !== attWas) render(); attWas = a; // 신고 받기 시간이 끝나면 화면 갱신
 }, 1000);
@@ -617,13 +636,13 @@ A.pick = d => pinPad(stu(d.id)?.name, async pin => {
   if (pinHash(d.id, pin) !== real) return false;
   // 공용 태블릿: 선생님 모드가 켜진 채로 학생이 들어오면 학생이 운영 권한을 갖게 되므로 끔
   const wasT = U.teacher; U.teacher = false; if (U.view === 'teacher') U.view = 'home';
-  U.me = d.id; U.inv = null; U.last = Date.now(); render(); toast(`${nm(d.id)}, 어서 와요! ✈️${wasT ? ' (선생님 모드는 꺼졌어요)' : ''}`); return 'close';
+  U.me = d.id; U.pin = pin; U.inv = null; U.last = Date.now(); render(); toast(`${nm(d.id)}, 어서 와요! ✈️${wasT ? ' (선생님 모드는 꺼졌어요)' : ''}`); return 'close';
 }, 6);
 A.teacherToggle = () => {
   if (U.teacher) { U.teacher = false; if (U.view === 'teacher') U.view = 'home'; render(); toast('선생님 모드를 껐어요'); return; }
   pinPad('선생님', async pin => {
     if (pin !== String(S.secret?.tpin || '1234')) return false;
-    if (U.me) { invFlush(); U.me = null; U.inv = null; } // 학생 화면 위에서 선생님 모드를 켜면 학생은 나가게
+    if (U.me) { invFlush(); U.me = null; U.pin = null; U.inv = null; } // 학생 화면 위에서 선생님 모드를 켜면 학생은 나가게
     U.teacher = true; U.last = Date.now(); if (U.view === 'home') { U.view = 'teacher'; U.sub.teacher = 'todo'; } render();
     toast(S.secret?.tpin ? '선생님 모드 켜짐' : '처음 PIN 1234 — ⚙ 선생님 > 비밀번호에서 바꿔 주세요'); return 'close';
   });
@@ -679,15 +698,38 @@ V.home = () => {
   const g = growth(U.me);
   const maniTxt = { off: '아직 시작 전', survey: '친해지고 싶은 친구를 골라요', running: mm.target ? '오늘의 미션을 해 볼까요?' : '짝 맺는 중', closed: '발표를 기다려요', done: '결과가 나왔어요!' }[M.phase || 'off'];
   const baton = relayHolder();
-  return `<div class="hero"><div style="font-size:42px">👋</div><div><h1>${esc(nm(U.me))}, 반가워요!</h1><p>${stu(U.me)?.no}번 · 오늘도 퍼스트클래스로 출발!</p></div></div>${notice}
+  return `<div class="hero"><div style="font-size:42px">👋</div><div><h1>${esc(nm(U.me))}, 반가워요!</h1><p>${stu(U.me)?.no}번 · 오늘도 퍼스트클래스로 출발!</p></div>${S.gacc?.d?.[U.me] ? '<span class="sp" style="flex:1"></span><button class="btn gbtn" data-a="gacc">🔑 내 구글 계정</button>' : ''}</div>${notice}
   <div class="tiles">
     <button class="tile" data-a="go" data-v="stock"><span class="em">⭐</span><span class="k">내 칭찬 점수</span><span class="v">${sc(U.me)}점</span><span class="s ${cls(g)}">${R ? '이번 라운드 ' + pct(g) : '주식 라운드 준비 중'}</span></button>
-    <button class="tile" data-a="go" data-v="stock" data-sub="${R?.status === 'open' ? 'invest' : 'wallet'}"><span class="em">💰</span><span class="k">내 지갑</span><span class="v">${won(w.cash || 0)}</span><span class="s">${R ? (R.status === 'open' ? (Object.keys(w.inv?.[R.id] || {}).length ? '✅ 투자했어요 · 바꿀 수 있어요' : '👉 지금 투자할 수 있어요!') : R.status === 'closed' ? '투자 마감 · 정산 기다리는 중' : '정산 완료') : ''}</span></button>
+    <button class="tile" data-a="go" data-v="stock" data-sub="${R?.status === 'open' ? 'invest' : 'wallet'}"><span class="em">💰</span><span class="k">내 주식 돈</span><span class="v">${won(w.cash || 0)}</span><span class="s">${R ? (R.status === 'open' ? (Object.keys(w.inv?.[R.id] || {}).length ? '✅ 투자했어요 · 바꿀 수 있어요' : '👉 지금 투자할 수 있어요!') : R.status === 'closed' ? '투자 마감 · 정산 기다리는 중' : '정산 완료') : ''}</span></button>
     <button class="tile" data-a="go" data-v="mani"><span class="em">🎁</span><span class="k">마니또</span><span class="v" style="font-size:22px">${maniTxt}</span><span class="s">${M.phase === 'running' ? `내가 한 미션 ${(mm.did || []).length}개` : ''}</span></button>
     <button class="tile" data-a="go" data-v="contest"><span class="em">🏆</span><span class="k">신청 받는 대회</span><span class="v">${openC.length}개</span><span class="s">${esc(openC.map(c => c.title).slice(0, 2).join(' · '))}</span></button>
     <button class="tile" data-a="go" data-v="plaza" data-sub="poll"><span class="em">🗳️</span><span class="k">아직 안 한 투표</span><span class="v">${polls.length}개</span><span class="s">${polls.length ? '👉 눌러서 투표해요' : '모두 했어요 ✅'}</span></button>
     <button class="tile" data-a="go" data-v="plaza" data-sub="relay"><span class="em">🏃</span><span class="k">칭찬 릴레이 바통</span><span class="v" style="font-size:24px">${esc(nm(baton) || '아직 없어요')}</span><span class="s">${baton === U.me ? '🏃 바통이 나에게 왔어요! 친구를 칭찬해요' : S.relay.length + '번 이어졌어요'}</span></button>
   </div>`;
+};
+
+/* 선생님이 퍼스트클래스에서 보낸 구글 계정(app/gacc)은 학생마다 그 학생 라운지 비밀번호로 잠겨 있음 → 로그인할 때 입력한 비밀번호로만 풀림 */
+async function gaUnseal(sid, pin, x, it) {
+  const enc = new TextEncoder(), ub = t => Uint8Array.from(atob(t), c => c.charCodeAt(0));
+  const base = await crypto.subtle.importKey('raw', enc.encode(pin), 'PBKDF2', false, ['deriveKey']);
+  const key = await crypto.subtle.deriveKey({ name: 'PBKDF2', salt: enc.encode('fc-gacc:' + sid + ':' + x.s), iterations: it || 150000, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
+  return JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: ub(x.i) }, key, ub(x.c))));
+}
+A.gacc = async () => {
+  const me = U.me, x = S.gacc?.d?.[me]; if (!me || !x) return;
+  if (!U.pin) return toast('다시 로그인해 주세요');
+  let g; try { g = await gaUnseal(me, U.pin, x, S.gacc.it); } catch (e) { console.error(e); return toast('계정을 열지 못했어요. 선생님께 말씀드려요'); }
+  if (U.me !== me) return;
+  const m = modal(`${mHead('🔑 내 구글 계정')}<div class="mb"><p class="small muted" style="margin:0">학교 구글 계정이에요. 친구에게 보여 주지 말아요!</p>
+    <label class="f">아이디<div class="row"><b id="gaI" style="font-size:20px;word-break:break-all;user-select:all">${esc(g.i || '(없음)')}</b>${g.i ? '<button class="btn sm" id="gaCi">복사</button>' : ''}</div></label>
+    <label class="f">비밀번호<div class="row"><b id="gaP" style="font-size:20px;font-family:ui-monospace,Consolas,monospace;letter-spacing:1px">••••••••</b>${g.p ? '<button class="btn sm p" id="gaSee">👆 꾹 눌러서 보기</button><button class="btn sm" id="gaCp">복사</button>' : ''}</div></label>
+    <p class="small muted" style="margin:0">다 봤으면 꼭 닫고 <b>나가기</b>를 눌러요.</p></div><div class="mf"><button class="btn p" data-a="closeModal">닫기</button></div>`);
+  const P = m.querySelector('#gaP'), see = m.querySelector('#gaSee'), show = on => { P.textContent = on ? g.p : '••••••••'; };
+  if (see) { see.addEventListener('pointerdown', e => { e.preventDefault(); show(true); }); ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => see.addEventListener(ev, () => show(false))); }
+  const cp = (t, msg) => navigator.clipboard?.writeText(t).then(() => toast(msg), () => toast('복사하지 못했어요'));
+  m.querySelector('#gaCi')?.addEventListener('click', () => cp(g.i, '아이디를 복사했어요'));
+  m.querySelector('#gaCp')?.addEventListener('click', () => cp(g.p, '비밀번호를 복사했어요'));
 };
 
 /* ---------------- seat grid ---------------- */
@@ -721,10 +763,10 @@ V.stock = () => {
   const t = U.sub.stock;
   if (t === 'board') {
     const tot = investTotals(R), max = Math.max(1, ...Object.values(tot));
-    const cell = s => { const g = growth(s.id, R), iv = tot[s.id] || 0; return `<div class="cell" style="--h:${(iv / max * .55).toFixed(2)}"><span class="heat"></span>${iv ? `<span class="inv">💰${iv}P</span>` : ''}<span class="n"><small>${s.no}</small>${esc(s.name)}</span><span class="m"><b>${sc(s.id)}점</b><span class="${cls(g)}">${R ? pct(g) : ''}</span></span></div>`; };
+    const cell = s => { const g = growth(s.id, R), iv = tot[s.id] || 0; return `<div class="cell" style="--h:${(iv / max * .55).toFixed(2)}"><span class="heat"></span>${iv ? `<span class="inv">💰${won(iv * st.unit)}</span>` : ''}<span class="n"><small>${s.no}</small>${esc(s.name)}</span><span class="m"><b>${priceOf(s.id, R)}점</b><span class="${cls(g)}">${R ? pct(g) : ''}</span></span></div>`; };
     const totalP = Object.values(tot).reduce((a, b) => a + b, 0), who = R ? Object.values(S.wallets).filter(w => Object.keys(w.inv?.[R.id] || {}).length).length : 0;
     body = `<div class="row legend"><div class="seg"><button data-a="seatView" data-v="seat" aria-pressed="${U.seatView === 'seat'}">좌석표</button><button data-a="seatView" data-v="no" aria-pressed="${U.seatView === 'no'}">번호순</button></div>
-      <span>💰 친구들이 투자한 포인트 (색이 진할수록 인기)</span><span><b class="up">▲</b><b class="dn">▼</b> 점수가 오른·내린 비율</span><span class="sp" style="flex:1"></span><b>투자 참여 ${who}명 · 총 ${totalP}P</b></div>
+      <span>💰 친구들이 투자한 돈 (색이 진할수록 인기${+st.div ? ` · 정산 때 받은 돈의 ${st.div}% 배당` : ''})</span><span><b class="up">▲</b><b class="dn">▼</b> 점수가 오른·내린 비율</span><span class="sp" style="flex:1"></span><b>투자 참여 ${who}명 · 총 ${won(totalP * st.unit)}</b></div>
       ${U.seatView === 'seat' ? seatGrid(cell) : listGrid(cell)}`;
   } else if (t === 'invest') body = U.me ? investView(R) : needMe();
   else if (t === 'wallet') body = U.me ? walletView() : needMe();
@@ -732,64 +774,65 @@ V.stock = () => {
   return `<div class="vhead"><h1>📈 우리반 주식</h1>${rinfo}<button class="help" data-a="help" data-v="stock">❓ 어떻게 해요?</button><span class="sp"></span>${seg('stock', subs)}</div>${body}`;
 };
 A.seatView = d => { U.seatView = d.v; render(); };
-/** 투자 예산: 내 칭찬 점수(라운드 시작 때). 점수가 낮은 친구도 참여할 수 있게 최소 예산 보장 */
-function budgetOf(id, R) { const st = ST(); return st.budget === 'fixed' ? st.fixed : Math.max(+st.minBudget || 0, +(R.base?.[id] ?? 0)); }
+/** 투자 한도(칸 수): 지갑의 주식 돈 ÷ 100만원. 예전 방식 라운드는 라운드 시작 때 칭찬 점수(최소 예산 보장) */
+function budgetOf(id, R) { const st = ST(); if (R?.v >= 2) return Math.max(0, Math.floor((+S.wallets[id]?.cash || 0) / st.unit)); return st.budget === 'fixed' ? st.fixed : Math.max(+st.minBudget || 0, +(R.base?.[id] ?? 0)); }
 /* 도움말 — 카드뉴스 형태 초등학생 눈높이 설명 */
 const HELP_CARDS = {
   stock: () => {
-    const st = ST();
+    const st = ST(), b1 = buyCalc(10), s1 = sellCalc(1);
     return {
       title: '📈 우리반 주식 안내',
       cards: [
         {
           step: '1단계',
-          title: '💸 친구 응원하고 투자하기',
-          desc: '선생님이 주식 라운드를 열면 <b>투자하기</b> 탭으로 가요. 이번 라운드에 열심히 활동할 친구의 <b>＋</b> 버튼을 눌러요!',
+          title: '⭐ → 💰 포인트를 주식 돈으로 바꾸기',
+          desc: `주식은 <b>주식 돈</b>으로 해요. <b>👛 내 지갑</b>에서 칭찬 포인트를 주식 돈으로 바꿔요. 1P = ${won(st.rate)}이고, 바꿀 때 <b>수수료 ${st.buyFee}%</b>를 내요. 바꾼 만큼 내 칭찬 점수는 줄어요.`,
+          mock: `<div class="cnews-mock-head">💱 카지노 칩처럼 바꿔요</div>
+            <div class="cnews-mock-ui" style="flex-direction:column;align-items:stretch;gap:4px">
+              <div style="display:flex;justify-content:space-between"><span>⭐ 10P</span><b>${won(b1.gross)}</b></div>
+              <div style="display:flex;justify-content:space-between"><span>수수료 ${st.buyFee}%</span><b>− ${won(b1.fee)}</b></div>
+              <div style="display:flex;justify-content:space-between;border-top:1px dashed #cbd5e1;padding-top:4px"><span>💰 받는 주식 돈</span><b style="color:var(--navy)">${won(b1.net)}</b></div>
+            </div>`,
+          tip: '💡 포인트와 주식 돈은 따로 관리돼요. 필요한 만큼만 바꿔요!'
+        },
+        {
+          step: '2단계',
+          title: '💸 친구에게 투자하기',
+          desc: '선생님이 라운드를 열면 <b>투자하기</b>에서 열심히 할 것 같은 친구의 <b>＋</b>를 눌러요. 여러 친구에게 나눠서 투자해도 돼요.',
           mock: `<div class="cnews-mock-head">📱 투자하기 화면 예시</div>
             <div class="cnews-mock-ui" style="justify-content:space-between">
               <div><b>3. 김하준</b> <span class="small muted">10점</span></div>
               <div style="display:flex;align-items:center;gap:6px;background:#fff;padding:4px 8px;border-radius:8px;border:1px solid #cbd5e1">
                 <button class="btn sm" style="padding:2px 8px;font-size:16px">−</button>
-                <b style="color:var(--navy);font-size:16px">2P</b>
+                <b style="color:var(--navy);font-size:15px">${won(st.unit * 3)}</b>
                 <button class="btn sm p" style="padding:2px 8px;font-size:16px">+</button>
               </div>
             </div>`,
-          tip: '💡 <b>＋</b>를 누르면 바로 자동 저장돼요! 내가 누구에게 투자했는지는 나만 볼 수 있어요.'
-        },
-        {
-          step: '2단계',
-          title: '💰 내 투자 포인트(P) 알아보기',
-          desc: `내 투자 포인트는 <b>내 칭찬 점수</b>만큼 주어져요${st.budget === 'fixed' ? ` (이번엔 모두 ${st.fixed}P)` : st.minBudget ? ` (최소 ${st.minBudget}P 보장)` : ''}. 친구에게 투자해도 <b>내 칭찬 점수는 절대 깎이지 않으니</b> 안심해요!`,
-          mock: `<div class="cnews-mock-head">📱 내 투자 예산 표시 예시</div>
-            <div class="cnews-mock-ui" style="flex-direction:column;align-items:stretch">
-              <div style="display:flex;justify-content:space-between"><span>내 투자 예산</span><b style="color:var(--navy)">10P = ${won(10 * st.unit)}</b></div>
-              <div style="height:8px;background:#e2e8f0;border-radius:99px;overflow:hidden"><div style="width:60%;height:100%;background:var(--ok)"></div></div>
-              <div class="small muted" style="text-align:right">6P 투자함 · 4P 남음</div>
-            </div>`,
-          tip: `💡 1P는 ${won(st.unit)}의 가치예요! 여러 친구에게 나누어서 분산 투자할 수 있어요.`
+          tip: '💡 누르면 바로 저장돼요. 투자한 돈은 정산 때까지 묶이고, 누구에게 투자했는지는 나만 봐요.'
         },
         {
           step: '3단계',
-          title: '🎉 성장한 만큼 돈 벌기',
-          desc: '내가 투자한 친구의 칭찬 점수가 오르면 <b>오른 비율만큼 수익</b>을 얻어요! 라운드가 끝나면 선생님이 정산해 줍니다.',
-          mock: `<div class="cnews-mock-head">📈 정산 수익 계산 예시</div>
+          title: '🎉 정산: 수익 + 배당금',
+          desc: `라운드가 끝나면 투자한 친구의 칭찬 점수가 <b>오른 비율만큼 벌고</b>, 내리면 잃어요. 그리고 <b>투자를 받은 친구</b>는 받은 돈의 <b>${st.div}%를 배당금</b>으로 받아요!`,
+          mock: `<div class="cnews-mock-head">📈 정산 예시</div>
             <div class="cnews-mock-ui" style="flex-direction:column;align-items:stretch;gap:4px">
               <div style="display:flex;justify-content:space-between"><span>하준이 점수</span><b>10점 ➔ 12점 (<span style="color:var(--up);font-weight:800">▲20%</span>)</b></div>
-              <div style="display:flex;justify-content:space-between"><span>내 투자금 (3P)</span><b>300만원</b></div>
-              <div style="display:flex;justify-content:space-between;border-top:1px dashed #cbd5e1;padding-top:4px"><span>🎉 번 돈</span><b style="color:var(--up);font-size:16px">+60만원 획득!</b></div>
+              <div style="display:flex;justify-content:space-between"><span>내가 투자한 돈</span><b>${won(st.unit * 3)}</b></div>
+              <div style="display:flex;justify-content:space-between;border-top:1px dashed #cbd5e1;padding-top:4px"><span>🎉 내 수익</span><b style="color:var(--up)">+${won(st.unit * 3 * 0.2)}</b></div>
+              <div style="display:flex;justify-content:space-between"><span>🎁 하준이 배당금 (${won(st.unit * 3)}의 ${st.div}%)</span><b style="color:var(--up)">+${won(r10k(st.unit * 3 * st.div / 100))}</b></div>
             </div>`,
-          tip: '💡 친구가 칭찬 점수를 많이 받을 수 있도록 교실에서 서로 돕고 응원해 주세요!'
+          tip: '💡 친구들이 나에게 투자하고 싶어지도록 교실에서 멋지게 활동해 봐요!'
         },
         {
           step: '4단계',
-          title: '💱 번 돈을 칭찬 점수로 환전하기',
-          desc: `모은 돈은 <b>내 지갑 ➔ 환전 신청</b>에서 칭찬 점수로 바꿀 수 있어요 (${won(st.rate)} = 1점). 선생님이 확인하면 내 칭찬 점수에 더해져요!`,
-          mock: `<div class="cnews-mock-head">📱 환전 신청 화면 예시</div>
+          title: '💰 → ⭐ 남길까, 바꿀까? 내 마음대로',
+          desc: `주식 돈은 지갑에 <b>그대로 남겨 두고</b> 다음 라운드에 또 투자해도 되고, <b>일부나 전부</b>를 칭찬 포인트로 바꿔도 돼요. 포인트로 바꿀 때도 <b>수수료 ${st.fee}%</b>가 있어요.`,
+          mock: `<div class="cnews-mock-head">📱 환전 예시</div>
             <div class="cnews-mock-ui" style="justify-content:space-between">
-              <div style="font-size:13px"><b>1점</b>으로 바꾸기</div>
-              <button class="btn sm g" style="font-weight:700">신청</button>
+              <div style="font-size:13px">⭐ <b>1P</b> 받으려면</div>
+              <b style="color:var(--navy)">${won(s1.cost)}</b>
             </div>`,
-          tip: `💡 환전할 때는 <b>환전 수수료 ${st.fee}%</b>가 함께 계산되어 지갑 잔액에서 차감돼요.`
+          tip: '💡 누르면 바로 바뀌고, 선생님 퍼스트클래스 점수에도 자동으로 들어가요.'
         }
       ]
     };
@@ -880,19 +923,21 @@ A.helpNext = d => showCardNews(d.v, curNews.idx + 1);
 A.helpGo = d => showCardNews(d.v, +d.i);
 function investView(R) {
   if (!R) return `<div class="empty"><div class="big">⏳</div>아직 주식 라운드가 열리지 않았어요.</div>`;
-  const st = ST(), saved = myW().inv?.[R.id] || {}, open = R.status === 'open';
+  const st = ST(), w = myW(), saved = w.inv?.[R.id] || {}, open = R.status === 'open';
   if (!U.inv) U.inv = { ...saved };
-  const d = open ? U.inv : saved, used = Object.values(d).reduce((a, b) => a + (+b || 0), 0), B = budgetOf(U.me, R), left = B - used;
+  const d = open ? U.inv : saved, used = unitsOf(d), B = budgetOf(U.me, R), left = B - used, v2 = R.v >= 2;
   const list = roster().filter(s => st.allowSelf || s.id !== U.me);
   const dirty = invDirty(saved);
-  const cells = list.map(s => { const n = +d[s.id] || 0, g = growth(s.id, R); return `<div class="icell ${n ? 'on' : ''}"><div class="nm">${s.no}. ${esc(s.name)}</div><div class="bot"><div class="sub">${sc(s.id)}점<br><span class="${cls(g)}">${pct(g)}</span></div>
-    ${open ? `<div class="stp"><button data-a="inv" data-id="${s.id}" data-d="-1">−</button><b>${n}</b><button data-a="inv" data-id="${s.id}" data-d="1" ${left <= 0 ? 'disabled' : ''}>+</button></div>` : `<b>${n || ''}</b>`}</div></div>`; }).join('');
-  return `<div class="ibar"><div><div class="small muted">내 투자 예산</div><div class="bud">${B}P = ${won(B * st.unit)}</div></div>
+  const cells = list.map(s => { const n = +d[s.id] || 0, g = growth(s.id, R); return `<div class="icell ${n ? 'on' : ''}"><div class="nm">${s.no}. ${esc(s.name)}</div><div class="bot"><div class="sub">${stockSc(s.id)}점<br><span class="${cls(g)}">${pct(g)}</span></div>
+    ${open ? `<div class="stp"><button data-a="inv" data-id="${s.id}" data-d="-1">−</button><b>${n ? wonS(n * st.unit) : 0}</b><button data-a="inv" data-id="${s.id}" data-d="1" ${left <= 0 ? 'disabled' : ''}>+</button></div>` : `<b>${n ? wonS(n * st.unit) : ''}</b>`}</div></div>`; }).join('');
+  const noMoney = open && v2 && !B;
+  return `<div class="ibar"><div><div class="small muted">${v2 ? '💰 내 주식 돈' : '내 투자 예산'}</div><div class="bud">${v2 ? won(w.cash || 0) : `${B}P = ${won(B * st.unit)}`}</div></div>
     <div class="meter"><i style="width:${B ? Math.min(100, used / B * 100) : 0}%"></i></div>
-    <div><b>${used}P</b> 투자 · <b>${left}P</b> 남음</div>
-    ${open ? `<div class="seg"><button data-a="step" data-v="1" aria-pressed="${U.step === 1}">1씩</button><button data-a="step" data-v="5" aria-pressed="${U.step === 5}">5씩</button></div>
+    <div><b>${won(used * st.unit)}</b> 투자 중 · <b>${won(left * st.unit)}</b> 남음</div>
+    ${open ? `<div class="seg"><button data-a="step" data-v="1" aria-pressed="${U.step === 1}">${won(st.unit)}씩</button><button data-a="step" data-v="5" aria-pressed="${U.step === 5}">${won(st.unit * 5)}씩</button></div>
     ${used ? '<button class="btn sm ghost" data-a="invReset">모두 빼기</button>' : ''}<span class="saved ${dirty || U.invSaving ? 'ing' : ''}">${dirty || U.invSaving ? '⏳ 저장 중…' : used ? '✅ 자동 저장됨' : ''}</span>` : '<span class="pill warn">투자 마감 — 바꿀 수 없어요</span>'}</div>
-    <p class="small muted" style="margin:0">🔒 내 투자는 나만 봐요 · 친구 칭찬 점수가 오르면 벌고, 내리면 잃어요 · ＋를 누르면 바로 저장돼요</p>
+    ${noMoney ? `<div class="notice">💡 주식 돈이 없어요. <b>👛 내 지갑</b>에서 칭찬 포인트를 주식 돈으로 바꾼 다음 투자해요 (1P = ${won(st.rate)}, 수수료 ${st.buyFee}%). <button class="btn sm p" data-a="sub" data-k="stock" data-v="wallet">내 지갑으로</button></div>` : ''}
+    <p class="small muted" style="margin:0">🔒 내 투자는 나만 봐요 · 친구 주가(칭찬 점수)가 오르면 벌고, 내리면 잃어요 · 투자한 돈은 정산 때까지 묶여요${v2 && +st.div ? ` · 투자를 많이 받은 친구는 정산 때 받은 돈의 ${st.div}%를 배당금으로 받아요` : ''}</p>
     <div class="igrid scroll">${cells}</div>`;
 }
 /* 투자는 누를 때마다 자동 저장 (저장 버튼을 깜빡하고 나가는 일이 없게) */
@@ -907,80 +952,120 @@ function invFlush() {
   DB.update('wallets/' + me, { ['inv.' + R.id]: clean, name: nm(me) }).catch(e => { console.error(e); toast('저장하지 못했어요. 다시 눌러 주세요'); }).finally(() => { U.invSaving = false; render(); });
 }
 A.step = d => { U.step = +d.v; render(); };
-A.inv = d => { const R = curRound(); if (!R || R.status !== 'open') return; const B = budgetOf(U.me, R); const used = Object.values(U.inv).reduce((a, b) => a + b, 0); let n = (+U.inv[d.id] || 0) + (+d.d) * U.step; if (+d.d > 0) n = Math.min(n, (+U.inv[d.id] || 0) + (B - used)); U.inv[d.id] = Math.max(0, n); if (!U.inv[d.id]) delete U.inv[d.id]; clearTimeout(invT); invT = setTimeout(invFlush, 700); render(); };
+A.inv = d => { const R = curRound(); if (!R || R.status !== 'open') return; const B = budgetOf(U.me, R); const used = unitsOf(U.inv); let n = (+U.inv[d.id] || 0) + (+d.d) * U.step; if (+d.d > 0) n = Math.min(n, (+U.inv[d.id] || 0) + (B - used)); U.inv[d.id] = Math.max(0, n); if (!U.inv[d.id]) delete U.inv[d.id]; clearTimeout(invT); invT = setTimeout(invFlush, 700); render(); };
 A.invReset = () => { U.inv = {}; clearTimeout(invT); invT = setTimeout(invFlush, 300); render(); };
+/** 교환 계산 (만원 단위로 반올림). buy: 포인트 → 주식 돈(수수료 빼고 받음) / sell: 주식 돈 → 포인트(수수료 더해서 냄) */
+const r10k = n => Math.round(n / 10000) * 10000;
+const buyCalc = pts => { const st = ST(), gross = pts * st.rate, fee = r10k(gross * (+st.buyFee || 0) / 100); return { gross, fee, net: gross - fee }; };
+const sellCalc = pts => { const st = ST(), gross = pts * st.rate, fee = r10k(gross * (+st.fee || 0) / 100); return { gross, fee, cost: gross + fee }; };
 function walletView() {
-  const w = myW(), st = ST(), ex = (w.ex || []), pendingWon = ex.filter(e => e.st === 'req').reduce((a, e) => a + e.cost, 0);
+  const w = myW(), st = ST(), locked = lockedOf(U.me), free = freeCash(U.me), my = sc(U.me), b1 = buyCalc(1), s1 = sellCalc(1), maxSell = Math.max(0, Math.floor(free / s1.cost));
+  const xl = (w.xl || []).slice(-6).reverse(), legacy = (w.ex || []).filter(e => e.st === 'req');
   const log = (w.log || []).slice().reverse();
-  const feePct = st.fee ?? 10;
-  const unitTotal = st.rate + Math.round(st.rate * feePct / 100);
-  return `<div class="body"><div class="col" style="flex:1"><div class="card"><h2>👛 내 지갑</h2><div style="font-family:var(--f-d);font-size:40px">${won(w.cash || 0)}</div><p class="small muted" style="margin:4px 0 0">정산 때마다 번 돈(또는 잃은 돈)이 쌓여요. 칭찬 점수 1점당 ${won(st.rate)} (환전 수수료 ${feePct}% 별도)으로 바꿀 수 있어요.</p></div>
-    <div class="card"><h2>💱 환전 신청</h2><div class="row"><input type="number" id="exPts" min="1" value="1" style="width:110px"> 점으로 바꾸기 <button class="btn g" data-a="exReq">신청</button></div>
-    <p class="small muted" style="margin:6px 0 0">필요 금액: 1점당 ${won(unitTotal)} (수수료 ${feePct}% 포함) · 선생님이 확인하면 칭찬 점수로 들어가요. (신청 중: ${won(pendingWon)})</p>
-    <div class="log" style="margin-top:6px">${ex.slice(-5).reverse().map(e => `<div><time>${fmtT(e.at)}</time><span>${e.pts}점 (${won(e.cost)}${e.feePct != null ? ` · 수수료 ${e.feePct}%` : ''})</span><span class="pill ${e.st === 'ok' ? 'ok' : e.st === 'no' ? 'bad' : 'warn'}">${{ req: '확인 중', ok: '완료', no: '반려' }[e.st]}</span></div>`).join('')}</div></div></div>
-    <div class="card col fill" style="flex:1.4"><h2>📜 정산 기록</h2><div class="scroll fill"><table class="t"><tr><th>라운드</th><th class="r">투자</th><th class="r">수익률</th><th class="r">번 돈</th></tr>
-    ${log.map(l => `<tr><td>${esc(l.title)}</td><td class="r">${won(l.principal)}</td><td class="r ${cls(l.profit)}">${pct(l.principal ? l.profit / l.principal : 0)}</td><td class="r ${cls(l.profit)}"><b>${won(l.profit)}</b></td></tr>`).join('') || '<tr><td colspan="4" class="muted">아직 정산 기록이 없어요</td></tr>'}</table>
-    ${(() => { const R = curRound(), m = R && w.inv?.[R.id]; return m && Object.keys(m).length ? `<h2 style="margin-top:14px">🔒 이번 라운드 내 투자 (나만 보여요)</h2><table class="t">${Object.entries(m).map(([k, v]) => `<tr><td>${esc(nm(k))}</td><td class="r">${v}P</td><td class="r ${cls(growth(k, R))}">${pct(growth(k, R))}</td><td class="r ${cls(growth(k, R))}">${won(v * st.unit * (growth(k, R) || 0))}</td></tr>`).join('')}</table>` : ''; })()}</div></div></div>`;
+  return `<div class="body"><div class="col" style="flex:1">
+    <div class="card"><h2>👛 내 주식 돈</h2><div style="font-family:var(--f-d);font-size:38px">${won(w.cash || 0)}</div>
+      <p class="small" style="margin:4px 0 0">${locked ? `📈 투자 중 <b>${won(locked)}</b> · ` : ''}쓸 수 있는 돈 <b>${won(free)}</b> · ⭐ 내 칭찬 포인트 <b>${my}P</b></p></div>
+    <div class="card"><h2>⭐ → 💰 포인트를 주식 돈으로</h2><div class="row"><input type="number" id="buyPts" min="1" max="${Math.max(1, my)}" value="1" style="width:90px"> P 바꾸기 <button class="btn p" data-a="buy" ${my > 0 ? '' : 'disabled'}>바꾸기</button></div>
+      <p class="small muted" style="margin:6px 0 0" id="buyPrev">1P = ${won(st.rate)} · 수수료 ${st.buyFee}% 빼고 <b>${won(b1.net)}</b> 받아요 · 내 칭찬 점수가 그만큼 줄어요</p></div>
+    <div class="card"><h2>💰 → ⭐ 주식 돈을 포인트로 (환전)</h2><div class="row"><input type="number" id="sellPts" min="1" value="1" style="width:90px"> P 받기 <button class="btn g" data-a="sell" ${maxSell ? '' : 'disabled'}>환전</button></div>
+      <p class="small muted" style="margin:6px 0 0" id="sellPrev">1P 받으려면 <b>${won(s1.cost)}</b> (수수료 ${st.fee}% 포함) · 지금 최대 ${maxSell}P · 남겨 둬도 괜찮아요</p>
+      ${legacy.length ? `<p class="small" style="margin:6px 0 0">⏳ 예전 방식 환전 신청 ${legacy.length}건 — 선생님 확인 중</p>` : ''}
+      <div class="log" style="margin-top:6px">${xl.map(x => `<div><time>${fmtT(x.at)}</time><span>${x.dir === 'buy' ? `⭐${x.pts}P → 💰${won(x.won)}` : `💰${won(x.won)} → ⭐${x.pts}P`}</span><span class="pill">수수료 ${won(x.fee)}</span></div>`).join('')}</div></div></div>
+    <div class="card col fill" style="flex:1.4"><h2>📜 정산 기록</h2><div class="scroll fill"><table class="t"><tr><th>라운드</th><th>내용</th><th class="r">금액</th><th class="r">받은 돈</th></tr>
+    ${log.map(l => l.kind === 'div'
+      ? `<tr><td>${esc(l.title)}</td><td>🎁 배당금 (투자받은 돈의 ${l.pctv}%)</td><td class="r">${won(l.received)}</td><td class="r up"><b>+${won(l.profit)}</b></td></tr>`
+      : `<tr><td>${esc(l.title)}</td><td>📈 투자 수익 <span class="${cls(l.profit)}">${pct(l.principal ? l.profit / l.principal : 0)}</span></td><td class="r">${won(l.principal)}</td><td class="r ${cls(l.profit)}"><b>${l.profit > 0 ? '+' : ''}${won(l.profit)}</b></td></tr>`).join('') || '<tr><td colspan="4" class="muted">아직 정산 기록이 없어요</td></tr>'}</table>
+    ${(() => { const R = curRound(), m = R && R.status !== 'settled' && w.inv?.[R.id]; return m && Object.keys(m).length ? `<h2 style="margin-top:14px">🔒 이번 라운드 내 투자 (나만 보여요)</h2><table class="t">${Object.entries(m).map(([k, v]) => `<tr><td>${esc(nm(k))}</td><td class="r">${won(v * st.unit)}</td><td class="r ${cls(growth(k, R))}">${pct(growth(k, R))}</td><td class="r ${cls(growth(k, R))}">${won(v * st.unit * (growth(k, R) || 0))}</td></tr>`).join('')}</table>` : ''; })()}</div></div></div>`;
 }
-A.exReq = async () => {
-  const pts = Math.floor(+$('#exPts').value); if (!(pts > 0)) return toast('1점 이상 적어요');
-  const w = myW(), st = ST(), feePct = st.fee ?? 10;
-  const rawCost = pts * st.rate;
-  const feeCost = Math.round(rawCost * feePct / 100);
-  const cost = rawCost + feeCost;
-  const pend = (w.ex || []).filter(e => e.st === 'req').reduce((a, e) => a + e.cost, 0);
-  if (cost > (w.cash || 0) - pend) return toast(`지갑에 돈이 모자라요 (수수료 ${feePct}% 포함 ${won(cost)} 필요)`);
-  await DB.update('wallets/' + U.me, { ex: [...(w.ex || []), { id: uid(), pts, cost, rawCost, feeCost, feePct, at: Date.now(), st: 'req' }], name: nm(U.me) }); toast('환전을 신청했어요'); render();
+AFTER.stock = () => {
+  const b = $('#buyPts'), s = $('#sellPts'), st = ST();
+  if (b) b.oninput = () => { const n = Math.max(0, Math.floor(+b.value || 0)), c = buyCalc(n); $('#buyPrev').innerHTML = `${n}P = ${won(c.gross)} − 수수료 ${won(c.fee)} → <b>${won(c.net)}</b> 받아요 · 내 칭찬 점수 ${sc(U.me)} → ${sc(U.me) - n}점`; };
+  if (s) s.oninput = () => { const n = Math.max(0, Math.floor(+s.value || 0)), c = sellCalc(n); $('#sellPrev').innerHTML = `${n}P 받으려면 ${won(c.gross)} + 수수료 ${won(c.fee)} = <b>${won(c.cost)}</b> · 쓸 수 있는 돈 ${won(freeCash(U.me))}${c.cost > freeCash(U.me) ? ' <b class="dn">(모자라요)</b>' : ''}`; };
+};
+A.buy = () => {
+  const pts = Math.floor(+$('#buyPts').value), me = U.me; if (!(pts > 0)) return toast('1P 이상 적어요');
+  if (pts > sc(me)) return toast(`칭찬 포인트가 모자라요 (지금 ${sc(me)}P)`);
+  const c = buyCalc(pts);
+  confirmBox(`칭찬 포인트 ${pts}P를 주식 돈으로 바꿀까요?\n${won(c.gross)} − 수수료 ${won(c.fee)} = ${won(c.net)}\n내 칭찬 점수가 ${pts}점 줄어들어요.`, async () => {
+    if (U.me !== me || pts > sc(me)) return toast('칭찬 포인트가 모자라요');
+    const w = S.wallets[me] || {}, id = uid(), at = Date.now();
+    await DB.multi([['wallets/' + me, { cash: (w.cash || 0) + c.net, xl: [...(w.xl || []), { id, dir: 'buy', pts, won: c.net, fee: c.fee, at }], name: nm(me) }],
+      ['app/attitude', { pen: { ['buy' + id]: { sid: me, pts, at, applied: false, kind: 'buy', reason: `주식 돈으로 바꿈 ${won(c.net)}` } } }]]);
+    toast(`💰 ${won(c.net)}이 지갑에 들어왔어요`);
+  }, '바꾸기');
+};
+A.sell = () => {
+  const pts = Math.floor(+$('#sellPts').value), me = U.me; if (!(pts > 0)) return toast('1P 이상 적어요');
+  const c = sellCalc(pts);
+  if (c.cost > freeCash(me)) return toast(`쓸 수 있는 돈이 모자라요 (${won(c.cost)} 필요)`);
+  confirmBox(`주식 돈 ${won(c.cost)}을 칭찬 포인트 ${pts}P로 바꿀까요?\n${won(c.gross)} + 수수료 ${won(c.fee)}`, async () => {
+    if (U.me !== me || c.cost > freeCash(me)) return toast('쓸 수 있는 돈이 모자라요');
+    const w = S.wallets[me] || {}, id = uid(), at = Date.now();
+    await DB.multi([['wallets/' + me, { cash: (w.cash || 0) - c.cost, xl: [...(w.xl || []), { id, dir: 'sell', pts, won: c.cost, fee: c.fee, at }], name: nm(me) }],
+      ['app/attitude', { pen: { ['ex' + id]: { sid: me, pts: -pts, at, applied: false, kind: 'ex', reason: `주식 돈 환전 ${won(c.cost)}` } } }]]);
+    toast(`⭐ 칭찬 포인트 +${pts}P! 퍼스트클래스에도 자동으로 들어가요`);
+  }, '환전하기');
 };
 function stockAdmin(R) {
-  const st = ST(), reqs = [];
-  for (const [sid, w] of Object.entries(S.wallets)) (w.ex || []).forEach(e => { if (e.st === 'req') reqs.push({ sid, ...e }); });
+  const st = ST(), reqs = [], xs = [];
+  for (const [sid, w] of Object.entries(S.wallets)) { (w.ex || []).forEach(e => { if (e.st === 'req') reqs.push({ sid, ...e }); }); (w.xl || []).forEach(x => xs.push({ sid, ...x })); }
+  xs.sort((a, b) => b.at - a.at);
+  const feeSum = xs.reduce((a, x) => a + (+x.fee || 0), 0), cashSum = Object.values(S.wallets).reduce((a, w) => a + (+w.cash || 0), 0);
   const rounds = Object.values(S.stock?.rounds || {}).sort((a, b) => b.at - a.at);
+  const recvNow = investTotals(R), recvTop = Object.entries(recvNow).sort((a, b) => b[1] - a[1]).slice(0, 3);
   return `<div class="body"><div class="col" style="flex:1">
-    <div class="card"><h2>🔁 라운드</h2>${R ? `<p class="small" style="margin:0 0 8px">현재: <b>${esc(R.title)}</b> · 시작 ${fmtT(R.at)}${R.end ? ' · 마감 예정 ' + esc(R.end) : ''}</p>` : ''}
+    <div class="card"><h2>🔁 라운드</h2>${R ? `<p class="small" style="margin:0 0 8px">현재: <b>${esc(R.title)}</b> · 시작 ${fmtT(R.at)}${R.end ? ' · 마감 예정 ' + esc(R.end) : ''}${R.v >= 2 ? '' : ' · <span class="pill warn">예전 방식 라운드</span>'}</p>` : ''}
       <div class="row">${!R || R.status === 'settled' ? '<button class="btn p" data-a="roundNew">새 라운드 열기</button>' : ''}
       ${R?.status === 'open' ? '<button class="btn" data-a="roundClose">투자 마감</button>' : ''}
       ${R && R.status !== 'settled' ? '<button class="btn g" data-a="roundSettle">지금 점수로 정산</button>' : ''}</div>
-      <p class="small muted" style="margin:8px 0 0">새 라운드를 열면 그 순간의 칭찬 점수(태도 감점 포함)를 시작 점수로 기록해요. 정산하면 성장률만큼 지갑에 돈이 들어가요.</p></div>
+      ${R && R.status !== 'settled' && recvTop.length ? `<p class="small" style="margin:8px 0 0">💰 투자 많이 받은 친구: ${recvTop.map(([k, v]) => `<b>${esc(nm(k))}</b> ${won(v * st.unit)}`).join(' · ')}</p>` : ''}
+      <p class="small muted" style="margin:8px 0 0">새 라운드를 열면 그 순간의 주가(칭찬 점수, 주식 돈 교환은 빼고)를 시작 점수로 기록해요. 정산하면 ① 투자한 학생은 성장률만큼 벌거나 잃고 ② 투자를 받은 학생은 받은 돈의 ${st.div}%를 배당금으로 받아요.</p></div>
     <div class="card"><h2>⚙ 설정</h2><div class="row">
-      <label class="f">투자 예산<select id="stBudget"><option value="score" ${st.budget === 'score' ? 'selected' : ''}>내 칭찬 점수만큼</option><option value="fixed" ${st.budget === 'fixed' ? 'selected' : ''}>모두 같은 포인트</option></select></label>
-      <label class="f">같은 포인트<input type="number" id="stFixed" value="${st.fixed}" style="width:90px"></label>
-      <label class="f">최소 예산(P)<input type="number" id="stMin" value="${st.minBudget}" min="0" style="width:90px"></label>
-      <label class="f">성장률 최소 분모<input type="number" id="stFloor" value="${st.floor}" style="width:90px"></label>
-      <label class="f">1점 환전 금액(만원)<input type="number" id="stRate" value="${st.rate / 10000}" style="width:110px"></label>
-      <label class="f">환전 수수료(%)<input type="number" id="stFee" value="${st.fee ?? 10}" min="0" max="100" style="width:85px"></label>
+      <label class="f">1P 가치(만원)<input type="number" id="stRate" value="${st.rate / 10000}" style="width:90px"></label>
+      <label class="f">포인트→돈 수수료(%)<input type="number" id="stBuyFee" value="${st.buyFee}" min="0" max="100" style="width:85px"></label>
+      <label class="f">돈→포인트 수수료(%)<input type="number" id="stFee" value="${st.fee}" min="0" max="100" style="width:85px"></label>
+      <label class="f">배당률(%)<input type="number" id="stDiv" value="${st.div}" min="0" max="100" style="width:85px"></label>
+      <label class="f">성장률 최소 분모<input type="number" id="stFloor" value="${st.floor}" style="width:85px"></label>
       <label class="f">자기 투자<select id="stSelf"><option value="0">금지</option><option value="1" ${st.allowSelf ? 'selected' : ''}>허용</option></select></label>
-      <button class="btn sm p" data-a="stSave">저장</button></div></div>
-    <div class="card col fill"><h2>💱 환전 신청 ${reqs.length ? `<span class="pill warn">${reqs.length}</span>` : ''}</h2><div class="scroll fill">
-      ${reqs.map(r => `<div class="row" style="padding:6px 0;border-bottom:1px solid var(--line)"><b>${esc(nm(r.sid))}</b> ${r.pts}점 (${won(r.cost)}${r.feePct != null ? ` · 수수료 ${r.feePct}%` : ''}) <span class="small muted">${fmtT(r.at)}</span><span class="sp" style="flex:1"></span><button class="btn sm" data-a="exDo" data-sid="${r.sid}" data-id="${r.id}" data-ok="0">반려</button><button class="btn sm p" data-a="exDo" data-sid="${r.sid}" data-id="${r.id}" data-ok="1">승인</button></div>`).join('') || '<p class="muted small">신청이 없어요</p>'}
-      <p class="small muted">승인하면 지갑에서 돈이 빠지고, 칭찬 점수는 <b>퍼스트클래스에 자동으로 +</b>돼요 (퍼스트클래스가 켜져 있을 때 반영, 그 전에도 라운지 점수에는 바로 보여요).</p></div></div></div>
-    <div class="card col fill" style="flex:1"><h2>📚 지난 라운드</h2><div class="scroll fill"><table class="t"><tr><th>라운드</th><th>상태</th><th class="r">최고 성장</th></tr>
-    ${rounds.map(r => { const top = r.rate ? Object.entries(r.rate).sort((a, b) => b[1] - a[1])[0] : null; return `<tr><td>${esc(r.title)}<div class="tiny muted">${fmtT(r.at)}</div></td><td>${{ open: '투자 중', closed: '진행 중', settled: '정산' }[r.status]}</td><td class="r">${top ? esc(nm(top[0])) + ' ' + pct(top[1]) : ''}</td></tr>`; }).join('')}</table></div></div></div>`;
+      <button class="btn sm p" data-a="stSave">저장</button></div></div></div>
+    <div class="col" style="flex:1"><div class="card col fill" style="flex:1.3"><h2>💱 포인트↔주식 돈 기록</h2><p class="small muted" style="margin:0 0 6px">학생이 누르면 바로 처리되고 퍼스트클래스 점수에 자동 반영돼요. 반 전체 주식 돈 ${won(cashSum)} · 지금까지 수수료 ${won(feeSum)}</p><div class="scroll fill">
+      ${reqs.length ? `<p class="small"><b>예전 방식 환전 신청 ${reqs.length}건</b></p>` + reqs.map(r => `<div class="row" style="padding:6px 0;border-bottom:1px solid var(--line)"><b>${esc(nm(r.sid))}</b> ${r.pts}점 (${won(r.cost)}) <span class="small muted">${fmtT(r.at)}</span><span class="sp" style="flex:1"></span><button class="btn sm" data-a="exDo" data-sid="${r.sid}" data-id="${r.id}" data-ok="0">반려</button><button class="btn sm p" data-a="exDo" data-sid="${r.sid}" data-id="${r.id}" data-ok="1">승인</button></div>`).join('') : ''}
+      <table class="t"><tr><th>시각</th><th>학생</th><th>내용</th><th class="r">수수료</th></tr>${xs.slice(0, 60).map(x => `<tr><td class="small">${fmtT(x.at)}</td><td>${esc(nm(x.sid))}</td><td>${x.dir === 'buy' ? `⭐${x.pts}P → 💰${won(x.won)}` : `💰${won(x.won)} → ⭐${x.pts}P`}</td><td class="r">${won(x.fee)}</td></tr>`).join('') || '<tr><td colspan="4" class="muted">아직 기록이 없어요</td></tr>'}</table></div></div>
+    <div class="card col fill" style="flex:1"><h2>📚 지난 라운드</h2><div class="scroll fill"><table class="t"><tr><th>라운드</th><th>상태</th><th class="r">최고 성장</th><th class="r">배당 1위</th></tr>
+    ${rounds.map(r => { const top = r.rate ? Object.entries(r.rate).sort((a, b) => b[1] - a[1])[0] : null, dtop = r.recv ? Object.entries(r.recv).sort((a, b) => b[1] - a[1])[0] : null; return `<tr><td>${esc(r.title)}<div class="tiny muted">${fmtT(r.at)}</div></td><td>${{ open: '투자 중', closed: '진행 중', settled: '정산' }[r.status]}</td><td class="r">${top ? esc(nm(top[0])) + ' ' + pct(top[1]) : ''}</td><td class="r">${dtop && r.divPct ? esc(nm(dtop[0])) + ' +' + won(r10k(dtop[1] * r.divPct / 100)) : ''}</td></tr>`; }).join('')}</table></div></div></div></div>`;
 }
-A.stSave = async () => { await DB.set('app/settings', { stock: { budget: $('#stBudget').value, fixed: +$('#stFixed').value || 20, minBudget: Math.max(0, Math.floor(+$('#stMin').value || 0)), floor: Math.max(1, +$('#stFloor').value || 10), rate: Math.max(1, +$('#stRate').value || 100) * 10000, fee: Math.max(0, +$('#stFee').value || 0), allowSelf: $('#stSelf').value === '1', unit: 1000000 } }); toast('저장했어요'); };
+A.stSave = async () => {
+  const pc = id => Math.min(100, Math.max(0, +$(id).value || 0));
+  await DB.set('app/settings', { stock: { floor: Math.max(1, +$('#stFloor').value || 10), rate: Math.max(1, +$('#stRate').value || 100) * 10000, buyFee: pc('#stBuyFee'), fee: pc('#stFee'), div: pc('#stDiv'), allowSelf: $('#stSelf').value === '1', unit: 1000000 } }); toast('저장했어요');
+};
 A.roundNew = () => {
   const n = Object.keys(S.stock?.rounds || {}).length + 1, end = new Date(Date.now() + 7 * DAY).toLocaleDateString('sv');
-  const m = modal(`${mHead('새 주식 라운드')}<div class="mb"><label class="f">라운드 이름<input type="text" id="rT" value="${n}회차 주식 (${new Date().getMonth() + 1}월)"></label><label class="f">마감 예정일<input type="date" id="rE" value="${end}"></label><p class="small muted" style="margin:0">지금 칭찬 점수가 시작 점수로 기록돼요.</p></div><div class="mf"><button class="btn" data-a="closeModal">취소</button><button class="btn p" id="rOk">열기</button></div>`);
+  const m = modal(`${mHead('새 주식 라운드')}<div class="mb"><label class="f">라운드 이름<input type="text" id="rT" value="${n}회차 주식 (${new Date().getMonth() + 1}월)"></label><label class="f">마감 예정일<input type="date" id="rE" value="${end}"></label><p class="small muted" style="margin:0">지금 주가(칭찬 점수, 주식 돈 교환은 빼고)가 시작 점수로 기록돼요. 학생들은 지갑의 주식 돈으로 투자해요.</p></div><div class="mf"><button class="btn" data-a="closeModal">취소</button><button class="btn p" id="rOk">열기</button></div>`);
   m.querySelector('#rOk').onclick = async () => {
-    const id = uid(), base = Object.fromEntries(roster().map(s => [s.id, sc(s.id)]));
-    await DB.set('app/stock', { cur: id, rounds: { [id]: { id, title: $('#rT').value || '주식 라운드', end: $('#rE').value, at: Date.now(), status: 'open', base } } });
+    const id = uid(), base = Object.fromEntries(roster().map(s => [s.id, stockSc(s.id)]));
+    await DB.set('app/stock', { cur: id, rounds: { [id]: { id, v: 2, title: $('#rT').value || '주식 라운드', end: $('#rE').value, at: Date.now(), status: 'open', base } } });
     closeModal(); toast('새 라운드를 열었어요');
   };
 };
 A.roundClose = () => confirmBox('투자를 마감할까요? 학생들은 더 이상 투자를 바꿀 수 없어요.', async () => { await DB.update('app/stock', { [`rounds.${S.stock.cur}.status`]: 'closed' }); });
 A.roundSettle = () => {
-  const R = curRound(); confirmBox(`'${R.title}'을(를) 지금 점수로 정산할까요?\n성장률만큼 학생 지갑에 돈이 들어가고 되돌릴 수 없어요.`, async () => {
-    const st = ST(), final = {}, rate = {};
-    for (const s of roster()) { final[s.id] = sc(s.id); rate[s.id] = (final[s.id] - (+R.base?.[s.id] || 0)) / Math.max(+R.base?.[s.id] || 0, st.floor); }
-    const jobs = [];
+  const R = curRound(), st0 = ST(); confirmBox(`'${R.title}'을(를) 지금 점수로 정산할까요?\n① 투자 수익(또는 손실)과 ② 배당금(투자받은 돈의 ${st0.div}%)이 지갑에 들어가고 되돌릴 수 없어요.`, async () => {
+    const st = ST(), final = {}, rate = {}, v2 = R.v >= 2, now = Date.now(), add = {}, logs = {}, recv = {};
+    for (const s of roster()) { final[s.id] = v2 ? stockSc(s.id) : sc(s.id); rate[s.id] = Math.max(-1, (final[s.id] - (+R.base?.[s.id] || 0)) / Math.max(+R.base?.[s.id] || 0, st.floor)); }
+    const give = (sid, amt, entry) => { add[sid] = (add[sid] || 0) + amt; (logs[sid] = logs[sid] || []).push(entry); };
     for (const [sid, w] of Object.entries(S.wallets)) {
-      const m = w.inv?.[R.id]; if (!m || !Object.keys(m).length) continue;
-      let principal = 0, profit = 0; for (const [t, p] of Object.entries(m)) { principal += p * st.unit; profit += p * st.unit * (rate[t] || 0); }
-      profit = Math.round(profit / 10000) * 10000;
-      jobs.push(DB.update('wallets/' + sid, { cash: (w.cash || 0) + profit, log: [...(w.log || []), { rid: R.id, title: R.title, principal, profit, at: Date.now() }] }));
+      const m = w.inv?.[R.id]; if (!m || !unitsOf(m)) continue;
+      let principal = 0, profit = 0; for (const [t, p] of Object.entries(m)) { const amt = p * st.unit; principal += amt; profit += amt * (rate[t] || 0); recv[t] = (recv[t] || 0) + amt; }
+      profit = r10k(profit); give(sid, profit, { kind: 'stock', rid: R.id, title: R.title, principal, profit, at: now });
     }
-    jobs.push(DB.update('app/stock', { [`rounds.${R.id}.status`]: 'settled', [`rounds.${R.id}.final`]: final, [`rounds.${R.id}.rate`]: rate, [`rounds.${R.id}.settledAt`]: Date.now() }));
-    await Promise.all(jobs); toast(`정산 완료! ${jobs.length - 1}명의 지갑에 반영했어요`);
+    // 배당금: 투자를 받은 모든 학생에게 받은 돈의 div% (학급 은행이 새로 지급 — 투자한 친구 수익은 줄지 않음)
+    const divPct = +st.div || 0;
+    if (divPct) for (const [t, amt] of Object.entries(recv)) { const dv = r10k(amt * divPct / 100); if (dv > 0 && stu(t)) give(t, dv, { kind: 'div', rid: R.id, title: R.title, received: amt, profit: dv, pctv: divPct, at: now }); }
+    const list = Object.keys(add).map(sid => { const w = S.wallets[sid] || {}; return ['wallets/' + sid, { cash: (w.cash || 0) + add[sid], log: [...(w.log || []), ...logs[sid]], name: nm(sid) }]; });
+    list.push(['app/stock', { rounds: { [R.id]: { status: 'settled', final, rate, recv, divPct, settledAt: now } } }]);
+    await DB.multi(list);
+    const nDiv = Object.values(logs).flat().filter(l => l.kind === 'div').length;
+    toast(`정산 완료! 투자 ${Object.values(logs).flat().filter(l => l.kind === 'stock').length}명 · 배당 ${nDiv}명`);
   }, '정산하기');
 };
 A.exDo = async d => {
@@ -1954,12 +2039,14 @@ A.stuPinList = () => {
 A.tpinSave = async () => { const v = $('#tpin').value.replace(/\D/g, ''); if (v.length !== 4) return toast('숫자 4자리'); await DB.set('app/secret', { tpin: v }); $('#tpin').value = ''; toast('교사 PIN을 바꿨어요'); };
 A.ntSave = async () => { await DB.set('app/settings', { notice: $('#ntx').value.trim() }); toast('공지를 저장했어요'); };
 
+window.__lg = { S, sc, stockSc, growth, freeCash, gaUnseal }; // 점검용 (콘솔·자동 테스트)
+
 /* ---------------- boot ---------------- */
 async function boot() {
   try { DB = CFG.fb ? await makeCloud(CFG) : makeLocal(CFG.code); }
   catch (e) { console.error(e); toast('Firestore 연결 실패 — 체험 모드로 열어요'); DB = makeLocal(CFG.code); }
   setConn(DB.kind === 'cloud' ? 'cloud' : 'demo', DB.kind === 'cloud' ? `연결됨 · ${CFG.code}` : '체험 모드');
-  const docs = { main: 'app/main', secret: 'app/secret', set: 'app/settings', stock: 'app/stock', mani: 'app/manito', att: 'app/attitude' };
+  const docs = { main: 'app/main', secret: 'app/secret', set: 'app/settings', stock: 'app/stock', mani: 'app/manito', att: 'app/attitude', gacc: 'app/gacc' };
   for (const [k, p] of Object.entries(docs)) DB.watchDoc(p, v => { S[k] = v; render(); });
   DB.watchCol('wallets', l => { S.wallets = Object.fromEntries(l.map(d => [d.id, d])); render(); });
   DB.watchCol('mani', l => { S.manis = Object.fromEntries(l.map(d => [d.id, d])); render(); });

@@ -448,8 +448,9 @@ legend{font-weight:600;margin-bottom:6px;font-size:13.5px;padding:0}
             <button type="button" id="sbGiveM" class="give m" data-i18n="giveM">머쓱 −</button>
           </div>
           <div class="sbbar-side">
-            <div class="seg" id="sbView" role="group" aria-label="view"><button type="button" data-view="seat" data-i18n="vSeat">좌석으로</button><button type="button" data-view="no" data-i18n="vNo">번호순</button></div>
+            <div class="seg" id="sbView" role="group" aria-label="view"><button type="button" data-view="seat" data-i18n="vSeat">좌석으로</button><button type="button" data-view="no" data-i18n="vNo">번호순</button><button type="button" data-view="pt" data-i18n="vPt">점수순</button></div>
             <button type="button" id="sbBulkOpen" class="btn sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M9 14l2 2 4-4"/></svg><span data-i18n="sbBulkMenu">수동 일괄</span></button>
+          <button type="button" id="sbTrOpen" class="btn sm" title="활동 트래커 엑셀에서 미션 상태(🟧 검사 완료 등)로 학생 고르기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/><path d="M13 14l2 2 3-3"/></svg><span>트래커로 선택</span></button>
             <button type="button" id="sbUndo" class="btn sm" data-i18n="undo">되돌리기</button>
             <button type="button" id="sbFull" class="btn sm ghost" data-i18n="fullscreen">전체 화면</button>
           </div>
@@ -621,6 +622,12 @@ legend{font-weight:600;margin-bottom:6px;font-size:13.5px;padding:0}
             <p class="muted">숫자 6자리 = 생일 4자리(월일) 앞이나 뒤에 <b>출석번호 2자리</b> 또는 <b>태어난 해 2자리</b>가 무작위로 붙습니다. (생년월일 등록·일괄 입력은 <b>탑승객 명단</b> 탭에서 관리할 수 있습니다.)</p>
             <p id="lpSum" style="margin:0;font-weight:600"></p>
             <div class="row"><button id="lpOpen" class="btn sm primary">비밀번호 만들기·관리</button><button id="lpLabel" class="btn sm">🖨 라벨지 인쇄</button></div>
+          </div>
+          <div class="card" id="gaCard">
+            <h2>🔑 학생 구글 계정</h2>
+            <p class="muted">학교 구글 계정·비밀번호를 여기서 한 번에 관리하면, 학생이 라운지에 로그인해 <b>자기 계정만</b> 조회합니다. 원문은 이 컴퓨터에만 있고 라운지에는 학생 비밀번호로 잠근 값만 갑니다.</p>
+            <p id="gaSum" style="margin:0;font-weight:600"></p>
+            <div class="row"><button id="gaOpen" class="btn sm primary">계정 입력·관리</button></div>
           </div>
           <div class="card" id="lgCard">
             <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
@@ -987,7 +994,7 @@ const LOCK_ON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke
 
 /* ---------------- i18n ---------------- */
 const I18N={ko:{
- brand:'퍼스트클래스',brandSub:'FIRST CLASS · 우리 반 좌석과 점수',tabScore:'점수판',passK:'FLIGHT · 탑승 학급',totP:'칭찬 점수 합계',vSeat:'좌석으로',vNo:'번호순',fullscreen:'전체 화면',
+ brand:'퍼스트클래스',brandSub:'FIRST CLASS · 우리 반 좌석과 점수',tabScore:'점수판',passK:'FLIGHT · 탑승 학급',totP:'칭찬 점수 합계',vSeat:'좌석으로',vNo:'번호순',vPt:'점수순',rankFmt:'{0}위',fullscreen:'전체 화면',
  selK:'명 선택',selAll:'전체 선택',selNone:'선택 해제',amt:'점수',giveP:'칭찬 +',giveM:'머쓱 −',gaveP:'{0}명에게 칭찬 +{1}',gaveM:'{0}명 머쓱 −{1} (칭찬 점수에서 뺌)',pickFirst:'먼저 학생을 눌러 선택하세요.',amtBad:'점수를 1 이상으로 적으세요.',importData:'데이터 파일 불러오기',
  sbBulkMenu:'수동 일괄 입력',sbBulkTitle:'수동 일괄 점수 입력',sbBulkDesc:'학생 명단을 복사해 붙여넣으세요. 이름, 번호, 엑셀 표(열/행), 쉼표 구분 모두 지원됩니다.',sbBulkParsed:'인식된 학생: {0}명',sbBulkNone:'명단을 붙여넣으면 인식된 학생이 여기에 표시됩니다.',sbBulkUnmatched:'미확인 {0}개',sbBulkGiveP:'칭찬 + 일괄 입력',sbBulkGiveM:'머쓱 − 일괄 입력',sbBulkDoneP:'{0}명에게 칭찬 +{1} 일괄 입력 완료',sbBulkDoneM:'{0}명 머쓱 −{1} 일괄 차감 완료',
  sbHint:'학생 좌석을 눌러 여러 명 고른 뒤, 점수를 적고 ‘칭찬 +’ 또는 ‘머쓱 −’을 누르세요. 머쓱은 칭찬 점수에서 뺍니다. 잘못 줬으면 ‘되돌리기’.',sbRest:'좌석이 없는 학생 {0}명',sbNoUndo:'되돌릴 점수가 없습니다.',sbUndone:'되돌렸습니다 ({0}명 {1})',scoreResetTitle:'점수 초기화',scoreResetDesc:'지금 학급의 칭찬 점수를 모두 0으로 돌립니다. 명단과 자리는 그대로 남습니다.',scoreReset:'점수 모두 0으로',scoreCleared:'점수를 모두 0으로 돌렸습니다.',sbEmpty:'아직 학생이 없습니다. 저장해 둔 데이터 파일(.json)을 불러오거나, 탑승객 명단에서 학생을 넣으세요.',
@@ -1042,7 +1049,7 @@ class:'학급',rename:'이름 바꾸기',newClass:'새 학급',
  wCol:'좌우 자리 돌아가기',wColD:'창가·복도 쪽을 번갈아',studentView:'학생 시점',teacherView:'교사 시점',pngMade:'만든 날 {0}',
  seedClass:'예시 · 3학년 1반',seedH1:'예시 기록 · 2학기 첫 자리',seedH2:'예시 기록 · 9월 둘째 자리',selectA:'학생 고르기',noClassStudents:'학생이 없습니다. 오른쪽에 명단을 붙여넣으세요.'
 },en:{
- brand:'First Class',brandSub:'FIRST CLASS · SEATS & POINTS',tabScore:'Scoreboard',passK:'FLIGHT · CLASS',totP:'Total points',vSeat:'By seat',vNo:'By number',fullscreen:'Full screen',
+ brand:'First Class',brandSub:'FIRST CLASS · SEATS & POINTS',tabScore:'Scoreboard',passK:'FLIGHT · CLASS',totP:'Total points',vSeat:'By seat',vNo:'By number',vPt:'By score',rankFmt:'#{0}',fullscreen:'Full screen',
  selK:'selected',selAll:'Select all',selNone:'Clear',amt:'Points',giveP:'Praise +',giveM:'Oops −',gaveP:'Praise +{1} to {0}',gaveM:'Oops −{1} for {0} (taken from points)',pickFirst:'Tap students to select them first.',amtBad:'Enter 1 or more points.',importData:'Load data file',
  sbBulkMenu:'Batch Points',sbBulkTitle:'Manual Batch Points',sbBulkDesc:'Paste a list of students. Names, numbers, Excel rows/columns, and comma-separated lists are supported.',sbBulkParsed:'Recognized: {0}',sbBulkNone:'Pasted students will appear here.',sbBulkUnmatched:'Unrecognized: {0}',sbBulkGiveP:'Batch Praise +',sbBulkGiveM:'Batch Oops −',sbBulkDoneP:'Batch Praise +{1} to {0}',sbBulkDoneM:'Batch Oops −{1} to {0}',
  sbHint:'Tap seats to select several students, enter points, then press Praise + or Oops −. Oops takes points away. Made a mistake? Press Undo.',sbRest:'{0} students without a seat',sbNoUndo:'Nothing to undo.',sbUndone:'Undone ({0} students {1})',scoreResetTitle:'Reset points',scoreResetDesc:'Sets every student’s points in this class back to 0. The list and seats stay.',scoreReset:'Reset all points',scoreCleared:'All points reset to 0.',sbEmpty:'No students yet. Load a saved data file (.json), or add students in Passengers.',
@@ -1421,6 +1428,12 @@ function renderScore(){
   const list=c.students.slice().sort(byNo);
   $('#sbCabin').classList.toggle('flip',flip);
   if(!list.length){grid.className='sbgrid list';grid.style.gridTemplateColumns='';grid.innerHTML=`<div class="sb-empty"><p class="muted">${esc(t('sbEmpty'))}</p><label class="btn primary" for="bkFile">${esc(t('importData'))}</label></div>`;$('#sbRest').hidden=true;$('#sbFront').hidden=true;return;}
+  if(sb.view==='pt'){
+    /* 점수순: 높은 점수부터, 같은 점수는 같은 순위(번호순으로 나열) */
+    $('#sbFront').hidden=true;grid.className='sbgrid list';grid.style.gridTemplateColumns='';
+    const byPt=list.slice().sort((a,b)=>ptOf(b.id)-ptOf(a.id)||byNo(a,b));let rank=0,prev=null;
+    grid.innerHTML=byPt.map((s,i)=>{const v=ptOf(s.id);if(v!==prev){rank=i+1;prev=v;}return scCard(s,t('rankFmt',rank));}).join('');$('#sbRest').hidden=true;return;
+  }
   if(sb.view==='no'||!c.layout.seats.length){
     $('#sbFront').hidden=true;grid.className='sbgrid list';grid.style.gridTemplateColumns='';
     grid.innerHTML=list.map(s=>scCard(s,noCode(s))).join('');$('#sbRest').hidden=true;return;
@@ -1474,6 +1487,7 @@ function give(sign){
   c.scoreLog.push({sids:ids,d,at:Date.now()});if(c.scoreLog.length>300)c.scoreLog.shift();
   sbSel.clear();persist();ids.forEach(id=>paintCard(id,d));renderTotals();renderSelBar();$('#sbUndo').disabled=false;
   toast(t(sign>0?'gaveP':'gaveM',ids.length,n));
+  if(DB.sb.view==='pt')setTimeout(()=>{if(DB.tab==='score'&&DB.sb.view==='pt')renderScore();},950); // 점수순: 애니메이션 뒤 순위 다시 정렬
 }
 $('#tab-score').addEventListener('click',e=>{
   const card=e.target.closest('.sc[data-sid]');
@@ -1507,6 +1521,7 @@ $('#sbUndo').onclick=()=>{
   const ids=(u.sids||[u.sid]).filter(id=>stuById(id));ids.forEach(id=>{c.scores[id]=ptOf(id)-u.d;paintCard(id);});
   toast(t('sbUndone',ids.length,(u.d>0?'+':'−')+Math.abs(u.d)));
   persist();renderTotals();$('#sbUndo').disabled=!c.scoreLog.length;
+  if(DB.sb.view==='pt')renderScore();
 };
 $('#sbFull').onclick=()=>{try{if(document.fullscreenElement)document.exitFullscreen();else $('#tab-score').requestFullscreen();}catch(e){}};
 $('#scoreReset').onclick=e=>armed(e.currentTarget,'confirmAgain',()=>{const c=cls();c.scores={};c.scoreLog=[];persist();renderScore();toast(t('scoreCleared'));});
@@ -2948,9 +2963,12 @@ async function lgPush(manual){
   try{if(!(await lgConnect())){if(manual)toast('학급 코드와 Firebase 설정을 먼저 저장하세요');return;}
     /* 점수와 '반영 완료' 표시를 한 번에(batch) 보냄 → 라운지에서 잠깐이라도 두 번 빠져 보이지 않게 */
     const done=lgCls().lgDone||{},ids=Object.keys(lg.pen).filter(id=>done[id]&&!lg.pen[id].applied);
-    const b=lg.F.writeBatch(lg.db);b.set(lgRef('app/main'),lgPayload());
+    /* 학생 구글 계정: 계정·PIN이 바뀌었거나 '지금 전송'일 때만 다시 잠가서 보냄 */
+    const gc=lgCls(),gSig=gaSig(gc),gKey='firstclass.gaSig.'+lg.cfg.code+'.'+gc.id;let gSend=manual||localStorage.getItem(gKey)!==gSig;
+    const gDoc=gSend?await gaDoc(gc):null;
+    const b=lg.F.writeBatch(lg.db);b.set(lgRef('app/main'),lgPayload());if(gDoc)b.set(lgRef('app/gacc'),gDoc);
     if(ids.length){const f={};ids.forEach(id=>f[`pen.${id}.applied`]=true);b.update(lgRef('app/attitude'),f);}
-    await b.commit();
+    await b.commit();if(gDoc)try{localStorage.setItem(gKey,gSig);}catch(e){}
     lgStatus('보냄 ✓ '+new Date().toLocaleTimeString());if(manual)toast('학생 라운지로 보냈습니다');
   }catch(e){console.error(e);lgStatus('보내기 실패: '+(e.code||e.message));}
 }
@@ -2961,15 +2979,15 @@ function lgWatch(){
   if(lg.unsub)lg.unsub();
   lg.unsub=lg.F.onSnapshot(lgRef('app/attitude'),snap=>{
     const pen=(snap.exists()&&snap.data().pen)||{};lg.pen=pen;if(!lgOnOf(lg.cfg))return;
-    const c=lgCls();c.lgDone=c.lgDone||{};let nMinus=0,nPlus=0,resend=false;
+    const c=lgCls();c.lgDone=c.lgDone||{};let nMinus=0,nPlus=0,nBuy=0,resend=false;
     for(const [id,p] of Object.entries(pen)){
       if(p.applied)continue;if(c.lgDone[id]){resend=true;continue;}
       if(!c.students.some(s=>s.id===p.sid))continue;const d=-(+p.pts||0);if(!d)continue;
       c.scores[p.sid]=(+c.scores[p.sid]||0)+d;c.scoreLog.push({sids:[p.sid],d,at:Date.now()});if(c.scoreLog.length>300)c.scoreLog.shift();
-      c.lgDone[id]=Date.now();d<0?nMinus++:nPlus++;}
+      c.lgDone[id]=Date.now();p.kind==='buy'?nBuy++:d<0?nMinus++:nPlus++;}
     for(const id in c.lgDone)if(!pen[id])delete c.lgDone[id];
-    if(nMinus||nPlus){persist();if(DB.tab==='score'&&c===cls())renderScore();toast('학생 라운지에서 받음: '+[nMinus?`태도 감점 ${nMinus}건(머쓱 −)`:'',nPlus?`주식 환전 ${nPlus}건(칭찬 +)`:''].filter(Boolean).join(', '));}
-    if(nMinus||nPlus||resend){clearTimeout(lg.timer);lg.timer=setTimeout(()=>lgPush(false),300);}
+    if(nMinus||nPlus||nBuy){persist();if(DB.tab==='score'&&c===cls())renderScore();toast('학생 라운지에서 받음: '+[nMinus?`태도 감점 ${nMinus}건(머쓱 −)`:'',nBuy?`포인트→주식 돈 ${nBuy}건(칭찬 −)`:'',nPlus?`주식 돈→포인트 ${nPlus}건(칭찬 +)`:''].filter(Boolean).join(', '));}
+    if(nMinus||nPlus||nBuy||resend){clearTimeout(lg.timer);lg.timer=setTimeout(()=>lgPush(false),300);}
   },e=>lgStatus('감점 받기 오류: '+(e.code||e.message)));
 }
 $('#lgSave').onclick=()=>{
@@ -3204,10 +3222,186 @@ function lpLabelHtml(c,L,list,f,o){
 }
 $('#lpLabel').onclick=lpLabelDlg;
 
+/* ---------------- 학생 트래커 엑셀 → 학생 골라 선택 ---------------- */
+/* 활동 트래커(score_tracker) scores 시트: 학생이름 | 미션… | 합계 | 마지막 업데이트
+   칸 색: 주황(#FB923C) = 검사 완료, 초록 = 제출만(검사 전), 흰색 = 미제출. 색은 엑셀 파일에만 남아서 .xlsx를 직접 풀어 읽음 */
+const TR_KEY='firstclass.tracker';
+async function unzipXlsx(buf){
+  const u=new Uint8Array(buf),dv=new DataView(buf),dir={};
+  let e=u.length-22;while(e>=0&&dv.getUint32(e,true)!==0x06054b50)e--;
+  if(e<0)throw new Error('엑셀(.xlsx) 파일이 아니에요');
+  let p=dv.getUint32(e+16,true);
+  for(let i=0,n=dv.getUint16(e+10,true);i<n;i++){
+    const nl=dv.getUint16(p+28,true),name=new TextDecoder().decode(u.subarray(p+46,p+46+nl));
+    dir[name]={m:dv.getUint16(p+10,true),size:dv.getUint32(p+20,true),off:dv.getUint32(p+42,true)};
+    p+=46+nl+dv.getUint16(p+30,true)+dv.getUint16(p+32,true);
+  }
+  return async name=>{
+    const f=dir[name];if(!f)return null;
+    const st=f.off+30+dv.getUint16(f.off+26,true)+dv.getUint16(f.off+28,true),data=u.subarray(st,st+f.size);
+    if(f.m===0)return new TextDecoder().decode(data);
+    return new Response(new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).text();
+  };
+}
+/** 칸 배경색 → 'o'(주황 계열) / 'g'(초록 계열) / '' */
+function trHue(hex){
+  if(!hex||hex.length<6)return '';hex=hex.slice(-6);
+  const r=parseInt(hex.slice(0,2),16)/255,g=parseInt(hex.slice(2,4),16)/255,b=parseInt(hex.slice(4,6),16)/255,mx=Math.max(r,g,b),d=mx-Math.min(r,g,b);
+  if(d<.15||d/mx<.3)return '';
+  let h=mx===r?((g-b)/d)%6:mx===g?(b-r)/d+2:(r-g)/d+4;h=(h*60+360)%360;
+  return h>=10&&h<52?'o':h>=70&&h<170?'g':'';
+}
+async function readTrackerXlsx(file){
+  const get=await unzipXlsx(await file.arrayBuffer()),X=async n=>new DOMParser().parseFromString((await get(n))||'<x/>','application/xml');
+  const tags=(d,t)=>[...d.getElementsByTagNameNS('*',t)];
+  const [wb,rels,ss,sty]=await Promise.all([X('xl/workbook.xml'),X('xl/_rels/workbook.xml.rels'),X('xl/sharedStrings.xml'),X('xl/styles.xml')]);
+  const rel={};tags(rels,'Relationship').forEach(r=>rel[r.getAttribute('Id')]=r.getAttribute('Target'));
+  const strs=tags(ss,'si').map(si=>tags(si,'t').map(t=>t.textContent).join(''));
+  const fills=tags(sty,'fill').map(f=>{const c=tags(f,'fgColor')[0];return c&&c.getAttribute('rgb')||'';});
+  const xfs=tags(tags(sty,'cellXfs')[0]||sty,'xf').map(x=>+x.getAttribute('fillId')||0);
+  const colN=ref=>{let n=0;for(const ch of ref.replace(/\d+/g,''))n=n*26+ch.charCodeAt(0)-64;return n-1;};
+  const sheets=tags(wb,'sheet').map(s=>{const t=rel[s.getAttribute('r:id')]||'';return{name:s.getAttribute('name'),path:t.startsWith('/')?t.slice(1):'xl/'+t.replace(/^\.\//,'')};});
+  sheets.sort((a,b)=>(b.name.toLowerCase()==='scores')-(a.name.toLowerCase()==='scores'));
+  for(const sh of sheets){
+    const doc=await X(sh.path),grid=[];
+    for(const c of tags(doc,'c')){
+      const ref=c.getAttribute('r')||'',r=(+ref.replace(/\D/g,''))-1,ci=colN(ref),t=c.getAttribute('t'),v=tags(c,'v')[0];
+      const val=t==='s'?strs[+(v&&v.textContent)]:t==='inlineStr'?tags(c,'t').map(x=>x.textContent).join(''):(v?v.textContent:'');
+      (grid[r]=grid[r]||[])[ci]={v:String(val??'').trim(),h:trHue(fills[xfs[+c.getAttribute('s')||0]])};
+    }
+    const head=(grid[0]||[]).map(x=>x?x.v:''),nameCol=head.findIndex(h=>/학생\s*이름|^이름$/.test(h||''));
+    if(nameCol<0)continue;
+    const skip=/^(학생\s*이름|이름|합계|마지막 업데이트|번호)$/;
+    const missions=[];head.forEach((h,i)=>{if(h&&!skip.test(h)&&i!==nameCol)missions.push({h,i});});
+    const rows=grid.slice(1).filter(r=>r&&r[nameCol]&&r[nameCol].v).map(r=>({name:r[nameCol].v.replace(/\s+/g,''),st:Object.fromEntries(missions.map(m=>{const x=r[m.i];return[m.h,!x?'':x.h==='o'?'i':(+x.v>0||x.h==='g')?'s':''];}))}));
+    if(rows.length)return{file:file.name,at:Date.now(),sheet:sh.name,missions:missions.map(m=>m.h),rows};
+  }
+  throw new Error('‘학생이름’ 열이 있는 시트를 찾지 못했어요');
+}
+const trLoad=k=>{try{return JSON.parse(localStorage.getItem(k)||'null');}catch(e){return null;}};
+const TR_ST={i:['🟧','검사 완료'],s:['🟩','제출만 (검사 전)'],any:['✅','제출 전체'],none:['⬜','미제출']};
+const trHit=(v,k)=>k==='any'?!!v:k==='none'?!v:v===k;
+function trOpen(){
+  let T=trLoad(TR_KEY),pick=trLoad(TR_KEY+'.pick')||{};
+  const d=lpDialog('trDlg','📋 학생 트래커로 학생 고르기',`
+    <p class="muted" style="margin:0">활동 트래커 구글 시트에서 <b>파일 → 다운로드 → Microsoft Excel(.xlsx)</b>로 받은 파일을 불러오세요. <b>scores</b> 시트의 칸 색(🟧 검사 완료 · 🟩 제출)을 읽어 해당 학생을 점수판에서 한 번에 선택합니다.</p>
+    <div class="row" style="gap:8px;align-items:center;flex-wrap:wrap"><label class="btn sm primary" for="trFile">📂 트래커 엑셀 불러오기</label><input type="file" id="trFile" accept=".xlsx" class="sr"><span id="trInfo" class="muted" style="font-size:13px"></span></div>
+    <div id="trBody"></div>`,
+    `<button class="btn" data-close>닫기</button><button class="btn" id="trAdd">선택에 더하기</button><button class="btn primary" id="trSet">이 학생들만 선택</button>`);
+  const match=()=>{
+    const ids=[],miss=[];if(!T||!pick.m)return{ids,miss};
+    const by=new Map(cls().students.map(s=>[String(s.name).replace(/\s+/g,''),s]));
+    for(const r of T.rows){const v=r.st[pick.m];if(v==null||!trHit(v,pick.s))continue;const s=by.get(r.name);s?ids.push(s.id):miss.push(r.name);}
+    return{ids,miss};
+  };
+  const paint=()=>{
+    $('#trInfo').textContent=T?`${T.file} · ${T.sheet} 시트 · 학생 ${T.rows.length}명 · 미션 ${T.missions.length}개 (${new Date(T.at).toLocaleString()} 불러옴)`:'아직 불러온 파일이 없어요';
+    if(!T){$('#trBody').innerHTML='';$('#trAdd').disabled=$('#trSet').disabled=true;return;}
+    if(!T.missions.includes(pick.m))pick.m=T.missions[0];if(!TR_ST[pick.s])pick.s='i';
+    const {ids,miss}=match(),cnt=k=>T.rows.filter(r=>trHit(r.st[pick.m],k)).length;
+    $('#trBody').innerHTML=`<div class="lp-grid" style="grid-template-columns:minmax(180px,1fr) 2fr">
+      <label>미션<select id="trM">${T.missions.map(m=>`<option ${m===pick.m?'selected':''}>${esc(m)}</option>`).join('')}</select></label>
+      <label>상태<span class="seg" style="flex-wrap:wrap">${Object.entries(TR_ST).map(([k,[e,l]])=>`<button type="button" data-trs="${k}" aria-pressed="${pick.s===k}">${e} ${l} (${cnt(k)})</button>`).join('')}</span></label></div>
+      <p style="margin:6px 0 4px;font-weight:700" id="trCnt">선택될 학생 ${ids.length}명</p>
+      <div style="display:flex;flex-wrap:wrap;gap:6px" id="trWho">${ids.map(id=>`<span class="pill">${esc(dname(stuById(id)))}</span>`).join('')||'<span class="muted">없음</span>'}</div>
+      ${miss.length?`<p class="muted" style="margin:6px 0 0;font-size:12.5px">⚠ 이 학급 명단에 없는 이름 ${miss.length}명: ${miss.map(esc).join(', ')}</p>`:''}`;
+    $('#trAdd').disabled=$('#trSet').disabled=!ids.length;
+    try{localStorage.setItem(TR_KEY+'.pick',JSON.stringify(pick));}catch(e){}
+  };
+  d.addEventListener('change',async e=>{
+    if(e.target.id==='trM'){pick.m=e.target.value;paint();}
+    if(e.target.id==='trFile'&&e.target.files[0]){
+      try{T=await readTrackerXlsx(e.target.files[0]);localStorage.setItem(TR_KEY,JSON.stringify(T));toast(`트래커 불러옴: 학생 ${T.rows.length}명 · 미션 ${T.missions.length}개`);}
+      catch(err){console.error(err);toast('불러오지 못했어요: '+err.message);}
+      e.target.value='';paint();
+    }
+  });
+  d.addEventListener('click',e=>{const b=e.target.closest('[data-trs]');if(b){pick.s=b.dataset.trs;paint();}});
+  const apply=only=>{
+    const {ids}=match();if(only)sbSel.clear();ids.forEach(id=>sbSel.add(id));d.close();
+    if(DB.tab!=='score')setTab('score');$$('.sc[data-sid]').forEach(el=>paintCard(el.dataset.sid));renderSelBar();
+    toast(`${pick.m} · ${TR_ST[pick.s][1]} ${ids.length}명 선택 — 점수를 적고 ‘칭찬 +’를 누르세요`);
+  };
+  $('#trAdd').onclick=()=>apply(false);$('#trSet').onclick=()=>apply(true);
+  paint();
+}
+$('#sbTrOpen').onclick=trOpen;
+
+/* ---------------- 학생 구글 계정 (라운지에서 본인만 조회) ---------------- */
+/* 원문은 이 브라우저(cls().gacc)에만. 라운지(app/gacc)에는 학생마다 그 학생 라운지 비밀번호로 잠근(AES-GCM, PBKDF2) 값만 보냄 */
+const GA_ITER=150000;
+const gaOf=()=>{const c=cls();c.gacc=c.gacc||{};return c.gacc;};
+const b64=u=>btoa(String.fromCharCode(...new Uint8Array(u)));
+async function gaSeal(sid,pin,obj){
+  const salt=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12)),enc=new TextEncoder();
+  const base=await crypto.subtle.importKey('raw',enc.encode(pin),'PBKDF2',false,['deriveKey']);
+  const key=await crypto.subtle.deriveKey({name:'PBKDF2',salt:enc.encode('fc-gacc:'+sid+':'+b64(salt)),iterations:GA_ITER,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['encrypt']);
+  const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,enc.encode(JSON.stringify(obj)));
+  return{s:b64(salt),i:b64(iv),c:b64(ct)};
+}
+/** 계정·비밀번호·라운지 PIN이 바뀌었을 때만 다시 잠가서 보냄 (PBKDF2가 느려서) */
+function gaSig(c){const G=c.gacc||{},L=c.lpins||{};return sha256(JSON.stringify(c.students.map(s=>[s.id,G[s.id]&&G[s.id].id||'',G[s.id]&&G[s.id].pw||'',L[s.id]&&L[s.id].pin||''])));}
+async function gaDoc(c){
+  const G=c.gacc||{},L=c.lpins||{},d={};
+  for(const s of c.students){const g=G[s.id],pin=L[s.id]&&L[s.id].pin;if(g&&(g.id||g.pw)&&pin)d[s.id]=await gaSeal(s.id,pin,{i:g.id||'',p:g.pw||''});}
+  return{v:1,it:GA_ITER,at:Date.now(),d};
+}
+function gaSum(){const c=cls(),G=c.gacc||{},L=c.lpins||{},n=c.students.filter(s=>G[s.id]&&(G[s.id].id||G[s.id].pw)).length,nopin=c.students.filter(s=>G[s.id]&&(G[s.id].id||G[s.id].pw)&&!(L[s.id]&&L[s.id].pin)).length;
+  const el=$('#gaSum');if(el)el.textContent=`계정 입력 ${n} / ${c.students.length}명`+(nopin?` · ⚠ 라운지 비밀번호가 없어 못 보내는 학생 ${nopin}명`:'');}
+/** 붙여넣기: 한 줄에 [번호 또는 이름] [아이디] [비밀번호] (탭·쉼표·공백 구분, 엑셀 복사 그대로) */
+function gaParse(txt){
+  const c=cls(),noMap=new Map(c.students.map(s=>[String(s.no),s])),byName=new Map(c.students.map(s=>[String(s.name).replace(/\s+/g,''),s])),hit=[],miss=[];
+  for(const line of String(txt||'').split(/\r?\n/)){
+    const raw=line.trim();if(!raw)continue;
+    let f=raw.split('\t').map(x=>x.trim()).filter(Boolean);if(f.length<2)f=raw.split(/\s*,\s*|\s+/).filter(Boolean);
+    const key=w=>String(w||'').replace(/\s+/g,'');let s=null,k=0;
+    if(/^\d+$/.test(f[0])&&f[1]&&byName.get(key(f[1]))){s=byName.get(key(f[1]));k=2;} // 번호 + 이름
+    else{s=byName.get(key(f[0]))||(/^\d+$/.test(f[0])?noMap.get(String(+f[0])):null)||null;k=1;}
+    const rest=f.slice(k);
+    if(!s||!rest.length){if(!/아이디|계정|id/i.test(raw))miss.push(raw);continue;}
+    hit.push({s,id:rest[0]||'',pw:rest.slice(1).join(' ')});
+  }
+  return{hit,miss};
+}
+function gaRender(){
+  const tb=document.getElementById('gaRows');if(!tb)return;const G=gaOf(),L=cls().lpins||{};
+  tb.innerHTML=cls().students.slice().sort(byNo).map(s=>{const g=G[s.id]||{};return `<tr><td>${s.no}</td><td><b>${esc(s.name)}</b>${L[s.id]&&L[s.id].pin?'':' <span class="bad">라운지 비번 없음</span>'}</td>
+    <td><input data-gaid="${s.id}" value="${esc(g.id||'')}" placeholder="아이디(이메일)" style="width:210px" autocomplete="off"></td>
+    <td><input data-gapw="${s.id}" value="${esc(g.pw||'')}" placeholder="비밀번호" style="width:150px;font-family:ui-monospace,Consolas,monospace" autocomplete="off"></td></tr>`;}).join('');
+}
+function gaOpen(){
+  const d=lpDialog('gaDlg','🔑 학생 구글 계정',`
+    <p class="muted" style="margin:0">학생이 라운지에 로그인하면 <b>홈 → 🔑 내 구글 계정</b>에서 자기 계정만 볼 수 있어요. 원문은 이 컴퓨터에만 저장되고, 라운지로는 <b>학생마다 그 학생의 라운지 비밀번호로 잠근 값</b>만 보냅니다. (학생 라운지 비밀번호를 바꾸면 자동으로 다시 잠가서 보냅니다)</p>
+    <details open><summary style="cursor:pointer;font-weight:700">엑셀에서 한 번에 붙여넣기</summary>
+      <p class="muted" style="margin:6px 0">한 줄에 한 명: <b>번호(또는 이름) · 아이디 · 비밀번호</b> — 엑셀 세 칸을 복사해 그대로 붙여넣으면 됩니다. 예) <code>3	s2026003@school.kr	abcd1234!</code></p>
+      <textarea id="gaPaste" class="lp-paste" placeholder="번호	아이디	비밀번호"></textarea>
+      <div class="row" style="margin-top:6px;gap:8px;align-items:center"><button class="btn sm primary" id="gaApply">붙여넣은 내용 반영</button><span id="gaMsg" class="muted" style="font-size:13px"></span></div>
+    </details>
+    <table class="lp-tb"><thead><tr><th>번호</th><th>이름</th><th>아이디</th><th>비밀번호</th></tr></thead><tbody id="gaRows"></tbody></table>`,
+    `<button class="btn" id="gaClear">모두 지우기</button><button class="btn primary" id="gaPush">🛫 라운지로 지금 전송</button>`);
+  gaRender();
+  const saved=()=>{persist();gaSum();if(typeof lgSchedule==='function')lgSchedule();};
+  d.addEventListener('change',e=>{
+    const a=e.target.closest('[data-gaid],[data-gapw]');if(!a)return;
+    const G=gaOf(),id=a.dataset.gaid||a.dataset.gapw,g=G[id]=G[id]||{};
+    if(a.dataset.gaid)g.id=a.value.trim();else g.pw=a.value;
+    if(!g.id&&!g.pw)delete G[id];saved();
+  });
+  $('#gaApply').onclick=()=>{
+    const {hit,miss}=gaParse($('#gaPaste').value),G=gaOf();
+    hit.forEach(h=>{G[h.s.id]={id:h.id,pw:h.pw};});saved();gaRender();
+    $('#gaMsg').textContent=`${hit.length}명 반영`+(miss.length?` · 못 알아본 줄 ${miss.length}개: ${miss.slice(0,3).join(' / ')}${miss.length>3?' …':''}`:'');
+    if(hit.length)$('#gaPaste').value='';
+  };
+  $('#gaClear').onclick=()=>{if(!confirm('이 학급의 학생 구글 계정을 모두 지울까요? (라운지에서도 지워집니다)'))return;cls().gacc={};saved();gaRender();};
+  $('#gaPush').onclick=async()=>{if(typeof lgPush==='function')await lgPush(true);};
+}
+$('#gaOpen').onclick=gaOpen;
+
 if(lgOnOf(lg.cfg)&&lg.cfg.fb)lgConnect().then(()=>lgPush(false)).catch(e=>lgStatus('연결 실패: '+(e.code||e.message)));
 
 DB=load();DB=migrate(DB||seed());DB.tab='score';persist();
-renderAll();initCaps();lpSum();lgFill();
+renderAll();initCaps();lpSum();gaSum();lgFill();
 window.__seat={optimize,buildCtx,cost,explain,parseRoster,gridFromText,get DB(){return DB;}};
 })();
 
