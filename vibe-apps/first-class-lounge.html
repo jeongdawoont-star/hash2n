@@ -478,7 +478,9 @@ async function makeCloud(cfg) {
   };
 }
 function makeLocal(code) {
-  const KEY = 'fclounge.demo.' + code; const read = () => { try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) { return {}; } };
+  const KEY = 'fclounge.demo.' + code;
+  try { localStorage.removeItem(KEY); } catch (e) { } // 이전 localStorage 잔여 데모 데이터 정리
+  const read = () => { try { return JSON.parse(sessionStorage.getItem(KEY) || '{}'); } catch (e) { return {}; } };
   let data = read(); const dw = new Set(), cw = new Set();
   const bc = 'BroadcastChannel' in window ? new BroadcastChannel(KEY) : null;
   const fcMain = () => { // 같은 브라우저의 퍼스트클래스 데이터를 그대로 읽어 옴
@@ -488,9 +490,8 @@ function makeLocal(code) {
   const getDoc = p => { if (p === 'app/main') return data[p] || fcMain() || SAMPLE_MAIN(); return data[p] ?? null; };
   const colOf = c => Object.keys(data).filter(k => k.startsWith(c + '/') && k.split('/').length === 2).map(k => ({ id: k.split('/')[1], ...clone(data[k]) }));
   let q = 0; const emit = () => { if (q) return; q = setTimeout(() => { q = 0; dw.forEach(w => w.cb(clone(getDoc(w.p)))); cw.forEach(w => w.cb(colOf(w.c))); }, 0); };
-  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) { toast('저장 공간이 부족해요'); } bc && bc.postMessage(1); emit(); };
+  const save = () => { try { sessionStorage.setItem(KEY, JSON.stringify(data)); } catch (e) { toast('저장 공간이 부족해요'); } bc && bc.postMessage(1); emit(); };
   if (bc) bc.onmessage = () => { data = read(); emit(); };
-  addEventListener('storage', e => { if (e.key === KEY) data = read(); if (e.key === KEY || e.key === 'firstclass.v1') emit(); });
   return {
     kind: 'demo',
     watchDoc(p, cb) { const w = { p, cb }; dw.add(w); setTimeout(() => cb(clone(getDoc(p))), 0); return () => dw.delete(w); },
@@ -500,7 +501,7 @@ function makeLocal(code) {
     async del(p) { delete data[p]; save(); },
     async multi(list) { for (const [p, o] of list) data[p] = data[p] ? deepMerge(data[p], san(o)) : san(o); save(); },
     async get(p) { return clone(getDoc(p)); },
-    wipe() { data = {}; save(); },
+    wipe() { data = {}; try { sessionStorage.removeItem(KEY); } catch (e) { } save(); },
   };
 }
 function mainFromFC(c) {
@@ -645,16 +646,29 @@ setInterval(() => {
 }, 1000);
 
 /* ---------------- login ---------------- */
-A.pick = d => pinPad(stu(d.id)?.name, async pin => {
-  const real = S.main?.pinH?.[d.id];
-  if (!real) { toast('아직 비밀번호가 없어요. 선생님께 말씀드려요'); return 'close'; }
-  if (pinHash(d.id, pin) !== real) return false;
-  // 공용 태블릿: 선생님 모드가 켜진 채로 학생이 들어오면 학생이 운영 권한을 갖게 되므로 끔
-  const wasT = U.teacher; U.teacher = false; if (U.view === 'teacher') U.view = 'home';
-  U.me = d.id; U.pin = pin; U.inv = null; U.last = Date.now(); render(); toast(`${nm(d.id)}, 어서 와요! ✈️${wasT ? ' (선생님 모드는 꺼졌어요)' : ''}`); return 'close';
-}, 6);
+A.pick = d => {
+  if (DB.kind === 'demo') {
+    const wasT = U.teacher; U.teacher = false; if (U.view === 'teacher') U.view = 'home';
+    U.me = d.id; U.pin = 'demo'; U.inv = null; U.last = Date.now(); render();
+    toast(`${nm(d.id)} (체험), 어서 와요! ✈️${wasT ? ' (선생님 모드는 꺼졌어요)' : ''}`);
+    return;
+  }
+  pinPad(stu(d.id)?.name, async pin => {
+    const real = S.main?.pinH?.[d.id];
+    if (!real) { toast('아직 비밀번호가 없어요. 선생님께 말씀드려요'); return 'close'; }
+    if (pinHash(d.id, pin) !== real) return false;
+    // 공용 태블릿: 선생님 모드가 켜진 채로 학생이 들어오면 학생이 운영 권한을 갖게 되므로 끔
+    const wasT = U.teacher; U.teacher = false; if (U.view === 'teacher') U.view = 'home';
+    U.me = d.id; U.pin = pin; U.inv = null; U.last = Date.now(); render(); toast(`${nm(d.id)}, 어서 와요! ✈️${wasT ? ' (선생님 모드는 꺼졌어요)' : ''}`); return 'close';
+  }, 6);
+};
 A.teacherToggle = () => {
   if (U.teacher) { U.teacher = false; if (U.view === 'teacher') U.view = 'home'; render(); toast('선생님 모드를 껐어요'); return; }
+  if (DB.kind === 'demo') {
+    if (U.me) { invFlush(); U.me = null; U.pin = null; U.inv = null; }
+    U.teacher = true; U.last = Date.now(); if (U.view === 'home') { U.view = 'teacher'; U.sub.teacher = 'todo'; } render(); aiWork();
+    toast('체험 모드: 비밀번호 없이 선생님 모드로 들어왔어요! 🎓'); return;
+  }
   pinPad('선생님', async pin => {
     if (pin !== String(S.secret?.tpin || '1234')) return false;
     if (U.me) { invFlush(); U.me = null; U.pin = null; U.inv = null; } // 학생 화면 위에서 선생님 모드를 켜면 학생은 나가게
@@ -662,6 +676,7 @@ A.teacherToggle = () => {
     toast(S.secret?.tpin ? '선생님 모드 켜짐' : '처음 PIN 1234 — ⚙ 선생님 > 비밀번호에서 바꿔 주세요'); return 'close';
   });
 };
+A.demoReset = () => confirmBox('체험 데이터를 모두 초기화하고 처음 상태로 되돌릴까요?', () => { DB.wipe(); location.reload(); });
 function pinPad(who, check, len = 4) {
   let v = '';
   const m = modal(`${mHead('비밀번호')}<div class="mb"><div class="pin"><div class="who">${esc(who || '')}</div><div class="dots">${'<i></i>'.repeat(len)}</div>
@@ -696,7 +711,15 @@ V.home = () => {
   const notice = S.set?.notice ? `<div class="notice">📢 ${esc(S.set.notice)}</div>` : '';
   if (!U.me) {
     const rs = roster(), cols = calcCols(rs.length);
-    return `<div class="hero"><div style="font-size:42px">🛫</div><div><h1>${esc(S.main?.cname || '우리 반')} 라운지</h1><p>👇 내 이름을 누르고 비밀번호 6자리를 눌러요. ${PHONE ? '' : '다 쓰면 꼭 <b>나가기</b>를 눌러요!'}${S.main?.sample ? ' <b>(체험 학급 비밀번호: 111111)</b>' : ''}</p></div></div>${notice}
+    const isDemo = DB.kind === 'demo';
+    const demoBar = isDemo ? `<div style="background:var(--gold-2);color:var(--navy);padding:10px 14px;border-radius:12px;border:1.5px solid var(--gold);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+      <span style="font-size:13.5px;font-weight:700">🧪 <b>체험판 모드</b>: 학생 이름 또는 우측 상단 <b>🔑(선생님)</b>를 누르면 비밀번호 없이 바로 체험할 수 있어요! (창을 닫으면 초기화)</span>
+      <button class="btn sm" data-a="demoReset" style="border:1px solid rgba(20,33,61,.2);background:#fff;font-weight:700">🔄 데이터 초기화</button>
+    </div>` : '';
+    const descText = isDemo
+      ? `👇 내 이름을 누르면 <b>비밀번호 없이</b> 바로 로그인돼요! (우측 상단 🔑 누르면 <b>선생님 모드</b>도 바로 진입)`
+      : `👇 내 이름을 누르고 비밀번호 6자리를 눌러요. ${PHONE ? '' : '다 쓰면 꼭 <b>나가기</b>를 눌러요!'}`;
+    return `${demoBar}<div class="hero"><div style="font-size:42px">🛫</div><div><h1>${esc(S.main?.cname || '우리 반')} 라운지</h1><p>${descText}</p></div></div>${notice}
     ${rs.length ? `
     <div class="names-board">
       <div class="names-head">
