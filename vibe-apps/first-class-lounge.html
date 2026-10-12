@@ -1915,7 +1915,7 @@ V.teacher = () => {
       <p class="small" style="margin:0">라운지는 <b>해시브라운 코딩기록소</b>(GitHub → Vercel)에 올라가 있어요.<br><a href="${HOSTED}" target="_blank" rel="noopener">${HOSTED.replace('https://', '')}</a></p>
       ${DB.kind === 'cloud' ? '<p class="small" style="margin:0">아래 QR을 학생 폰이나 교실 태블릿으로 <b>한 번</b> 찍으면 우리 반 연결 설정까지 들어가요. (설정은 QR에만 있고 공개 저장소에는 올리지 않아요)</p>' : '<p class="small muted" style="margin:0">먼저 왼쪽에 Firebase 설정을 넣어 Firestore에 연결해야 다른 기기에서 같은 데이터를 써요.</p>'}
       <label class="f">라운지 웹 주소 (보통 그대로 두면 돼요)<input type="url" id="cfUrl" value="${esc(S.set?.appUrl || '')}" placeholder="${HOSTED}"></label><button class="btn sm" data-a="cfUrlSave">주소 저장</button>
-      ${qr && DB.kind === 'cloud' ? `<div class="row" style="align-items:flex-start"><div data-qr="${esc(qr)}" data-s="210"></div><div class="small">폰 카메라로 찍으면 바로 들어와요.<br>폰은 15분 동안 로그인 유지.<br><button class="btn sm g" data-a="qrBig" style="margin-top:8px">크게 보기 (TV·인쇄)</button></div></div>` : ''}
+      ${qr && DB.kind === 'cloud' ? `<div class="row" style="align-items:flex-start"><div data-qr="${esc(qr)}" data-s="210"></div><div class="small">폰 카메라로 찍으면 바로 들어와요.<br>폰은 15분 동안 로그인 유지.<br><button class="btn sm g" data-a="qrBig" style="margin-top:8px">크게 보기 (TV·인쇄)</button><br><button class="btn sm" data-a="copyLink" style="margin-top:6px">🔗 우리 반 링크 복사</button></div></div>` : ''}
       ${DB.kind === 'cloud' ? `<details class="small"><summary>다른 사이트(Netlify 등)에 직접 올리고 싶을 때</summary><p style="margin:6px 0">연결 설정을 넣은 파일을 만들어요. <b>공개 저장소(GitHub)에는 올리지 마세요</b> — 설정이 다 보여요.</p><button class="btn sm" data-a="deploy">📦 설정 넣은 index.html 내려받기</button></details>` : ''}</div></div>`;
   } else if (t === 'pins') {
     const H = S.main?.pinH || {}, local = getStoredPins(), r = roster();
@@ -2096,7 +2096,13 @@ A.deploy = () => {
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'index.html'; document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 5000); toast('index.html을 내려받았어요 → Netlify Drop에 끌어다 놓아요');
 };
-A.qrBig = () => { const link = studentLink(); const m = modal(`${mHead('📱 학생 라운지 접속')}<div class="mb" style="align-items:center"><div data-qr="${esc(link)}" data-s="380"></div><b>폰 카메라로 찍어요</b></div>`, { wide: true }); drawQR(m); };
+A.qrBig = () => { const link = studentLink(); const m = modal(`${mHead('📱 학생 라운지 접속')}<div class="mb" style="align-items:center"><div data-qr="${esc(link)}" data-s="380"></div><b>폰 카메라로 찍어요</b><button class="btn sm" data-a="copyLink">🔗 우리 반 링크 복사</button></div>`, { wide: true }); drawQR(m); };
+A.copyLink = () => {
+  const link = studentLink(); if (!link) return toast('라운지 주소가 없어요');
+  const done = () => toast('우리 반 라운지 링크를 복사했어요!');
+  const fallback = () => { const ta = document.createElement('textarea'); ta.value = link; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy') ? done() : toast('복사하지 못했어요'); } catch (e) { toast('복사하지 못했어요'); } ta.remove(); };
+  navigator.clipboard?.writeText ? navigator.clipboard.writeText(link).then(done, fallback) : fallback();
+};
 const PINS_STORE_KEY = 'fclounge.pins.' + (CFG.code || 'demo');
 function getStoredPins() {
   try { return JSON.parse(localStorage.getItem(PINS_STORE_KEY) || '{}'); } catch (e) { return {}; }
