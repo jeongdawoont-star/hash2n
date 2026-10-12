@@ -32,6 +32,15 @@ export const RECORDS = [
   // ▼ 여기에 새 기록을 붙여넣으세요 (최신 항목을 맨 위에) ▼
 
   {
+    title: "포켓몬 밥 타이머",
+    desc: "정해진 시간 안에 밥을 다 먹으면 몬스터볼에서 포켓몬이 나오는 어린이 식사 습관 타이머다.\n모은 포켓몬은 동네에서 뛰놀고, 두 마리를 합쳐 진화시킬 수도 있다.",
+    tags: "meal, timer, pokemon, kids, habit, games",
+    category: "games",
+    link: "./vibe-apps/pokemon-bab-timer/",
+    image: "img/pokemon-bab-timer.png",
+  },
+
+  {
     title: "퍼스트클래스",
     desc: "우리 반을 비행기 일등석처럼 꾸민 자리배치·칭찬 점수판이다.\n학생 여럿을 골라 칭찬 점수를 한 번에 주고, 머쓱 점수는 칭찬에서 빼는 방식으로 교실 화면에 띄워 쓴다.\n짝·키·이전 자리 기록을 따져 자동으로 자리를 바꿔 주고, 학급 데이터는 파일로 저장해 불러온다.",
     tags: "classroom, seating, score, praise, class-tools, first-class",
