@@ -37,7 +37,7 @@ export const RECORDS = [
     tags: "meal, timer, pokemon, kids, habit, games",
     category: "games",
     link: "./vibe-apps/pokemon-bab-timer/",
-    image: "img/pokemon-bab-timer.png",
+    image: "img-re/pokemon-bab-timer.avif",
   },
 
   {
@@ -46,7 +46,7 @@ export const RECORDS = [
     tags: "classroom, seating, score, praise, class-tools, first-class",
     category: "class-tools",
     link: "./vibe-apps/first-class.html",
-    image: "img/first-class.png",
+    image: "img-re/first-class.avif",
   },
 
   {
