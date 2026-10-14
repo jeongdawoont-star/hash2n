@@ -570,7 +570,7 @@ function isAttSchedNow() {
   const e = (eh || 12) * 60 + (em || 30);
   return cur >= s && cur <= e;
 }
-const attOpen = () => (+S.set?.attUntil || 0) > Date.now() || isAttSchedNow();
+const attOpen = () => S.set?.att24h === true || (+S.set?.attUntil || 0) > Date.now() || isAttSchedNow();
 /** 선생님이 처리할 일 (⚙ 오늘 할 일·메뉴 빨간 점) */
 function teacherTodo() {
   let ex = 0; for (const w of Object.values(S.wallets)) ex += (w.ex || []).filter(e => e.st === 'req').length;
@@ -1825,8 +1825,10 @@ function reportView() {
   const open = attOpen(), mine = S.reports.filter(r => r.by === U.me).sort((a, b) => b.at - a.at);
   const lastTo = id => mine.find(r => r.to === id)?.at || 0;
   if (!open) return `<div class="empty"><div class="big">🤫</div><b>지금은 신고 시간이 아니에요</b><span>운영 시간: 평일 08:30 ~ 12:30 (또는 선생님이 열어둔 시간)</span></div>`;
+  const is24h = S.set?.att24h === true;
   const manualActive = (+S.set?.attUntil || 0) > Date.now();
-  const untilStr = manualActive ? `${fmtT(S.set.attUntil).split(' ')[1]}까지 (임시 개방)` : `정규 신고 시간 (08:30 ~ 12:30)`;
+  const untilTimeStr = manualActive ? (todayKey(S.set.attUntil) === todayKey() ? fmtT(S.set.attUntil).split(' ')[1] : fmtT(S.set.attUntil)) : '';
+  const untilStr = is24h ? '24시간 상시 운영' : manualActive ? `${untilTimeStr}까지 (임시 개방)` : `정규 신고 시간 (08:30 ~ 12:30)`;
   return `<div class="card small">🤫 <b>선생님이 안 계실 때 수업을 방해하는 친구</b>를 알려 주세요 (<b>${untilStr}</b>). 누가 신고했는지는 친구들에게 비밀이에요. 신고만으로 점수가 바뀌지 않고 <b>선생님이 보고 판단</b>해요. 같은 친구는 30분에 한 번만! 장난 신고는 선생님이 다 알아요.</div>
   <div class="body"><div class="pgrid scroll" style="flex:1">${others().map(s => { const w = Date.now() - lastTo(s.id) < REP_GAP; return `<button data-a="repPick" data-id="${s.id}" ${w ? 'disabled' : ''}>${esc(s.name)}${w ? '<div class="tiny">✓ 신고함</div>' : ''}</button>`; }).join('')}</div>
   <div class="card col" style="width:280px"><h2>📒 내가 한 신고 (오늘)</h2><div class="log scroll">${mine.filter(r => todayKey(r.at) === todayKey()).map(r => `<div><time>${fmtT(r.at)}</time>${esc(nm(r.to))} · ${esc(r.why)}</div>`).join('') || '<span class="muted">없어요</span>'}</div></div></div>`;
@@ -1860,21 +1862,32 @@ function reportAdmin() {
   <p class="tiny muted" style="margin:0">'반영 대기' 감점은 주식 점수에 바로 들어가요. 퍼스트클래스가 연동 중이면 자동으로 <b>머쓱 −</b>로 기록되고 '반영'으로 바뀌어요.</p></div></div>`;
 }
 document.addEventListener('change', e => { const c = e.target.closest('[data-rsel]'); if (c) { c.checked ? U.repSel.add(c.dataset.rsel) : U.repSel.delete(c.dataset.rsel); render(); } });
-/* 신고 받기: 8:30~12:30 자동 스케줄 + 교사 On/Off 토글 + 수동 타이머 */
+/* 신고 받기: 24시간 모드 + 8:30~12:30 자동 스케줄 + 교사 On/Off 토글 + 수동 타이머 */
 function attToggleHtml() {
+  const is24h = S.set?.att24h === true;
   const schedOn = S.set?.attSchedOn !== false;
   const manualActive = (+S.set?.attUntil || 0) > Date.now();
   const isOpen = attOpen();
+  const untilTimeStr = manualActive ? (todayKey(S.set.attUntil) === todayKey() ? fmtT(S.set.attUntil).split(' ')[1] : fmtT(S.set.attUntil)) : '';
+  const statusStr = is24h ? '24시간 상시' : manualActive ? `${untilTimeStr}까지` : '자동스케줄';
   return `<span class="row" style="gap:6px;flex-wrap:wrap">
+    <button class="btn sm ${is24h ? 'ok' : 'ghost'}" data-a="att24Toggle" title="24시간 언제나(주말·야간 포함) 신고 접수 가능">
+      ${is24h ? '🌐 24시간 모드 ON' : '🌐 24시간 모드 OFF'}
+    </button>
     <button class="btn sm ${schedOn ? 'ok' : 'ghost'}" data-a="attSchedToggle" title="평일 08:30~12:30 자동 운영 여부">
       ${schedOn ? '⏰ 자동스케줄(08:30~12:30) ON' : '⏰ 자동스케줄 OFF'}
     </button>
     ${isOpen
-      ? `<button class="btn sm red" data-a="attSet" data-m="0">🔴 신고 받는 중 (${manualActive ? fmtT(S.set.attUntil).split(' ')[1] + '까지' : '자동스케줄'}) — 끄기</button>`
+      ? `<button class="btn sm red" data-a="attSet" data-m="0">🔴 신고 받는 중 (${statusStr}) — 끄기</button>`
       : `<span class="small muted">⚪ 신고 꺼짐</span>`}
-    <span class="small">임시 켜기:</span>${[[20, '20분'], [40, '40분'], [120, '2시간']].map(([m, l]) => `<button class="btn sm" data-a="attSet" data-m="${m}">${l}</button>`).join('')}
+    <span class="small">임시 켜기:</span>${[[20, '20분'], [40, '40분'], [120, '2시간'], [1440, '24시간']].map(([m, l]) => `<button class="btn sm" data-a="attSet" data-m="${m}">${l}</button>`).join('')}
   </span>`;
 }
+A.att24Toggle = async () => {
+  const next = !(S.set?.att24h === true);
+  await DB.set('app/settings', { att24h: next });
+  toast(next ? '신고 기능 24시간 모드를 켰어요 (상시 개방)' : '24시간 모드를 껐어요');
+};
 A.attSchedToggle = async () => {
   const next = !(S.set?.attSchedOn !== false);
   await DB.set('app/settings', { attSchedOn: next });
@@ -1883,11 +1896,12 @@ A.attSchedToggle = async () => {
 A.attSet = async d => {
   const m = +d.m;
   if (m === 0) {
-    await DB.set('app/settings', { attUntil: 0, attSchedOn: false });
-    toast('신고 받기를 껐어요 (자동스케줄도 일시 OFF)');
+    await DB.set('app/settings', { attUntil: 0, attSchedOn: false, att24h: false });
+    toast('신고 받기를 껐어요 (스케줄·24시간 모드 OFF)');
   } else {
     await DB.set('app/settings', { attUntil: Date.now() + m * 60000 });
-    toast(`신고 받기를 켰어요 (${m}분 뒤 저절로 꺼져요)`);
+    const lbl = m >= 1440 ? `${Math.round(m / 1440)}일(24시간)` : m >= 60 ? `${Math.round(m / 60)}시간` : `${m}분`;
+    toast(`신고 받기를 켰어요 (${lbl} 뒤 저절로 꺼져요)`);
   }
 };
 A.repPer = d => { U.repPeriod = d.v; U.repSel.clear(); render(); };
@@ -1993,7 +2007,7 @@ function todoView() {
     ${T.aiErr ? row('🍎', `그림 감상 실패 ${T.aiErr}건`, '키·무료 사용량을 확인하고 다시 시도해요', go('teacher', 'art', '확인 ▶', 'p'), 1) : ''}
     ${stockRow}
     ${row('🎁', '마니또: ' + maniNext[0], '단계마다 버튼 하나로 넘어가요', `<button class="btn sm" data-a="maniGo">${maniNext[1]} ▶</button>`)}
-    ${row('🤫', '태도 신고 받기', '자리를 비울 때 켜면 정한 시간 뒤 저절로 꺼져요', `<span class="row">${attToggleHtml()}</span>`)}
+    ${row('🤫', '태도 신고 받기', '자리를 비울 때 켜거나 24시간 모드·자동스케줄로 운영해요', `<span class="row">${attToggleHtml()}</span>`)}
   </div></div>
   <div class="col" style="flex:1"><div class="card"><h2>🔌 연결 상태</h2>
     <div class="todo">${DB.kind === 'cloud' ? '<span class="ic">🟢</span><div class="tx"><b>Firestore 연결됨</b>' : '<span class="ic">🟡</span><div class="tx"><b>체험 모드 (이 브라우저에만 저장)</b>'}<span class="small muted">학급 코드 ${esc(CFG.code)}</span></div></div>
