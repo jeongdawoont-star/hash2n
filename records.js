@@ -37,7 +37,7 @@ export const RECORDS = [
     tags: "energy, climate, recycling, environment, roguelike, pixel, games",
     category: "games",
     link: "./vibe-apps/earth-defense.html",
-    image: "img/earth-defense.png",
+    image: "img-re/earth-defense.avif",
   },
 
   {
