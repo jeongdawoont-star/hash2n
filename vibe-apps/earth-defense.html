@@ -11,6 +11,8 @@
 html,body{height:100%;margin:0;background:#0b1030;color:var(--tx);font-family:"Galmuri11","DotGothic16","Courier New",monospace;-webkit-user-select:none;user-select:none;overflow:hidden}
 #st{background:rgba(8,12,34,.62);border:2px solid #2d3d72;box-shadow:0 0 0 2px #0b1220;padding:5px 7px 6px;width:166px!important}
 #clim{font-size:11px;margin-top:3px;line-height:1.5}#clim b{font-weight:normal}
+#msg{background:rgba(8,12,34,.78);border:2px solid #2d3d72;padding:3px 9px}#msg:empty{display:none}
+.nd em{background:rgba(8,12,34,.78);padding:1px 6px;white-space:nowrap}
 .wr{color:#ff8a6a}.gd2{color:#7dffa0}
 .rcy{color:#6dc2ca}
 #mg{position:fixed;inset:0;z-index:30;display:none;flex-direction:column;align-items:center;justify-content:space-between;padding:12px 10px 14px;background:radial-gradient(#1a3a5a,#070b24 75%)}
@@ -62,6 +64,9 @@ html,body{height:100%;margin:0;background:#0b1030;color:var(--tx);font-family:"G
 .cd.x{background:#4a2a8a;border-color:#b66cff}.cd.dup{box-shadow:0 0 0 2px var(--ac)}
 .cd u{position:absolute;top:-8px;right:-4px;background:var(--ac);color:#000;font-size:9px;padding:0 3px;text-decoration:none}
 .tt{background:#14214a;font-size:11px;text-align:center;padding:2px;white-space:nowrap;overflow:hidden}
+.rb{font-size:10px;text-align:center;color:#fff;padding:2px 0 1px;margin:-3px -3px 2px;text-shadow:0 1px 0 #000;letter-spacing:1px;white-space:nowrap}.rb img.px{height:11px;width:11px;vertical-align:-1px}
+.cd .art{height:40px}.cd .art img{height:34px}.lrow .rb{font-size:12px;margin:-5px -5px 3px;padding:3px 0}
+.rtag{display:inline-block;color:#fff;font-size:11px;padding:0 5px;margin-right:4px;text-shadow:0 1px 0 #000}
 .art{height:46px;margin:3px 0;background:linear-gradient(#1b2f6a,#3b2a7a);display:flex;align-items:center;justify-content:center;border:2px solid #0b1220}
 .art img{height:38px;image-rendering:pixelated}
 .ds{font-size:11px;text-align:center;line-height:1.3;font-weight:bold}
@@ -99,7 +104,7 @@ body.menu #tbtn{display:flex}
 #info{left:8px;bottom:176px;max-width:94vw}
 #well{bottom:112px;left:8px;width:54px;height:54px}#go{bottom:112px;right:8px}
 #bars{top:248px;bottom:auto;left:14px}.bw{width:44%}
-.cd{flex:0 0 70px;width:70px;height:98px;font-size:9px;padding:2px}.tt{font-size:10px}.art{height:34px}.art img{height:28px}.ds{font-size:9px}
+.cd{flex:0 0 70px;width:70px;height:98px;font-size:9px;padding:2px}.tt{font-size:10px}.cd .art{height:28px}.cd .art img{height:24px}.ds{font-size:9px}.rb{font-size:9px;margin:-2px -2px 1px;letter-spacing:0}
 .lrow{bottom:22%;gap:5px;width:98vw;left:1vw;transform:none}.lrow .cd{width:32vw;height:min(66vw,280px);padding:4px;flex:1 1 0}.lrow .art{height:24%}.lrow .art img{height:80%}.lrow .tt{font-size:11px}.lrow .ds{font-size:10px}.lrow .edu{font-size:9px}
 .lbtn{position:absolute;left:4%;right:4%;top:auto;bottom:3%;width:auto;display:flex;gap:6px}.lbtn .b{margin:0;font-size:12px;padding:8px 2px}
 .lt{font-size:17px;top:4%}.cg{grid-auto-columns:150px}
@@ -121,9 +126,9 @@ body.menu #tbtn{display:flex}
 <div id="ov"><div class="box" id="box"></div></div>
 <script>
 const $=s=>document.querySelector(s),R=Math.random,cl=(v,a=0,b=100)=>Math.max(a,Math.min(b,v)),sl=ms=>new Promise(r=>setTimeout(r,ms));
-const cv=$('#cv'),ctx=cv.getContext('2d');let W=585,H=270;
-let BZ=1.15;
-function fit(){if(innerWidth>=innerHeight){H=270;W=Math.round(H*innerWidth/innerHeight)}else{W=270;H=Math.round(W*innerHeight/innerWidth)}cv.width=W;cv.height=H;BZ=Math.min(1.15,W/330,H/190);TV.z=V.z=BZ;pan.x=pan.y=TP.x=TP.y=0}
+const cv=$('#cv'),HX=cv.getContext('2d'),LO=document.createElement('canvas'),LX=LO.getContext('2d');let ctx=LX,TQ=null,SHX=0,SHY=0,W=585,H=270;
+let BZ=1.15,SS=1;
+function fit(){if(innerWidth>=innerHeight){H=270;W=Math.round(H*innerWidth/innerHeight)}else{W=270;H=Math.round(W*innerHeight/innerWidth)}SS=Math.max(1,Math.min(3,Math.round(Math.min(innerWidth,innerHeight)*(devicePixelRatio||1)/Math.min(W,H))));cv.width=W*SS;cv.height=H*SS;LO.width=W;LO.height=H;BZ=Math.min(1.15,W/330,H/190);TV.z=V.z=BZ;pan.x=pan.y=TP.x=TP.y=0}
 // ---- 도트 아이콘 (이모지 -> 16x16 -> 16색 팔레트 + 외곽선)
 const PAL=['#140c1c','#442434','#30346d','#4e4a4e','#854c30','#346524','#d04648','#757161','#597dce','#d27d2c','#8595a1','#6daa2c','#d2aa99','#6dc2ca','#dad45e','#deeed6'].map(h=>[1,3,5].map(i=>parseInt(h.substr(i,2),16)));
 const SC={};
@@ -145,7 +150,7 @@ ns.forEach(n=>{const t=n.nodeValue;EMO.lastIndex=0;if(!EMO.test(t))return;EMO.la
 while((m=EMO.exec(t))){if(m.index>last)f.appendChild(document.createTextNode(t.slice(last,m.index)));const im=document.createElement('img');im.className='px';im.src=su(m[0]);im.alt=m[0];f.appendChild(im);last=m.index+m[0].length}
 if(last<t.length)f.appendChild(document.createTextNode(t.slice(last)));n.parentNode.replaceChild(f,n)})}
 function sp(e,x,y,s,a=1){ctx.globalAlpha=a;s=s*1.12;ctx.drawImage(spr(e),Math.round(x-s/2),Math.round(y-s/2),s,s);ctx.globalAlpha=1}
-function tx(t,x,y,c='#fff',sz=10){ctx.font=`${sz}px ${PF(sz)}`;ctx.textAlign='left';ctx.lineWidth=sz<8?2:3;ctx.strokeStyle='#000';const pr=String(t).split(EMO);let tw=0;pr.forEach((q,k)=>{if(q==='')return;tw+=k%2?sz*1.15:(ctx.measureText(q).width||q.length*sz*.6)});let xx=Math.round(x-tw/2);
+function tx(t,x,y,c='#fff',sz=10){if(TQ){TQ.push(()=>tx(t,x,y,c,sz));return}ctx.font=`${sz}px ${PF(sz)}`;ctx.textAlign='left';ctx.lineJoin='round';ctx.lineWidth=Math.max(1.6,sz*.24);ctx.strokeStyle='#000';const pr=String(t).split(EMO);let tw=0;pr.forEach((q,k)=>{if(q==='')return;tw+=k%2?sz*1.15:(ctx.measureText(q).width||q.length*sz*.6)});let xx=Math.round(x-tw/2);
 pr.forEach((q,k)=>{if(q==='')return;if(k%2){sp(q,xx+sz*.58,y-sz*.35,sz*1.1);xx+=sz*1.15}else{ctx.strokeText(q,xx,Math.round(y));ctx.fillStyle=c;ctx.fillText(q,xx,Math.round(y));xx+=(ctx.measureText(q).width||q.length*sz*.6)}})}
 const LS={get(k,d){try{const v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(_){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(_){}}};
 const jo=(w,a,b)=>{const c=w.charCodeAt(w.length-1)-0xAC00;return c>=0&&c<11172&&c%28?a:b};
@@ -216,6 +221,12 @@ smog:{e:'🌫️',n:'스모그',d:'발전량 ×0.5 · 🌍-3/턴',edu:'공기가
 const zf=(b,k)=>G.zf.filter(f=>f.k===k&&f.z===zone(b.x,b.y)).length;
 const mhp=b=>Math.max(1,Math.round(val(b,'hp')*hpMul()*(zf(b,'shield')?1.5:1)));
 function adjB(b){const r={p:0,g:0};[[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx,dy])=>{const nb=G.grid[b.y+dy]?.[b.x+dx];if(!nb||!C[nb.id].adj)return;const A=C[nb.id].adj;if(A.p&&val(b,'p')>0&&(!A.clean||CLEAN.includes(b.id)))r.p+=A.p*nb.lv;if(A.g&&val(b,'g')<0)r.g+=A.g*nb.lv});return r}
+// 카드 역할: 색띠 하나로 공격·방어·에너지·자연·특수를 바로 알 수 있게
+const ROLE={atk:{e:'⚔️',n:'공격',c:'#d64541',rgb:'214,69,65'},def:{e:'🛡️',n:'방어',c:'#3b7ddd',rgb:'59,125,221'},en:{e:'⚡',n:'에너지',c:'#c98a12',rgb:'230,170,40'},nat:{e:'🌳',n:'자연',c:'#2f9a52',rgb:'90,220,130'},sp:{e:'✨',n:'특수',c:'#9b59b6',rgb:'180,110,220'}};
+const role=id=>{const d=C[id];return st(d,'atk')||['bolt','nuke','xgrav','tsunami'].includes(id)?'atk':['wall','repair'].includes(id)?'def':['forest','park','rain','xbio'].includes(id)?'nat':st(d,'p')>0&&!d.adj?'en':'sp'};
+const FACE={bolt:'적 1명',nuke:'적 모두 🌍-15',xgrav:'적 모두',tsunami:'적 모두',repair:'시설 회복',copy:'카드 복사',rain:'🌍+8',xbio:'🌍+15',xai:'⚡+10',rcy:'🗑→♻',bio:'🗑→⚡',grid:'옆 칸 ⚡↑',lab:'옆 칸 ⚡↑',xamp:'옆 칸 ⚡↑',wall:'적을 막아요'};
+function face(id){if(FACE[id])return FACE[id];const d=C[id],a=st(d,'atk'),p=st(d,'p'),g=st(d,'g');return a?'⚔'+a:(p?'⚡+'+p:'')+(g?' 🌍'+(g>0?'+':'')+g:'')}
+const rband=id=>{const r=ROLE[role(id)];return `<div class=rb style="background:${r.c}">${r.e} ${r.n}</div>`};
 function chips(id){const d=C[id];if(d.k==='s')return d.d;const p=st(d,'p'),g=st(d,'g'),a=st(d,'atk');let s='';if(a)s+='⚔'+a+' ';if(p)s+='⚡+'+p+' ';if(g)s+='🌍'+(g>0?'+':'')+g;if(d.co>0)s+=' 💨CO₂';if(d.w)s+=' 🗑+'+d.w;if(d.rc)s+='🗑→♻'+d.rc;if(d.bio)s+=' 🗑→⚡'+d.bio;if(d.adj){const A=d.adj;s+=(s?' ':'')+'주변'+(A.p?' ⚡+'+A.p:'')+(A.g?' 🌍오염-'+A.g:'')+(A.clean?'(청정)':'')}return s.trim()||'🛡 피해 막기'}
 const AL={s:{e:'🛸',hp:3,dmg:1,sp:.9},g:{e:'👽',hp:5,dmg:2,sp:.7},o:{e:'🐙',hp:9,dmg:3,sp:.5},b:{e:'👾',hp:40,dmg:5,sp:.35,lv:2}};
 const EV=[
@@ -255,9 +266,9 @@ $('#tl').innerHTML=h;pxify($('#st'));pxify($('#tl'));
 $('#go').style.display=G.phase==='plan'&&!G.busy&&G.hand.length<=lim()?'block':'none';
 $('#bp').classList.toggle('on',G.paused);$('#bf').textContent=['1x','2x','3x'][G.spd-1];$('#ba').classList.toggle('on',G.auto);
 $('#bars').style.display=G.phase==='battle'?'flex':'none'}
-const cardEl=(id,i,cls,big)=>{const d=inf(id),c=C[id],dup=c.k==='b'&&bl().some(b=>b.id===id&&b.lv<3);return `<div class="cd ${c.x?'x':''} ${dup?'dup':''} ${cls||''}" data-i="${i}" data-id="${id}"><div class=tt>${d.n}</div><div class=art><img src="${su(d.e)}"></div><div class=ds>${chips(id)}${big?`<span class=edu>🌱 ${c.edu}</span>`:''}</div>${dup?'<u>⬆LV</u>':''}</div>`};
+const cardEl=(id,i,cls,big)=>{const d=inf(id),c=C[id],dup=c.k==='b'&&bl().some(b=>b.id===id&&b.lv<3);return `<div class="cd ${c.x?'x':''} ${dup?'dup':''} ${cls||''}" data-i="${i}" data-id="${id}" style="border-color:${ROLE[role(id)].c}">${rband(id)}<div class=tt>${d.n}</div><div class=art><img src="${su(d.e)}"></div><div class=ds>${face(id)}${big&&(c.co>0||c.w)?`<small style="display:block;color:#ffb0a0">${c.co>0?'💨CO₂ ':''}${c.w?'🗑+'+c.w:''}</small>`:''}${big?`<span class=edu>🌱 ${c.edu}</span>`:''}</div>${dup?'<u>⬆LV</u>':''}</div>`};
 function info(){const el=$('#info');if(G.sel<0||!G.hand[G.sel]){el.style.display='none';return}const id=G.hand[G.sel],c=C[id];
-el.innerHTML=`<b>${inf(id).n}</b> ${chips(id)}<br>${c.k==='b'?'초록 칸=설치 · 금색 칸=⬆레벨업\n♻ 버튼=버리기':c.t?'전투 중 적을 터치':'맵을 터치해 사용\n♻ 버튼=버리기'}<br><span class=edu>🌱 ${c.edu}</span>`;el.style.display='block'}
+el.innerHTML=`<span class=rtag style="background:${ROLE[role(id)].c}">${ROLE[role(id)].e} ${ROLE[role(id)].n}</span><b>${inf(id).n}</b> ${chips(id)}<br>${c.k==='b'?'초록 칸=설치 · 금색 칸=⬆레벨업\n♻ 버튼=버리기':c.t?'전투 중 적을 터치':'맵을 터치해 사용\n♻ 버튼=버리기'}<br><span class=edu>🌱 ${c.edu}</span>`;el.style.display='block'}
 function hand(){$('#hand').innerHTML=G.hand.map((id,i)=>cardEl(id,i,G.sel===i?'sel':'')).join('');hud();info();pxify($('#hand'));pxify($('#info'));const cw=innerWidth<innerHeight?70:86,n=G.hand.length,ml=n>1?Math.min(6,(innerWidth-24-n*cw)/(n-1)):0;$('#hand').querySelectorAll('.cd').forEach((c,i)=>{if(i)c.style.marginLeft=ml+'px'})}
 // 카드: 탭=선택(click), 끌어서 놓기=pointer
 $('#hand').addEventListener('click',e=>{if(supp)return;const c=e.target.closest('.cd');if(!c)return;if(G.busy&&G.phase!=='battle')return;const i=+c.dataset.i;G.sel=G.sel===i?-1:i;msg('');hand()});
@@ -452,7 +463,7 @@ function guide(tab){tab=tab||0;if(!gp&&G.phase!=='menu'){gp=1;G.pb=G.paused;G.pa
 const T=['📖 방법','🌳 진화','📚 도감','🏆 랭킹','👑 명예'];let h=`<div class=tabs>${T.map((t,i)=>`<button class="b ${i===tab?'on':''}" data-t="${i}">${t}</button>`).join('')}</div>`;
 if(tab>=3&&DB)h+=`<div class=tabs style="margin:4px 0"><button class="b ${RK.src==='l'?'on':''}" data-s="l">📱 내 기기</button><button class="b ${RK.src==='s'?'on':''}" data-s="s">👥 함께(공유)</button></div>`;
 h+='<div class=cg>';
-if(tab===0)h+=[['🎯 목표','외계 침공을 막고\n2200년까지\n⚡번영 '+TARGET+' 이상\n🌍자연 50 이상\n🌡기온 +2℃ 미만\n→ 🌈 공존 엔딩!'],['🃏 카드','카드를 탭하면\n놓을 수 있는 칸이 빛나요\n초록=설치\n금색=⬆레벨업'],['⭐ 레벨업','같은 시설을\n같은 칸에 겹치면\n효과 ×2, ×3\n(오염도 함께 커져요)'],['⚔ 번영의 힘','⚡번영이 높을수록\n⚔공격력이 세져요\n🌍자연이 높을수록\n❤시설 체력이 올라요'],['✨ 자연 100+','자연은 150까지!\n100을 넘으면\n게이지 색이 변하고\n점수도 크게 올라요'],['🍀 이벤트','좋은 일·나쁜 일이\n랜덤으로 생겨요\n구역에 3턴 동안\n버프·디버프'],['🔌 이웃 효과','스마트그리드·공원·\n연구소는 주변 4칸을\n도와줘요\n(하늘색 테두리)'],['♻ 카드 재활용','카드를 고르고\n♻ 버튼을 누르면\n카드를 버리고\n🌍+1 ♻자원+1'],['🌡 기후','석탄·석유는 CO₂를 내요\nCO₂는 계속 쌓여\n기온을 올려요\n1.5℃를 넘기지 마세요!'],['🌊 해수면','기온이 +2℃를 넘으면\n빙하가 녹아\n바닷가 칸이 잠겨요\n(되돌릴 수 없어요)'],['🗑 쓰레기','번영할수록 쓰레기가\n늘어요. 10을 넘으면\n자연이 아파요\n♻재활용센터로 줄여요'],['🚛 분리배출의 날','쓰레기가 쌓이면\n알맞은 통에 넣어요\n맞히면 🗑-2 ♻+1\n시대마다 쓰레기가 달라요'],['♻ 자원 쓰기','카드 보상에서\n♻5=한 장 더(업사이클)\n♻2=다시 뽑기\n남은 ♻은 점수로!'],['🏛 본부','외계인이 본부에 닿으면\n본부 체력이 깎여요\n0이 되면 ❤-1\n❤ 3개를 지키세요'],['✋ 전투','손패가 2장이 되면\n전투가 시작돼요\n전투 중엔 ⚡번개 같은\n주문을 쓸 수 있어요'],['🏭 에너지','석탄·석유는 번영이 크지만\n자연을 해쳐요\n시대가 지나면\n☀️🌬️🔋🌞 청정 에너지가 열려요'],['🎚 난이도','쉬움·보통·어려움\n적의 수·체력·공격과\n점수 배율이 달라져요'],['🎥 조작','맵 드래그=이동\n두 손가락=확대\n[전체] 버튼=전체화면\n가로·세로 모두 가능']].map(([t,b])=>gcard(t,b)).join('');
+if(tab===0)h+=[['🎨 카드 색','윗줄 색만 보면 돼요\n<span style="color:#ff8a86">⚔ 빨강=공격</span>\n<span style="color:#8ab8ff">🛡 파랑=방어</span>\n<span style="color:#ffd24a">⚡ 노랑=에너지</span>\n<span style="color:#7dffa0">🌳 초록=자연</span>\n<span style="color:#d9a6ff">✨ 보라=특수</span>'],['🎯 목표','외계 침공을 막고\n2200년까지\n⚡번영 '+TARGET+' 이상\n🌍자연 50 이상\n🌡기온 +2℃ 미만\n→ 🌈 공존 엔딩!'],['🃏 카드','카드를 탭하면\n놓을 수 있는 칸이 빛나요\n초록=설치\n금색=⬆레벨업'],['⭐ 레벨업','같은 시설을\n같은 칸에 겹치면\n효과 ×2, ×3\n(오염도 함께 커져요)'],['⚔ 번영의 힘','⚡번영이 높을수록\n⚔공격력이 세져요\n🌍자연이 높을수록\n❤시설 체력이 올라요'],['✨ 자연 100+','자연은 150까지!\n100을 넘으면\n게이지 색이 변하고\n점수도 크게 올라요'],['🍀 이벤트','좋은 일·나쁜 일이\n랜덤으로 생겨요\n구역에 3턴 동안\n버프·디버프'],['🔌 이웃 효과','스마트그리드·공원·\n연구소는 주변 4칸을\n도와줘요\n(하늘색 테두리)'],['♻ 카드 재활용','카드를 고르고\n♻ 버튼을 누르면\n카드를 버리고\n🌍+1 ♻자원+1'],['🌡 기후','석탄·석유는 CO₂를 내요\nCO₂는 계속 쌓여\n기온을 올려요\n1.5℃를 넘기지 마세요!'],['🌊 해수면','기온이 +2℃를 넘으면\n빙하가 녹아\n바닷가 칸이 잠겨요\n(되돌릴 수 없어요)'],['🗑 쓰레기','번영할수록 쓰레기가\n늘어요. 10을 넘으면\n자연이 아파요\n♻재활용센터로 줄여요'],['🚛 분리배출의 날','쓰레기가 쌓이면\n알맞은 통에 넣어요\n맞히면 🗑-2 ♻+1\n시대마다 쓰레기가 달라요'],['♻ 자원 쓰기','카드 보상에서\n♻5=한 장 더(업사이클)\n♻2=다시 뽑기\n남은 ♻은 점수로!'],['🏛 본부','외계인이 본부에 닿으면\n본부 체력이 깎여요\n0이 되면 ❤-1\n❤ 3개를 지키세요'],['✋ 전투','손패가 2장이 되면\n전투가 시작돼요\n전투 중엔 ⚡번개 같은\n주문을 쓸 수 있어요'],['🏭 에너지','석탄·석유는 번영이 크지만\n자연을 해쳐요\n시대가 지나면\n☀️🌬️🔋🌞 청정 에너지가 열려요'],['🎚 난이도','쉬움·보통·어려움\n적의 수·체력·공격과\n점수 배율이 달라져요'],['🎥 조작','맵 드래그=이동\n두 손가락=확대\n[전체] 버튼=전체화면\n가로·세로 모두 가능']].map(([t,b])=>gcard(t,b)).join('');
 if(tab===1){const en=['증기 1800~','전기 1907~','정보 2013~','우주 2120~'],cur=G.phase==='menu'?0:era();
 h+=en.map((n,k)=>{const ids=NX.filter(id=>C[id].u===k+1&&C[id].k==='b'&&!Array.isArray(C[id].e));return gcard(`${k+1}시대 ${n}${k+1===cur?' ◀':''}`,ids.map(id=>`<div class="${CLEAN.includes(id)||id==='forest'||id==='park'?'cln':(C[id].g||0)<0?'pol':''}">${C[id].e} ${C[id].n}<small>${chips(id)}</small></div>`).join(''),k+1===cur?'cur':'')}).join('')
 +gcard('🛡 방어 진화',C.tower.e.map((e,i)=>`<div>${e} ${C.tower.n[i]}<small>⚔${C.tower.atk[i]} 사거리 ${C.tower.r[i]}</small></div>`).join(''))
@@ -460,7 +471,7 @@ h+=en.map((n,k)=>{const ids=NX.filter(id=>C[id].u===k+1&&C[id].k==='b'&&!Array.i
 +gcard('🔬 연구소 진화',C.lab.e.map((e,i)=>`<div>${e} ${C.lab.n[i]}<small>주변 청정 ⚡+2</small></div>`).join(''))
 +gcard('⭐ 레벨업','같은 시설을 겹치면\n⭐ Lv1 ×1\n⭐⭐ Lv2 ×2\n⭐⭐⭐ Lv3 ×3\n오염도 함께 커져요')
 +gcard('👽 외계기술',XS.map(id=>`<div>${C[id].e} ${C[id].n}</div>`).join(''),'x')}
-if(tab===2)h+=gcard('🗑 분리배출 도감',Object.keys(BIN).map(k=>`<div>${BIN[k].e} ${BIN[k].n}<small>${TRASH.filter(t=>t.b===k).map(t=>t.e+t.n).join(' ')}</small></div>`).join(''),'cur')+TRASH.map(t=>gcard(`${t.e} ${t.n} → ${BIN[t.b].e}`,`<small>${BIN[t.b].n} · ${TN[t.u-1]}시대부터</small><span class=edu>♻ ${t.tip}</span>`)).join('')+[...NX,...XS].map(id=>{const c=C[id],e=Array.isArray(c.e)?c.e.join(''):c.e,n=Array.isArray(c.n)?c.n.join('→'):c.n;return gcard(`${e} ${n}`,`<small>${c.k==='b'?chips(id):c.d}</small><span class=edu>🌱 ${c.edu}</span>`,c.x?'x':'')}).join('');
+if(tab===2)h+=gcard('🗑 분리배출 도감',Object.keys(BIN).map(k=>`<div>${BIN[k].e} ${BIN[k].n}<small>${TRASH.filter(t=>t.b===k).map(t=>t.e+t.n).join(' ')}</small></div>`).join(''),'cur')+TRASH.map(t=>gcard(`${t.e} ${t.n} → ${BIN[t.b].e}`,`<small>${BIN[t.b].n} · ${TN[t.u-1]}시대부터</small><span class=edu>♻ ${t.tip}</span>`)).join('')+[...NX,...XS].map(id=>{const c=C[id],e=Array.isArray(c.e)?c.e.join(''):c.e,n=Array.isArray(c.n)?c.n.join('→'):c.n;return gcard(`${e} ${n}`,`<span class=rtag style="background:${ROLE[role(id)].c}">${ROLE[role(id)].e} ${ROLE[role(id)].n}</span><small>${c.k==='b'?chips(id):c.d}</small><span class=edu>🌱 ${c.edu}</span>`,c.x?'x':'')}).join('');
 if(tab===3){const L=recs().slice().sort((a,b)=>b.sc-a.sc).slice(0,10);h+=L.length?L.map((r,i)=>gcard(`${['🥇','🥈','🥉'][i]||(i+1)+'위'} ${esc(r.n)}`,`${r.sc}점\n${DF[r.df]?DF[r.df].e+DF[r.df].n:''} · ${EK[r.k]||''}\n🌍${r.nat} ⚡${r.pro}\n청정 ${r.cp}%`,i===0?'cur':'')).join(''):gcard('🏆 랭킹',RK.src==='s'&&RK.err?'공유 저장소를\n쓸 수 없어요\n(Contributor 권한으로\n공유한 링크에서 가능)':'아직 기록이 없어요\n게임을 끝내면\n이름을 남길 수 있어요')}
 if(tab===4){const L=recs(),top=(f,flt)=>(flt?L.filter(flt):L).slice().sort((a,b)=>f(b)-f(a))[0],cd=(t,r,v)=>gcard(t,r?`${esc(r.n)}\n${v(r)}`:'아직 없어요',r?'cur':'');
 h+=[0,1,2].map(d=>{const r=top(x=>x.sc,x=>x.df===d);return cd(`${DF[d].e} ${DF[d].n} 챔피언`,r,x=>x.sc+'점 · '+(EK[x.k]||''))}).join('')+cd('🌈 공존 엔딩',top(x=>x.sc,x=>x.k==='a'),x=>x.sc+'점')+cd('🔋 청정에너지 왕',top(x=>x.cp),x=>'청정 '+x.cp+'%')+cd('🌍 지구 수호자',top(x=>x.nat),x=>'자연 '+x.nat)+cd('⚡ 번영의 왕',top(x=>x.pro),x=>'번영 '+x.pro)+cd('🌡 1.5℃ 지킴이',top(x=>-x.tc,x=>x.tc!=null&&x.k!=='x'),x=>'기온 +'+x.tc+'℃')+cd('♻ 분리배출 달인',top(x=>x.ac||0,x=>x.ac!=null),x=>'정답률 '+x.ac+'%')+cd('📅 최근 기록',L.slice().sort((a,b)=>(b.d||'').localeCompare(a.d||''))[0],x=>x.d)}
@@ -487,27 +498,21 @@ const GC=document.createElement('canvas');GC.width=GC.height=48;const gc=GC.getC
 function globe(rot){gc.clearRect(0,0,48,48);for(let y=0;y<48;y++)for(let x=0;x<48;x++){const dx=x-23.5,dy=y-23.5,d=Math.hypot(dx,dy);if(d>23)continue;const nx=(x+rot)*.35,n=Math.sin(nx*1.7+y*.31)+Math.cos(y*.27-nx*.9)+Math.sin(nx*.6+y*.8)*.5;let c=n>.45?[63,174,82]:[47,111,208];
 if(Math.abs(dy)>19+n*.8)c=[240,248,255];const cx=(x+rot*1.6)*.5,cn=Math.sin(cx+y*.35)*Math.cos(y*.4-cx*.4);if(cn>.6)c=[245,250,255];
 const f=cl(.62+.5*(1-(dx+dy)/46)*.8,.45,1.05)*(d>21.5?.7:1);gc.fillStyle=`rgb(${c.map(v=>Math.min(255,v*f|0)).join(',')})`;gc.fillRect(x,y,1,1)}}
-function pixText(s,sz,c1,c2){const m=document.createElement('canvas'),x=m.getContext('2d'),f=`${sz>10?'bold ':''}${sz}px ${PF(sz)}`;x.font=f;const w=Math.ceil(x.measureText(s).width)||60,h=sz+6;m.width=w+6;m.height=h;x.font=f;x.textBaseline='middle';x.fillStyle='#000';x.fillText(s,3,h/2+1);
-const a=x.getImageData(0,0,w+6,h).data,W2=w+6,o=document.createElement('canvas');o.width=W2+3;o.height=h+3;const ox=o.getContext('2d'),im=ox.createImageData(W2+3,h+3),b=im.data;
-const op=(X,Y)=>X>=0&&Y>=0&&X<W2&&Y<h&&a[(Y*W2+X)*4+3]>=120;
-for(let Y=-1;Y<h+1;Y++)for(let X=-1;X<W2+1;X++){const k=((Y+1)*(W2+3)+X+1)*4;let col=null;
-if(op(X,Y)){const t=Y/h;col=c1.map((v,i)=>Math.round(lerp(v,c2[i],t)))}
-else if(op(X-1,Y)||op(X+1,Y)||op(X,Y-1)||op(X,Y+1))col=[20,12,28];
-else if(op(X-1,Y-1)||op(X-2,Y-2))col=[60,30,90];
-if(col){b[k]=col[0];b[k+1]=col[1];b[k+2]=col[2];b[k+3]=255}}
-ox.putImageData(im,0,0);return o}
-let TT=null;try{Promise.all(['bold 11px Galmuri11','11px Galmuri11','9px Galmuri9','7px Galmuri7'].map(f=>document.fonts.load(f))).then(()=>{TT=null;if(G&&G.phase!=='menu'){hud();hand()}}).catch(()=>{})}catch(_){}
+try{Promise.all(['bold 11px Galmuri11','11px Galmuri11','9px Galmuri9','7px Galmuri7'].map(f=>document.fonts.load(f))).then(()=>{if(G&&G.phase!=='menu'){hud();hand()}}).catch(()=>{})}catch(_){}
+// 큰 글씨: 외곽선 + 보라 그림자 + 세로 그라데이션 (Galmuri는 11px 격자라 11의 배수 크기에서 도트가 반듯함)
+function bigText(s,x,y,sz,c1,c2){if(TQ){TQ.push(()=>bigText(s,x,y,sz,c1,c2));return}const u=sz/11;ctx.font=`bold ${sz}px Galmuri11,"Malgun Gothic",monospace`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.lineJoin='miter';
+ctx.fillStyle='#3c1e5a';ctx.fillText(s,x+u*1.5,y+u*1.5);ctx.lineWidth=u*2;ctx.strokeStyle='#140c1c';ctx.strokeText(s,x,y);const g=ctx.createLinearGradient(0,y-sz/2,0,y+sz/2);g.addColorStop(0,c1);g.addColorStop(1,c2);ctx.fillStyle=g;ctx.fillText(s,x,y);ctx.textBaseline='alphabetic'}
 function title(dt){const tt=performance.now()/1000;ctx.save();const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#04061a');g.addColorStop(1,'#1a2a64');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
 STARS.forEach(s=>{if((tt*1.5+s.s)%3<2.4){ctx.fillStyle=s.s>4.6?'#ffd24a':'#fff';ctx.fillRect((s.x*W)|0,(s.y*H)|0,1,1)}});
 const sz=Math.min(H*.5,134,W*.62),cx=W/2,cy=H*(W<H?.5:.62);globe(tt*3);ctx.fillStyle='rgba(90,170,255,.16)';ctx.beginPath();ctx.arc(cx,cy,sz/2+6,0,6.3);ctx.fill();ctx.fillStyle='rgba(90,170,255,.1)';ctx.beginPath();ctx.arc(cx,cy,sz/2+12,0,6.3);ctx.fill();
 ctx.drawImage(GC,cx-sz/2,cy-sz/2,sz,sz);
 for(let i=0;i<6;i++){const a=tt*.55+i*1.047,r=sz*.78,x=cx+Math.cos(a)*r*(W<H?.8:1.7),y=cy+Math.sin(a)*r*.38-8;if(Math.sin(a)<0)sp('🛸',x,y,15);}
-if(!TT)TT={a:pixText('지구 방위',11,[255,236,120],[255,140,40]),b:pixText('에너지 · 환경 · 자원순환',9,[170,230,255],[90,160,255])};
-const ta=TT.a,tb=TT.b,sc=Math.max(1,Math.min(Math.floor(H/84),Math.floor(W*.9/ta.width))),sb=Math.max(1,Math.min(Math.floor(sc/2.5),Math.floor(W*.94/tb.width)));ctx.drawImage(ta,Math.round(cx-ta.width*sc/2),Math.round(H*.04),ta.width*sc,ta.height*sc);ctx.drawImage(tb,Math.round(cx-tb.width*sb/2),Math.round(H*.04+ta.height*sc),tb.width*sb,tb.height*sb);
+const ts=11*Math.max(2,Math.min(4,Math.floor(H/80),Math.floor(W*.85/62))),ty=Math.round(H*.05)+ts*.5;bigText('지구 방위',cx,ty,ts,'#ffec78','#ff8c28');bigText('에너지 · 환경 · 자원순환',cx,ty+ts*.62+8,11,'#aae6ff','#5aa0ff');
 for(let i=0;i<6;i++){const a=tt*.55+i*1.047,r=sz*.78,x=cx+Math.cos(a)*r*(W<H?.8:1.7),y=cy+Math.sin(a)*r*.38-8;if(Math.sin(a)>=0)sp('🛸',x,y,17);}
-tx('EARTH DEFENSE · 1800→2200',cx,H*.04+ta.height*sc+tb.height*sb+10,'#9fb3e6',9);ctx.restore()}
-function render(dt){ctx.imageSmoothingEnabled=false;if(G.phase==='menu'){title(dt);return}
-ctx.save();if(shake>0){shake-=dt;ctx.translate((R()-.5)*4,(R()-.5)*4)}
+tx('EARTH DEFENSE · 1800→2200',cx,ty+ts*.62+26,'#9fb3e6',9);ctx.restore()}
+function flush(){const q=TQ;TQ=null;ctx=HX;HX.setTransform(SS,0,0,SS,0,0);HX.imageSmoothingEnabled=false;HX.drawImage(LO,0,0,W,H);HX.translate(SHX,SHY);q.forEach(f=>f());ctx=LX}
+function render(dt){ctx=LX;TQ=[];SHX=SHY=0;ctx.imageSmoothingEnabled=false;if(G.phase==='menu'){title(dt);flush();return}
+ctx.save();if(shake>0){shake-=dt;SHX=Math.round((R()-.5)*4);SHY=Math.round((R()-.5)*4);ctx.translate(SHX,SHY)}
 const tt=performance.now()/1000,z=V.z,hw=TW*z,hh2=TH*z,dg=cl((100-G.nat)/80,0,1);
 const TT2=T_(),hz=cl((TT2-.6)/2.6,0,1),fb=cl((TT2-.7)/2.3,0,1),ice=cl(1-TT2/2.4,0,1);
 const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,mix([7,11,36],[44,12,30],hz));g.addColorStop(1,mix([22,39,90],[96,44,40],hz));ctx.fillStyle=g;ctx.fillRect(-5,-5,W+10,H+10);
@@ -525,7 +530,7 @@ if(dg>.7&&hh(o.i+5,o.j+1)>.5){ctx.fillStyle='rgba(60,60,60,.35)';dia(p.x,p.y,hw*
 const s=G.sel>=0?C[G.hand[G.sel]]:null,sid=G.sel>=0?G.hand[G.sel]:null,pu=.5+.5*Math.sin(tt*6);
 for(let j=0;j<5;j++)for(let i=0;i<5;i++){const p=P(i,j),o=ok(i,j),b=G.grid[j][i];
 if(i==2&&j==2){dia(p.x,p.y,hw,hh2);ctx.fillStyle='rgba(60,50,100,.5)';ctx.fill()}
-dia(p.x,p.y,hw,hh2);if(b){ctx.fillStyle=CLEAN.includes(b.id)||b.id==='forest'||b.id==='park'?'rgba(100,230,150,.35)':b.id==='tower'||b.id==='wall'||C[b.id].adj?'rgba(120,160,230,.35)':'rgba(220,150,90,.35)';ctx.fill()}
+dia(p.x,p.y,hw,hh2);if(b){ctx.fillStyle=`rgba(${ROLE[role(b.id)].rgb},.32)`;ctx.fill()}
 {const zs=G.zf.filter(f=>f.z===zone(i,j));if(zs.length&&(o||b)){dia(p.x,p.y,hw,hh2);ctx.fillStyle=ZE[zs[0].k].good?'rgba(120,255,160,.16)':'rgba(255,90,90,.2)';ctx.fill()}if(b&&C[b.id].adj){[[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx,dy])=>{const q=P(i+dx,j+dy);dia(q.x,q.y,hw*.92,hh2*.92);ctx.strokeStyle='rgba(120,220,255,.7)';ctx.lineWidth=1;ctx.stroke()})}}
 ctx.strokeStyle=o||(i==2&&j==2)?'rgba(235,255,245,.95)':'rgba(235,255,245,.22)';ctx.lineWidth=1;ctx.stroke();
 if(!o&&!(i==2&&j==2)&&!flooded(i,j)){dia(p.x,p.y,hw,hh2);ctx.fillStyle='rgba(8,12,30,.3)';ctx.fill()}
@@ -550,7 +555,7 @@ ents=ents.filter(e=>{e.life-=G.paused?0:dt*(G.phase==='battle'?G.spd:1);const p=
 if(e.k==='t')tx(e.t,p.x,p.y-(e.s?14:24)*z-(e.l0-e.life)*(e.s?10:14),e.c||'#ffd24a',e.s||10);
 else if(e.k==='b'){const a=P(e.x1,e.y1),b=P(e.x2,e.y2);ctx.strokeStyle=e.c;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(a.x,a.y-12*z);ctx.lineTo(b.x,b.y-4*z);ctx.stroke();ctx.strokeStyle='#fff';ctx.lineWidth=.6;ctx.stroke()}
 else if(e.k==='p'){e.gx+=e.vx*dt;e.gy+=e.vy*dt;ctx.fillStyle='#b03a3a';ctx.fillRect(p.x,p.y-4,2,2)}return e.life>0});
-ctx.restore()}
+ctx.restore();flush()}
 let last=0;function loop(ts){const dt=Math.min(.05,(ts-last)/1000||0);last=ts;
 const k=Math.min(1,dt*3);if(!manual){pan.x+=(TP.x-pan.x)*k;pan.y+=(TP.y-pan.y)*k}V.z+=(TV.z-V.z)*k;V.x=W/2+pan.x;V.y=H*(W<H?.47:.44)+pan.y;
 if(G.phase==='battle'&&!G.paused)sim(dt*G.spd);render(dt);requestAnimationFrame(loop)}
