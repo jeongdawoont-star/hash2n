@@ -32,6 +32,15 @@ export const RECORDS = [
   // ▼ 여기에 새 기록을 붙여넣으세요 (최신 항목을 맨 위에) ▼
 
   {
+    title: "지구 방위 · 에너지 문명",
+    desc: "1800년부터 2200년까지 카드로 발전소와 방어 시설을 놓아 외계 침공을 막는 도트 로그라이크 디펜스 게임이다.\n석탄·석유로 빨리 번영하면 CO₂가 쌓여 기온과 해수면이 오르고, 쓰레기는 '분리배출의 날'에 바르게 나눠야 자원으로 돌아온다.\n에너지·환경·자원순환 교육을 한 판에 묶었고, 엔딩에서 시대별 자연·번영·기온 그래프로 플레이를 돌아본다.",
+    tags: "energy, climate, recycling, environment, roguelike, pixel, games",
+    category: "games",
+    link: "./vibe-apps/earth-defense.html",
+    image: "img/earth-defense.png",
+  },
+
+  {
     title: "포켓몬 밥 타이머",
     desc: "정해진 시간 안에 밥을 다 먹으면 몬스터볼에서 포켓몬이 나오는 어린이 식사 습관 타이머다.\n모은 포켓몬은 동네에서 뛰놀고, 두 마리를 합쳐 진화시킬 수도 있다.",
     tags: "meal, timer, pokemon, kids, habit, games",
