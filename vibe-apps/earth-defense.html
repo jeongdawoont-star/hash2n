@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>지구 방위 · 에너지 문명</title>
+<meta name="description" content="1800년부터 2200년까지, 외계 침공을 막으며 에너지·환경·자원순환의 균형을 찾는 도트 로그라이크 디펜스 게임">
+<meta name="theme-color" content="#0b1030"><meta name="color-scheme" content="dark">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/galmuri@2.40.3/dist/galmuri.css">
+<style>
+:root{--card:#1b2742;--tx:#e8eefc;--ac:#ffd24a;color-scheme:dark}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0;background:#0b1030;color:var(--tx);font-family:"Galmuri11","DotGothic16","Courier New",monospace;-webkit-user-select:none;user-select:none;overflow:hidden}
+#st{background:rgba(8,12,34,.62);border:2px solid #2d3d72;box-shadow:0 0 0 2px #0b1220;padding:5px 7px 6px;width:166px!important}
+#clim{font-size:11px;margin-top:3px;line-height:1.5}#clim b{font-weight:normal}
+.wr{color:#ff8a6a}.gd2{color:#7dffa0}
+.rcy{color:#6dc2ca}
+#mg{position:fixed;inset:0;z-index:30;display:none;flex-direction:column;align-items:center;justify-content:space-between;padding:12px 10px 14px;background:radial-gradient(#1a3a5a,#070b24 75%)}
+#mg .mh{font-size:17px;color:var(--ac);text-align:center;text-shadow:0 2px 0 #000}
+#mg .mh small{display:block;font-size:11px;color:#bcd0ff;margin-top:2px}
+#mg .tb{width:min(420px,80vw);height:10px;border:2px solid #fff;background:#0b1220;margin:6px auto 0}#mg .tb i{display:block;height:100%;background:#6dc2ca}
+#mg .it{display:flex;flex-direction:column;align-items:center;gap:4px;min-height:0}
+#mg .it img{width:min(22vh,96px);height:min(22vh,96px);image-rendering:pixelated;filter:drop-shadow(0 4px 0 #000)}
+#mg .it b{font-size:15px}#mg .tip{font-size:12px;min-height:3em;text-align:center;white-space:pre-line;word-break:keep-all;max-width:92vw}
+#mg .bins{display:flex;gap:6px;width:min(640px,98vw)}
+#mg .bin{flex:1;font-family:inherit;color:#fff;border:3px solid #fff;border-radius:6px 6px 2px 2px;padding:6px 2px;font-size:12px;box-shadow:0 4px 0 #0b1220;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}
+#mg .bin img{width:30px;height:30px;image-rendering:pixelated}#mg .bin:active{transform:translateY(3px);box-shadow:0 1px 0 #0b1220}
+#mg .bin.ok{outline:4px solid #7dffa0}#mg .bin.no{outline:4px solid #ff6b6b}
+#mg .sc{font-size:13px}
+@media (orientation:portrait){#mg .bins{gap:3px}#mg .bin{font-size:10px;padding:10px 1px;white-space:nowrap;letter-spacing:-.5px}#mg .bin img{width:34px;height:34px}}
+@keyframes pop{0%{transform:scale(.6)}60%{transform:scale(1.15)}100%{transform:scale(1)}}.pop{animation:pop .22s}
+@keyframes shk{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}.shk{animation:shk .25s}
+.chart{width:100%;max-width:420px;height:auto;image-rendering:pixelated;border:2px solid #2d3d72;background:#0b1220;display:block;margin:6px auto}
+.badges{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;margin:4px 0}.badges span{font-size:11px;padding:3px 6px;border:2px solid #ffd24a;background:#2b2a12}.badges span.off{opacity:.35;border-color:#666;background:#1a1a2a}
+.eg{display:block}@media (min-width:700px){.eg{display:grid;grid-template-columns:1.1fr 1fr;gap:10px;align-items:start}}
+.lesson{text-align:left;font-size:12px;background:#14214a;padding:6px 8px;margin:6px 0;border-left:4px solid #7dffa0}
+#cv{position:fixed;inset:0;width:100vw;height:100dvh;image-rendering:pixelated;touch-action:none}
+.ui{position:fixed;z-index:5}
+#st{left:12px;top:8px;width:150px;font-size:12px;text-shadow:0 1px 0 #000}
+.sb{margin:3px 0}.sb small{font-size:10px;color:#cfe}.inp{width:100%;font-family:inherit;font-size:15px;padding:9px;background:#0f1a38;color:#fff;border:3px solid #5a74b8;margin:6px 0;text-align:center}
+#tbtn .df{flex:1 1 28%;font-size:14px}#tbtn .df.on{border-color:#ffd24a;background:#3a5aba}.tabs .b{font-size:12px!important}.bar{height:11px;background:#0b1220;border:2px solid #fff;position:relative}.bar i{display:block;height:100%}.bar u{position:absolute;top:-3px;bottom:-3px;width:2px;background:#fff}
+#tl{left:50%;top:10px;transform:translateX(-50%);display:flex;align-items:center;white-space:nowrap}
+.nd{position:relative;width:24px;display:flex;justify-content:center}
+.dm{width:13px;height:13px;transform:rotate(45deg);border:2px solid #fff;display:flex;align-items:center;justify-content:center}
+.dm i{transform:rotate(-45deg);font-style:normal;font-size:11px}
+.nd.pa{opacity:.35}.nd.cu .dm{width:20px;height:20px;background:#fff}
+.nd em{position:absolute;top:26px;font-style:normal;font-size:11px;text-shadow:0 1px 0 #000}
+#tl s{width:8px;border-top:2px dashed #fff;opacity:.6}
+#ctl{right:10px;top:10px;display:flex;flex-direction:column;gap:5px}
+.cb{width:44px;height:32px;border:2px solid #fff;background:rgba(10,10,40,.45);color:#fff;border-radius:6px;font-family:inherit;font-size:14px}.cb.on{background:#fff;color:#000}
+#well{left:12px;bottom:12px;width:64px;height:64px;border-radius:50%;background:#3a4a7a;border:3px solid #9fb3e6;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:22px;text-align:center;z-index:9}
+#well small{font-size:9px}#well.hot{background:#5a8a5a;border-color:#fff}
+#go{right:12px;bottom:14px;padding:12px 14px;border:3px solid #f77;background:#a33;color:#fff;font-family:inherit;font-size:15px;display:none;z-index:9}
+#msg{left:50%;top:58px;transform:translateX(-50%);font-size:12px;color:var(--ac);text-shadow:0 1px 0 #000;text-align:center;max-width:56vw}
+#info{left:86px;bottom:140px;max-width:34vw;background:rgba(10,15,40,.85);border:2px solid #9fb3e6;padding:6px 8px;font-size:12px;line-height:1.4;display:none;z-index:9}
+#info b{font-size:14px}.edu{color:#9be7a8}
+#bars{left:90px;right:14px;bottom:10px;display:none;justify-content:space-between;pointer-events:none}
+.bw{width:30%;font-size:12px;text-shadow:0 1px 0 #000}.bw:last-child{text-align:right}
+.bw .bar{border-color:#0b1220}
+#hand{left:50%;bottom:6px;transform:translateX(-50%);display:flex;z-index:8}
+.cd{position:relative;flex:0 0 86px;width:86px;height:114px;margin-left:-12px;background:#2a4a9a;border:3px solid #6a8ee8;border-radius:5px;padding:3px;touch-action:none;cursor:pointer;box-shadow:0 0 0 2px #0b1220;transition:transform .1s}
+.cd:first-child{margin-left:0}
+.cd.sel{transform:translateY(-16px) scale(1.1);z-index:9;border-color:var(--ac);background:#3a5aba}
+.cd.x{background:#4a2a8a;border-color:#b66cff}.cd.dup{box-shadow:0 0 0 2px var(--ac)}
+.cd u{position:absolute;top:-8px;right:-4px;background:var(--ac);color:#000;font-size:9px;padding:0 3px;text-decoration:none}
+.tt{background:#14214a;font-size:11px;text-align:center;padding:2px;white-space:nowrap;overflow:hidden}
+.art{height:46px;margin:3px 0;background:linear-gradient(#1b2f6a,#3b2a7a);display:flex;align-items:center;justify-content:center;border:2px solid #0b1220}
+.art img{height:38px;image-rendering:pixelated}
+.ds{font-size:11px;text-align:center;line-height:1.3;font-weight:bold}
+.ghost{position:fixed;z-index:50;width:60px;height:70px;margin:-35px 0 0 -30px;pointer-events:none;opacity:.9}
+#ov,#loot{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:10px;background:rgba(5,8,16,.88)}
+#ov{z-index:25}#loot{z-index:22}
+.box{background:var(--card);border:4px solid var(--ac);padding:12px;max-width:560px;width:100%;text-align:center;max-height:94dvh;overflow:auto}
+.box p{font-size:13px;line-height:1.5;margin:6px 0}
+.b{font-family:inherit;font-size:14px;padding:10px 8px;background:#2b3c66;color:var(--tx);border:3px solid #5a74b8;cursor:pointer;width:100%;margin:4px 0;border-radius:4px}.b:disabled{opacity:.4}
+.lt{position:absolute;top:6%;left:0;right:0;text-align:center;font-size:22px;text-shadow:0 2px 0 #000}
+.lrow{position:absolute;bottom:7%;left:50%;transform:translateX(-50%);display:flex;gap:12px}
+.lrow .cd{margin:0;transform:none;flex:none;width:150px;height:auto;min-height:210px;padding:5px}.lrow .cd.pick{transform:translateY(-12px);border-color:var(--ac);background:#3a5aba}
+.lrow .art{height:70px}.lrow .art img{height:58px}.lrow .tt{font-size:13px}.lrow .ds{font-size:12px;font-weight:normal}.lrow .edu{font-size:10px;display:block;margin-top:4px}
+.lbtn{position:absolute;right:3%;top:22%;width:170px}
+@media (max-height:420px){.lrow .cd{width:128px;height:178px}.lrow .art{height:54px}.lrow .art img{height:44px}.lrow .edu{font-size:9px}}
+img.px{height:1.2em;width:1.2em;vertical-align:-.25em;image-rendering:pixelated}
+body.menu .ui{display:none!important}
+#tbtn{position:fixed;left:50%;bottom:3.5vh;transform:translateX(-50%);z-index:6;display:none;gap:8px;width:min(620px,94vw);flex-wrap:wrap}
+#tbtn .b{flex:1 1 28%}
+body.menu #tbtn{display:flex}
+#tbtn .b{margin:0;font-size:16px;padding:12px 6px;border-width:4px;border-radius:0;box-shadow:0 4px 0 #0b1220}
+#tstart{background:#d04648;border-color:#ffb0a0}
+.gd{text-align:left;font-size:12px;line-height:1.45;margin:6px 0;padding:4px;background:#14214a}
+#toast{position:fixed;left:50%;bottom:30%;transform:translateX(-50%);z-index:70;background:rgba(10,15,40,.92);border:2px solid #ffd24a;padding:8px 12px;font-size:12px;display:none;text-align:center;max-width:88vw}
+.box p,#msg,#info,.edu,.gb,#toast,.ds{white-space:pre-line;word-break:keep-all;line-height:1.5}
+.edu{display:block;margin-top:3px}
+.tabs{display:flex;gap:4px}.tabs .b{margin:0;padding:8px 2px;font-size:13px}.tabs .b.on{border-color:#ffd24a;background:#3a5aba}
+.cg{display:grid;grid-auto-flow:column;grid-template-rows:repeat(2,auto);grid-auto-columns:176px;gap:6px;overflow-x:auto;padding:6px 0;margin:4px 0;text-align:left;max-height:62dvh}
+.gc{background:#2a4a9a;border:3px solid #6a8ee8;border-radius:5px;padding:4px;font-size:11px}
+.gc.x{background:#4a2a8a;border-color:#b66cff}.gc.cur{border-color:#ffd24a;box-shadow:0 0 0 2px #ffd24a}
+.gt{background:#14214a;padding:3px 4px;margin-bottom:4px;font-size:12px;font-weight:bold}
+.gb small{display:block;color:#bcd0ff;font-size:10px}.gb>div{margin:2px 0}.cln{color:#7dffa0}.pol{color:#ffa0a0}
+@media (orientation:portrait){
+#tl{top:156px}#msg{top:200px;max-width:80vw}
+#info{left:8px;bottom:176px;max-width:94vw}
+#well{bottom:112px;left:8px;width:54px;height:54px}#go{bottom:112px;right:8px}
+#bars{top:248px;bottom:auto;left:14px}.bw{width:44%}
+.cd{flex:0 0 70px;width:70px;height:98px;font-size:9px;padding:2px}.tt{font-size:10px}.art{height:34px}.art img{height:28px}.ds{font-size:9px}
+.lrow{bottom:22%;gap:5px;width:98vw;left:1vw;transform:none}.lrow .cd{width:32vw;height:min(66vw,280px);padding:4px;flex:1 1 0}.lrow .art{height:24%}.lrow .art img{height:80%}.lrow .tt{font-size:11px}.lrow .ds{font-size:10px}.lrow .edu{font-size:9px}
+.lbtn{position:absolute;left:4%;right:4%;top:auto;bottom:3%;width:auto;display:flex;gap:6px}.lbtn .b{margin:0;font-size:12px;padding:8px 2px}
+.lt{font-size:17px;top:4%}.cg{grid-auto-columns:150px}
+}
+</style></head><body class="menu">
+<canvas id="cv"></canvas>
+<div id="st" class="ui"></div>
+<div id="tl" class="ui"></div>
+<div id="msg" class="ui"></div>
+<div id="info" class="ui"></div>
+<div id="ctl" class="ui"><button class="cb" id="bp">⏸</button><button class="cb" id="bf">1x</button><button class="cb" id="bi">i</button><button class="cb" id="ba">auto</button><button class="cb" id="bz">전체</button></div>
+<div id="toast"></div>
+<div id="well" class="ui">♻<small>재활용</small></div><div id="tbtn"><button class="b df" data-d="0">🌱 쉬움</button><button class="b df" data-d="1">🌍 보통</button><button class="b df" data-d="2">🔥 어려움</button><button class="b" id="tstart">▶ 게임 시작</button><button class="b" id="tguide">📖 방법·도감·랭킹</button><button class="b" id="tfs">전체화면</button></div>
+<button id="go" class="ui">⚔ 전투</button>
+<div id="bars" class="ui"><div class="bw">🏛 본부 <span id="hqn"></span><div class="bar"><i id="b1" style="background:#5a8ae8"></i></div></div><div class="bw">👽 외계 함대<div class="bar"><i id="b2" style="background:#d04648"></i></div></div></div>
+<div id="hand" class="ui"></div>
+<div id="loot"></div>
+<div id="mg"></div>
+<div id="ov"><div class="box" id="box"></div></div>
+<script>
+const $=s=>document.querySelector(s),R=Math.random,cl=(v,a=0,b=100)=>Math.max(a,Math.min(b,v)),sl=ms=>new Promise(r=>setTimeout(r,ms));
+const cv=$('#cv'),ctx=cv.getContext('2d');let W=585,H=270;
+let BZ=1.15;
+function fit(){if(innerWidth>=innerHeight){H=270;W=Math.round(H*innerWidth/innerHeight)}else{W=270;H=Math.round(W*innerHeight/innerWidth)}cv.width=W;cv.height=H;BZ=Math.min(1.15,W/330,H/190);TV.z=V.z=BZ;pan.x=pan.y=TP.x=TP.y=0}
+// ---- 도트 아이콘 (이모지 -> 16x16 -> 16색 팔레트 + 외곽선)
+const PAL=['#140c1c','#442434','#30346d','#4e4a4e','#854c30','#346524','#d04648','#757161','#597dce','#d27d2c','#8595a1','#6daa2c','#d2aa99','#6dc2ca','#dad45e','#deeed6'].map(h=>[1,3,5].map(i=>parseInt(h.substr(i,2),16)));
+const SC={};
+function spr(e){if(SC[e])return SC[e];
+const c=document.createElement('canvas');c.width=c.height=16;const x=c.getContext('2d');
+x.font='13px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText(e.includes('\uFE0F')?e:e+'\uFE0F',8,9);
+const a=x.getImageData(0,0,16,16).data,o=document.createElement('canvas');o.width=o.height=18;const ox=o.getContext('2d'),im=ox.createImageData(18,18),d=im.data;
+const op=(X,Y)=>X>=0&&Y>=0&&X<16&&Y<16&&a[(Y*16+X)*4+3]>=110;
+for(let Y=-1;Y<17;Y++)for(let X=-1;X<17;X++){const k=((Y+1)*18+X+1)*4;let col=null;
+if(op(X,Y)){const i=(Y*16+X)*4;let b=1e9;for(const p of PAL){const dd=(p[0]-a[i])**2+(p[1]-a[i+1])**2+(p[2]-a[i+2])**2;if(dd<b){b=dd;col=p}}}
+else if(op(X-1,Y)||op(X+1,Y)||op(X,Y-1)||op(X,Y+1))col=PAL[0];
+if(col){d[k]=col[0];d[k+1]=col[1];d[k+2]=col[2];d[k+3]=255}}
+ox.putImageData(im,0,0);return SC[e]=o}
+const SU={},su=e=>SU[e]||(SU[e]=spr(e).toDataURL());
+const PF=sz=>`${sz<=8?'Galmuri7':sz<=10?'Galmuri9':'Galmuri11'},"Malgun Gothic",monospace`;
+const EMO=/(\p{Extended_Pictographic}(?:\uFE0F|\u200D\p{Extended_Pictographic})*)/gu;
+function pxify(root){if(!root)return;const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT),ns=[];while(w.nextNode())ns.push(w.currentNode);
+ns.forEach(n=>{const t=n.nodeValue;EMO.lastIndex=0;if(!EMO.test(t))return;EMO.lastIndex=0;const f=document.createDocumentFragment();let last=0,m;
+while((m=EMO.exec(t))){if(m.index>last)f.appendChild(document.createTextNode(t.slice(last,m.index)));const im=document.createElement('img');im.className='px';im.src=su(m[0]);im.alt=m[0];f.appendChild(im);last=m.index+m[0].length}
+if(last<t.length)f.appendChild(document.createTextNode(t.slice(last)));n.parentNode.replaceChild(f,n)})}
+function sp(e,x,y,s,a=1){ctx.globalAlpha=a;s=s*1.12;ctx.drawImage(spr(e),Math.round(x-s/2),Math.round(y-s/2),s,s);ctx.globalAlpha=1}
+function tx(t,x,y,c='#fff',sz=10){ctx.font=`${sz}px ${PF(sz)}`;ctx.textAlign='left';ctx.lineWidth=sz<8?2:3;ctx.strokeStyle='#000';const pr=String(t).split(EMO);let tw=0;pr.forEach((q,k)=>{if(q==='')return;tw+=k%2?sz*1.15:(ctx.measureText(q).width||q.length*sz*.6)});let xx=Math.round(x-tw/2);
+pr.forEach((q,k)=>{if(q==='')return;if(k%2){sp(q,xx+sz*.58,y-sz*.35,sz*1.1);xx+=sz*1.15}else{ctx.strokeText(q,xx,Math.round(y));ctx.fillStyle=c;ctx.fillText(q,xx,Math.round(y));xx+=(ctx.measureText(q).width||q.length*sz*.6)}})}
+const LS={get(k,d){try{const v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(_){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(_){}}};
+const jo=(w,a,b)=>{const c=w.charCodeAt(w.length-1)-0xAC00;return c>=0&&c<11172&&c%28?a:b};
+const esc=t=>String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const DF=[{n:'쉬움',e:'🌱',en:.7,eh:.8,ed:.8,sm:.8},{n:'보통',e:'🌍',en:1,eh:1,ed:1,sm:1},{n:'어려움',e:'🔥',en:1.4,eh:1.3,ed:1.3,sm:1.3}];
+let DFI=LS.get('ed_df',1);if(!DF[DFI])DFI=1;
+const cn=v=>Math.max(0,Math.min(150,v));
+// ---- 에너지 카드: p=⚡번영/턴, g=🌍자연/턴, u=등장 시대(1~4)
+const TN=['증기','전기','정보','우주'],LAST=16,TGS=[130,180,240],LM=[1,1.6,2.2];let TARGET=180;
+const C={
+coal:{k:'b',u:1,e:'🏭',n:'석탄발전',p:4,g:-4,hp:4,co:3,w:2,edu:'석탄을 태우면 이산화탄소가 나와\n지구가 더워져요(지구온난화).\n산업혁명을 이끈 힘이지만 오염이 커요.'},
+hydro:{k:'b',u:1,e:'💧',n:'수력발전',p:3,g:-1,hp:4,edu:'흐르는 물로 전기를 만들어요.\n오염은 적지만 댐이\n강과 물고기의 길을 막을 수 있어요.'},
+forest:{k:'b',u:1,e:'🌳',n:'숲',p:0,g:3,hp:3,co:-1.5,edu:'나무는 이산화탄소를 먹고\n산소를 만들어요.\n숲은 홍수와 산사태도 막아줘요.'},
+oil:{k:'b',u:2,e:'🛢️',n:'석유발전',p:5,g:-4,hp:4,co:2.5,w:2,edu:'석유는 자동차와 공장을 움직여요.\n태우면 이산화탄소가 나오고\n바다에 새면 큰 오염이 생겨요.'},
+nuclear:{k:'b',u:2,e:'⚛️',n:'원자력발전',p:6,g:-2,hp:5,w:1,edu:'이산화탄소는 거의 없지만\n방사성 폐기물을\n아주 오래 안전하게 보관해야 해요.'},
+wind:{k:'b',u:3,e:'🌬️',n:'풍력발전',p:2,g:0,hp:4,edu:'바람으로 전기를 만들어요.\n오염은 없지만\n바람이 불 때만 만들 수 있어요.'},
+solar:{k:'b',u:3,e:'☀️',n:'태양광발전',p:2,g:1,hp:4,edu:'햇빛으로 전기를 만들어요.\n오염이 없고 어디서나 쓸 수 있어요.\n밤에는 저장이 필요해요.'},
+hydrogen:{k:'b',u:3,e:'🔋',n:'수소연료전지',p:4,g:0,hp:4,edu:'수소는 쓸 때 물만 나와요.\n만들 때 깨끗한 전기를 쓰는 게\n중요해요.'},
+geo:{k:'b',u:3,e:'♨️',n:'지열발전',p:3,g:0,hp:4,edu:'땅속의 뜨거운 열로 전기를 만들어요.\n날씨와 상관없이\n꾸준히 쓸 수 있어요.'},
+fusion:{k:'b',u:4,e:'🌞',n:'핵융합로',p:8,g:0,hp:6,edu:'태양처럼 가벼운 원자를 합쳐\n에너지를 만드는 꿈의 기술이에요.\n오염이 거의 없어요.'},
+tower:{k:'b',u:1,e:['💣','🗼','🛰️','☄️'],n:['대포','레이저탑','위성포','반물질포'],p:0,g:[-1,-1,0,0],hp:[4,5,6,8],atk:[2,3,5,8],r:[2,2,3,3],edu:'방어에도 에너지가 필요해요.\n시대가 발전할수록\n깨끗한 에너지로 지킬 수 있어요.'},
+wall:{k:'b',u:1,e:['🌿','🧱','🛡️','💠'],n:['방풍림','방파제','에너지막','플라즈마막'],p:0,g:0,hp:[6,9,13,18],edu:'나무와 갯벌, 맹그로브는\n파도와 바람을 막는 자연 방벽이에요.\n자연을 지키면 우리도 안전해요.'},
+rain:{k:'s',u:1,e:'🌧️',n:'정화비',d:'🌍+8',edu:'오염된 물과 공기를 정화하면\n자연은 다시 회복돼요.\n지구에는 회복할 시간이 필요해요.'},
+bolt:{k:'s',u:1,t:1,e:'⚡',n:'번개',d:'전투중 적 1체',edu:'번개처럼 자연의 힘은 강력해요.\n자연을 존중하고\n재난을 미리 준비해요.'},
+nuke:{k:'s',u:2,e:'☢️',n:'핵폭탄',d:'전투중 전체↓ 🌍-15',edu:'핵 같은 강한 힘은\n환경을 아주 오래 오염시켜요.\n큰 대가가 따라요.'},
+park:{k:'b',u:1,e:'🏞️',n:'생태공원',p:0,g:1,hp:3,co:-.5,adj:{g:1},edu:'공원과 녹지는\n공기를 맑게 하고\n주변 오염을 줄여줘요.'},
+grid:{k:'b',u:2,e:'🔌',n:'스마트그리드',p:0,g:0,hp:3,adj:{p:1},edu:'스마트그리드는 전기를\n필요한 곳에 알맞게 보내\n에너지 낭비를 줄여요.'},
+lab:{k:'b',u:2,e:['🧪','🔬','💻','🧬'],n:['실험실','연구소','AI센터','양자연구소'],p:0,g:0,hp:[3,4,5,6],adj:{p:2,clean:1},edu:'연구와 과학기술이\n청정 에너지를 더 효율적으로\n만들어줘요.'},
+copy:{k:'s',u:2,e:'🔁',n:'재사용',d:'손패 카드 1장 복제',edu:'쓰고 남은 것을 다시 쓰는 재사용!\n새로 만들지 않아도\n자원을 아낄 수 있어요.'},
+repair:{k:'s',u:1,e:'🛠️',n:'수리',d:'시설 회복 🌍+2',edu:'낡은 것을 고쳐 쓰면\n쓰레기도 줄고\n자원도 아낄 수 있어요.'},
+tsunami:{k:'s',u:3,e:'🌊',n:'해일',d:'전투중 전체↓ (자연↑=강함)',edu:'자연의 힘은 강력해요.\n건강한 바다와 숲이\n지구를 지켜줘요.'},
+rcy:{k:'b',u:1,e:'♻️',n:'재활용센터',p:0,g:0,hp:3,rc:2,edu:'모은 캔·병·종이를 녹이고 풀어\n새 물건의 재료로 바꿔요.\n쓰레기도 다시 자원이 돼요!'},
+bio:{k:'b',u:2,e:'🐄',n:'바이오가스',p:1,g:0,hp:4,bio:2,edu:'음식물 쓰레기와 가축 분뇨가 썩을 때\n나오는 메탄가스로 전기를 만들어요.\n쓰레기가 에너지로 돌아와요!'},
+xcore:{x:1,k:'b',e:'🔮',n:'외계 반응로',p:7,g:2,hp:6,edu:'오염 없이 에너지를 만드는\n꿈의 청정 에너지!\n우리가 만들어갈 미래예요.'},
+xbio:{x:1,k:'s',e:'💚',n:'바이오재생',d:'🌍+15',edu:'생태계는 회복력이 있어요.\n오염을 멈추면\n숲과 바다가 스스로 되살아나요.'},
+xgrav:{x:1,k:'s',e:'🕳️',n:'중력포',d:'전투중 적 전체↓',edu:'엄청난 힘이지만\n에너지를 많이 써요.\n힘을 쓸 땐 책임도 생각해요.'},
+xai:{x:1,k:'s',e:'🤖',n:'외계 AI',d:'⚡+10',edu:'인공지능은 에너지를 아끼고\n자원을 효율적으로 쓰는 방법을\n찾아줘요.'},
+xamp:{x:1,k:'b',e:'🧿',n:'외계 증폭기',p:0,g:0,hp:5,adj:{p:2,g:1},edu:'작은 힘도 모으면 커져요.\n좋은 에너지를 이웃과 나눌수록\n더 큰 힘이 돼요.'}};
+const CLEAN=['hydro','wind','solar','hydrogen','geo','fusion','xcore','bio'],GREEN=['forest','park','rcy'];
+// ---- 분리배출: 시대가 바뀌면 쓰레기도 바뀐다 (u=등장 시대)
+const BIN={paper:{e:'📄',n:'종이',c:'#8a6a3a'},can:{e:'🥫',n:'캔·고철',c:'#6a6a7a'},glass:{e:'🍾',n:'유리병',c:'#2a7a5a'},food:{e:'🍎',n:'음식물',c:'#8a4a2a'},plastic:{e:'🧴',n:'플라스틱',c:'#2a5aa0'},ewaste:{e:'🔋',n:'전지·전자',c:'#7a3a8a'}};
+const TRASH=[
+{u:1,e:'📰',n:'신문지',b:'paper',tip:'신문은 반듯하게 펴서\n끈으로 묶어 내놓아요.'},
+{u:1,e:'📦',n:'택배 상자',b:'paper',tip:'테이프와 송장 스티커를 떼고\n납작하게 접어서!'},
+{u:1,e:'🥫',n:'통조림 캔',b:'can',tip:'내용물을 비우고 헹궈요.\n캔은 녹여서 몇 번이고 다시 써요.'},
+{u:1,e:'🔩',n:'나사·고철',b:'can',tip:'못·나사 같은 쇠붙이도\n캔·고철로 모으면 다시 쇠가 돼요.'},
+{u:1,e:'🍾',n:'유리병',b:'glass',tip:'뚜껑은 따로 떼고 헹궈서!\n깨진 유리는 신문지에 싸서 일반쓰레기로.'},
+{u:1,e:'🍌',n:'바나나 껍질',b:'food',tip:'물기를 꼭 짜서 음식물로.\n퇴비나 바이오가스가 돼요.'},
+{u:1,e:'🍎',n:'사과 심',b:'food',tip:'음식물 쓰레기는\n흙으로 돌아가는 거름이 돼요.'},
+{u:2,e:'🧴',n:'페트병',b:'plastic',tip:'라벨을 떼고 헹군 뒤 찌그러뜨려요.\n깨끗한 페트병은 옷감으로 다시 태어나요.'},
+{u:2,e:'🥤',n:'플라스틱 컵',b:'plastic',tip:'남은 음료를 비우고 헹궈요.\n빨대는 너무 작아 재활용이 어려워요.'},
+{u:2,e:'🧃',n:'종이팩 음료',b:'paper',tip:'빨대를 빼고 헹궈 펼쳐요.\n(종이팩은 따로 모으면 휴지가 돼요)'},
+{u:3,e:'🔋',n:'폐건전지',b:'ewaste',tip:'건전지는 전용 수거함에!\n땅에 묻히면 중금속이 흘러나와요.'},
+{u:3,e:'📱',n:'낡은 휴대폰',b:'ewaste',tip:'폐휴대폰에서 금·은·구리를 다시 캐요.\n이걸 \'도시 광산\'이라고 불러요.'},
+{u:3,e:'💡',n:'폐형광등',b:'ewaste',tip:'형광등엔 수은이 들어 있어\n깨지지 않게 전용 수거함으로!'},
+{u:4,e:'🧩',n:'태양광 패널 조각',b:'ewaste',tip:'수명이 다한 태양광 패널에서도\n유리·은·실리콘을 되살려 써요.'}];
+const bins=()=>Object.keys(BIN).filter(k=>k!=='plastic'||era()>=2).filter(k=>k!=='ewaste'||era()>=3);
+const T_=()=>G.co2/24,ppm=()=>Math.round(280+G.co2*5),sea=()=>Math.round(T_()*32);
+const XS=Object.keys(C).filter(k=>C[k].x),NX=Object.keys(C).filter(k=>!C[k].x);
+const era=()=>1+(((G?G.t:1)-1)/4|0);
+const st=(d,f)=>{const v=d[f];return Array.isArray(v)?v[era()-1]:(v||0)};
+const inf=id=>({e:Array.isArray(C[id].e)?C[id].e[era()-1]:C[id].e,n:Array.isArray(C[id].n)?C[id].n[era()-1]:C[id].n});
+const val=(b,f)=>{const v=st(C[b.id],f);return f==='r'?v:v*LM[b.lv-1]};
+const dmgMul=()=>1+Math.min(1,G.pro/TARGET)*.6+Math.max(0,Math.min(1,G.pro/TARGET-1))*.4,hpMul=()=>.7+Math.min(1.5,G.nat/100)*.6;
+const ZN=['북쪽','동쪽','서쪽','남쪽'],zone=(x,y)=>(x>=2?1:0)+(y>=2?2:0),ZC=[[1,1],[3,1],[1,3],[3,3]];
+const ZE={sun:{good:1,e:'🌞',n:'햇살 축복',d:'발전량 ×1.5',edu:'태양은 지구에\n엄청난 에너지를 보내줘요.'},shield:{good:1,e:'🛡️',n:'수호 가호',d:'시설 체력 ×1.5',edu:'튼튼하게 지으면\n오래 쓰고 자원도 아껴요.'},farm:{good:1,e:'🌱',n:'풍년',d:'🌍+3/턴',edu:'건강한 땅은\n더 많은 생명을 키워요.'},heat:{good:1,e:'⚔️',n:'전투 열기',d:'방어탑 공격 ×1.5',edu:'함께 힘을 모으면\n더 강해져요.'},gift:{good:1,inst:1,e:'🎁',n:'보급품',d:'시설 카드 2장 획득',edu:'나누고 재사용하면\n모두에게 도움이 돼요.'},
+smog:{e:'🌫️',n:'스모그',d:'발전량 ×0.5 · 🌍-3/턴',edu:'공기가 나빠지면\n사람도 자연도 힘들어요.'},quake:{inst:1,e:'🌋',n:'지진',d:'시설 1개 파괴',edu:'재난에 대비해\n튼튼하게 지어야 해요.'},wild:{inst:1,e:'🔥',n:'산불 확산',d:'시설 1개 파괴 · 🌍-3',edu:'숲이 마르면\n산불이 크게 번져요.'},scout:{inst:1,e:'👽',n:'외계 정찰대',d:'다음 침공 +30%',edu:'미리 준비하면\n위기도 이겨낼 수 있어요.'},crisis:{inst:1,e:'💸',n:'에너지 위기',d:'⚡ -8',edu:'에너지를 아껴 쓰면\n위기에도 버틸 수 있어요.'}};
+const zf=(b,k)=>G.zf.filter(f=>f.k===k&&f.z===zone(b.x,b.y)).length;
+const mhp=b=>Math.max(1,Math.round(val(b,'hp')*hpMul()*(zf(b,'shield')?1.5:1)));
+function adjB(b){const r={p:0,g:0};[[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx,dy])=>{const nb=G.grid[b.y+dy]?.[b.x+dx];if(!nb||!C[nb.id].adj)return;const A=C[nb.id].adj;if(A.p&&val(b,'p')>0&&(!A.clean||CLEAN.includes(b.id)))r.p+=A.p*nb.lv;if(A.g&&val(b,'g')<0)r.g+=A.g*nb.lv});return r}
+function chips(id){const d=C[id];if(d.k==='s')return d.d;const p=st(d,'p'),g=st(d,'g'),a=st(d,'atk');let s='';if(a)s+='⚔'+a+' ';if(p)s+='⚡+'+p+' ';if(g)s+='🌍'+(g>0?'+':'')+g;if(d.co>0)s+=' 💨CO₂';if(d.w)s+=' 🗑+'+d.w;if(d.rc)s+='🗑→♻'+d.rc;if(d.bio)s+=' 🗑→⚡'+d.bio;if(d.adj){const A=d.adj;s+=(s?' ':'')+'주변'+(A.p?' ⚡+'+A.p:'')+(A.g?' 🌍오염-'+A.g:'')+(A.clean?'(청정)':'')}return s.trim()||'🛡 피해 막기'}
+const AL={s:{e:'🛸',hp:3,dmg:1,sp:.9},g:{e:'👽',hp:5,dmg:2,sp:.7},o:{e:'🐙',hp:9,dmg:3,sp:.5},b:{e:'👾',hp:40,dmg:5,sp:.35,lv:2}};
+const EV=[
+{t:'🌍 환경 운동이 번진다.\n나무 심기가 늘었다!',a:['🌳 숲 카드 2장',()=>G.hand.push('forest','forest')],b:['⚡ 번영+8 (🌍-6)',()=>{G.pro+=8;G.nat-=6}]},
+{t:'💰 에너지 호황!\n공장을 더 돌릴까?',a:['🏭 번영+10 (🌍-8)',()=>{G.pro+=10;G.nat-=8}],b:['🌳 자연 회복 (🌍+10)',()=>{G.nat+=10}]},
+{t:'📡 외계 함대 접근 신호!\n방어를 준비하자.',a:['🛡 방벽 카드 2장',()=>G.hand.push('wall','wall')],b:['🗼 방어탑 카드 1장',()=>G.hand.push('tower')]},
+{t:'👽 외계 기술 잔해를 발견했다!',a:['🔮 외계 반응로 카드',()=>G.hand.push('xcore')],b:['🌧 정화비 카드 + 🌍+5',()=>{G.hand.push('rain');G.nat+=5}]},
+{u:1,t:'⛏ 큰 탄광을 새로 찾았다!\n석탄을 캐면 공장이 쑥쑥 돌아가요.',a:['🏭 석탄발전 카드 2장',()=>G.hand.push('coal','coal')],b:['🌳 땅속에 그대로 두기 (🌍+6)',()=>{G.nat+=6}]},
+{u:2,t:'🛍 값싼 일회용 플라스틱이 쏟아진다!\n편리하지만 한 번 쓰고 버려져요.',a:['🛍 마음껏 쓰자 (⚡+6, 🗑+8)',()=>{G.pro+=6;G.waste+=8}],b:['🧺 장바구니·텀블러 운동 (🗑-5)',()=>{G.waste=Math.max(0,G.waste-5);G.nat+=2}]},
+{u:2,t:'🏔 쓰레기 매립지가 꽉 찼다!\n쌓인 쓰레기를 어떻게 할까요?',a:['🔥 소각장 (🗑-10, ⚡+3, 💨CO₂↑)',()=>{G.waste=Math.max(0,G.waste-10);G.pro+=3;G.co2+=8}],b:['♻️ 재활용센터 카드 + ♻+2',()=>{G.hand.push('rcy');G.rc+=2}]},
+{u:3,t:'🌐 파리기후협약(2015)!\n지구 기온 상승을 1.5℃ 안으로 막자고\n세계가 약속했어요.',a:['🤝 참여: 석탄발전 1곳을 숲으로',()=>{const c=bl().find(b=>b.id==='coal'||b.id==='oil');if(c){G.grid[c.y][c.x]={id:'forest',lv:1,x:c.x,y:c.y};G.grid[c.y][c.x].hp=mhp(G.grid[c.y][c.x])}else G.hand.push('forest');G.co2=Math.max(0,G.co2-6)}],b:['🙅 불참하고 공장 가동 (⚡+8, 💨CO₂↑)',()=>{G.pro+=8;G.co2+=6}]},
+{u:3,t:'📱 해마다 새 스마트폰이 나온다!\n아직 멀쩡한데 바꿀까요?',a:['📱 새로 바꾸자 (⚡+5, 🗑+6)',()=>{G.pro+=5;G.waste+=6}],b:['🔧 고쳐 쓰자 (🛠 수리 카드 + ♻+3)',()=>{G.hand.push('repair');G.rc+=3}]},
+{u:2,t:'🍱 급식 잔반이 산더미처럼 남았다!',a:['🗑 그냥 버리기 (🗑+5)',()=>{G.waste+=5}],b:['🐄 바이오가스 카드 (먹을 만큼만!)',()=>G.hand.push('bio')]}];
+let G,ents=[],shake=0,drag=null,manual=0,panMoved=0,supp=0;
+const sh=a=>{for(let i=a.length-1;i>0;i--){const j=R()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+const Y=t=>Math.round(1800+(t-1)*400/15),lim=()=>G.t===LAST?0:2;
+function init(){TARGET=TGS[DFI];G={t:1,nat:100,pro:0,lives:3,open:1,rr:0,pc:0,pt:0,df:DFI,zf:[],extra:0,co2:0,waste:0,rc:0,fl:0,sOk:0,sAll:0,hist:[],bh:1,bhm:1,ls:0,m15:0,grid:[...Array(5)].map(()=>Array(5).fill(null)),al:[],hand:['coal','forest','tower','tower'],sel:-1,busy:true,over:false,phase:'menu',paused:false,spd:1,auto:false,wave:{dir:0,list:[]}}}
+const bl=()=>G.grid.flat().filter(Boolean);
+const FLD=[[[0,0],[4,0],[0,4],[4,4]],[[2,0],[0,2],[4,2],[2,4]]],FLT=[2,3.2];
+const flooded=(x,y)=>FLD.slice(0,G.fl).some(l=>l.some(([a,b])=>a===x&&b===y));
+const ok=(x,y)=>x>=0&&y>=0&&x<5&&y<5&&!(x==2&&y==2)&&(G.open==2||(x>=1&&x<=3&&y>=1&&y<=3))&&!flooded(x,y);
+function fx(t,gx,gy,c){ents.push({k:'t',t,gx,gy,life:1.3,l0:1.3,c})}
+function dn(t,gx,gy,c){if(ents.length<120)ents.push({k:'t',t,gx:gx+(R()-.5)*.35,gy,life:.55,l0:.55,c,s:6})}
+function msg(t){$('#msg').textContent=t;pxify($('#msg'))}
+// ---- 카메라 / 아이소메트릭
+const TW=56,TH=28,V={x:290,y:120,z:1.15},pan={x:0,y:0},TP={x:0,y:0},TV={z:1.15};
+const P=(gx,gy)=>({x:V.x+((gx-2)-(gy-2))*TW/2*V.z,y:V.y+((gx-2)+(gy-2))*TH/2*V.z});
+function toW(sx,sy){const u=(sx-V.x)/(V.z*TW/2),v=(sy-V.y)/(V.z*TH/2);return{x:2+(u+v)/2,y:2+(v-u)/2}}
+const DIRS=[[7,2],[2,7],[-3,2],[2,-3]];
+// ---- UI
+function hud(){const SPN=innerWidth<innerHeight?3:5,bar=(l,v,c,m)=>`<div class=sb>${l}<div class=bar><i style="width:${cl(v)}%;background:${c}"></i>${m?`<u style="left:${m}%"></u>`:''}</div></div>`;
+const pp=G.pro/TARGET,nc=G.nat>=125?'#ffe066':G.nat>=100?'#46e6d6':G.nat>60?'#5ee08a':G.nat>30?'#ffd24a':'#ff6b6b',pc=pp>=1.5?'#ff5ad0':pp>=1?'#ff9a3a':'#ffd24a',sg=v=>(v>=0?'+':'')+Math.round(v*100)+'%';
+$('#st').innerHTML=`<div style="font-size:15px">${'❤️'.repeat(Math.max(0,G.lives))}${'🖤'.repeat(3-Math.max(0,G.lives))}<small> ${DF[G.df].e}${DF[G.df].n}</small></div>`+bar(`⚡ 번영${pp>=1?' ✨':''}<small> ⚔${sg(dmgMul()-1)}</small>`,pp*100,pc)+bar(`🌍 자연${G.nat>=100?' ✨':''}<small> ❤${sg(hpMul()-1)}</small>`,G.nat,nc,50)
++`<div id=clim>🌡<b class=${T_()>1.5?'wr':'gd2'}>+${T_().toFixed(1)}℃</b> <small>CO₂ ${ppm()}ppm</small><br>🌊<b class=${G.fl?'wr':''}>+${sea()}cm</b> 🗑<b class=${G.waste>=10?'wr':''}>${G.waste}</b> <span class=rcy>♻${G.rc}</span></div>`;
+let h='';for(let t=Math.max(1,G.t-SPN);t<=Math.min(LAST,G.t+SPN);t++){const ic=t===LAST?'🏁':t===14?'👾':(t===6||t===10)&&G.open===1?'🗺':'';h+=`<div class="nd ${t<G.t?'pa':t===G.t?'cu':''}"><div class=dm><i>${ic}</i></div>${t===G.t?`<em>${Y(t)}년 · ${TN[era()-1]}시대</em>`:''}</div>${t<Math.min(LAST,G.t+SPN)?'<s></s>':''}`}
+$('#tl').innerHTML=h;pxify($('#st'));pxify($('#tl'));
+$('#go').style.display=G.phase==='plan'&&!G.busy&&G.hand.length<=lim()?'block':'none';
+$('#bp').classList.toggle('on',G.paused);$('#bf').textContent=['1x','2x','3x'][G.spd-1];$('#ba').classList.toggle('on',G.auto);
+$('#bars').style.display=G.phase==='battle'?'flex':'none'}
+const cardEl=(id,i,cls,big)=>{const d=inf(id),c=C[id],dup=c.k==='b'&&bl().some(b=>b.id===id&&b.lv<3);return `<div class="cd ${c.x?'x':''} ${dup?'dup':''} ${cls||''}" data-i="${i}" data-id="${id}"><div class=tt>${d.n}</div><div class=art><img src="${su(d.e)}"></div><div class=ds>${chips(id)}${big?`<span class=edu>🌱 ${c.edu}</span>`:''}</div>${dup?'<u>⬆LV</u>':''}</div>`};
+function info(){const el=$('#info');if(G.sel<0||!G.hand[G.sel]){el.style.display='none';return}const id=G.hand[G.sel],c=C[id];
+el.innerHTML=`<b>${inf(id).n}</b> ${chips(id)}<br>${c.k==='b'?'초록 칸=설치 · 금색 칸=⬆레벨업\n♻ 버튼=버리기':c.t?'전투 중 적을 터치':'맵을 터치해 사용\n♻ 버튼=버리기'}<br><span class=edu>🌱 ${c.edu}</span>`;el.style.display='block'}
+function hand(){$('#hand').innerHTML=G.hand.map((id,i)=>cardEl(id,i,G.sel===i?'sel':'')).join('');hud();info();pxify($('#hand'));pxify($('#info'));const cw=innerWidth<innerHeight?70:86,n=G.hand.length,ml=n>1?Math.min(6,(innerWidth-24-n*cw)/(n-1)):0;$('#hand').querySelectorAll('.cd').forEach((c,i)=>{if(i)c.style.marginLeft=ml+'px'})}
+// 카드: 탭=선택(click), 끌어서 놓기=pointer
+$('#hand').addEventListener('click',e=>{if(supp)return;const c=e.target.closest('.cd');if(!c)return;if(G.busy&&G.phase!=='battle')return;const i=+c.dataset.i;G.sel=G.sel===i?-1:i;msg('');hand()});
+$('#hand').addEventListener('pointerdown',e=>{const c=e.target.closest('.cd');if(!c)return;drag={i:+c.dataset.i,x0:e.clientX,y0:e.clientY,mv:0,g:null}});
+addEventListener('pointermove',e=>{if(!drag)return;if(!drag.mv&&Math.hypot(e.clientX-drag.x0,e.clientY-drag.y0)>14){drag.mv=1;G.sel=drag.i;const g=document.createElement('div');g.className='ghost cd';g.innerHTML=`<div class=art style="height:100%"><img src="${su(inf(G.hand[drag.i]).e)}"></div>`;document.body.appendChild(g);drag.g=g}
+if(drag.g){drag.g.style.left=e.clientX+'px';drag.g.style.top=e.clientY+'px';const el=document.elementFromPoint(e.clientX,e.clientY);$('#well').classList.toggle('hot',!!(el&&el.closest&&el.closest('#well')))}});
+addEventListener('pointerup',e=>{if(!drag)return;const d=drag;drag=null;if(d.g)d.g.remove();$('#well').classList.remove('hot');if(!d.mv)return;G.sel=-1;supp=1;setTimeout(()=>supp=0,50);
+if(G.busy&&G.phase!=='battle'){hand();return}const el=document.elementFromPoint(e.clientX,e.clientY);
+if(el&&el.closest&&el.closest('#well'))recycle(d.i);else if(el===cv){const w=toW(e.clientX*W/innerWidth,e.clientY*H/innerHeight);useCard(d.i,w.x,w.y)}G.sel=-1;hand()});
+function used(i){G.hand.splice(i,1);G.sel=-1;hand();msg('');if(G.phase==='plan'&&G.hand.length<=lim()&&!G.busy)setTimeout(battle,800)}
+function recycle(i){G.hand.splice(i,1);G.sel=-1;G.nat=cn(G.nat+1);G.rc++;fx('♻+1 🌍+1',2,2,'#5ee08a');msg('안 쓰는 것도 버리지 말고 재활용!\n♻ 자원은 카드를 더 받는 데 써요');hand();if(G.phase==='plan'&&G.hand.length<=lim()&&!G.busy)setTimeout(battle,800)}
+function useCard(i,gx,gy){const id=G.hand[i],d=C[id];if(!d)return;
+if(d.k==='b'){if(G.phase!=='plan'||G.busy){msg('시설은 전투 전에만 놓을 수 있어요');return}
+const x=Math.round(gx),y=Math.round(gy);if(!ok(x,y)){msg(x==2&&y==2?'본부 칸이에요':'아직 열리지 않은 땅이에요');return}
+const b=G.grid[y][x];
+if(b){if(b.id!==id){msg('다른 시설이 있어요\n같은 카드만 겹칠 수 있어요');return}if(b.lv>=3){msg('이미 최대 레벨');return}b.lv++;b.hp=mhp(b);fx('⬆ Lv'+b.lv+'!',x,y,'#ffd24a');shake=.2}
+else{const nb={id,lv:1,x,y};nb.hp=mhp(nb);G.grid[y][x]=nb;fx('설치!',x,y)}
+used(i);return}
+const bt=G.phase==='battle';
+if(d.t){if(!bt){msg('이 주문은 전투 중 적에게 사용해요');return}
+const a=G.al.map(a=>({a,d:Math.hypot(a.gx-gx,a.gy-gy)})).sort((p,q)=>p.d-q.d)[0];if(!a||a.d>1.4){msg('적 가까이를 터치하세요');return}hit(a.a,6);used(i);return}
+if(id==='rain'){G.nat=cn(G.nat+8);fx('🌍+8',2,2,'#5ee08a')}
+else if(id==='xbio'){G.nat=cn(G.nat+15);fx('💚 재생!',2,2,'#5ee08a')}
+else if(id==='xai'){G.pro+=10;fx('⚡+10',2,2)}
+else if(id==='nuke'||id==='xgrav'){if(!bt){msg('전투 중에 사용하세요');return}G.al.forEach(a=>hit(a,id==='nuke'?8:4));if(id==='nuke')G.nat=cn(G.nat-15);shake=.8}
+else if(id==='tsunami'){if(!bt){msg('전투 중에 사용하세요');return}const dm=Math.round(3+G.nat/25);G.al.forEach(a=>hit(a,dm));shake=.6;fx('🌊 해일!',2,2,'#6dc2ca')}
+else if(id==='repair'){bl().forEach(b=>b.hp=mhp(b));G.nat=cn(G.nat+2);fx('🛠 수리!',2,2,'#5ee08a')}
+else if(id==='copy'){if(G.phase!=='plan'){msg('전투 전에 사용하세요');return}let j=G.hand.findIndex((x,k)=>k!==i&&C[x].k==='b'&&bl().some(b=>b.id===x&&b.lv<3));if(j<0)j=G.hand.findIndex((x,k)=>k!==i);if(j<0){msg('복제할 다른 카드가 없어요');return}G.hand.push(G.hand[j]);fx('🔁 복제! '+inf(G.hand[j]).n,2,2,'#6dc2ca')}
+used(i)}
+function tapAt(sx,sy){const w=toW(sx,sy);if(G.sel>=0){if(G.busy&&G.phase!=='battle')return;useCard(G.sel,w.x,w.y);return}
+const b=G.grid[Math.round(w.y)]?.[Math.round(w.x)];if(b){const el=$('#info');el.innerHTML=`<b>${inf(b.id).n}</b> Lv${b.lv} ${chips(b.id)}<br><span class=edu>🌱 ${C[b.id].edu}</span>`;el.style.display='block';pxify(el)}else $('#info').style.display='none'}
+// ---- 카메라 입력 (드래그 이동, 핀치/휠 줌)
+const ptr=new Map();let pinch0=0,z0=1;
+cv.addEventListener('pointerdown',e=>{panMoved=0;ptr.set(e.pointerId,{x:e.clientX,y:e.clientY,sx:e.clientX,sy:e.clientY});if(ptr.size==2){const[a,b]=[...ptr.values()];pinch0=Math.hypot(a.x-b.x,a.y-b.y);z0=TV.z}});
+cv.addEventListener('pointermove',e=>{const p=ptr.get(e.pointerId);if(!p)return;const dx=e.clientX-p.x,dy=e.clientY-p.y;p.x=e.clientX;p.y=e.clientY;
+if(ptr.size==2){panMoved=1;const[a,b]=[...ptr.values()];TV.z=cl(z0*Math.hypot(a.x-b.x,a.y-b.y)/pinch0,.6,2.4)}
+else if(Math.hypot(e.clientX-p.sx,e.clientY-p.sy)>10){panMoved=1;manual=1;pan.x=cl(pan.x+dx*W/innerWidth,-260,260);pan.y=cl(pan.y+dy*H/innerHeight,-160,160);TP.x=pan.x;TP.y=pan.y}});
+const up=e=>ptr.delete(e.pointerId);cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+cv.addEventListener('click',e=>{if(panMoved||supp)return;tapAt(e.clientX*W/innerWidth,e.clientY*H/innerHeight)});
+cv.addEventListener('wheel',e=>{e.preventDefault();TV.z=cl(TV.z*(e.deltaY<0?1.1:.9),.6,2.4)},{passive:false});
+$('#well').onclick=()=>{if(G.busy&&G.phase!=='battle')return;if(G.sel<0){msg('먼저 버릴 카드를 고르세요');return}recycle(G.sel)};
+$('#bp').onclick=()=>{G.paused=!G.paused;hud()};$('#bf').onclick=()=>{G.spd=G.spd%3+1;hud()};$('#ba').onclick=()=>{G.auto=!G.auto;hud()};$('#go').onclick=battle;
+// ---- 웨이브 / 전투
+function makeWave(t){const D=DF[G.df],n=Math.min(40,Math.max(2,Math.round((1+Math.pow(t,1.3)*.6)*D.en*(1+(G.extra||0))))),l=[];for(let i=0;i<n;i++){const r=R();l.push(t<5?'s':t<9?(r<.65?'s':'g'):t<13?(r<.4?'s':r<.85?'g':'o'):(r<.25?'s':r<.6?'g':'o'))}if(t===14||t===LAST)l.push('b');return{dir:R()*4|0,list:l}}
+function planning(){G.phase='plan';G.busy=false;G.rr=0;G.sel=-1;G.wave=makeWave(G.t);G.extra=0;manual=0;TP.x=0;TP.y=0;TV.z=BZ;hand();msg(G.t===LAST?'🚨 최종 전투!\n손패를 모두 쓰거나 재활용하세요':'카드를 선택해 맵에 놓으세요\n손패가 2장이 되면 전투가 시작돼요')}
+async function battle(){if(G.busy||G.over||G.phase!=='plan'||G.hand.length>lim())return;G.busy=true;G.sel=-1;msg('');hand();
+const low=G.nat<30;let tp=0,em=0,wg=2+Math.floor(G.pro/40),rcap=0,bcap=0;bl().forEach(b=>{const ab=adjB(b);let p=val(b,'p'),g=val(b,'g');if(p>0)p+=ab.p;if(g<0)g=Math.min(0,g+ab.g);p=Math.round(p*(1+.5*zf(b,'sun'))*(zf(b,'smog')?.5:1));if(low)p=Math.floor(p/2);tp+=p;G.pt+=p;if(CLEAN.includes(b.id))G.pc+=p;G.nat+=g;em+=val(b,'co');wg+=val(b,'w');rcap+=val(b,'rc');bcap+=val(b,'bio')});
+G.zf.forEach(f=>{if(f.k==='farm')G.nat+=3;if(f.k==='smog')G.nat-=3});
+// 자원순환: 번영할수록 쓰레기가 늘고, 재활용센터는 ♻자원으로, 바이오가스는 ⚡로 되돌린다
+G.waste+=Math.round(wg);const bw=Math.min(G.waste,Math.round(bcap));G.waste-=bw;tp+=bw;G.pt+=bw;G.pc+=bw;const rw=Math.min(G.waste,Math.round(rcap));G.waste-=rw;G.rc+=rw;
+// 기후: CO₂는 쌓이고(누적), 건강한 자연이 조금씩 흡수한다
+G.co2=Math.max(0,G.co2+em-G.nat/100*.8);
+G.pro+=tp;if(tp)fx('⚡+'+tp,2,2);if(rw)fx('♻+'+rw,2,1.4,'#6dc2ca');
+const wp=G.waste>10?1+Math.floor((G.waste-10)/6):0;G.nat=cn(G.nat-wp);
+msg(low?'⚠ 자연이 약해져 발전량이 줄었어요!':wp?`🗑 쓰레기가 넘쳐 자연이 아파요 (🌍-${wp})`:'');hud();await sl(700);
+if(G.nat<=0)return end('🌍 자연이\n완전히 무너졌다…');
+const T=T_();if(T>=1.5&&!G.m15){G.m15=1;msg('🌡 지구 기온이 1.5℃ 넘게 올랐어요!\n(파리협정 목표선을 넘었어요)');await sl(1600)}
+while(G.fl<2&&T>=FLT[G.fl]){FLD[G.fl].forEach(([x,y])=>{if(G.grid[y][x])fx('🌊 침수!',x,y,'#6dc2ca');G.grid[y][x]=null});G.fl++;shake=.5;msg(`🌊 해수면 상승! 바닷가 땅 ${G.fl===1?'모서리':'가장자리'}가 잠겼어요\n빙하가 녹으면 바닷물이 불어나요`);hud();await sl(1800)}
+if(R()<.06+Math.max(0,T-1)*.12+Math.max(0,50-G.nat)/150){const l=bl();
+if(R()<.6&&l.length){const b=l[R()*l.length|0];G.grid[b.y][b.x]=null;G.nat=cn(G.nat-3);fx('🔥 산불!',b.x,b.y,'#ff6b6b');shake=.5;msg('기온이 오르고 건조해지면\n산불이 더 자주 나요')}
+else{G.pro=Math.max(0,G.pro-5);fx('🥵 폭염 ⚡-5',2,2,'#ff6b6b');msg('지구가 더워지면 폭염이 와서\n도시 활동이 줄어요')}
+hud();await sl(900)}
+G.hist.push({y:Y(G.t),n:Math.round(G.nat),p:G.pro,T:+T_().toFixed(2),w:G.waste});
+G.bhm=Math.round((8+G.t*1.6)*[1.2,1,.85][G.df]);G.bh=G.bhm;G.ls=0;
+const [gx,gy]=DIRS[G.wave.dir];G.al=G.wave.list.map((k,i)=>({...AL[k],k,hp:Math.max(1,Math.round(AL[k].hp*DF[G.df].eh*(1+(G.t-1)*.07))),mhp:Math.max(1,Math.round(AL[k].hp*DF[G.df].eh*(1+(G.t-1)*.07))),dmg:AL[k].dmg*DF[G.df].ed*(1+(G.t-1)*.03),sp:AL[k].sp*(G.df===0?.9:G.df===2?1.15:1),b:k==='b',gx:gx+((i%5)-2)*.3+R()*.2,gy:gy+((i/5|0)-1)*.3+R()*.2,dl:R()*1.5,tgt:null}));
+G.a0=G.al.reduce((s,a)=>s+a.hp,0);G.bt=0;G.phase='battle';manual=0;TV.z=BZ*.83;hud();if(!G.al.length)endBattle()}
+function hit(a,d){a.hp-=d;dn('-'+d,a.gx,a.gy,'#fff')}
+function kill(a){for(let i=0;i<4;i++)ents.push({k:'p',gx:a.gx,gy:a.gy,vx:(R()-.5)*1.5,vy:(R()-.5)*1.5,life:.5});
+if(a.b){G.pro+=20;fx('👾 보스 격파!',a.gx,a.gy,'#ffd24a')}if(a.b||R()<.04){const x=XS[R()*XS.length|0];G.hand.push(x);fx('👽 '+inf(x).n+' 입수!',2,1,'#b66cff');hand()}}
+function sim(dt){G.bt+=dt;const bs=bl();
+for(const b of bs){const atk=val(b,'atk');if(!atk)continue;b.cd=(b.cd||0)-dt;if(b.cd>0)continue;const r=val(b,'r')+.4;
+const tg=G.al.filter(a=>a.dl<=0&&Math.hypot(a.gx-b.x,a.gy-b.y)<=r).sort((p,q)=>Math.hypot(p.gx-b.x,p.gy-b.y)-Math.hypot(q.gx-b.x,q.gy-b.y)).slice(0,Math.min(5,b.lv+(era()>>1)));
+if(tg.length){b.cd=1;tg.forEach(a=>{ents.push({k:'b',x1:b.x,y1:b.y,x2:a.gx,y2:a.gy,life:.14,c:val(b,'g')<0?'#dad45e':'#6dc2ca'});hit(a,Math.max(1,Math.round(atk*dmgMul()*(zf(b,'heat')?1.5:1))))})}}
+G.hq=(G.hq||0)-dt;if(G.hq<=0){const tg=G.al.filter(a=>a.dl<=0&&Math.hypot(a.gx-2,a.gy-2)<=1.5).slice(0,2);if(tg.length){G.hq=1.2;tg.forEach(a=>{ents.push({k:'b',x1:2,y1:2,x2:a.gx,y2:a.gy,life:.14,c:'#fff'});hit(a,Math.max(1,Math.round(2*dmgMul())))})}}
+for(const a of G.al){if(a.hp<=0)continue;if(a.dl>0){a.dl-=dt;continue}
+if(a.tgt){if(a.tgt.hp>0){const q=a.dmg*.5*dt*(G.bt>35?2.2:1);a.tgt.hp-=q;a.tgt.hd=(a.tgt.hd||0)+q;if(a.tgt.hd>=1){dn('-'+Math.floor(a.tgt.hd),a.tgt.x,a.tgt.y,'#ff7a7a');a.tgt.hd-=Math.floor(a.tgt.hd)}continue}G.grid[a.tgt.y][a.tgt.x]=null;fx('💥',a.tgt.x,a.tgt.y);shake=.3;a.tgt=null}
+const dx=2-a.gx,dy=2-a.gy,d=Math.hypot(dx,dy);
+if(d<.5){const q=Math.ceil(a.dmg*(a.b?3:2));G.bh-=q;a.hp=0;a.gone=1;dn('-'+q,2,2,'#ff6b6b');shake=.4;continue}
+const fz=G.bt>35?1.5:1;a.gx+=dx/d*a.sp*dt*fz;a.gy+=dy/d*a.sp*dt*fz;
+const b=G.grid[Math.round(a.gy)]?.[Math.round(a.gx)];if(b&&Math.hypot(a.gx-b.x,a.gy-b.y)<.55)a.tgt=b}
+G.al=G.al.filter(a=>{if(a.hp>0)return true;if(!a.gone)kill(a);return false});
+const ah=G.al.reduce((s,a)=>s+Math.max(0,a.hp),0);
+if(G.bt>70&&G.al.length){G.bh-=G.al.reduce((s,a)=>s+Math.ceil(a.dmg*2),0);G.al=[];fx('💥 잔당 돌격!',2,2,'#ff6b6b')}
+if(G.bh<=0&&!G.ls){G.ls=1;G.lives--;G.al=[];shake=1;fx('💔 본부 함락! ❤-1',2,2,'#ff6b6b');hud()}
+$('#b1').style.width=cl(G.bh/G.bhm*100)+'%';$('#hqn').textContent=Math.max(0,Math.ceil(G.bh))+'/'+G.bhm;$('#b2').style.width=(G.a0?ah/G.a0*100:0)+'%';
+if(!G.al.length){endBattle()}
+else if(!manual){let cx=0,cy=0;G.al.forEach(a=>{cx+=a.gx;cy+=a.gy});cx/=G.al.length;cy/=G.al.length;const mx=(cx+2)/2,my=(cy+2)/2;TP.x=-((mx-2)-(my-2))*TW/2*TV.z;TP.y=-((mx-2)+(my-2))*TH/2*TV.z}}
+async function endBattle(){if(G.phase!=='battle')return;G.phase='post';hud();
+if(G.lives<=0){await sl(800);return end('🏛 외계 함대가\n지구 본부를 점령했다…')}
+if(G.ls)msg('🏛 본부가 뚫렸어요! ❤-1\n방어탑과 방벽을 침공 방향에 놓아 보세요');
+await sl(700);bl().forEach(b=>b.hp=mhp(b));TP.x=0;TP.y=0;TV.z=BZ;manual=0;hud();await sl(G.ls?1600:600);
+if(G.t>=LAST)return end();
+const e0=era();G.zf.forEach(f=>f.t--);G.zf=G.zf.filter(f=>f.t>0);G.t++;const q=[];if(era()!==e0)q.push(eraModal);
+if(G.waste>=6&&(G.t-(G.lsort||0)>=2||G.waste>=14)){G.lsort=G.t;q.push(sortGame)}
+if((G.t===6||G.t===10)&&G.open===1)q.push(expandModal);
+if(G.t===8)q.push(d=>zoneEvent(d,true));else{const r=R();if(r<.4)q.push(d=>zoneEvent(d));else if(r<.55)q.push(eventModal)}
+q.push(lootModal);flow(q)}
+function flow(q){const f=q.shift();if(f)f(()=>flow(q));else planning()}
+function modal(h){$('#box').style.maxWidth='';$('#box').innerHTML=h;$('#ov').style.display='flex';pxify($('#box'))}
+function close(){$('#ov').style.display='none'}
+function eraModal(done){const E=era(),nw=NX.filter(k=>C[k].u===E&&!Array.isArray(C[k].e)).map(k=>C[k].e+C[k].n).join(' · ');
+modal(`<div style="color:#6dc2ca;font-size:18px">🔬 ${TN[E-1]} 시대!</div><p>방어 시설이 진화해요\n${['','💣→🗼','🗼→🛰️','🛰️→☄️'][E-1]}${nw?'\n새 카드: <b>'+nw+'</b>':''}</p><p style="color:#9be7a8">🌱 ${['','전기가 퍼지고\n석유와 원자력이 등장해요.\n편리하지만 오염과 폐기물도 늘어요.','풍력·태양광·수소·지열 같은\n청정 에너지가 열려요.\n깨끗하게 바꿀수록 자연이 살아나요.','핵융합 같은 꿈의 에너지가 열려요.\n기술은 자연을 지키는 데\n쓸 때 가장 빛나요.'][E-1]}</p><p class=lesson>🗑 ${['','플라스틱이 발명됐어요(1907년).\n가볍고 튼튼하지만 썩는 데 수백 년!\n이제 🧴플라스틱 분리배출 통이 생겨요.','휴대폰·컴퓨터가 늘면서\n건전지·전자 폐기물이 쏟아져요.\n🔋전용 수거함이 생겨요.','쓰레기 0을 꿈꾸는 시대!\n모든 물건을 다시 쓰는\n순환 경제에 도전해요.'][E-1]}\n지금 기온 🌡+${T_().toFixed(1)}℃ · CO₂ ${ppm()}ppm</p><button class=b id=k>계속</button>`);$('#k').onclick=()=>{close();done()}}
+function expandModal(done){modal(`<div style="color:var(--ac)">🗺 영토 확장 (${Y(G.t)}년)</div><p>숲을 개간해 땅을 넓힐까요?\n(3×3 → 5×5)</p><p style="color:#9be7a8">🌱 개발과 보존은 균형이 필요해요.\n땅을 넓히면 자연이 줄어들어요.</p><button class=b id=ea>🏗 확장 (🌍-5, 칸 +16)</button><button class=b id=eb>🌳 보존 (🌍+4)</button>`);
+$('#ea').onclick=()=>{G.open=2;G.nat=cn(G.nat-5);close();done()};$('#eb').onclick=()=>{G.nat=cn(G.nat+4);close();done()}}
+function eventModal(done){const ev=EV.filter(e=>(e.u||1)<=era()),e=ev[R()*ev.length|0];modal(`<div style="color:var(--ac)">📅 ${Y(G.t)}년</div><p>${e.t}</p><button class=b id=ea>${e.a[0]}</button><button class=b id=eb>${e.b[0]}</button>`);
+const go=f=>()=>{f();G.nat=cn(G.nat);close();done()};$('#ea').onclick=go(e.a[1]);$('#eb').onclick=go(e.b[1])}
+function zoneEvent(done,fg){const good=fg||R()<.55,keys=Object.keys(ZE).filter(k=>!!ZE[k].good===good),k=keys[R()*keys.length|0],E=ZE[k];
+const zs=[0,1,2,3].filter(q=>bl().some(b=>zone(b.x,b.y)===q)),z=(zs.length?zs:[0,1,2,3])[R()*(zs.length||4)|0];let extra='',zt=!E.inst;
+if(k==='quake'||k==='wild'){zt=1;const t=bl().filter(b=>zone(b.x,b.y)===z);if(t.length){const b=t[R()*t.length|0];G.grid[b.y][b.x]=null;extra=inf(b.id).n+' 파괴'}if(k==='wild')G.nat=cn(G.nat-3)}
+else if(k==='scout')G.extra=.3;else if(k==='crisis')G.pro=Math.max(0,G.pro-8);else if(k==='gift')G.hand.push(...sh(NX.filter(c=>C[c].u<=era()&&C[c].k==='b')).slice(0,2));
+else G.zf.push({z,k,t:3});
+modal(`<div style="color:${good?'#7dffa0':'#ff8a8a'};font-size:18px">${good?'🍀 좋은 일!':'⚠ 나쁜 일!'}</div><p>${E.e} <b>${E.n}</b>\n${zt?ZN[z]+' 구역 · ':''}${E.d}${extra?'\n'+extra:''}${!E.inst?'\n(3턴 동안)':''}</p><p style="color:#9be7a8">🌱 ${E.edu}</p><button class=b id=k>확인</button>`);$('#k').onclick=()=>{close();hud();done()}}
+function lootModal(done){const E=era(),pool=NX.filter(k=>C[k].u<=E),dr=()=>{const ids=[...new Set(sh(pool.concat(['tower','tower','wall'])))].slice(0,3);if(R()<.3)ids[R()*3|0]=XS[R()*XS.length|0];return ids};let ids=dr(),sel=-1,fin=0,up=0;
+const L=$('#loot'),fn=()=>{if(fin)return;fin=1;L.style.display='none';done()};
+const show=()=>{const rrc=G.rr?2:0;L.innerHTML=`<div class=lt>🎁 ${Y(G.t)}년 · 카드 1장을 고르세요<small style="display:block;font-size:12px;color:#6dc2ca;margin-top:3px">보유 ♻${G.rc} · 재활용 자원으로 카드를 더 만들 수 있어요</small></div><div class=lrow>${ids.map((id,i)=>cardEl(id,i,sel===i?'pick':'',1)).join('')}</div><div class=lbtn><button class=b id=lk ${sel<0?'disabled':''}>✔ 받기</button><button class=b id=lu ${sel<0||up||G.rc<5||ids.length<2?'disabled':''}>♻5 업사이클 +1장</button><button class=b id=lr ${G.rc<rrc?'disabled':''}>🔄 다시 뽑기 ${rrc?'(♻2)':'(무료)'}</button><button class=b id=lv>건너뛰기 (🌍+2)</button></div>`;L.style.display='block';hud();pxify(L);
+L.querySelectorAll('.cd').forEach(el=>el.onclick=()=>{sel=+el.dataset.i;show()});
+$('#lv').onclick=()=>{G.nat=cn(G.nat+2);fn()};$('#lk').onclick=()=>{G.hand.push(ids[sel]);fn()};
+$('#lu').onclick=()=>{G.rc-=5;up=1;G.hand.push(ids[sel]);ids.splice(sel,1);sel=-1;toast('♻ 모은 자원으로 카드를 한 장 더 만들었어요!\n버린 것이 다시 쓸모가 되는 업사이클!');show()};
+$('#lr').onclick=()=>{if(G.rr)G.rc-=2;G.rr=1;ids=dr();sel=-1;show()}};
+show();if(G.auto)setTimeout(()=>{if(fin)return;const i=Math.max(0,ids.findIndex(id=>bl().some(b=>b.id===id&&b.lv<3)));if(G.rc>=5&&ids.length>1){G.rc-=5;G.hand.push(ids.splice(i,1)[0])}G.hand.push(ids[Math.min(i,ids.length-1)]);fn()},1400)}
+// ---- 분리배출의 날: 쌓인 쓰레기를 알맞은 통에 (맞히면 🗑-2 ♻+1)
+function sortGame(done){const M=$('#mg'),bs=bins(),pool=sh(TRASH.filter(t=>t.u<=era())),n=Math.min(8,Math.max(4,Math.ceil(G.waste/2))),items=[...Array(n)].map((_,k)=>pool[k%pool.length]);
+let i=0,ok=0,cb=0,fin=0,lock=0,t0=0,ai=0;const TL=[12,10,8.5][G.df]+n*.5;
+M.innerHTML=`<div class=mh>🚛 분리배출의 날! (${Y(G.t)}년)<small>쌓인 쓰레기 🗑${G.waste} · 알맞은 통을 누르세요 · 맞히면 🗑-2 ♻+1</small><div class=tb><i id=mgt style="width:100%"></i></div></div>
+<div class=it><img id=mgi src="${su('🚛')}"><b id=mgn>쓰레기 ${n}개가 도착했어요</b><div class=sc id=mgs>제한 시간 ${Math.round(TL)}초</div></div><div class=tip id=mgtip>잘 나누면 쓰레기가 다시 자원이 돼요.\n<button class=b id=mgo style="width:auto;padding:8px 22px">▶ 시작!</button> <button class=b id=mgx style="width:auto;padding:8px 14px">나중에 (🌍-2)</button></div>
+<div class=bins>${bs.map((k,j)=>`<button class=bin data-b=${k} style="background:${BIN[k].c}"><img src="${su(BIN[k].e)}">${BIN[k].n}<small style="opacity:.6">${j+1}</small></button>`).join('')}</div>`;
+M.style.display='flex';pxify(M.querySelector('.mh'));pxify(M.querySelector('.tip'));
+const tip=(t,c)=>{const e=$('#mgtip');e.textContent=t;e.style.color=c};
+const put=()=>{const it=items[i],im=$('#mgi');im.src=su(it.e);im.className='';void im.offsetWidth;im.className='pop';$('#mgn').textContent=it.n;$('#mgs').textContent=`${i+1} / ${n} · 정답 ${ok}${cb>1?' · 🔥'+cb+'연속':''}`};
+const finish=()=>{if(fin)return;fin=1;clearInterval(ai);removeEventListener('keydown',key);const pf=ok===n;if(pf)G.nat=cn(G.nat+3);
+M.querySelector('.it').innerHTML=`<img src="${su(pf?'🏆':ok>=n/2?'♻️':'🗑️')}" class=pop><b>${pf?'완벽한 분리배출!':ok>=n/2?'잘했어요!':'조금 더 연습해요'}</b><div class=sc>정답 ${ok}/${n} · ♻+${ok} · 🗑-${ok*2}${pf?' · 🌍+3':''}</div>`;
+tip(pf?'잘 나눈 쓰레기는 그대로 새 물건의 재료가 돼요.':'헷갈린 건 📚도감의 ‘분리배출’에서 다시 볼 수 있어요.\n섞여 버린 쓰레기는 재활용되지 못하고 묻히거나 태워져요.','#e8eefc');
+const b=document.createElement('button');b.className='b';b.style.cssText='width:auto;padding:8px 26px;display:block;margin:6px auto 0';b.textContent='확인';b.onclick=()=>{M.style.display='none';hud();done()};$('#mgtip').appendChild(b);pxify(M.querySelector('.it'));if(G.auto)setTimeout(()=>b.click(),900)};
+const pick=k=>{if(lock||fin||!t0)return;const it=items[i],btn=M.querySelector(`[data-b=${k}]`),good=it.b===k;G.sAll++;
+if(good){ok++;cb++;G.sOk++;G.waste=Math.max(0,G.waste-2);G.rc++;btn.classList.add('ok');tip('✔ '+it.tip,'#7dffa0')}
+else{cb=0;btn.classList.add('no');M.querySelector(`[data-b=${it.b}]`).classList.add('ok');tip(`✖ ${it.n}${jo(it.n,'은','는')} ${BIN[it.b].n}${jo(BIN[it.b].n,'이에요','예요')}!\n${it.tip}`,'#ffa0a0');$('#mgi').className='shk'}
+lock=1;setTimeout(()=>{M.querySelectorAll('.bin').forEach(b=>b.classList.remove('ok','no'));lock=0;i++;if(i>=n)finish();else put()},good?350:1300)};
+const key=e=>{const j=+e.key-1;if(bs[j])pick(bs[j])};
+const go=()=>{t0=performance.now();put();tip('','#fff');addEventListener('keydown',key);
+const tick=()=>{if(fin)return;const r=1-(performance.now()-t0)/1000/TL;$('#mgt').style.width=cl(r*100)+'%';$('#mgt').style.background=r<.3?'#d04648':'#6dc2ca';if(r<=0){tip('⏰ 시간 끝! 남은 쓰레기는 그대로 쌓여요','#ffd24a');finish()}else requestAnimationFrame(tick)};tick();
+if(G.auto)ai=setInterval(()=>{if(lock||fin)return;const it=items[i];pick(R()<.8?it.b:bs[R()*bs.length|0])},450)};
+M.querySelectorAll('.bin').forEach(b=>b.onclick=()=>pick(b.dataset.b));$('#mgo').onclick=go;$('#mgx').onclick=()=>{G.nat=cn(G.nat-2);M.style.display='none';hud();done()};
+if(G.auto)setTimeout(go,600)}
+function calcScore(){const cp=G.pt?Math.round(G.pc/G.pt*100):0,D=DF[G.df],T=T_(),acc=G.sAll?Math.round(G.sOk/G.sAll*100):0;
+return{cp,T,acc,sc:Math.round((G.pro+G.nat*1.2+G.lives*15+cp*.5+Math.max(0,G.nat-100)*2.5+(cp>=70?30:0)+(G.lives===3?20:0)+G.rc*.8+(T<=1.5?40:T<=2?15:-(T-2)*15)+(acc>=80&&G.sAll>=8?20:0))*D.sm)}}
+// 결과 그래프: 시대별 자연·번영·기온 변화
+function chart(){const c=document.createElement('canvas'),w=300,h=118,x=c.getContext('2d'),L=G.hist,pl=22,pb=14,pw=w-pl-6,ph=h-pb-8;c.width=w;c.height=h;c.className='chart';
+x.fillStyle='#0b1220';x.fillRect(0,0,w,h);x.font='9px Galmuri9,monospace';x.fillStyle='#8595a1';
+const X=i=>pl+(L.length<2?pw/2:i/(L.length-1)*pw),Yv=v=>8+ph-cl(v,0,150)/150*ph;
+x.strokeStyle='#1f2c50';[0,50,100,150].forEach(v=>{x.beginPath();x.moveTo(pl,Yv(v)+.5);x.lineTo(w-6,Yv(v)+.5);x.stroke();x.fillText(v,2,Yv(v)+3)});
+x.setLineDash([3,3]);x.strokeStyle='#d04648';x.beginPath();x.moveTo(pl,Yv(1.5*37.5)+.5);x.lineTo(w-6,Yv(1.5*37.5)+.5);x.stroke();x.setLineDash([]);x.fillStyle='#ff8a8a';x.fillText('1.5℃',w-34,Yv(1.5*37.5)-3);
+const ln=(f,c)=>{x.strokeStyle=c;x.lineWidth=2;x.beginPath();L.forEach((d,i)=>{const yy=Yv(f(d));i?x.lineTo(X(i),yy):x.moveTo(X(i),yy)});x.stroke();L.forEach((d,i)=>{x.fillStyle=c;x.fillRect(X(i)-1.5,Yv(f(d))-1.5,3,3)})};
+ln(d=>d.n,'#5ee08a');ln(d=>d.p/TARGET*100,'#ffd24a');ln(d=>d.T*37.5,'#ff6b6b');
+x.fillStyle='#8595a1';L.forEach((d,i)=>{if(i%3===0||i===L.length-1)x.fillText(d.y,X(i)-10,h-3)});return c}
+function lessons(r){const L=[],T=r.T;
+L.push(r.cp>=70?`🔋 전기의 ${r.cp}%를 청정에너지로 만들었어요.\n화석연료 없이도 번영할 수 있다는 걸 보여줬어요!`:`🔋 전기의 ${r.cp}%만 청정에너지였어요.\n석탄·석유는 번영이 빠르지만 CO₂가 쌓여요.\n일찍 바꿀수록 기온이 덜 올라요.`);
+L.push(T<=1.5?`🌡 기온 상승을 +${T.toFixed(1)}℃로 막았어요.\n파리협정 목표(1.5℃)를 지켰어요!`:`🌡 CO₂가 ${ppm()}ppm까지 쌓여 기온이 +${T.toFixed(1)}℃ 올랐어요.\nCO₂는 수백 년 동안 남아서\n나중에 줄여도 기온이 바로 내려가지 않아요.${G.fl?`\n🌊 해수면이 +${sea()}cm 올라 바닷가 땅이 잠겼어요.`:''}`);
+L.push(!G.sAll?'🗑 쓰레기가 적게 나왔어요.\n아껴 쓰는 게 가장 좋은 재활용이에요!':r.acc>=80?`♻ 분리배출 정답률 ${r.acc}%!\n쓰레기를 다시 자원으로 바꾸는\n순환의 고리를 만들었어요.`:`♻ 분리배출 정답률 ${r.acc}%.\n종이팩·건전지·형광등이 헷갈리기 쉬워요.\n📚 도감에서 다시 확인해요.`);
+return L.map(t=>`<div class=lesson>${t}</div>`).join('')}
+let DB=null;(async()=>{try{if(window.claude&&claude.use)DB=await claude.use('db')}catch(_){DB=null}})();
+async function dbSave(r){if(!DB)return false;try{await DB.collection('rank').doc(r.id).set(r);return true}catch(_){return false}}
+async function dbTop(){if(!DB)return null;try{const q=await DB.collection('rank').orderBy('sc','desc').limit(40).get();return q.docs.map(d=>d.data())}catch(_){return null}}
+async function saveRec(name){const r={id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),n:name,sc:G.res.sc,df:G.df,k:G.res.k,nat:Math.round(G.nat),pro:G.pro,cp:G.res.cp,tc:+G.res.T.toFixed(1),ac:G.res.acc,y:Y(G.t),d:new Date().toISOString().slice(0,10)};
+const L=LS.get('ed_rank',[]);L.push(r);L.sort((a,b)=>b.sc-a.sc);LS.set('ed_rank',L.slice(0,50));return await dbSave(r)}
+function restart(){close();init();ents=[];updDf();planning()}
+function end(lose){G.over=true;G.phase='end';hud();const nat=G.nat>=50,pro=G.pro>=TARGET,cs=calcScore(),cp=cs.cp;let sc=cs.sc;
+const k=lose?'x':nat&&pro?(cs.T<2?'a':'h'):pro?'b':nat?'c':'d';
+const t=lose||({a:'🌈 공존 엔딩!\n번영한 인류와 푸른 지구가\n외계 함대를 막아냈다.',h:'🌡 뜨거운 공존\n번영도 자연도 지켰지만\n지구는 너무 뜨거워졌다.\n(기온 +2℃ 미만이면 진짜 공존!)',b:'🏙 잿빛 승리\n인류는 번영했지만\n지구는 병들었다.',c:'🌿 초록 요새\n자연은 지켰지만\n인류의 번영이 부족했다.',d:'⚠ 간신히 버텼지만\n번영도 자연도 모자랐다.'})[k];
+if(lose)sc=Math.min(sc,40);G.res={sc,k,cp,T:cs.T,acc:cs.acc};
+const bd=[['🌡 1.5℃ 지킴이',cs.T<=1.5&&!lose],['🔋 청정 70%',cp>=70],['♻ 분리배출 달인',cs.acc>=80&&G.sAll>=8],['🌍 자연 100+',G.nat>=100],['❤ 무피해',G.lives===3]];
+modal(`<div style="color:var(--ac)">📅 ${Y(G.t)}년 · ${DF[G.df].e}${DF[G.df].n}</div><p>${t}</p><p>⚡ 번영 ${G.pro} · 🌍 자연 ${Math.round(G.nat)}${G.nat>100?' ✨':''} · ❤ ${Math.max(0,G.lives)}\n🌡 +${cs.T.toFixed(1)}℃ · 🔋 청정 ${cp}% · ♻ ${G.rc} (분리배출 ${G.sAll?cs.acc+'%':'-'})\n점수 <b style="font-size:24px;color:var(--ac)">${sc}</b></p><div class=eg><div><div class=badges>${bd.map(([n,o])=>`<span class="${o?'':'off'}">${n}</span>`).join('')}</div><div id=chw></div><div style="font-size:11px"><span style="color:#5ee08a">■ 자연</span> <span style="color:#ffd24a">■ 번영(목표=100)</span> <span style="color:#ff6b6b">■ 기온 (점선=1.5℃)</span></div></div><div>${lessons(cs)}</div></div><input class=inp id=nm maxlength=8 placeholder="이름을 입력하세요" value="${esc(LS.get('ed_name',''))}"><button class=b id=sv>🏆 기록 저장</button><button class=b id=rs>🔄 다시 하기</button>`);
+$('#box').style.maxWidth='800px';if(G.hist.length)$('#chw').appendChild(chart());
+$('#sv').onclick=async()=>{const name=(($('#nm').value||'').trim()||'무명').slice(0,8);LS.set('ed_name',name);$('#sv').disabled=true;const sh2=await saveRec(name);toast(sh2?'내 기기와 공유 랭킹에 저장했어요':'내 기기에 저장했어요');RK.src='l';guide(3)};
+$('#rs').onclick=restart}
+// 자동 진행: 레벨업 > 침공 방향 방어 > 청정·순환 시설 순으로 고른다 (전투 중엔 위급할 때 주문 사용)
+const BSP=['bolt','nuke','xgrav','tsunami'];
+setInterval(()=>{if(!G.auto||G.paused||G.over)return;
+if(G.phase==='battle'){const near=G.al.filter(a=>a.dl<=0&&Math.hypot(a.gx-2,a.gy-2)<2.2);if(!near.length)return;const i=G.hand.findIndex(id=>BSP.includes(id)&&(id!=='nuke'||G.nat>60));if(i>=0)useCard(i,near[0].gx,near[0].gy);return}
+if(G.busy||G.phase!=='plan'||G.hand.length<=lim())return;
+const [wx,wy]=DIRS[G.wave.dir],hot=T_()>1.1;let best={s:-1e9,i:0};
+G.hand.forEach((id,i)=>{const d=C[id];if(d.k!=='b'){const s=BSP.includes(id)?-5:id==='copy'?3:12;if(s>best.s)best={s,i,x:2,y:2};return}
+const def=st(d,'atk')||id==='wall';for(let y=0;y<5;y++)for(let x=0;x<5;x++){if(!ok(x,y))continue;const b=G.grid[y][x],dd=Math.hypot(x-wx,y-wy);let s;
+if(b){if(b.id!==id||b.lv>=3)continue;s=40+(def?15:0)}else s=def?30-dd*2:20+((CLEAN.includes(id)||GREEN.includes(id))?6:0)-(d.co>0&&hot?18:0)+(d.w&&G.waste>8?-6:0)+dd*.5;
+if(s>best.s)best={s,i,x,y}}});
+if(best.s<0){recycle(best.i);return}useCard(best.i,best.x,best.y)},600);
+// ---- 도감 / 진화 트리 (2행 카드)
+let gp=0;
+const gcard=(t,b,c)=>`<div class="gc ${c||''}"><div class=gt>${t}</div><div class=gb>${b}</div></div>`;
+const RK={src:'l',shared:null,err:false},EK={a:'🌈',h:'🌡',b:'🏙',c:'🌿',d:'⚠',x:'💀'};
+const recs=()=>RK.src==='s'?(RK.shared||[]):LS.get('ed_rank',[]);
+function guide(tab){tab=tab||0;if(!gp&&G.phase!=='menu'){gp=1;G.pb=G.paused;G.paused=true}
+const T=['📖 방법','🌳 진화','📚 도감','🏆 랭킹','👑 명예'];let h=`<div class=tabs>${T.map((t,i)=>`<button class="b ${i===tab?'on':''}" data-t="${i}">${t}</button>`).join('')}</div>`;
+if(tab>=3&&DB)h+=`<div class=tabs style="margin:4px 0"><button class="b ${RK.src==='l'?'on':''}" data-s="l">📱 내 기기</button><button class="b ${RK.src==='s'?'on':''}" data-s="s">👥 함께(공유)</button></div>`;
+h+='<div class=cg>';
+if(tab===0)h+=[['🎯 목표','외계 침공을 막고\n2200년까지\n⚡번영 '+TARGET+' 이상\n🌍자연 50 이상\n🌡기온 +2℃ 미만\n→ 🌈 공존 엔딩!'],['🃏 카드','카드를 탭하면\n놓을 수 있는 칸이 빛나요\n초록=설치\n금색=⬆레벨업'],['⭐ 레벨업','같은 시설을\n같은 칸에 겹치면\n효과 ×2, ×3\n(오염도 함께 커져요)'],['⚔ 번영의 힘','⚡번영이 높을수록\n⚔공격력이 세져요\n🌍자연이 높을수록\n❤시설 체력이 올라요'],['✨ 자연 100+','자연은 150까지!\n100을 넘으면\n게이지 색이 변하고\n점수도 크게 올라요'],['🍀 이벤트','좋은 일·나쁜 일이\n랜덤으로 생겨요\n구역에 3턴 동안\n버프·디버프'],['🔌 이웃 효과','스마트그리드·공원·\n연구소는 주변 4칸을\n도와줘요\n(하늘색 테두리)'],['♻ 카드 재활용','카드를 고르고\n♻ 버튼을 누르면\n카드를 버리고\n🌍+1 ♻자원+1'],['🌡 기후','석탄·석유는 CO₂를 내요\nCO₂는 계속 쌓여\n기온을 올려요\n1.5℃를 넘기지 마세요!'],['🌊 해수면','기온이 +2℃를 넘으면\n빙하가 녹아\n바닷가 칸이 잠겨요\n(되돌릴 수 없어요)'],['🗑 쓰레기','번영할수록 쓰레기가\n늘어요. 10을 넘으면\n자연이 아파요\n♻재활용센터로 줄여요'],['🚛 분리배출의 날','쓰레기가 쌓이면\n알맞은 통에 넣어요\n맞히면 🗑-2 ♻+1\n시대마다 쓰레기가 달라요'],['♻ 자원 쓰기','카드 보상에서\n♻5=한 장 더(업사이클)\n♻2=다시 뽑기\n남은 ♻은 점수로!'],['🏛 본부','외계인이 본부에 닿으면\n본부 체력이 깎여요\n0이 되면 ❤-1\n❤ 3개를 지키세요'],['✋ 전투','손패가 2장이 되면\n전투가 시작돼요\n전투 중엔 ⚡번개 같은\n주문을 쓸 수 있어요'],['🏭 에너지','석탄·석유는 번영이 크지만\n자연을 해쳐요\n시대가 지나면\n☀️🌬️🔋🌞 청정 에너지가 열려요'],['🎚 난이도','쉬움·보통·어려움\n적의 수·체력·공격과\n점수 배율이 달라져요'],['🎥 조작','맵 드래그=이동\n두 손가락=확대\n[전체] 버튼=전체화면\n가로·세로 모두 가능']].map(([t,b])=>gcard(t,b)).join('');
+if(tab===1){const en=['증기 1800~','전기 1907~','정보 2013~','우주 2120~'],cur=G.phase==='menu'?0:era();
+h+=en.map((n,k)=>{const ids=NX.filter(id=>C[id].u===k+1&&C[id].k==='b'&&!Array.isArray(C[id].e));return gcard(`${k+1}시대 ${n}${k+1===cur?' ◀':''}`,ids.map(id=>`<div class="${CLEAN.includes(id)||id==='forest'||id==='park'?'cln':(C[id].g||0)<0?'pol':''}">${C[id].e} ${C[id].n}<small>${chips(id)}</small></div>`).join(''),k+1===cur?'cur':'')}).join('')
++gcard('🛡 방어 진화',C.tower.e.map((e,i)=>`<div>${e} ${C.tower.n[i]}<small>⚔${C.tower.atk[i]} 사거리 ${C.tower.r[i]}</small></div>`).join(''))
++gcard('🛡 방벽 진화(자연→기술)',C.wall.e.map((e,i)=>`<div>${e} ${C.wall.n[i]}<small>HP ${C.wall.hp[i]}</small></div>`).join(''))
++gcard('🔬 연구소 진화',C.lab.e.map((e,i)=>`<div>${e} ${C.lab.n[i]}<small>주변 청정 ⚡+2</small></div>`).join(''))
++gcard('⭐ 레벨업','같은 시설을 겹치면\n⭐ Lv1 ×1\n⭐⭐ Lv2 ×2\n⭐⭐⭐ Lv3 ×3\n오염도 함께 커져요')
++gcard('👽 외계기술',XS.map(id=>`<div>${C[id].e} ${C[id].n}</div>`).join(''),'x')}
+if(tab===2)h+=gcard('🗑 분리배출 도감',Object.keys(BIN).map(k=>`<div>${BIN[k].e} ${BIN[k].n}<small>${TRASH.filter(t=>t.b===k).map(t=>t.e+t.n).join(' ')}</small></div>`).join(''),'cur')+TRASH.map(t=>gcard(`${t.e} ${t.n} → ${BIN[t.b].e}`,`<small>${BIN[t.b].n} · ${TN[t.u-1]}시대부터</small><span class=edu>♻ ${t.tip}</span>`)).join('')+[...NX,...XS].map(id=>{const c=C[id],e=Array.isArray(c.e)?c.e.join(''):c.e,n=Array.isArray(c.n)?c.n.join('→'):c.n;return gcard(`${e} ${n}`,`<small>${c.k==='b'?chips(id):c.d}</small><span class=edu>🌱 ${c.edu}</span>`,c.x?'x':'')}).join('');
+if(tab===3){const L=recs().slice().sort((a,b)=>b.sc-a.sc).slice(0,10);h+=L.length?L.map((r,i)=>gcard(`${['🥇','🥈','🥉'][i]||(i+1)+'위'} ${esc(r.n)}`,`${r.sc}점\n${DF[r.df]?DF[r.df].e+DF[r.df].n:''} · ${EK[r.k]||''}\n🌍${r.nat} ⚡${r.pro}\n청정 ${r.cp}%`,i===0?'cur':'')).join(''):gcard('🏆 랭킹',RK.src==='s'&&RK.err?'공유 저장소를\n쓸 수 없어요\n(Contributor 권한으로\n공유한 링크에서 가능)':'아직 기록이 없어요\n게임을 끝내면\n이름을 남길 수 있어요')}
+if(tab===4){const L=recs(),top=(f,flt)=>(flt?L.filter(flt):L).slice().sort((a,b)=>f(b)-f(a))[0],cd=(t,r,v)=>gcard(t,r?`${esc(r.n)}\n${v(r)}`:'아직 없어요',r?'cur':'');
+h+=[0,1,2].map(d=>{const r=top(x=>x.sc,x=>x.df===d);return cd(`${DF[d].e} ${DF[d].n} 챔피언`,r,x=>x.sc+'점 · '+(EK[x.k]||''))}).join('')+cd('🌈 공존 엔딩',top(x=>x.sc,x=>x.k==='a'),x=>x.sc+'점')+cd('🔋 청정에너지 왕',top(x=>x.cp),x=>'청정 '+x.cp+'%')+cd('🌍 지구 수호자',top(x=>x.nat),x=>'자연 '+x.nat)+cd('⚡ 번영의 왕',top(x=>x.pro),x=>'번영 '+x.pro)+cd('🌡 1.5℃ 지킴이',top(x=>-x.tc,x=>x.tc!=null&&x.k!=='x'),x=>'기온 +'+x.tc+'℃')+cd('♻ 분리배출 달인',top(x=>x.ac||0,x=>x.ac!=null),x=>'정답률 '+x.ac+'%')+cd('📅 최근 기록',L.slice().sort((a,b)=>(b.d||'').localeCompare(a.d||''))[0],x=>x.d)}
+h+='</div><button class="b" id="gx">닫기</button>'+(G.phase==='end'?'<button class="b" id="gr">🔄 다시 하기</button>':'');modal(h);
+$('#box').querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>guide(+b.dataset.t));
+$('#box').querySelectorAll('[data-s]').forEach(b=>b.onclick=async()=>{RK.src=b.dataset.s;if(RK.src==='s'){const l=await dbTop();RK.shared=l||[];RK.err=l===null}guide(tab)});
+$('#gx').onclick=()=>{close();if(gp){G.paused=G.pb;gp=0;hud()}};if($('#gr'))$('#gr').onclick=()=>{gp=0;restart()}}
+function toast(t){const e=$('#toast');e.textContent=t;e.style.display='block';clearTimeout(e._t);e._t=setTimeout(()=>e.style.display='none',4200)}
+function fs(){const d=document,e=d.documentElement;if(d.fullscreenElement||d.webkitFullscreenElement){(d.exitFullscreen||d.webkitExitFullscreen).call(d);return}
+const rq=e.requestFullscreen||e.webkitRequestFullscreen;const fail=()=>toast('이 화면에서는 전체화면이 막혀 있어요\n링크를 브라우저 새 탭에서 열면\n전체화면을 쓸 수 있어요');
+if(!rq){fail();return}try{Promise.resolve(rq.call(e)).then(()=>{try{screen.orientation.lock('any')}catch(_){}}).catch(fail)}catch(_){fail()}}
+document.addEventListener('fullscreenchange',()=>setTimeout(()=>{fit();if(G){hud();hand()}},150));
+$('#bz').onclick=fs;$('#tfs').onclick=fs;
+$('#bi').onclick=()=>guide(0);$('#tguide').onclick=()=>guide(0);
+// ---- 렌더: 우리 땅 = 지구
+const hh=(i,j)=>((i*73856093^j*19349663)>>>0)%100/100;
+const lerp=(a,b,t)=>a+(b-a)*t,mix=(c1,c2,t)=>'rgb('+c1.map((v,i)=>Math.round(lerp(v,c2[i],t))).join(',')+')';
+const GR=[[56,140,60],[70,160,70]],DD=[[112,86,58],[126,98,66]],OC=[[40,104,208],[52,124,226]],OD=[[88,100,84],[100,112,92]],SD=[[222,204,140],[232,214,152]],SDD=[[150,128,92],[160,138,100]];
+const STARS=[...Array(140)].map(()=>({x:R(),y:R(),s:R()*6}));
+const TL=[];for(let i=-4;i<=8;i++)for(let j=-4;j<=8;j++){const d=Math.hypot(i-2,j-2);let t=null;if(i>=0&&i<5&&j>=0&&j<5)t='L';else if(i>=-1&&i<=5&&j>=-1&&j<=5)t='B';else if(d<4.6||(d<5.6&&hh(i,j)>.5))t='O';if(t)TL.push({i,j,t})}
+const CLOUDS=[...Array(8)].map(()=>({a:R()*6.28,r:4.3+R()*1.6,v:.04+R()*.05,s:.8+R()*.8}));
+function dia(x,y,w,h){ctx.beginPath();ctx.moveTo(x,y-h/2);ctx.lineTo(x+w/2,y);ctx.lineTo(x,y+h/2);ctx.lineTo(x-w/2,y);ctx.closePath()}
+const GC=document.createElement('canvas');GC.width=GC.height=48;const gc=GC.getContext('2d');
+function globe(rot){gc.clearRect(0,0,48,48);for(let y=0;y<48;y++)for(let x=0;x<48;x++){const dx=x-23.5,dy=y-23.5,d=Math.hypot(dx,dy);if(d>23)continue;const nx=(x+rot)*.35,n=Math.sin(nx*1.7+y*.31)+Math.cos(y*.27-nx*.9)+Math.sin(nx*.6+y*.8)*.5;let c=n>.45?[63,174,82]:[47,111,208];
+if(Math.abs(dy)>19+n*.8)c=[240,248,255];const cx=(x+rot*1.6)*.5,cn=Math.sin(cx+y*.35)*Math.cos(y*.4-cx*.4);if(cn>.6)c=[245,250,255];
+const f=cl(.62+.5*(1-(dx+dy)/46)*.8,.45,1.05)*(d>21.5?.7:1);gc.fillStyle=`rgb(${c.map(v=>Math.min(255,v*f|0)).join(',')})`;gc.fillRect(x,y,1,1)}}
+function pixText(s,sz,c1,c2){const m=document.createElement('canvas'),x=m.getContext('2d'),f=`${sz>10?'bold ':''}${sz}px ${PF(sz)}`;x.font=f;const w=Math.ceil(x.measureText(s).width)||60,h=sz+6;m.width=w+6;m.height=h;x.font=f;x.textBaseline='middle';x.fillStyle='#000';x.fillText(s,3,h/2+1);
+const a=x.getImageData(0,0,w+6,h).data,W2=w+6,o=document.createElement('canvas');o.width=W2+3;o.height=h+3;const ox=o.getContext('2d'),im=ox.createImageData(W2+3,h+3),b=im.data;
+const op=(X,Y)=>X>=0&&Y>=0&&X<W2&&Y<h&&a[(Y*W2+X)*4+3]>=120;
+for(let Y=-1;Y<h+1;Y++)for(let X=-1;X<W2+1;X++){const k=((Y+1)*(W2+3)+X+1)*4;let col=null;
+if(op(X,Y)){const t=Y/h;col=c1.map((v,i)=>Math.round(lerp(v,c2[i],t)))}
+else if(op(X-1,Y)||op(X+1,Y)||op(X,Y-1)||op(X,Y+1))col=[20,12,28];
+else if(op(X-1,Y-1)||op(X-2,Y-2))col=[60,30,90];
+if(col){b[k]=col[0];b[k+1]=col[1];b[k+2]=col[2];b[k+3]=255}}
+ox.putImageData(im,0,0);return o}
+let TT=null;try{Promise.all(['bold 11px Galmuri11','11px Galmuri11','9px Galmuri9','7px Galmuri7'].map(f=>document.fonts.load(f))).then(()=>{TT=null;if(G&&G.phase!=='menu'){hud();hand()}}).catch(()=>{})}catch(_){}
+function title(dt){const tt=performance.now()/1000;ctx.save();const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#04061a');g.addColorStop(1,'#1a2a64');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+STARS.forEach(s=>{if((tt*1.5+s.s)%3<2.4){ctx.fillStyle=s.s>4.6?'#ffd24a':'#fff';ctx.fillRect((s.x*W)|0,(s.y*H)|0,1,1)}});
+const sz=Math.min(H*.5,134,W*.62),cx=W/2,cy=H*(W<H?.5:.62);globe(tt*3);ctx.fillStyle='rgba(90,170,255,.16)';ctx.beginPath();ctx.arc(cx,cy,sz/2+6,0,6.3);ctx.fill();ctx.fillStyle='rgba(90,170,255,.1)';ctx.beginPath();ctx.arc(cx,cy,sz/2+12,0,6.3);ctx.fill();
+ctx.drawImage(GC,cx-sz/2,cy-sz/2,sz,sz);
+for(let i=0;i<6;i++){const a=tt*.55+i*1.047,r=sz*.78,x=cx+Math.cos(a)*r*(W<H?.8:1.7),y=cy+Math.sin(a)*r*.38-8;if(Math.sin(a)<0)sp('🛸',x,y,15);}
+if(!TT)TT={a:pixText('지구 방위',11,[255,236,120],[255,140,40]),b:pixText('에너지 · 환경 · 자원순환',9,[170,230,255],[90,160,255])};
+const ta=TT.a,tb=TT.b,sc=Math.max(1,Math.min(Math.floor(H/84),Math.floor(W*.9/ta.width))),sb=Math.max(1,Math.min(Math.floor(sc/2.5),Math.floor(W*.94/tb.width)));ctx.drawImage(ta,Math.round(cx-ta.width*sc/2),Math.round(H*.04),ta.width*sc,ta.height*sc);ctx.drawImage(tb,Math.round(cx-tb.width*sb/2),Math.round(H*.04+ta.height*sc),tb.width*sb,tb.height*sb);
+for(let i=0;i<6;i++){const a=tt*.55+i*1.047,r=sz*.78,x=cx+Math.cos(a)*r*(W<H?.8:1.7),y=cy+Math.sin(a)*r*.38-8;if(Math.sin(a)>=0)sp('🛸',x,y,17);}
+tx('EARTH DEFENSE · 1800→2200',cx,H*.04+ta.height*sc+tb.height*sb+10,'#9fb3e6',9);ctx.restore()}
+function render(dt){ctx.imageSmoothingEnabled=false;if(G.phase==='menu'){title(dt);return}
+ctx.save();if(shake>0){shake-=dt;ctx.translate((R()-.5)*4,(R()-.5)*4)}
+const tt=performance.now()/1000,z=V.z,hw=TW*z,hh2=TH*z,dg=cl((100-G.nat)/80,0,1);
+const TT2=T_(),hz=cl((TT2-.6)/2.6,0,1),fb=cl((TT2-.7)/2.3,0,1),ice=cl(1-TT2/2.4,0,1);
+const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,mix([7,11,36],[44,12,30],hz));g.addColorStop(1,mix([22,39,90],[96,44,40],hz));ctx.fillStyle=g;ctx.fillRect(-5,-5,W+10,H+10);
+STARS.forEach(s=>{if((tt*1.5+s.s)%3<2.4){ctx.fillStyle='#fff';ctx.fillRect(((s.x*W)+pan.x*.1)|0,(s.y*H)|0,1,1)}});
+TL.filter(o=>o.t==='O').forEach(o=>{const p=P(o.i,o.j),a=(o.i+o.j)&1;dia(p.x,p.y,hw*1.02,hh2*1.02);ctx.fillStyle=mix(OC[a],OD[a],dg);ctx.fill();
+if(hh(o.j,o.i)>.82&&ice>.05){const q=ice*.5;dia(p.x,p.y,hw*q,hh2*q);ctx.fillStyle='#eaf6ff';ctx.fill();dia(p.x,p.y-z,hw*q*.6,hh2*q*.6);ctx.fillStyle='#ffffff';ctx.fill()}else if(hh(o.i+3,o.j)>.9){ctx.fillStyle=`rgba(255,255,255,${.35*(1-dg)})`;ctx.fillRect(p.x-3*z,p.y,6*z,1)}
+if(G.waste>=12&&hh(o.i+11,o.j)>.84)sp(hh(o.j,o.i+2)>.5?'🧴':'🛍️',p.x,p.y-2*z+Math.sin(tt*2+o.i)*1.5,9*z,.85)});
+TL.filter(o=>o.t!=='O').sort((a,b)=>a.i+a.j-b.i-b.j).forEach(o=>{const p=P(o.i,o.j),a=(o.i+o.j)&1,L=o.t==='L';
+if(L?flooded(o.i,o.j):hh(o.i+7,o.j+3)<fb){dia(p.x,p.y+3*z,hw*1.02,hh2*1.02);ctx.fillStyle=mix([70,150,220],[96,120,110],dg);ctx.fill();if(hh(o.i,o.j+5)>.6){ctx.fillStyle='rgba(255,255,255,.45)';ctx.fillRect(p.x-4*z,p.y+3*z+Math.sin(tt*2+o.j)*1,8*z,1)}return}
+dia(p.x,p.y+9*z,hw*1.02,hh2*1.02);ctx.fillStyle=L?'#4a3322':'#8a7648';ctx.fill();dia(p.x,p.y+4*z,hw*1.02,hh2*1.02);ctx.fillStyle=L?'#6d4b33':'#b09a62';ctx.fill();
+dia(p.x,p.y,hw*1.02,hh2*1.02);ctx.fillStyle=L?mix(GR[a],DD[a],dg):mix(SD[a],SDD[a],dg);ctx.fill();
+if(L){if(hh(o.i,o.j)>.5){ctx.fillStyle=dg<.5?'#2f7a34':'#4a3524';ctx.fillRect(p.x-6*z,p.y-2*z,2,1);ctx.fillRect(p.x+4*z,p.y+3*z,2,1)}
+if(dg>.4&&hh(o.j,o.i)>.45){ctx.strokeStyle='rgba(40,25,15,.75)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(p.x-8*z,p.y-2*z);ctx.lineTo(p.x-2*z,p.y+z);ctx.lineTo(p.x+4*z,p.y-z);ctx.stroke()}
+if(dg>.7&&hh(o.i+5,o.j+1)>.5){ctx.fillStyle='rgba(60,60,60,.35)';dia(p.x,p.y,hw*.6,hh2*.6);ctx.fill()}}});
+const s=G.sel>=0?C[G.hand[G.sel]]:null,sid=G.sel>=0?G.hand[G.sel]:null,pu=.5+.5*Math.sin(tt*6);
+for(let j=0;j<5;j++)for(let i=0;i<5;i++){const p=P(i,j),o=ok(i,j),b=G.grid[j][i];
+if(i==2&&j==2){dia(p.x,p.y,hw,hh2);ctx.fillStyle='rgba(60,50,100,.5)';ctx.fill()}
+dia(p.x,p.y,hw,hh2);if(b){ctx.fillStyle=CLEAN.includes(b.id)||b.id==='forest'||b.id==='park'?'rgba(100,230,150,.35)':b.id==='tower'||b.id==='wall'||C[b.id].adj?'rgba(120,160,230,.35)':'rgba(220,150,90,.35)';ctx.fill()}
+{const zs=G.zf.filter(f=>f.z===zone(i,j));if(zs.length&&(o||b)){dia(p.x,p.y,hw,hh2);ctx.fillStyle=ZE[zs[0].k].good?'rgba(120,255,160,.16)':'rgba(255,90,90,.2)';ctx.fill()}if(b&&C[b.id].adj){[[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx,dy])=>{const q=P(i+dx,j+dy);dia(q.x,q.y,hw*.92,hh2*.92);ctx.strokeStyle='rgba(120,220,255,.7)';ctx.lineWidth=1;ctx.stroke()})}}
+ctx.strokeStyle=o||(i==2&&j==2)?'rgba(235,255,245,.95)':'rgba(235,255,245,.22)';ctx.lineWidth=1;ctx.stroke();
+if(!o&&!(i==2&&j==2)&&!flooded(i,j)){dia(p.x,p.y,hw,hh2);ctx.fillStyle='rgba(8,12,30,.3)';ctx.fill()}
+if(s&&s.k==='b'&&G.phase==='plan'&&o){dia(p.x,p.y,hw,hh2);
+if(!b){ctx.fillStyle=`rgba(80,255,140,${.28+.3*pu})`;ctx.fill();ctx.strokeStyle='#b8ffd0';ctx.lineWidth=2;ctx.stroke();tx('＋',p.x,p.y+4*z,'#eaffee',12*z)}
+else if(b.id===sid&&b.lv<3){ctx.fillStyle=`rgba(255,210,60,${.35+.35*pu})`;ctx.fill();ctx.strokeStyle='#ffd24a';ctx.lineWidth=3;ctx.stroke();tx('⬆Lv'+(b.lv+1),p.x,p.y-22*z-pu*3,'#ffd24a',11*z)}
+else{ctx.fillStyle='rgba(255,60,60,.22)';ctx.fill()}}}
+CLOUDS.forEach(c=>{c.a+=dt*c.v;const p=P(2+Math.cos(c.a)*c.r,2+Math.sin(c.a)*c.r*.9),q=14*z*c.s;ctx.globalAlpha=.8;ctx.fillStyle=mix([245,250,255],[110,110,120],dg);for(let k=0;k<4;k++)ctx.fillRect(Math.round(p.x+(k-1.5)*q*.5),Math.round(p.y-q*.3-(k%2)*q*.25-18*z),Math.round(q*.7),Math.round(q*.4));ctx.globalAlpha=1});
+const dr=[];
+dr.push({d:4,f:()=>{const p=P(2,2);sp('🏛️',p.x,p.y-8*z,38*z)}});
+G.zf.forEach(f=>dr.push({d:30,f:()=>{const [zx,zy]=ZC[f.z],p=P(zx,zy);sp(ZE[f.k].e,p.x,p.y-30*z+Math.sin(tt*3)*2,13*z);tx(f.t+'턴',p.x,p.y-16*z,'#fff',7)}}));
+TL.filter(o=>o.t==='L'&&!ok(o.i,o.j)&&!(o.i==2&&o.j==2)&&hh(o.i*3,o.j*7)>.35).forEach(o=>dr.push({d:o.i+o.j-.3,f:()=>{const p=P(o.i,o.j);sp(G.nat>66?'🌲':G.nat>33?'🍂':'🪨',p.x-6*z,p.y-4*z,12*z)}}));
+bl().forEach(b=>dr.push({d:b.x+b.y,f:()=>{const p=P(b.x,b.y),m=mhp(b),y=p.y-9*z;ctx.fillStyle='rgba(0,0,0,.25)';dia(p.x,p.y+2*z,hw*.55,hh2*.55);ctx.fill();sp(inf(b.id).e,p.x,y,32*z);
+if(b.lv>1)tx('⭐'.repeat(b.lv),p.x,y-19*z,'#ffd24a',9*z);if(b.hp<m){ctx.fillStyle='#000';ctx.fillRect(p.x-12*z,p.y+5*z,24*z,3);ctx.fillStyle='#6daa2c';ctx.fillRect(p.x-12*z,p.y+5*z,24*z*Math.max(0,b.hp)/m,3)}
+if(val(b,'g')<0&&G.nat<85)sp('💨',p.x+8*z,y-14*z+Math.sin(tt*2+b.x)*3,12*z,.7)}}));
+{const BT=TL.filter(o=>o.t==='B'&&!(hh(o.i+7,o.j+3)<fb)).sort((a,b)=>hh(a.i*5,a.j*3)-hh(b.i*5,b.j*3)),n=Math.min(BT.length,G.waste>>1),TS=['🗑️','🧴','🥫','📦','🥤','🛍️'];for(let k=0;k<n;k++){const o=BT[k];dr.push({d:o.i+o.j-.2,f:()=>{const p=P(o.i,o.j);sp(TS[k%TS.length],p.x+(hh(o.i,o.j)-.5)*14*z,p.y-3*z,10*z)}})}}
+const idle=G.phase==='plan'?G.wave.list:[];
+if(idle.length){const [gx,gy]=DIRS[G.wave.dir];idle.slice(0,14).forEach((k,i)=>dr.push({d:gx+gy,f:()=>{const p=P(gx+((i%5)-2)*.3,gy+((i/5|0)-1)*.3);sp(AL[k].e,p.x,p.y+Math.sin(tt*3+i)*1.5,13*z)}}));dr.push({d:99,f:()=>{const p=P(gx,gy);tx('👽 침공 예고',p.x,p.y-18*z,'#ff9a9a',9)}})}
+G.al.forEach(a=>{if(a.hp<=0)return;dr.push({d:a.gx+a.gy,f:()=>{const p=P(a.gx,a.gy);ctx.fillStyle='rgba(0,0,0,.3)';ctx.fillRect(p.x-4*z,p.y+1,8*z,2);sp(a.e,p.x,p.y-5*z+Math.sin(tt*8+a.gx*5)*1,(a.b?26:12)*z);if(a.hp<a.mhp&&a.mhp>5){ctx.fillStyle='#d04648';ctx.fillRect(p.x-6*z,p.y-12*z,12*z*a.hp/a.mhp,2)}}})});
+dr.sort((a,b)=>a.d-b.d).forEach(o=>o.f());
+ents=ents.filter(e=>{e.life-=G.paused?0:dt*(G.phase==='battle'?G.spd:1);const p=e.gx!=null?P(e.gx,e.gy):0;
+if(e.k==='t')tx(e.t,p.x,p.y-(e.s?14:24)*z-(e.l0-e.life)*(e.s?10:14),e.c||'#ffd24a',e.s||10);
+else if(e.k==='b'){const a=P(e.x1,e.y1),b=P(e.x2,e.y2);ctx.strokeStyle=e.c;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(a.x,a.y-12*z);ctx.lineTo(b.x,b.y-4*z);ctx.stroke();ctx.strokeStyle='#fff';ctx.lineWidth=.6;ctx.stroke()}
+else if(e.k==='p'){e.gx+=e.vx*dt;e.gy+=e.vy*dt;ctx.fillStyle='#b03a3a';ctx.fillRect(p.x,p.y-4,2,2)}return e.life>0});
+ctx.restore()}
+let last=0;function loop(ts){const dt=Math.min(.05,(ts-last)/1000||0);last=ts;
+const k=Math.min(1,dt*3);if(!manual){pan.x+=(TP.x-pan.x)*k;pan.y+=(TP.y-pan.y)*k}V.z+=(TV.z-V.z)*k;V.x=W/2+pan.x;V.y=H*(W<H?.47:.44)+pan.y;
+if(G.phase==='battle'&&!G.paused)sim(dt*G.spd);render(dt);requestAnimationFrame(loop)}
+addEventListener('resize',()=>{fit();if(G){hud();hand()}});addEventListener('orientationchange',()=>setTimeout(fit,200));
+fit();init();G.phase='menu';hud();['#well','#bars','#ctl','#go','#tbtn'].forEach(q=>pxify($(q)));
+function updDf(){document.querySelectorAll('.df').forEach(b=>b.classList.toggle('on',+b.dataset.d===DFI))}
+document.querySelectorAll('.df').forEach(b=>b.onclick=()=>{DFI=+b.dataset.d;LS.set('ed_df',DFI);G.df=DFI;TARGET=TGS[DFI];updDf()});updDf();
+$('#tstart').onclick=()=>{document.body.classList.remove('menu');G.df=DFI;TARGET=TGS[DFI];planning()};
+requestAnimationFrame(loop);
+</script></body></html>
