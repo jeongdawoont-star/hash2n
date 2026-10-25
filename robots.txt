@@ -1,2 +1,8 @@
+User-agent: facebookexternalhit
+Allow: /policies/
+
+User-agent: Facebot
+Allow: /policies/
+
 User-agent: *
 Disallow: /
