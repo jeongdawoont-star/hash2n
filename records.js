@@ -32,6 +32,15 @@ export const RECORDS = [
   // ▼ 여기에 새 기록을 붙여넣으세요 (최신 항목을 맨 위에) ▼
 
   {
+    title: "포켓몬수학",
+    desc: "수콩마을을 포켓몬 버전으로 키워 1학년 수학까지 이어지는 게임이다.\n문제를 풀거나 집중 타이머를 끝까지 하면 몬스터볼을 열어 1~9세대 도감을 채운다.",
+    tags: "math, kids, pokemon, pomodoro, timer, pixel, games",
+    category: "games",
+    link: "./vibe-apps/pokemon-math/",
+    image: "img-re/pokemon-math.avif",
+  },
+
+  {
     title: "톡톡 수콩마을",
     desc: "콩이와 함께 마을을 돌며 수 감각을 키우는 태블릿 터치 게임이다.\n한눈에 세기, 10 만들기, 100판, 묶어 세기까지 6곳을 놀이로 익힌다.",
     tags: "math, number-sense, kids, tablet, pixel, games",
