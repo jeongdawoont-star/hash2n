@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>톡톡 수콩마을</title>
+<meta name="description" content="도트 동물 친구들과 여섯 장소를 돌며 수 감각을 기르는 터치형 태블릿 게임">
+<meta name="theme-color" content="#fff3d6">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/galmuri@2.40.3/dist/galmuri.css">
+<style>
+:root{--bg:#fff3d6;--card:#fffdf6;--ink:#333c57;--sub:#566c86;--ac:#ef7d57;--ok:#38b764;--sky:#41a6f6;--yel:#ffcd75;--red:#b13e53;--line:#e8d9b4}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);font-family:"Galmuri11","Malgun Gothic",sans-serif;-webkit-user-select:none;user-select:none;overflow:hidden;touch-action:manipulation}
+body{background-image:radial-gradient(#f5e2b4 1.5px,transparent 1.6px);background-size:22px 22px}
+button{font-family:inherit;color:inherit;cursor:pointer}
+img.px{image-rendering:pixelated;display:block;width:100%;height:100%}
+img.sm{image-rendering:auto}
+img.in{display:inline-block;width:1.25em;height:1.25em;vertical-align:-.28em}
+.scr{position:fixed;inset:0;display:none;flex-direction:column;padding:max(10px,env(safe-area-inset-top)) 16px max(10px,env(safe-area-inset-bottom))}
+.scr.on{display:flex}
+.btn{background:var(--card);border:4px solid var(--ink);border-radius:10px;box-shadow:0 5px 0 var(--ink);padding:10px 14px;font-size:17px;transition:transform .08s}
+.btn:active{transform:translateY(4px);box-shadow:0 1px 0 var(--ink)}
+.btn.pri{background:var(--ac);color:#fff}
+.btn.grn{background:var(--ok);color:#fff}
+.btn:disabled{opacity:.35}
+/* ---- 홈 */
+#home header{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:10px}
+.logo .mas{width:clamp(48px,9vmin,72px);height:clamp(48px,9vmin,72px);animation:bob 1.6s ease-in-out infinite}
+.logo h1{margin:0;font-size:clamp(26px,5.4vmin,44px);letter-spacing:1px;text-shadow:3px 3px 0 var(--yel)}
+.logo small{display:block;font-size:clamp(12px,2vmin,15px);color:var(--sub);letter-spacing:0;text-shadow:none;margin-top:2px}
+.tbar{display:flex;gap:8px}
+.tbar .btn{font-size:15px;padding:8px 12px}
+#map{flex:1;display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(10px,2.2vmin,20px);padding:clamp(10px,2.4vmin,22px) 0;min-height:0}
+@media (orientation:portrait){#map{grid-template-columns:repeat(2,1fr)}}
+.place{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border:4px solid var(--ink);border-radius:16px;box-shadow:0 6px 0 var(--ink);padding:10px 6px;min-height:0;overflow:hidden}
+.place:active{transform:translateY(4px);box-shadow:0 2px 0 var(--ink)}
+.place .pic{width:clamp(54px,13vmin,110px);height:clamp(54px,13vmin,110px)}
+.place b{font-size:clamp(17px,3.3vmin,26px)}
+.place span{font-size:clamp(12px,2.1vmin,16px);color:var(--sub)}
+.place .st{font-size:clamp(13px,2.2vmin,17px);color:var(--ink);background:rgba(255,255,255,.7);border-radius:20px;padding:2px 10px}
+.place:nth-child(odd) .pic{animation:bob 2s ease-in-out infinite}
+.place:nth-child(even) .pic{animation:bob 2s .5s ease-in-out infinite}
+#home footer{display:flex;justify-content:center}
+#bParent{position:relative;overflow:hidden;font-size:15px;padding:8px 18px}
+#bParent i{position:absolute;left:0;bottom:0;height:5px;width:0;background:var(--ac)}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+/* ---- 놀이 */
+#play{gap:8px}
+.ptop{display:flex;align-items:center;gap:10px}
+.ptop .btn{padding:6px 10px;font-size:15px}
+#ptitle{flex:1;font-size:clamp(16px,3vmin,22px)}
+#ptitle small{color:var(--sub);font-size:.75em;margin-left:6px}
+#dots{display:flex;gap:6px}
+#dots i{width:clamp(16px,3vmin,24px);height:clamp(16px,3vmin,24px);border:3px solid var(--ink);border-radius:50%;background:var(--card)}
+#dots i.now{background:var(--yel);animation:bob 1s infinite}
+#dots i.g{background:var(--ok)}#dots i.y{background:var(--ac)}
+#ask{display:flex;align-items:center;gap:10px;justify-content:center}
+#ask .mas{width:clamp(40px,8vmin,62px);height:clamp(40px,8vmin,62px);flex:none}
+#say{position:relative;background:var(--card);border:4px solid var(--ink);border-radius:14px;padding:8px 16px;font-size:clamp(17px,3.5vmin,28px);max-width:80vw;word-break:keep-all;text-align:center}
+#say:before{content:"";position:absolute;left:-12px;top:50%;margin-top:-8px;border:8px solid transparent;border-right:8px solid var(--ink);border-left:0}
+#stage{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;position:relative}
+#ans{display:flex;justify-content:center;gap:clamp(8px,2vmin,18px);flex-wrap:wrap;min-height:clamp(70px,14vmin,116px);padding-bottom:6px}
+.num{min-width:clamp(72px,17vmin,130px);height:clamp(66px,13vmin,110px);font-size:clamp(30px,7vmin,56px);padding:0 10px;background:var(--card);border:5px solid var(--ink);border-radius:16px;box-shadow:0 6px 0 var(--ink)}
+.num:active{transform:translateY(5px);box-shadow:0 1px 0 var(--ink)}
+.num.ok{background:var(--ok);color:#fff;animation:pop .3s}
+.num.no{background:#d9d2c3;color:#9a927f;animation:shk .3s}
+.num.glow{animation:glow .8s infinite}
+@keyframes pop{0%{transform:scale(.7)}60%{transform:scale(1.15)}100%{transform:scale(1)}}
+@keyframes shk{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+@keyframes glow{0%,100%{box-shadow:0 6px 0 var(--ink),0 0 0 0 var(--yel)}50%{box-shadow:0 6px 0 var(--ink),0 0 0 9px var(--yel)}}
+/* 반짝 언덕 */
+.field{position:relative;width:min(62vmin,440px);aspect-ratio:1/1;background:var(--card);border:5px solid var(--ink);border-radius:18px}
+.field.wide{width:min(80vmin,560px);aspect-ratio:2/1}
+.field.wide:after{content:"";position:absolute;left:50%;top:8%;bottom:8%;border-left:4px dashed var(--line)}
+.it{position:absolute;width:16%;aspect-ratio:1/1;transform:translate(-50%,-50%)}
+.field.wide .it{width:9%}
+.it.pop{animation:pop .3s}
+.it em,.cell em,.pk em{position:absolute;right:-12%;top:-18%;font-style:normal;background:var(--ac);color:#fff;border:3px solid var(--ink);border-radius:12px;min-width:1.7em;text-align:center;font-size:clamp(12px,2.6vmin,20px);padding:0 3px;z-index:2}
+.cover{position:absolute;inset:-5px;border-radius:18px;background:repeating-linear-gradient(45deg,#7cc4ef 0 14px,#69b6e6 14px 28px);border:5px solid var(--ink);display:flex;align-items:center;justify-content:center;font-size:clamp(40px,10vmin,80px);color:#fff;text-shadow:3px 3px 0 var(--ink);transition:opacity .25s}
+.cover.off{opacity:0;pointer-events:none}
+.again{font-size:15px;padding:6px 12px}
+/* 10칸 틀 (기차) */
+.train{display:flex;flex-direction:column;align-items:center}
+.car{position:relative;background:#f4b4c4;border:5px solid var(--ink);border-radius:20px 20px 10px 10px;padding:clamp(10px,2vmin,16px)}
+.car:before{content:"";position:absolute;left:12%;right:12%;top:-16px;height:12px;background:var(--red);border:4px solid var(--ink);border-bottom:0;border-radius:8px 8px 0 0}
+.tf{display:grid;grid-template-columns:repeat(5,1fr);gap:clamp(5px,1.2vmin,10px);position:relative}
+.cell{position:relative;width:clamp(48px,11vmin,88px);aspect-ratio:1/1;background:#fff7e8;border:4px solid var(--ink);border-radius:10px;padding:8%}
+.cell.e{background:#fff}
+.wheels{display:flex;justify-content:space-around;width:80%;margin-top:-10px}
+.wheels i{width:clamp(26px,5vmin,40px);aspect-ratio:1;border-radius:50%;background:var(--ink);border:5px solid #94b0c2}
+.tunnel{position:absolute;top:-10px;bottom:-10px;right:-22px;background:repeating-linear-gradient(0deg,#566c86 0 10px,#4a5d75 10px 20px);border:5px solid var(--ink);border-radius:40px 0 0 40px;display:flex;align-items:center;justify-content:center;font-size:clamp(28px,7vmin,54px);color:#fff;text-shadow:3px 3px 0 var(--ink);transition:opacity .4s}
+.tunnel.off{opacity:.12}
+.lbl{font-size:clamp(16px,3vmin,24px);background:var(--card);border:3px solid var(--ink);border-radius:10px;padding:4px 12px}
+/* 징검다리 */
+.river{position:relative;width:min(94vw,860px);padding:clamp(48px,10vmin,84px) 10px clamp(18px,4vmin,30px);background:repeating-linear-gradient(90deg,#73c6f2 0 30px,#69bdeb 30px 60px);border:5px solid var(--ink);border-radius:20px}
+.stones{display:flex;justify-content:space-between;gap:4px;position:relative}
+.stone{position:relative;flex:1;max-width:110px;aspect-ratio:1.25/1;background:#c7c2b6;border:4px solid var(--ink);border-radius:50% 50% 46% 46%;display:flex;align-items:center;justify-content:center;font-size:clamp(18px,4.4vmin,36px);box-shadow:inset 0 -7px 0 #a39e92}
+.stone.q{background:var(--yel);box-shadow:inset 0 -7px 0 #e7ae4f;animation:glow2 1s infinite}
+@keyframes glow2{50%{transform:translateY(-4px)}}
+.stone sup{position:absolute;top:-1.6em;left:50%;transform:translateX(-50%);font-size:clamp(12px,2.4vmin,17px);color:#fff;background:var(--ink);border-radius:8px;padding:0 5px;white-space:nowrap}
+.frog{position:absolute;width:clamp(40px,8vmin,66px);aspect-ratio:1;bottom:72%;transform:translateX(-50%);transition:left .45s cubic-bezier(.3,1.6,.6,1)}
+.dir{font-size:clamp(14px,2.6vmin,19px);color:var(--sub)}
+/* 백칸 숲 */
+.grid9{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(5px,1.2vmin,10px);width:min(56vmin,400px)}
+.tile{aspect-ratio:1;border:4px solid var(--ink);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:clamp(24px,6.4vmin,50px);background:#a7f070;position:relative}
+.tile .px{width:62%;height:62%}
+.tile.c{background:var(--card)}
+.tile.q{background:var(--yel);animation:glow2 1s infinite}
+.tile.v{background:#e6f7d4;color:var(--sub);font-size:clamp(18px,4.6vmin,36px)}
+.hint100{font-size:clamp(13px,2.4vmin,17px);color:var(--sub);text-align:center}
+/* 묶음 가게 */
+.shelf{display:flex;align-items:flex-end;justify-content:center;gap:clamp(10px,3vmin,30px);flex-wrap:wrap;max-width:94vw}
+.packs{display:flex;gap:clamp(5px,1.2vmin,10px);flex-wrap:wrap;justify-content:center;max-width:min(64vw,620px)}
+.pk{position:relative;display:grid;grid-template-columns:repeat(2,1fr);gap:2px;padding:4px;background:#ffd9e2;border:4px solid var(--ink);border-radius:8px;width:clamp(40px,7.4vmin,60px)}
+.pk .px,.pk .sm{width:100%;height:auto;aspect-ratio:1}
+.pk.on{background:var(--yel)}
+.loose{display:flex;flex-wrap:wrap;gap:4px;max-width:clamp(150px,30vmin,250px);padding:8px;background:#fff;border:4px dashed var(--ink);border-radius:12px;min-height:60px;min-width:80px;justify-content:center}
+.loose .lo{position:relative;width:clamp(28px,6vmin,46px);aspect-ratio:1}
+.loose .lo.on{background:var(--yel);border-radius:50%}
+.loose .lo em{position:absolute;right:-30%;top:-30%;font-style:normal;font-size:12px;background:var(--ac);color:#fff;border-radius:8px;padding:0 3px}
+.order{font-size:clamp(20px,4.4vmin,34px);background:var(--card);border:4px solid var(--ink);border-radius:12px;padding:6px 16px}
+.order b{color:var(--ac);font-size:1.3em}
+.tools{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.tools .btn{font-size:clamp(15px,2.8vmin,20px);padding:10px 12px}
+/* 소풍 바구니 */
+.baskets{display:flex;flex-wrap:wrap;gap:clamp(8px,2vmin,18px);justify-content:center;max-width:94vw}
+.bk{position:relative;display:grid;gap:3px;padding:10px 10px 12px;background:#ffcd75;border:4px solid var(--ink);border-radius:8px 8px 22px 22px;box-shadow:0 5px 0 var(--ink)}
+.bk:before{content:"";position:absolute;left:18%;right:18%;top:-22px;height:22px;border:4px solid var(--ink);border-bottom:0;border-radius:30px 30px 0 0}
+.bk .f{width:clamp(28px,6.2vmin,48px);aspect-ratio:1}
+.bk.done{background:#a7f070}
+.bk b{position:absolute;left:50%;top:-14px;transform:translate(-50%,-100%);background:var(--ac);color:#fff;border:3px solid var(--ink);border-radius:12px;padding:0 8px;font-size:clamp(16px,3.4vmin,26px);font-weight:normal;animation:pop .3s}
+.sent{font-size:clamp(15px,3vmin,22px);background:var(--card);border:3px solid var(--ink);border-radius:10px;padding:6px 14px;text-align:center;word-break:keep-all}
+/* 덮개 화면 */
+.ov{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(51,60,87,.55);z-index:20}
+.ov.on{display:flex}
+.box{background:var(--card);border:5px solid var(--ink);border-radius:18px;box-shadow:0 8px 0 var(--ink);padding:18px;width:min(560px,100%);max-height:92dvh;overflow:auto;text-align:center}
+.box h2{margin:4px 0 12px;font-size:clamp(20px,4vmin,30px)}
+.lvl{display:flex;align-items:center;gap:12px;width:100%;text-align:left;margin:8px 0;font-size:16px}
+.lvl .n{flex:none;width:44px;height:44px;border-radius:50%;background:var(--yel);border:4px solid var(--ink);display:flex;align-items:center;justify-content:center;font-size:20px}
+.lvl small{display:block;color:var(--sub);font-size:13px;margin-top:2px}
+.lvl .s{margin-left:auto;font-size:18px;white-space:nowrap}
+.stars{display:flex;justify-content:center;gap:10px;margin:8px 0}
+.stars span{width:clamp(48px,11vmin,80px);height:clamp(48px,11vmin,80px);opacity:.2}
+.stars span.on{opacity:1;animation:pop .4s backwards}
+.newst{display:flex;align-items:center;justify-content:center;gap:10px;margin:10px 0;font-size:17px}
+.newst span{width:64px;height:64px;animation:bob 1.2s infinite}
+.row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px}
+.tg{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 4px;border-bottom:2px dashed var(--line);font-size:16px;text-align:left}
+.tg small{display:block;color:var(--sub);font-size:12px}
+.sw{flex:none;width:58px;height:32px;border:4px solid var(--ink);border-radius:20px;background:#d9d2c3;position:relative}
+.sw:after{content:"";position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;border:2px solid var(--ink);transition:left .15s}
+.sw.on{background:var(--ok)}.sw.on:after{left:28px}
+/* 스티커북 */
+#book .bk2{flex:1;overflow:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(clamp(70px,13vmin,110px),1fr));gap:12px;padding:12px 2px;align-content:start}
+.stk{aspect-ratio:1;background:var(--card);border:4px solid var(--ink);border-radius:14px;padding:14%;display:flex;align-items:center;justify-content:center}
+.stk.lock{background:#efe6d0}
+/* 부모님께 */
+#parent{background:#fbf7ee}
+#parent .phead{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+#parent .phead h2{margin:0;flex:1;font-size:clamp(18px,3.4vmin,26px)}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding:4px 2px 10px;flex:none}
+.tabs button{flex:none;border:3px solid var(--ink);border-radius:20px;background:var(--card);padding:6px 12px;font-size:14px;white-space:nowrap}
+.tabs button.on{background:var(--ink);color:#fff}
+.doc{flex:1;overflow:auto;background:#fff;border:3px solid var(--ink);border-radius:14px;padding:clamp(14px,3vmin,28px);font-family:"Malgun Gothic","Apple SD Gothic Neo",sans-serif;font-size:16px;line-height:1.75;-webkit-user-select:text;user-select:text}
+.doc h3{font-family:"Galmuri11",sans-serif;font-size:20px;margin:0 0 4px}
+.doc h4{font-size:16px;margin:18px 0 4px;color:var(--ac)}
+.doc p{margin:4px 0 8px;word-break:keep-all}
+.doc ul{margin:4px 0 8px;padding-left:22px}.doc li{margin:3px 0;word-break:keep-all}
+.doc .tag{display:inline-block;background:var(--yel);border-radius:6px;padding:0 8px;font-size:13px;margin:0 4px 4px 0}
+.doc .ref{font-size:13px;color:var(--sub);border-top:2px dashed var(--line);margin-top:20px;padding-top:10px}
+.doc table{border-collapse:collapse;width:100%;font-size:14px;margin:6px 0}
+.doc td,.doc th{border-bottom:1px solid #e6dcc4;padding:7px 4px;text-align:left}
+.bar{height:12px;background:#eee4cc;border-radius:6px;overflow:hidden;min-width:70px}
+.bar i{display:block;height:100%;background:var(--ok)}
+.tip{background:#fff6dd;border-left:5px solid var(--yel);padding:8px 12px;border-radius:6px;margin:8px 0}
+#fx{position:fixed;inset:0;pointer-events:none;z-index:30;overflow:hidden}
+#fx span{position:absolute;width:34px;height:34px;animation:fly 1s ease-out forwards}
+@keyframes fly{to{transform:translate(var(--dx),var(--dy)) rotate(200deg);opacity:0}}
+</style>
+</head>
+<body>
+
+<section id="home" class="scr on">
+  <header>
+    <div class="logo"><span class="mas" data-e="🐥"></span><h1>톡톡 수콩마을<small>콩이와 함께 수 감각 여행</small></h1></div>
+    <div class="tbar"><button class="btn" id="bBook"><span data-e="📒"></span> 스티커북</button><button class="btn" id="bSet"><span data-e="⚙️"></span></button></div>
+  </header>
+  <div id="map"></div>
+  <footer><button class="btn" id="bParent"><span data-e="👪"></span> 부모님께 <small>(꾹 누르기)</small><i></i></button></footer>
+</section>
+
+<section id="play" class="scr">
+  <div class="ptop"><button class="btn" id="bBack"><span data-e="🏠"></span></button><div id="ptitle"></div><div id="dots"></div></div>
+  <div id="ask"><span class="mas" data-e="🐥"></span><div id="say"></div></div>
+  <div id="stage"></div>
+  <div id="ans"></div>
+</section>
+
+<section id="book" class="scr">
+  <div class="ptop"><button class="btn" data-go="home"><span data-e="🏠"></span></button><div id="ptitle2" style="flex:1;font-size:clamp(18px,3.4vmin,26px)">스티커북</div><div id="bookN"></div></div>
+  <div class="bk2" id="bookG"></div>
+</section>
+
+<section id="parent" class="scr">
+  <div class="phead"><button class="btn" data-go="home"><span data-e="🏠"></span></button><h2>부모님께 · 놀이 속 수학 이야기</h2></div>
+  <div class="tabs" id="ptabs"></div>
+  <div class="doc" id="pdoc"></div>
+</section>
+
+<div class="ov" id="ovLv"><div class="box"><h2 id="lvT"></h2><div id="lvL"></div><div class="row"><button class="btn" data-close>닫기</button></div></div></div>
+<div class="ov" id="ovRes"><div class="box"><h2 id="resT"></h2><div class="stars" id="resS"></div><p id="resP" style="font-size:17px;margin:6px 0"></p><div id="resN"></div><div class="row" id="resB"></div></div></div>
+<div class="ov" id="ovSet"><div class="box"><h2>설정</h2><div id="setL"></div><div class="row"><button class="btn" data-close>닫기</button></div></div></div>
+<div id="fx"></div>
+
+<script>
+'use strict';
+const $=s=>document.querySelector(s),R=Math.random,ri=(a,b)=>a+Math.floor(R()*(b-a+1)),pick=a=>a[Math.floor(R()*a.length)],sl=ms=>new Promise(r=>setTimeout(r,ms));
+const shuf=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(R()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const LS={get(k,d){try{const v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(_){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(_){}}};
+const KEY='sukong_v1';
+const S=Object.assign({stars:{},stats:{},stk:[],log:[],opt:{}},LS.get(KEY,{}));
+S.opt=Object.assign({pixel:1,voice:1,sound:1,openAll:0},S.opt);
+const save=()=>LS.set(KEY,S);
+
+// ---- 도트 이모지 (이모지 -> 20x20 -> 팔레트 + 외곽선)
+const PAL=['#1a1c2c','#5d275d','#b13e53','#ef7d57','#ffcd75','#a7f070','#38b764','#257179','#29366f','#3b5dc9','#41a6f6','#73eff7','#f4f4f4','#94b0c2','#566c86','#333c57','#f4b4c4','#e26d8f','#8b5a3c','#c98d5a','#ffe6b0','#ffffff','#ffd84a','#7a4a2a'].map(h=>[1,3,5].map(i=>parseInt(h.substr(i,2),16)));
+const G0=20,SC={},SU={},HU={},GU={};
+function spr(e){if(SC[e])return SC[e];
+const c=document.createElement('canvas');c.width=c.height=G0;const x=c.getContext('2d',{willReadFrequently:true});
+x.font=`${G0-3}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`;x.textAlign='center';x.textBaseline='middle';x.fillText(e,G0/2,G0/2+1);
+const a=x.getImageData(0,0,G0,G0).data,N=G0+2,o=document.createElement('canvas');o.width=o.height=N;const ox=o.getContext('2d'),im=ox.createImageData(N,N),d=im.data;
+const op=(X,Y)=>X>=0&&Y>=0&&X<G0&&Y<G0&&a[(Y*G0+X)*4+3]>=110;
+for(let Y=-1;Y<=G0;Y++)for(let X=-1;X<=G0;X++){const k=((Y+1)*N+X+1)*4;let col=null;
+if(op(X,Y)){const i=(Y*G0+X)*4;let b=1e9;for(const p of PAL){const dd=(p[0]-a[i])**2+(p[1]-a[i+1])**2+(p[2]-a[i+2])**2;if(dd<b){b=dd;col=p}}}
+else if(op(X-1,Y)||op(X+1,Y)||op(X,Y-1)||op(X,Y+1))col=PAL[0];
+if(col){d[k]=col[0];d[k+1]=col[1];d[k+2]=col[2];d[k+3]=255}}
+ox.putImageData(im,0,0);return SC[e]=o}
+const su=e=>SU[e]||(SU[e]=spr(e).toDataURL());
+// 도트 끄기용 부드러운 그림
+const hu=e=>{if(HU[e])return HU[e];const c=document.createElement('canvas');c.width=c.height=96;const x=c.getContext('2d');x.font='80px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText(e,48,52);return HU[e]=c.toDataURL()};
+// 스티커북 잠금용 그림자
+const gu=e=>{if(GU[e])return GU[e];const s=spr(e),c=document.createElement('canvas');c.width=s.width;c.height=s.height;const x=c.getContext('2d');x.drawImage(s,0,0);x.globalCompositeOperation='source-in';x.fillStyle='#cdbf9c';x.fillRect(0,0,c.width,c.height);return GU[e]=c.toDataURL()};
+const ic=(e,cls='')=>S.opt.pixel?`<img class="px ${cls}" src="${su(e)}" alt="${e}" draggable="false">`:`<img class="px sm ${cls}" src="${hu(e)}" alt="${e}" draggable="false">`;
+function paint(root=document){root.querySelectorAll('[data-e]').forEach(n=>{const e=n.dataset.e;n.innerHTML=n.classList.contains('mas')||n.closest('.stars')||n.closest('.newst')?ic(e):ic(e,'in')})}
+
+// ---- 소리
+let AC=null;
+function tone(f,t0,d,type='square',v=.05){const o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.value=f;g.gain.setValueAtTime(v,AC.currentTime+t0);g.gain.exponentialRampToValueAtTime(.0001,AC.currentTime+t0+d);o.connect(g).connect(AC.destination);o.start(AC.currentTime+t0);o.stop(AC.currentTime+t0+d+.02)}
+function sfx(k){if(!S.opt.sound)return;try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();
+if(k==='ok'){[523,659,784,1047].forEach((f,i)=>tone(f,i*.07,.16))}
+else if(k==='no'){tone(247,0,.18,'triangle',.08);tone(196,.15,.25,'triangle',.08)}
+else if(k==='tap'){tone(880,0,.06,'square',.03)}
+else if(k==='hop'){tone(392,0,.08);tone(587,.07,.1)}
+else if(k==='win'){[523,659,784,659,784,1047].forEach((f,i)=>tone(f,i*.12,.2,'square',.05))}}catch(_){}}
+// ---- 목소리
+const NAT=['영','하나','둘','셋','넷','다섯','여섯','일곱','여덟','아홉','열'],ADJ=['','한','두','세','네','다섯','여섯','일곱','여덟','아홉','열'];
+const cnt=(n,u)=>n<=10&&n>0?ADJ[n]+' '+u:n+u;
+// 숫자 뒤 조사: 끝 글자 읽는 소리에 받침이 있는지(영·일·삼·육·칠·팔, 십·백)
+const bc=n=>[0,1,3,6,7,8].includes(n%10),wa=n=>n+(bc(n)?'과':'와'),eul=n=>n+(bc(n)?'을':'를'),eun=n=>n+(bc(n)?'은':'는'),ro=n=>n+([1,7,8].includes(n%10)||!bc(n)?'로':'으로');
+function speak(t){if(!S.opt.voice||!window.speechSynthesis)return;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t.replace(/<[^>]+>/g,'').replace(/\p{Extended_Pictographic}/gu,''));u.lang='ko-KR';u.rate=.95;u.pitch=1.15;const v=speechSynthesis.getVoices().find(v=>/ko/i.test(v.lang));if(v)u.voice=v;speechSynthesis.speak(u)}catch(_){}}
+function say(t,voice=true){$('#say').innerHTML=t;paint($('#say'));if(voice)speak(t)}
+function fx(){const b=$('#fx');for(let i=0;i<14;i++){const s=document.createElement('span');s.style.left=(40+R()*20)+'vw';s.style.top=(45+R()*10)+'vh';s.style.setProperty('--dx',(R()*80-40)+'vw');s.style.setProperty('--dy',(R()*-60-10)+'vh');s.innerHTML=ic(pick(['⭐','✨','💖','🌟']));b.appendChild(s);setTimeout(()=>s.remove(),1000)}}
+
+// ---- 장소(모드)
+const FRIENDS=['🐶','🐱','🐰','🐻','🐼','🐨','🐯','🦊','🐹','🐸','🐷','🐵','🐤','🐧','🐮','🦁'];
+const MODES=[
+ {id:'flash',e:'✨',name:'반짝 언덕',sub:'한눈에 몇 마리?',bg:'#ffe6b0',lv:[['살짝 보기','1~5마리, 흩어져 있어요'],['주사위 모양','1~6, 주사위처럼 놓여요'],['10칸 · 도미노','5~10, 정해진 모양으로 봐요']]},
+ {id:'train',e:'🚂',name:'열칸 기차역',sub:'5와 10을 채워요',bg:'#ffd9e2',lv:[['5칸 기차','빈자리는 몇 개?'],['10칸 기차','10명이 되려면?'],['터널 속 친구','모으기와 가르기']]},
+ {id:'stone',e:'🐸',name:'징검다리 개울',sub:'다음 수는 뭘까?',bg:'#cdeefd',lv:[['20까지 길','1씩 커지는 수'],['100까지 길','앞으로, 거꾸로'],['껑충 뛰기','2씩, 5씩, 10씩']]},
+ {id:'forest',e:'🌳',name:'백칸 숲',sub:'숨은 수를 찾아요',bg:'#d8f5c0',lv:[['옆 칸','왼쪽, 오른쪽 수'],['위아래 칸','10 작은 수, 10 큰 수'],['대각선 칸','비스듬한 자리의 수']]},
+ {id:'shop',e:'🏪',name:'묶음 가게',sub:'10개씩 묶어요',bg:'#ffe0f0',lv:[['열 몇 개','10묶음 1개와 낱개'],['몇십 몇 개','묶음과 낱개 세기'],['주문 받기','묶음으로 수 만들기']]},
+ {id:'picnic',e:'🧺',name:'소풍 바구니',sub:'같은 수씩 세요',bg:'#fff1c2',lv:[['2개씩','2, 4, 6, 8…'],['5개씩·10개씩','5, 10, 15…'],['3개씩·4개씩','묶음으로 껑충']]}
+];
+const MQ=5;
+const stars=(m,l)=>S.stars[m+l]||0;
+const unlocked=(m,l)=>l===0||S.opt.openAll||stars(m,l-1)>0;
+
+function show(id){document.querySelectorAll('.scr').forEach(s=>s.classList.toggle('on',s.id===id));if(id==='home')drawHome();if(id==='book')drawBook()}
+function drawHome(){$('#map').innerHTML=MODES.map((m,i)=>{const t=[0,1,2].reduce((a,l)=>a+stars(m.id,l),0);return `<button class="place" style="background:${m.bg}" data-m="${i}"><span class="pic">${ic(m.e)}</span><b>${m.name}</b><span>${m.sub}</span><span class="st">${ic('⭐','in')} ${t} / 9</span></button>`}).join('');
+$('#map').querySelectorAll('.place').forEach(b=>b.onclick=()=>{sfx('tap');openLv(+b.dataset.m)})}
+function openLv(i){const m=MODES[i];$('#lvT').innerHTML=`${ic(m.e,'in')} ${m.name}`;
+$('#lvL').innerHTML=m.lv.map((l,k)=>{const u=unlocked(m.id,k),s=stars(m.id,k);return `<button class="btn lvl" data-k="${k}" ${u?'':'disabled'}><span class="n">${u?k+1:ic('🔒','in')}</span><span>${l[0]}<small>${l[1]}</small></span><span class="s">${[0,1,2].map(j=>j<s?ic('⭐','in'):'<span style="opacity:.25">'+ic('⭐','in')+'</span>').join('')}</span></button>`}).join('')+(S.opt.openAll?'':'<p style="font-size:13px;color:var(--sub);margin:8px 0 0">별을 하나 이상 받으면 다음 단계가 열려요</p>');
+$('#lvL').querySelectorAll('.lvl').forEach(b=>b.onclick=()=>{close();start(m.id,+b.dataset.k)});$('#ovLv').classList.add('on')}
+function close(){document.querySelectorAll('.ov').forEach(o=>o.classList.remove('on'))}
+document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>{sfx('tap');close()});
+document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{sfx('tap');show(b.dataset.go)});
+
+// ---- 놀이 흐름
+let G=null;const st=()=>$('#stage'),an=()=>$('#ans');
+function start(mid,lv){G={mid,lv,qi:0,ok:0,res:[],tok:0,lock:false};const m=MODES.find(x=>x.id===mid);$('#ptitle').innerHTML=`${ic(m.e,'in')} ${m.name}<small>${lv+1}단계 · ${m.lv[lv][0]}</small>`;show('play');nextQ()}
+function drawDots(){$('#dots').innerHTML=Array.from({length:MQ},(_,i)=>`<i class="${i<G.res.length?(G.res[i]?'g':'y'):i===G.qi?'now':''}"></i>`).join('')}
+async function nextQ(){if(G.qi>=MQ)return finish();const tok=++G.tok;G.miss=0;G.lock=false;G.q=GEN[G.mid](G.lv);st().innerHTML='';an().innerHTML='';drawDots();say(G.q.ask);
+await G.q.draw(st(),tok);if(tok!==G.tok)return;if(G.q.build)G.q.build(an(),tok);else choiceBtns()}
+function choiceBtns(){const q=G.q;an().innerHTML=q.ch.map(v=>`<button class="num" data-v="${v}">${v}</button>`).join('');an().querySelectorAll('.num').forEach(b=>b.onclick=()=>pickAns(+b.dataset.v,b))}
+async function pickAns(v,b){if(G.lock)return;const q=G.q,tok=G.tok;
+if(v===q.ans){b.classList.add('ok');an().querySelectorAll('.num').forEach(x=>x.disabled=true);await good(tok)}
+else{b.classList.add('no');b.disabled=true;await bad(tok)}}
+async function good(tok){G.lock=true;G.res.push(!G.miss);if(!G.miss)G.ok++;drawDots();sfx('ok');fx();const q=G.q;
+say((G.miss?pick(['맞았어!','찾았다!','그렇지!']):pick(['딩동댕!','멋져요!','척척박사!','바로 그거야!','최고예요!']))+(q.good?' '+q.good:''));
+if(q.after)await q.after(st(),tok);await sl(q.wait||1500);if(tok!==G.tok)return;G.qi++;nextQ()}
+async function bad(tok){G.miss++;sfx('no');const q=G.q;
+if(G.miss===1){G.lock=true;say(q.oops||pick(['괜찮아, 같이 볼까?','앗, 다시 살펴보자!']));if(q.hint)await q.hint(st(),tok);if(tok!==G.tok)return;G.lock=false;if(q.retry)say(q.retry)}
+else{const r=an().querySelector(`[data-v="${q.ans}"]`);if(r)r.classList.add('glow');say(q.show||`정답은 <b>${q.ans}</b>! 반짝이는 걸 눌러 봐.`)}}
+function finish(){const sc=G.ok,s=sc>=5?3:sc>=4?2:sc>=3?1:0,k=G.mid+G.lv,m=MODES.find(x=>x.id===G.mid);
+const prev=S.stars[k]||0;S.stars[k]=Math.max(prev,s);const t=S.stats[k]||{ok:0,n:0};t.ok+=sc;t.n+=MQ;S.stats[k]=t;
+S.log.unshift({t:Date.now(),k,ok:sc});S.log=S.log.slice(0,40);
+let ns=null;if(s>=2){const left=STK.filter(e=>!S.stk.includes(e));if(left.length){ns=pick(left);S.stk.push(ns)}}save();
+sfx(s?'win':'tap');if(s)fx();
+$('#resT').textContent=['한 번 더 해 볼까?','좋아요!','잘했어요!','완벽해요!'][s];
+$('#resS').innerHTML=[0,1,2].map(i=>`<span class="${i<s?'on':''}" style="animation-delay:${i*.25}s">${ic('⭐')}</span>`).join('');
+$('#resP').textContent=`${MQ}문제 중 ${sc}문제를 한 번에 맞혔어요`;
+$('#resN').innerHTML=ns?`<div class="newst"><span>${ic(ns)}</span>새 스티커 친구가 왔어요!</div>`:'';
+const nx=G.lv<2&&unlocked(G.mid,G.lv+1);
+$('#resB').innerHTML=`<button class="btn" id="rH">${ic('🏠','in')} 마을</button><button class="btn pri" id="rA">${ic('🔁','in')} 다시</button>`+(nx?`<button class="btn grn" id="rN">다음 단계 ${ic('➡️','in')}</button>`:'');
+$('#ovRes').classList.add('on');speak($('#resT').textContent+(ns?' 새 스티커를 받았어요!':''));
+const {mid,lv}=G;$('#rH').onclick=()=>{close();show('home')};$('#rA').onclick=()=>{close();start(mid,lv)};if(nx)$('#rN').onclick=()=>{close();start(mid,lv+1)}}
+$('#bBack').onclick=()=>{sfx('tap');if(G)G.tok++;try{speechSynthesis.cancel()}catch(_){}show('home')};
+
+// 보기 고르기: 정답 주변의 수 4개를 작은 수부터
+function choices(ans,lo,hi,ds=[1,-1,2,-2,3,-3]){const s=new Set([ans]);const near=shuf(ds.slice(0,4));for(const d of near.concat(ds,[1,-1,2,-2,3,-3,4,-4,5,-5])){const v=ans+d;if(v>=lo&&v<=hi)s.add(v);if(s.size>=4)break}
+for(let v=lo;s.size<4&&v<=hi;v++)s.add(v);return [...s].sort((a,b)=>a-b)}
+
+// ---- 1. 반짝 언덕: 한눈에 알아보기
+const DICE={1:[[1,1]],2:[[0,0],[2,2]],3:[[0,0],[1,1],[2,2]],4:[[0,0],[2,0],[0,2],[2,2]],5:[[0,0],[2,0],[1,1],[0,2],[2,2]],6:[[0,0],[0,1],[0,2],[2,0],[2,1],[2,2]]};
+function scatter(n){for(let t=0;t<200;t++){const p=[];let ok=true;for(let i=0;i<n&&ok;i++){let placed=false;for(let k=0;k<60;k++){const x=14+R()*72,y=14+R()*72;if(p.every(q=>(q[0]-x)**2+(q[1]-y)**2>=(n>4?22:26)**2)){p.push([x,y]);placed=true;break}}ok=placed}if(ok)return p}
+return Array.from({length:n},(_,i)=>[20+(i%3)*30,20+Math.floor(i/3)*30])}
+const GEN={};
+GEN.flash=lv=>{const e=pick(FRIENDS);let n,pos,wide=false,shape;
+if(lv===0){n=pick([1,2,3,3,4,4,5]);pos=scatter(n)}
+else if(lv===1){n=ri(1,6);pos=DICE[n].map(([c,r])=>[22+c*28,22+r*28])}
+else{shape=pick(['tf','tf','dom']);
+ if(shape==='tf'){n=ri(5,10);pos=Array.from({length:n},(_,i)=>[14+(i%5)*18,34+Math.floor(i/5)*32])}
+ else{const a=ri(1,5),b=ri(Math.max(1,5-a),5);n=a+b;wide=true;const hp=(k,ox)=>DICE[k].map(([c,r])=>[ox+c*14.5,22+r*28]);pos=hp(a,10.5).concat(hp(b,60.5))}}
+const time=[1500,1200,1200][lv];let peeks=1;
+const item=(p,i)=>`<div class="it" data-i="${i}" style="left:${p[0]}%;top:${p[1]}%">${ic(e)}</div>`;
+async function flashShow(tok){const c=st().querySelector('.cover');c.classList.add('off');await sl(time);if(tok!==G.tok)return;c.classList.remove('off')}
+return{ans:n,ask:`몇 마리였을까? 잘 봐!`,good:`${cnt(n,'마리')}!`,retry:'몇 마리였는지 골라 봐!',
+ ch:choices(n,1,10),
+ async draw(el,tok){el.innerHTML=`<div class="field ${wide?'wide':''}">${pos.map(item).join('')}<div class="cover">?</div></div><button class="btn again" style="visibility:hidden">${ic('👀','in')} 한 번 더 보기</button>`;
+  await sl(700);if(tok!==G.tok)return;say('하나, 둘, 셋… 반짝!',false);await flashShow(tok);if(tok!==G.tok)return;say('몇 마리였을까?');
+  const ag=el.querySelector('.again');ag.style.visibility='visible';ag.onclick=async()=>{if(G.lock||!peeks)return;peeks--;ag.style.visibility='hidden';sfx('tap');G.lock=true;await flashShow(tok);G.lock=false}},
+ async hint(el,tok){const f=el.querySelector('.field');f.querySelector('.cover').classList.add('off');el.querySelector('.again').style.visibility='hidden';
+  const its=[...f.querySelectorAll('.it')];for(let i=0;i<its.length;i++){if(tok!==G.tok)return;its[i].classList.add('pop');its[i].insertAdjacentHTML('beforeend',`<em>${i+1}</em>`);sfx('tap');speak(NAT[i+1]);await sl(520)}},
+ after(el){const c=el.querySelector('.cover');if(c)c.classList.add('off')}}};
+
+// ---- 2. 열칸 기차역: 5와 10, 가르기와 모으기
+GEN.train=lv=>{const A=pick(FRIENDS);let B=pick(FRIENDS);while(B===A)B=pick(FRIENDS);
+const seats=lv===0?5:10;const car=(cells,tun)=>`<div class="train"><div class="car"><div class="tf" style="grid-template-columns:repeat(5,1fr)">${cells}${tun||''}</div></div><div class="wheels"><i></i><i></i><i></i></div></div>`;
+const cell=(e,i)=>`<div class="cell ${e?'':'e'}" data-i="${i}">${e?ic(e):''}</div>`;
+async function numberEmpty(el,tok,from){const cs=[...el.querySelectorAll('.cell')].slice(from);for(let i=0;i<cs.length;i++){if(tok!==G.tok)return;cs[i].insertAdjacentHTML('beforeend',`<em>${i+1}</em>`);sfx('tap');speak(NAT[i+1]);await sl(500)}}
+if(lv<2){const n=lv===0?ri(1,4):ri(1,9),ans=seats-n;const cells=Array.from({length:seats},(_,i)=>cell(i<n?A:null,i)).join('');
+ return{ans,ch:choices(ans,0,seats),ask:lv===0?'빈자리는 몇 개일까?':`${seats}명이 타려면 몇 명 더 타야 할까?`,good:`${wa(n)} ${eul(ans)} 모으면 ${seats}!`,retry:'빈자리 수를 골라 봐!',
+  draw(el){el.innerHTML=car(cells)+`<div class="lbl">${ic(A,'in')} ${n}마리가 탔어요</div>`},
+  hint:(el,tok)=>numberEmpty(el,tok,n),
+  async after(el,tok){const cs=[...el.querySelectorAll('.cell.e')];for(const c of cs){if(tok!==G.tok)return;c.classList.remove('e');c.innerHTML=ic(B);await sl(110)}}}}
+// 3단계: 두 친구 모으기 / 터널에 가려진 수 가르기
+const a=ri(2,7),b=ri(1,10-a),tot=a+b;const cells=Array.from({length:10},(_,i)=>cell(i<a?A:i<tot?B:null,i)).join('');
+if(R()<.5)return{ans:tot,ch:choices(tot,2,10),ask:`${ic(A,'in')}와 ${ic(B,'in')}, 모두 몇 마리일까?`,good:`${wa(a)} ${eul(b)} 모으면 ${tot}!`,retry:'모두 몇 마리인지 골라 봐!',
+ draw(el){el.innerHTML=car(cells)},
+ async hint(el,tok){const cs=[...el.querySelectorAll('.cell')].slice(0,tot);for(let i=0;i<cs.length;i++){if(tok!==G.tok)return;cs[i].insertAdjacentHTML('beforeend',`<em>${i+1}</em>`);sfx('tap');speak(NAT[i+1]);await sl(450)}}};
+// 터널: 앞쪽 a칸만 보이고 뒤쪽은 터널 속
+const w=(10-a)/10;
+return{ans:b,ch:choices(b,0,9),ask:`모두 ${tot}마리가 탔어요. 터널 속에는 몇 마리?`,good:`${eun(tot)} ${wa(a)} ${ro(b)} 가를 수 있어!`,retry:'터널 속 친구 수를 골라 봐!',
+ draw(el){el.innerHTML=car(cells,'')+`<div class="lbl">${ic(A,'in')} ${a}마리 보이고, 모두 ${tot}마리</div>`;
+  // 2줄 10칸에서 a칸 이후를 가리는 터널(줄마다)
+  const tf=el.querySelector('.tf'),cs=[...tf.querySelectorAll('.cell')];
+  requestAnimationFrame(()=>{const r0=tf.getBoundingClientRect();const mk=(i0,i1)=>{if(i0>i1)return;const s=cs[i0].getBoundingClientRect(),e2=cs[i1].getBoundingClientRect();const t=document.createElement('div');t.className='tunnel';t.textContent='?';Object.assign(t.style,{left:(s.left-r0.left-6)+'px',width:(e2.right-s.left+12)+'px',top:(s.top-r0.top-6)+'px',height:(s.height+12)+'px',right:'auto',bottom:'auto',borderRadius:'14px'});tf.appendChild(t)};
+   if(a<5){mk(a,4);mk(5,9)}else mk(a,9)})},
+ async hint(el,tok){el.querySelectorAll('.tunnel').forEach(t=>t.classList.add('off'));await sl(300);const cs=[...el.querySelectorAll('.cell')].slice(a,tot);for(let i=0;i<cs.length;i++){if(tok!==G.tok)return;cs[i].insertAdjacentHTML('beforeend',`<em>${i+1}</em>`);sfx('tap');speak(NAT[i+1]);await sl(500)}},
+ after(el){el.querySelectorAll('.tunnel').forEach(t=>t.classList.add('off'))}}};
+
+// ---- 3. 징검다리 개울: 수의 순서, 이어 세기, 뛰어 세기
+GEN.stone=lv=>{const L=7;let step=1,s0,rev=false;
+if(lv===0){s0=ri(1,20-L+1)}
+else if(lv===1){rev=R()<.4;s0=rev?ri(20+L,100):ri(20,100-L+1)}
+else{step=pick([2,5,10]);if(step===10){s0=pick([0,10,ri(1,9)])}else s0=step*ri(0,(step===2?14:6));rev=R()<.3;if(rev)s0+=step*(L-1)}
+const seq=Array.from({length:L},(_,i)=>s0+(rev?-1:1)*step*i);const hid=ri(lv===0?2:1,L-1),ans=seq[hid];
+const dir=step>1?`${step}씩 ${rev?'작아져요':'커져요'}`:rev?'1씩 작아져요 (거꾸로)':'1씩 커져요';
+const stoneH=(v,i)=>`<div class="stone ${i===hid?'q':''}" data-i="${i}">${i===hid?'?':v}</div>`;
+let at=hid-1;onresize=()=>{if(st().querySelector('.frog'))place(st(),at)};
+const place=(el,i)=>{at=i;const s=el.querySelectorAll('.stone')[i],r=el.querySelector('.stones').getBoundingClientRect(),b=s.getBoundingClientRect();el.querySelector('.frog').style.left=(b.left-r.left+b.width/2)+'px'};
+return{ans,ch:choices(ans,0,1000,step>1?[step,-step,1,-1,2*step]:[1,-1,2,-2,10,-10]),ask:'물음표 돌에 들어갈 수는?',good:`${ans}!`,retry:'물음표 돌의 수를 골라 봐!',wait:1700,
+ draw(el){el.innerHTML=`<div class="river"><div class="stones">${seq.map(stoneH).join('')}<div class="frog">${ic('🐸')}</div></div></div><div class="dir">${ic(rev?'⬅️':'➡️','in')} ${dir}</div>`;requestAnimationFrame(()=>place(el,hid-1))},
+ async hint(el,tok){const ss=el.querySelectorAll('.stone');for(let i=1;i<L;i++){if(tok!==G.tok)return;ss[i].insertAdjacentHTML('beforeend',`<sup>${rev?'-':'+'}${step}</sup>`)}
+  for(let i=0;i<hid;i++){if(tok!==G.tok)return;place(el,i);sfx('hop');speak(String(seq[i]));await sl(650)}},
+ async after(el,tok){const s=el.querySelectorAll('.stone')[hid];s.classList.remove('q');s.textContent=ans;place(el,hid);sfx('hop');await sl(400);if(tok!==G.tok)return;
+  for(let i=hid+1;i<L;i++){await sl(260);if(tok!==G.tok)return;place(el,i);sfx('hop')}}}};
+
+// ---- 4. 백칸 숲: 수 배열표의 규칙
+GEN.forest=lv=>{const c=ri(1,8)*10+ri(2,9),D={L:-1,R:1,U:-10,D:10,UL:-11,UR:-9,DL:9,DR:11};
+// c: 11~89 중 가장자리가 아닌 수
+let dir;if(lv===0)dir=pick(['L','R']);else if(lv===1)dir=pick(['U','D','U','D','L','R']);else dir=pick(['UL','UR','DL','DR','U','D']);
+const ans=c+D[dir];const lay=['UL','U','UR','L','C','R','DL','D','DR'];
+const tl=(k,show)=>k==='C'?`<div class="tile c">${c}</div>`:k===dir?`<div class="tile q" data-k="${k}">?</div>`:show?`<div class="tile v" data-k="${k}">${c+D[k]}</div>`:`<div class="tile" data-k="${k}">${ic('🌳')}</div>`;
+const say2={L:'왼쪽',R:'오른쪽',U:'위',D:'아래',UL:'왼쪽 위',UR:'오른쪽 위',DL:'왼쪽 아래',DR:'오른쪽 아래'}[dir];
+return{ans,ch:choices(ans,1,100,[1,-1,10,-10,11,-11,9,-9].filter(x=>x!==0)),ask:`${c}의 ${say2} 칸에 숨은 수는?`,good:`${c}의 ${say2} 칸은 ${ans}!`,retry:'숨은 수를 골라 봐!',
+ draw(el){el.innerHTML=`<div class="grid9">${lay.map(k=>tl(k,false)).join('')}</div><div class="hint100">1부터 100까지 수 배열표의 한 조각이에요<br>${ic('➡️','in')} 오른쪽은 1 커지고 ${ic('⬇️','in')} 아래는 10 커져요</div>`},
+ async hint(el,tok){const ts=el.querySelectorAll('.tile[data-k]');for(const t of ts){if(tok!==G.tok)return;const k=t.dataset.k;if(k===dir)continue;t.className='tile v';t.textContent=c+D[k];sfx('tap');await sl(180)}},
+ after(el){const t=el.querySelector('.tile.q');t.classList.remove('q');t.classList.add('c');t.textContent=ans}}};
+
+// ---- 5. 묶음 가게: 10개씩 묶음과 낱개 (자릿값)
+GEN.shop=lv=>{const e=pick(['🍪','🍩','🍓','🧁','🍊','🍎']);
+const pack=k=>`<div class="pk" data-p="${k}">${Array.from({length:10},()=>ic(e)).join('')}</div>`;
+const lo=k=>`<div class="lo">${ic(e)}</div>`;
+if(lv<2){let t,o;if(lv===0){t=1;o=ri(1,9)}else if(R()<.25){t=ri(1,6);o=ri(10,14)}else{t=ri(2,9);o=ri(0,9)}const n=t*10+o;
+ return{ans:n,ch:choices(n,1,200,[1,-1,10,-10,2,-2]),ask:o>=10?'묶음도 있고 낱개도 많아요. 모두 몇 개?':'모두 몇 개일까?',good:`10개씩 ${t}묶음, 낱개 ${o}개는 ${n}!`,retry:'모두 몇 개인지 골라 봐!',
+  draw(el){el.innerHTML=`<div class="shelf"><div class="packs">${Array.from({length:t},(_,k)=>pack(k)).join('')}</div><div class="loose">${Array.from({length:o},lo).join('')}</div></div><div class="lbl">한 봉지에 10개씩 들어 있어요</div>`},
+  async hint(el,tok){let v=0;for(const p of el.querySelectorAll('.pk')){if(tok!==G.tok)return;v+=10;p.classList.add('on');p.insertAdjacentHTML('beforeend',`<em>${v}</em>`);sfx('tap');speak(String(v));await sl(650)}
+   for(const l of el.querySelectorAll('.lo')){if(tok!==G.tok)return;v++;l.classList.add('on');l.insertAdjacentHTML('beforeend',`<em>${v}</em>`);sfx('tap');speak(String(v));await sl(520)}}}}
+// 3단계: 주문만큼 담기
+const target=ri(12,59);let P=0,O=0,hist=[];
+return{ans:target,ask:`손님이 ${target}개를 주문했어요. 담아 볼까?`,good:'주문 완료!',
+ draw(el){el.innerHTML=`<div class="order">${ic('🧾','in')} 주문: <b>${target}</b>개</div><div class="shelf"><div class="packs" id="sP"></div><div class="loose" id="sO"></div></div>`},
+ build(box,tok){const rd=()=>{st().querySelector('#sP').innerHTML=Array.from({length:P},(_,k)=>pack(k)).join('');st().querySelector('#sO').innerHTML=Array.from({length:O},lo).join('');bt.tie.style.display=O>=10?'':'none'};
+  box.innerHTML=`<div class="tools"><button class="btn" data-a="p">${ic('🛍️','in')} 10개 봉지 +</button><button class="btn" data-a="o">${ic(e,'in')} 낱개 +</button><button class="btn" data-a="t" style="display:none">${ic('🎀','in')} 10개 묶기</button><button class="btn" data-a="u">${ic('↩️','in')} 빼기</button><button class="btn grn" data-a="d">${ic('✅','in')} 다 담았어요</button></div>`;
+  const bt={tie:box.querySelector('[data-a="t"]')};
+  box.querySelectorAll('[data-a]').forEach(b=>b.onclick=async()=>{if(G.lock||tok!==G.tok)return;const a=b.dataset.a;sfx('tap');
+   if(a==='p'&&P<9){P++;hist.push('p')}else if(a==='o'&&O<19){O++;hist.push('o')}else if(a==='t'&&O>=10){O-=10;P++;hist=hist.filter(x=>x!=='o');for(let i=0;i<O;i++)hist.push('o');hist.push('t');say('낱개 10개가 한 봉지가 됐어요!')}
+   else if(a==='u'&&hist.length){const h=hist.pop();if(h==='p')P--;else if(h==='o')O--;else{P--;O+=10}}
+   else if(a==='d'){const v=P*10+O;if(v===target){G.q.good=`10개씩 ${P}봉지, 낱개 ${O}개면 ${target}개!`+(O>=10?' 낱개 10개는 한 봉지로 바꿀 수도 있어요.':'');box.querySelectorAll('button').forEach(x=>x.disabled=true);await good(tok)}
+    else{G.miss++;sfx('no');say(v<target?`지금은 ${v}개예요. ${target-v}개 더 필요해요!`:`지금은 ${v}개예요. ${v-target}개 너무 많아요!`)}}
+   rd()});rd()}}};
+
+// ---- 6. 소풍 바구니: 같은 수씩 묶어 세기
+GEN.picnic=lv=>{const e=pick(['🍓','🍎','🍊','🍋','🍑','🍒','🥕','🍙']);let m,g;
+if(lv===0){m=2;g=ri(2,6)}else if(lv===1){m=pick([5,5,10]);g=m===10?ri(2,4):ri(2,6)}else{m=pick([3,4]);g=ri(2,5)}
+const ans=m*g,cols=m===10?5:m===4?2:m;let k=0;
+const tapB=(b)=>{if(b.classList.contains('done'))return;k++;b.classList.add('done');b.insertAdjacentHTML('beforeend',`<b>${k*m}</b>`);sfx('tap');speak(String(k*m))};
+return{ans,ch:choices(ans,1,100,[m,-m,1,-1,2*m]),ask:`바구니마다 ${m}개씩! 모두 몇 개일까?`,retry:'바구니를 눌러 세어 봐도 돼!',wait:2600,
+ good:`${m}씩 ${g}묶음은 ${ans}!`,
+ draw(el){el.innerHTML=`<div class="baskets">${Array.from({length:g},()=>`<div class="bk" style="grid-template-columns:repeat(${cols},1fr)">${Array.from({length:m},()=>`<span class="f">${ic(e)}</span>`).join('')}</div>`).join('')}</div><div class="dir">바구니를 하나씩 누르면 ${m}씩 세어 줘요</div>`;
+  el.querySelectorAll('.bk').forEach(b=>b.onclick=()=>{if(!G.lock)tapB(b)})},
+ async hint(el,tok){el.querySelectorAll('.bk').forEach(b=>{b.classList.remove('done');const x=b.querySelector('b');if(x)x.remove()});k=0;for(const b of el.querySelectorAll('.bk')){if(tok!==G.tok)return;tapB(b);await sl(700)}},
+ after(el){const seqs=Array.from({length:g},(_,i)=>(i+1)*m).join(', ');el.querySelector('.dir').outerHTML=`<div class="sent">${seqs}<br>${Array(g).fill(m).join(' + ')} = ${ans}${lv===2?`<br>${m} × ${g} = ${ans}`:''}</div>`}}};
+
+// ---- 스티커북
+const STK=['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐸','🐵','🐔','🐧','🐤','🦄','🐝','🐞','🦋','🐢','🐙','🦀','🐳','🐬','🦖','🍓','🍰'];
+function drawBook(){$('#bookN').innerHTML=`${ic('⭐','in')} ${S.stk.length} / ${STK.length}`;$('#bookG').innerHTML=STK.map(e=>S.stk.includes(e)?`<div class="stk">${ic(e)}</div>`:`<div class="stk lock"><img class="px" src="${gu(e)}" alt=""></div>`).join('')}
+$('#bBook').onclick=()=>{sfx('tap');show('book')};
+
+// ---- 설정
+const OPTS=[['pixel','도트 그림','동물 친구들을 도트(픽셀)로 보여 줘요'],['voice','콩이 목소리','문제와 수를 소리 내어 읽어 줘요'],['sound','효과음','맞힘·틀림 소리']];
+function drawSet(){$('#setL').innerHTML=OPTS.map(([k,t,d])=>`<div class="tg"><span>${t}<small>${d}</small></span><button class="sw ${S.opt[k]?'on':''}" data-k="${k}" aria-label="${t}"></button></div>`).join('');
+$('#setL').querySelectorAll('.sw').forEach(b=>b.onclick=()=>{const k=b.dataset.k;S.opt[k]=S.opt[k]?0:1;save();sfx('tap');drawSet();if(k==='pixel'){paint();drawHome()}})}
+$('#bSet').onclick=()=>{sfx('tap');drawSet();$('#ovSet').classList.add('on')};
+
+// ---- 부모님께 (꾹 누르면 열림)
+(()=>{const b=$('#bParent'),bar=b.querySelector('i');let t0=0,raf=0;
+const stop=()=>{cancelAnimationFrame(raf);t0=0;bar.style.width='0'};
+const tick=()=>{const p=Math.min(1,(performance.now()-t0)/1500);bar.style.width=p*100+'%';if(p>=1){stop();openParent()}else raf=requestAnimationFrame(tick)};
+b.addEventListener('pointerdown',e=>{e.preventDefault();t0=performance.now();raf=requestAnimationFrame(tick)});['pointerup','pointerleave','pointercancel'].forEach(k=>b.addEventListener(k,stop))})();
+const PTF=()=>[
+{t:'수 감각이란',h:`<h3>수 감각, 계산보다 먼저 자라는 힘</h3>
+<p>수 감각(number sense)은 숫자를 외워 쓰는 능력과는 조금 다릅니다. 눈앞의 양이 얼마쯤인지 느끼고, 수를 쪼개거나 합쳐 보고, 한 수가 다른 수와 어떤 관계인지 떠올리는 <b>직관적인 이해</b>를 말합니다. 아이들은 보통 초등학교에 들어오기 전부터 놀이와 생활 속에서 이 감각을 조금씩 쌓아 갑니다.</p>
+<p>저학년 때 덧셈·뺄셈에서 자꾸 막히거나, 어떤 문제든 손가락으로 1부터 다시 세는 아이들 가운데에는 이 바탕이 아직 단단하지 않은 경우가 많습니다. 반대로 바탕이 튼튼하면 학년이 올라가 큰 수, 곱셈, 분수를 만나도 훨씬 덜 흔들립니다.</p>
+<h4>수콩마을의 여섯 장소 = 여섯 가지 감각</h4>
+<table><tr><th>장소</th><th>기르는 감각</th></tr>
+<tr><td>${ic('✨','in')} 반짝 언덕</td><td>세지 않고 한눈에 수 알아보기</td></tr>
+<tr><td>${ic('🚂','in')} 열칸 기차역</td><td>5와 10을 기준으로 보기, 가르기·모으기</td></tr>
+<tr><td>${ic('🐸','in')} 징검다리 개울</td><td>수의 순서, 이어 세기·거꾸로 세기·뛰어 세기</td></tr>
+<tr><td>${ic('🌳','in')} 백칸 숲</td><td>1~100 수 배열의 규칙(1씩, 10씩)</td></tr>
+<tr><td>${ic('🏪','in')} 묶음 가게</td><td>10개를 한 묶음으로 보기, 자릿값</td></tr>
+<tr><td>${ic('🧺','in')} 소풍 바구니</td><td>같은 수씩 묶어 세기, 곱셈의 씨앗</td></tr></table>
+<h4>함께해 주실 때</h4>
+<ul><li><b>짧게, 자주.</b> 하루 5~10분, 한 장소에서 한 판(5문제)이면 충분합니다.</li>
+<li><b>답보다 방법을 물어 주세요.</b> "어떻게 알았어?"라는 질문이 아이의 생각을 말로 꺼내 줍니다.</li>
+<li><b>세는 것을 막지 마세요.</b> 하나씩 세는 단계를 충분히 거친 아이가 자연스럽게 묶어 보기로 넘어갑니다. 게임은 틀리면 함께 세어 보는 장면을 보여 줍니다.</li>
+<li><b>쉬운 단계로 돌아가는 것은 뒷걸음이 아닙니다.</b> 별 3개를 받을 때까지 같은 단계를 반복해도 좋습니다.</li>
+<li>틀린 답은 별 개수에만 반영되고, 아이는 정답을 찾을 때까지 다시 고를 수 있습니다.</li></ul>`},
+{t:'반짝 언덕',h:`<h3>${ic('✨','in')} 반짝 언덕 · 한눈에 알아보기</h3><span class="tag">직산(subitizing)</span><span class="tag">수의 모양</span>
+<h4>놀이 속 수학</h4><p>동물 친구들이 1초 남짓 나타났다가 덮개에 가려집니다. 하나씩 셀 시간이 없기 때문에 아이는 모여 있는 <b>모양 전체</b>로 수를 알아보게 됩니다. 단계가 오를수록 흩어진 배치 → 주사위 배치 → 10칸·도미노 배치로 바뀝니다.</p>
+<h4>배경이 되는 생각</h4><p>사람은 대개 서너 개까지는 세지 않고도 곧바로 몇 개인지 압니다. 이를 <b>지각적 직산</b>이라고 합니다. 그보다 많은 양은 "셋하고 둘이니까 다섯"처럼 작은 덩어리로 나누어 재빨리 합쳐 알아보는데, 이것을 <b>개념적 직산</b>이라고 부릅니다. 이렇게 덩어리로 보는 습관은 곧 '수를 가르고 모으는 생각'이어서, 이후 덧셈·뺄셈 전략의 출발점이 됩니다.</p>
+<p>주사위 눈이나 10칸 틀처럼 늘 같은 자리에 놓이는 배치는 수마다 고유한 '얼굴'을 갖게 해 줍니다. 얼굴을 기억한 수는 세지 않고 떠올릴 수 있습니다.</p>
+<h4>집에서 이렇게</h4><ul><li>주사위를 굴리자마자 손으로 덮고 "몇이었어?" 묻기</li><li>손가락을 잠깐 펴 보였다가 숨기기 (5는 한 손 전체!)</li><li>바둑돌·단추를 한 줌 놓고 3초만 보여 주기</li></ul>
+<h4>살펴볼 점</h4><ul><li>4개 이하에서도 자주 틀린다면 1단계만 여러 번 해 주세요.</li><li>'한 번 더 보기'는 문제마다 한 번 쓸 수 있습니다. 자꾸 쓴다면 보이는 시간이 아직 짧게 느껴진다는 신호입니다.</li></ul>`},
+{t:'열칸 기차역',h:`<h3>${ic('🚂','in')} 열칸 기차역 · 5와 10을 기준으로</h3><span class="tag">10칸 틀(ten-frame)</span><span class="tag">부분과 전체</span><span class="tag">10의 짝</span>
+<h4>놀이 속 수학</h4><p>5칸·10칸 기차에 친구들이 왼쪽 위부터 차례로 앉습니다. 빈자리 수를 맞히고, 10명을 채우려면 몇 명이 더 필요한지 생각하고, 3단계에서는 두 무리를 모으거나 터널에 가려진 수를 찾습니다(가르기).</p>
+<h4>배경이 되는 생각</h4><p>한 수를 두 부분으로 나누고 다시 합치는 <b>부분-전체 관계</b>는 덧셈과 뺄셈을 하나로 이어 주는 핵심 생각입니다. "7은 5와 2", "7은 10보다 3 작은 수"처럼 하나의 수를 여러 방식으로 볼 수 있어야 계산이 유연해집니다.</p>
+<p>10칸 틀은 <b>5와 10이라는 기준점</b>을 눈에 보이게 만들어 줍니다. 한 줄이 꽉 차면 5, 두 줄이 꽉 차면 10이라 세지 않아도 양이 드러납니다. 특히 더해서 10이 되는 짝(1과 9, 2와 8, 3과 7 …)을 빠르게 떠올리는 힘은 8+5를 '8+2+3'으로 바꾸는 받아올림 전략의 열쇠입니다.</p>
+<h4>집에서 이렇게</h4><ul><li>10구 달걀판에 작은 물건을 넣고 "몇 개 더 넣으면 꽉 찰까?"</li><li>양손 열 손가락 중 몇 개를 접고 "펴진 건 몇 개?"</li><li>숫자 카드로 더해서 10 되는 짝 찾기</li></ul>
+<h4>살펴볼 점</h4><ul><li>빈칸을 1부터 하나씩 세는지, 한 줄을 보고 바로 답하는지 지켜봐 주세요. 바로 답하기 시작하면 다음 단계로 가도 좋습니다.</li></ul>`},
+{t:'징검다리 개울',h:`<h3>${ic('🐸','in')} 징검다리 개울 · 수의 순서</h3><span class="tag">수 계열</span><span class="tag">이어 세기</span><span class="tag">뛰어 세기</span>
+<h4>놀이 속 수학</h4><p>개구리가 숫자 돌을 차례로 건넙니다. 물음표 돌에 알맞은 수를 찾으려면 앞뒤 수의 흐름을 읽어야 합니다. 1씩 커지는 길, 거꾸로 작아지는 길, 2·5·10씩 뛰는 길이 나옵니다.</p>
+<h4>배경이 되는 생각</h4><p>수는 하나씩 커지는 긴 줄을 이룹니다. 아이가 덧셈을 할 때 처음에는 두 묶음을 모두 1부터 세지만(모두 세기), 점차 큰 수에서 시작해 이어서 세는 방법(<b>이어 세기</b>)으로 넘어갑니다. 이 전환에는 "아무 수에서나 다음 수, 앞의 수를 바로 말할 수 있는 힘"이 필요합니다. 거꾸로 세기는 뺄셈의 바탕이 되고, 일정하게 <b>뛰어 세기</b>는 곱셈과 큰 수의 이해로 이어집니다.</p>
+<h4>집에서 이렇게</h4><ul><li>계단을 오르며 13부터, 내려오며 거꾸로 세기</li><li>엘리베이터·아파트 동 번호로 "다음 수는? 앞의 수는?"</li><li>박수 치며 2, 4, 6… / 5, 10, 15…</li></ul>
+<h4>살펴볼 점</h4><ul><li>거꾸로 세기가 앞으로 세기보다 어려운 것은 아주 자연스럽습니다.</li><li>뛰어 셀 때 출발한 수를 '하나'로 함께 세는 실수가 흔합니다(예: 2에서 두 칸 뛰면 3이라고 함). 이럴 땐 말판 놀이에서 말을 옮기듯, 출발 칸은 세지 않는다는 것을 보여 주세요.</li></ul>`},
+{t:'백칸 숲',h:`<h3>${ic('🌳','in')} 백칸 숲 · 수 배열의 규칙</h3><span class="tag">100 수 배열표</span><span class="tag">1씩·10씩</span>
+<h4>놀이 속 수학</h4><p>1부터 100까지 열 개씩 줄지어 놓은 수 배열표에서 3×3 조각만 떼어 보여 줍니다. 가운데 수를 실마리로 옆·위아래·대각선에 숨은 수를 찾습니다.</p>
+<h4>배경이 되는 생각</h4><p>수 배열표는 <b>오른쪽으로 갈수록 1씩, 아래로 갈수록 10씩</b> 커지도록 짜여 있습니다. 이 짜임을 알면 숫자를 하나하나 외우지 않고도 "위 칸은 10 작다"처럼 추론할 수 있습니다. 이는 34+10, 52-10 같은 계산을 머릿속에서 한 칸 이동으로 떠올리는 힘, 곧 <b>십진법 구조에 대한 감각</b>으로 이어집니다. 대각선은 1과 10이 함께 움직인 결과(11 또는 9)라서 두 규칙을 동시에 생각해야 하는 도전 단계입니다.</p>
+<h4>집에서 이렇게</h4><ul><li>달력에서 "바로 아래 날짜는 7 큰 수"처럼 줄 규칙 찾기</li><li>수 배열표를 냉장고에 붙이고 포스트잇으로 몇 칸 가린 뒤 맞히기</li></ul>
+<h4>살펴볼 점</h4><ul><li>위아래 칸에서 1만 더하거나 빼는 실수를 한다면, 틀렸을 때 나오는 주변 수를 함께 소리 내어 읽어 보세요.</li></ul>`},
+{t:'묶음 가게',h:`<h3>${ic('🏪','in')} 묶음 가게 · 10개씩 묶음과 자릿값</h3><span class="tag">자릿값</span><span class="tag">단위화</span><span class="tag">수의 여러 표현</span>
+<h4>놀이 속 수학</h4><p>사탕 10개가 든 봉지와 낱개 사탕을 보고 모두 몇 개인지 맞힙니다. 2단계에서는 가끔 낱개가 10개를 넘게 섞여 나오고, 3단계에서는 손님 주문에 맞게 봉지와 낱개를 직접 담습니다. 낱개가 10개 모이면 '10개 묶기'로 한 봉지를 만들 수 있습니다.</p>
+<h4>배경이 되는 생각</h4><p>낱개 10개를 <b>'하나의 묶음'</b>으로 바라보는 생각을 단위화라고 합니다. 이것이 자릿값의 핵심입니다. 34에서 3은 그냥 3이 아니라 '10이 3개'라는 뜻임을 아는 것이 목표입니다.</p>
+<p>또 같은 34를 '봉지 3개와 낱개 4개'뿐 아니라 '봉지 2개와 낱개 14개'로도 나타낼 수 있다는 <b>유연한 표현</b>을 아는 것이 중요합니다. 이 생각이 있어야 받아올림(낱개 10개 → 봉지 1개)과 받아내림(봉지 1개 → 낱개 10개)을 '규칙'이 아니라 '이유'로 이해할 수 있습니다.</p>
+<h4>집에서 이렇게</h4><ul><li>빨대·면봉을 10개씩 고무줄로 묶어 보관하기</li><li>10원·100원 동전으로 장난감 물건값 내기</li></ul>
+<h4>살펴볼 점</h4><ul><li>봉지 안의 사탕을 다시 하나씩 세고 있다면 아직 단위화 전 단계입니다. 틀렸을 때 나오는 "10, 20, 30, 31, 32…" 세기를 함께 따라 말해 주세요.</li></ul>`},
+{t:'소풍 바구니',h:`<h3>${ic('🧺','in')} 소풍 바구니 · 같은 수씩 묶어 세기</h3><span class="tag">묶어 세기</span><span class="tag">반복 덧셈</span><span class="tag">곱셈의 기초</span>
+<h4>놀이 속 수학</h4><p>바구니마다 같은 개수의 과일이 들어 있습니다. 바구니를 하나씩 누르면 2, 4, 6…처럼 묶음 단위로 세어 줍니다. 정답을 맞히면 '2+2+2+2 = 8' 같은 식이 함께 나오고, 3단계에서는 곱셈식도 살짝 보여 줍니다.</p>
+<h4>배경이 되는 생각</h4><p>같은 양이 여러 번 되풀이되는 장면을 <b>'몇씩 몇 묶음'</b>으로 바라보는 것이 곱셈적 사고의 시작입니다. 낱개를 하나씩 세던 아이가 묶음째 세게 되면, 덧셈의 반복이 곧 곱셈이라는 연결이 자연스럽게 생깁니다.</p>
+<p>뛰어 세기에는 리듬이 있습니다. 5씩 셀 때 끝자리가 5, 0, 5, 0으로, 2씩 셀 때 2, 4, 6, 8, 0으로 돌아옵니다. 이런 <b>끝자리 규칙</b>을 몸으로 느낀 아이는 구구단을 외울 때도 훨씬 덜 헷갈립니다.</p>
+<h4>집에서 이렇게</h4><ul><li>양말 짝 세기(2씩), 손가락 세기(5씩), 자동차 바퀴 세기(4씩)</li><li>과자를 접시마다 같은 수만큼 나눠 담고 모두 몇 개인지 맞히기</li></ul>`},
+{t:'우리 아이 기록',h:''},
+{t:'설정·도움말',h:''}];
+let PTi=0;
+function openParent(){sfx('win');show('parent');drawPT()}
+function drawPT(){const PT=PTF();$('#ptabs').innerHTML=PT.map((p,i)=>`<button class="${i===PTi?'on':''}" data-i="${i}">${p.t}</button>`).join('');$('#ptabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{PTi=+b.dataset.i;drawPT();$('#pdoc').scrollTop=0});
+const d=$('#pdoc');if(PT[PTi].t==='우리 아이 기록')d.innerHTML=recHTML();else if(PT[PTi].t==='설정·도움말'){d.innerHTML=optHTML();bindOpt()}else d.innerHTML=PT[PTi].h+REF}
+const REF=`<div class="ref">참고한 자료: 세종특별자치시교육청(2022), 「초기 수리력 개별화 지도 자료」. 놀이 구성과 이 페이지의 설명 글은 톡톡 수콩마을을 위해 새로 만들고 쓴 것입니다.</div>`;
+function recHTML(){let rows='',weak=null;MODES.forEach(m=>m.lv.forEach((l,k)=>{const t=S.stats[m.id+k];if(!t)return;const p=Math.round(t.ok/t.n*100);if(t.n>=10&&(!weak||p<weak.p))weak={p,name:`${m.name} ${k+1}단계`};
+ rows+=`<tr><td>${ic(m.e,'in')} ${m.name}</td><td>${k+1}단계</td><td>${t.n}문제</td><td><div class="bar"><i style="width:${p}%"></i></div></td><td>${p}%</td><td>${'⭐'.repeat(stars(m.id,k))}</td></tr>`}));
+const last=S.log.slice(0,10).map(g=>{const m=MODES.find(x=>g.k.startsWith(x.id)),d=new Date(g.t);return `<tr><td>${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}</td><td>${m?m.name:''} ${+g.k.slice(-1)+1}단계</td><td>${g.ok} / ${MQ}</td></tr>`}).join('');
+return `<h3>우리 아이 기록</h3><p>'한 번에 맞힌 비율'은 처음 고른 답이 정답이었던 문제의 비율입니다. 이 기록은 이 기기의 브라우저에만 저장됩니다.</p>`+
+(rows?`<table><tr><th>장소</th><th>단계</th><th>푼 문제</th><th colspan="2">한 번에 맞힌 비율</th><th>별</th></tr>${rows}</table>`:'<p class="tip">아직 기록이 없어요. 아이와 한 판 해 보세요!</p>')+
+(weak&&weak.p<70?`<div class="tip"><b>추천:</b> ${weak.name}의 정답률이 ${weak.p}%예요. 한 단계 아래로 돌아가 별 3개를 받은 뒤 다시 도전하면 자신감이 붙습니다.</div>`:'')+
+(last?`<h4>최근 놀이</h4><table>${last}</table>`:'')}
+function optHTML(){return `<h3>설정·도움말</h3>
+<div class="tg"><span>모든 단계 열기<small>별을 받지 않아도 2·3단계를 고를 수 있어요</small></span><button class="sw ${S.opt.openAll?'on':''}" data-k="openAll"></button></div>
+${OPTS.map(([k,t,d])=>`<div class="tg"><span>${t}<small>${d}</small></span><button class="sw ${S.opt[k]?'on':''}" data-k="${k}"></button></div>`).join('')}
+<h4>이렇게 놀아요</h4><ul><li>장소를 고르고 단계를 고르면 5문제가 나옵니다.</li><li>처음 고른 답이 맞으면 초록 동그라미, 다시 골라서 맞히면 주황 동그라미가 됩니다.</li><li>한 번에 맞힌 문제 수에 따라 별(3개 이상 맞히면 1개, 4개 2개, 5개 3개)을 받습니다.</li><li>별 2개 이상이면 스티커 친구를 하나씩 모읍니다.</li></ul>
+<h4>기록 지우기</h4><p>별·스티커·기록을 모두 처음 상태로 되돌립니다.</p><button class="btn" id="bReset">${ic('🗑️','in')} 모든 기록 지우기</button>`+REF}
+function bindOpt(){$('#pdoc').querySelectorAll('.sw').forEach(b=>b.onclick=()=>{const k=b.dataset.k;S.opt[k]=S.opt[k]?0:1;save();sfx('tap');if(k==='pixel')paint();drawPT()});
+$('#bReset').onclick=()=>{if(confirm('별, 스티커, 기록을 모두 지울까요?')){S.stars={};S.stats={};S.stk=[];S.log=[];save();drawPT()}}}
+
+// ---- 시작
+function boot(){paint();drawHome()}
+boot();
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(boot);
+</script>
+</body></html>
