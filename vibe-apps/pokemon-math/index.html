@@ -37,6 +37,7 @@ img.pms{image-rendering:pixelated;display:block;width:100%;height:100%;object-fi
 .tbar{display:flex;gap:8px;flex-wrap:wrap}
 .tbar .btn{font-size:16px;padding:7px 14px;display:flex;align-items:center;gap:6px}
 .tbar .ball{width:24px;border-width:3px}
+#bFull svg{width:22px;height:22px;display:block}
 .chs{display:flex;gap:10px;overflow-x:auto;padding:12px 8px 6px;flex:none}
 .chs button{flex:none;border:3px solid var(--ink);border-radius:10px;background:#fff;padding:7px 18px;font-size:clamp(14px,2.4vmin,18px);white-space:nowrap;transform:skewX(-14deg);box-shadow:0 3px 0 var(--ink)}
 .chs button>span{display:inline-block;transform:skewX(14deg)}
@@ -302,7 +303,7 @@ img.pms{image-rendering:pixelated;display:block;width:100%;height:100%;object-fi
 <section id="home" class="scr on">
   <header>
     <div class="logo"><span class="mas" data-p></span><h1>포켓몬수학<small id="subt"></small></h1></div>
-    <div class="tbar"><button class="btn" id="bBag"><span class="ball"></span><span id="bagN">0</span></button><button class="btn" id="bDex"><span data-e="📕"></span> <span id="dexN0">0</span></button><button class="btn" id="bPomo"><span data-e="⏱️"></span> <span id="pomoN">집중</span></button><button class="btn" id="bSet"><span data-e="⚙️"></span></button></div>
+    <div class="tbar"><button class="btn" id="bBag"><span class="ball"></span><span id="bagN">0</span></button><button class="btn" id="bDex"><span data-e="📕"></span> <span id="dexN0">0</span></button><button class="btn" id="bPomo"><span data-e="⏱️"></span> <span id="pomoN">집중</span></button><button class="btn" id="bSet"><span data-e="⚙️"></span></button><button class="btn" id="bFull" aria-label="전체화면" hidden></button></div>
   </header>
   <div class="chs" id="chs"></div>
   <div id="map"></div>
@@ -347,6 +348,7 @@ img.pms{image-rendering:pixelated;display:block;width:100%;height:100%;object-fi
 <div id="fx"></div>
 
 <script src="pokedex.js"></script>
+<script src="cine/cine.js"></script>
 <script>
 'use strict';
 const $=s=>document.querySelector(s),R=Math.random,ri=(a,b)=>a+Math.floor(R()*(b-a+1)),pick=a=>a[Math.floor(R()*a.length)],sl=ms=>new Promise(r=>setTimeout(r,ms));
@@ -354,7 +356,7 @@ const shuf=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(R()*(i+1));[a[i]
 const LS={get(k,d){try{const v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(_){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(_){}}};
 const KEY='pokemath_v1';
 const S=Object.assign({stars:{},stats:{},log:[],opt:{},bag:{},dex:{},gens:[1],buddy:25,chap:0,pomo:null,pday:{d:'',n:0},pmin:15},LS.get(KEY,{}));
-S.opt=Object.assign({pixel:0,voice:1,sound:1,openAll:0,allGens:0},S.opt);
+S.opt=Object.assign({pixel:0,voice:1,sound:1,cine:1,openAll:0,allGens:0},S.opt);
 S.bag=Object.assign({poke:0,great:0,ultra:0},S.bag);
 // v2 디자인: 아이콘을 매끈한 그림으로 (예전 저장값의 도트 설정을 한 번만 바꿈)
 if((S.v||1)<2){S.opt.pixel=0;S.v=2}
@@ -405,6 +407,10 @@ else if(k==='shake'){[0,.8,1.6].forEach(t=>{tone(330,t,.08,'triangle',.07);tone(
 else if(k==='catch'){[392,392,392,523,659,784,1047].forEach((f,i)=>tone(f,i*.11,.18,'square',.05))}
 else if(k==='bell'){[0,.5,1].forEach(t=>{tone(1047,t,.35,'sine',.12);tone(1319,t+.12,.35,'sine',.08)})}
 else if(k==='win'){[523,659,784,659,784,1047].forEach((f,i)=>tone(f,i*.12,.2,'square',.05))}}catch(_){}}
+// 컷신(cine/cine.js)이 쓰는 소리 통로: 효과음이 꺼져 있으면 무음
+const audio=()=>{if(!S.opt.sound)return null;try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();return AC}catch(_){return null}};
+const film=(name,p)=>S.opt.cine&&window.CINE?CINE.play(name,p,{ac:audio}):Promise.resolve();
+const artImg=id=>{const i=new Image();i.onerror=()=>{i.onerror=null;i.src=SP(id)};i.src=ART(id);return i};
 // ---- 목소리
 const NAT=['영','하나','둘','셋','넷','다섯','여섯','일곱','여덟','아홉','열'],ADJ=['','한','두','세','네','다섯','여섯','일곱','여덟','아홉','열'];
 const cnt=(n,u)=>n<=10&&n>0?ADJ[n]+' '+u:n+u;
@@ -447,10 +453,14 @@ const CH=[{name:'1장 수감각 마을',sub:'피카츄와 함께 수 감각 모�
 const placeIcon=m=>m.p?pm(m.p):m.ball?'<span class="ball" style="width:100%"></span>':ic(m.e);
 const MQ=5;
 const stars=(m,l)=>S.stars[m+l]||0;
-const unlocked=(m,l)=>l===0||S.opt.openAll||stars(m,l-1)>0;
-const chStars=i=>MODES.filter(m=>m.ch===i).reduce((a,m)=>a+[0,1,2].reduce((b,l)=>b+stars(m.id,l),0),0);
-const chNeed=i=>MODES.filter(m=>m.ch===i).length*3;
-const chOpen=i=>i===0||(!CH[i].soon&&(S.opt.openAll||chStars(i-1)>=chNeed(i-1)));
+// 통과 = 별 2개 = 5문제 중 4문제 이상(80%)을 한 번에 맞힘. 이미 별을 받은 단계·장은 기준이 올라도 계속 열어 둔다.
+const PASS=2,passed=(m,l)=>stars(m,l)>=PASS;
+const unlocked=(m,l)=>l===0||S.opt.openAll||passed(m,l-1)||stars(m,l)>0;
+const chLv=i=>MODES.filter(m=>m.ch===i).flatMap(m=>[0,1,2].map(l=>[m.id,l]));
+const chPass=i=>chLv(i).filter(([m,l])=>passed(m,l)).length;
+// 다음 장: 앞 장 단계의 80% 이상 통과 (1장 18단계 중 15, 2장 15단계 중 12)
+const chNeed=i=>Math.ceil(chLv(i).length*.8);
+const chOpen=i=>i===0||(!CH[i].soon&&(S.opt.openAll||chPass(i-1)>=chNeed(i-1)||chLv(i).some(([m,l])=>stars(m,l)>0)));
 
 function show(id){document.querySelectorAll('.scr').forEach(s=>s.classList.toggle('on',s.id===id));if(id==='home')drawHome();if(id==='dex')drawDex();if(id==='pomo')drawPomo()}
 function drawHome(){paint($('#home header'));
@@ -458,12 +468,12 @@ $('#chs').innerHTML=CH.map((c,i)=>`<button class="${i===S.chap?'on':''} ${chOpen
 $('#chs').querySelectorAll('button').forEach(b=>b.onclick=()=>{sfx('tap');S.chap=+b.dataset.i;save();drawHome()});
 const c=CH[S.chap];$('#subt').textContent=c.sub||'피카츄와 함께 수학 모험';
 if(c.soon)$('#map').innerHTML=`<div class="soon"><span class="pic">${pm(S.buddy)}</span>2학년 모험은 준비하고 있어요!<br><small style="color:var(--sub)">세 자리 수, 받아올림 있는 두 자리 덧셈, 곱셈구구가 기다려요</small></div>`;
-else if(!chOpen(S.chap))$('#map').innerHTML=`<div class="soon"><span class="pic">${ic('🔒')}</span>${CH[S.chap-1].name}에서 별을 ${chNeed(S.chap-1)}개 모으면 열려요<br><b>지금 ${ic('⭐','in')} ${chStars(S.chap-1)} / ${chNeed(S.chap-1)}</b></div>`;
+else if(!chOpen(S.chap))$('#map').innerHTML=`<div class="soon"><span class="pic">${ic('🔒')}</span>${CH[S.chap-1].name}에서 단계를 ${chNeed(S.chap-1)}개 통과하면 열려요<br><small style="color:var(--sub)">통과: 5문제 중 4문제 이상 한 번에 맞혀 별 2개 받기</small><br><b>지금 ${ic('✅','in')} ${chPass(S.chap-1)} / ${chNeed(S.chap-1)}</b></div>`;
 else{$('#map').innerHTML=MODES.map((m,i)=>m.ch!==S.chap?'':`<button class="place" style="--c1:${m.c[0]};--c2:${m.c[1]}" data-m="${i}"><span class="pic">${placeIcon(m)}</span><b>${m.name}</b><span>${m.sub}</span><span class="st">${ic('⭐','in')} ${[0,1,2].reduce((a,l)=>a+stars(m.id,l),0)} / 9</span></button>`).join('');
  $('#map').querySelectorAll('.place').forEach(b=>b.onclick=()=>{sfx('tap');openLv(+b.dataset.m)})}
 $('#bagN').textContent=S.bag.poke+S.bag.great+S.bag.ultra;$('#dexN0').textContent=Object.keys(S.dex).length;pomoBadge()}
 function openLv(i){const m=MODES[i];$('#lvT').innerHTML=`${m.p?pm(m.p,'in'):m.ball?'':ic(m.e,'in')} ${m.name}`;
-$('#lvL').innerHTML=m.lv.map((l,k)=>{const u=unlocked(m.id,k),s=stars(m.id,k);return `<button class="btn lvl" data-k="${k}" ${u?'':'disabled'}><span class="n">${u?k+1:ic('🔒','in')}</span><span>${l[0]}<small>${l[1]}</small></span><span class="s">${[0,1,2].map(j=>j<s?ic('⭐','in'):'<span style="opacity:.25">'+ic('⭐','in')+'</span>').join('')}</span></button>`}).join('')+(S.opt.openAll?'':'<p style="font-size:13px;color:var(--sub);margin:8px 0 0">별을 하나 이상 받으면 다음 단계가 열려요</p>');
+$('#lvL').innerHTML=m.lv.map((l,k)=>{const u=unlocked(m.id,k),s=stars(m.id,k);return `<button class="btn lvl" data-k="${k}" ${u?'':'disabled'}><span class="n">${u?k+1:ic('🔒','in')}</span><span>${l[0]}<small>${l[1]}</small></span><span class="s">${[0,1,2].map(j=>j<s?ic('⭐','in'):'<span style="opacity:.25">'+ic('⭐','in')+'</span>').join('')}</span></button>`}).join('')+(S.opt.openAll?'':'<p style="font-size:13px;color:var(--sub);margin:8px 0 0">5문제 중 4문제 이상 한 번에 맞혀 별 2개를 받으면 다음 단계가 열려요</p>');
 $('#lvL').querySelectorAll('.lvl').forEach(b=>b.onclick=()=>{close();start(m.id,+b.dataset.k)});$('#ovLv').classList.add('on')}
 function close(){document.querySelectorAll('.ov').forEach(o=>o.classList.remove('on'))}
 document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>{sfx('tap');close()});
@@ -471,7 +481,7 @@ document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{sfx('tap');show
 
 // ---- 놀이 흐름
 let G=null;const st=()=>$('#stage'),an=()=>$('#ans');
-function start(mid,lv){G={mid,lv,qi:0,ok:0,res:[],tok:0,lock:false};const m=MODES.find(x=>x.id===mid);$('#ptitle').innerHTML=`${m.name}<small>${lv+1}단계 · ${m.lv[lv][0]}</small>`;
+function start(mid,lv){G={mid,lv,qi:0,ok:0,res:[],tok:0,lock:false,run:0};const m=MODES.find(x=>x.id===mid);$('#ptitle').innerHTML=`${m.name}<small>${lv+1}단계 · ${m.lv[lv][0]}</small>`;
 show('play');paint($('#ask'));nextQ()}
 function drawDots(){$('#dots').innerHTML=Array.from({length:MQ},(_,i)=>`<i class="${i<G.res.length?(G.res[i]?'g':'y'):i===G.qi?'now':''}"></i>`).join('')}
 async function nextQ(){if(G.qi>=MQ)return finish();const tok=++G.tok;G.miss=0;G.lock=false;G.q=GEN[G.mid](G.lv);st().innerHTML='';an().innerHTML='';drawDots();say(G.q.ask);
@@ -483,21 +493,30 @@ async function pickAns(v,b){if(G.lock||b.classList.contains('no'))return;const q
 if(String(v)===String(q.ans)){b.classList.add('ok');$('#play').querySelectorAll('[data-v]').forEach(x=>x.disabled=true);await good(tok)}
 else{b.classList.add('no');b.disabled=true;await bad(tok)}}
 async function good(tok){G.lock=true;G.res.push(!G.miss);if(!G.miss)G.ok++;drawDots();sfx('ok');fx();const q=G.q;
+G.run=G.miss?0:G.run+1;if(G.run===3&&G.qi<MQ-1)film('combo',{n:3,im:artImg(S.buddy)});
 say((G.miss?pick(['맞았어!','찾았다!','그렇지!']):pick(['딩동댕!','멋져요!','척척박사!','바로 그거야!','최고예요!']))+(q.good?' '+q.good:''));
 if(q.after)await q.after(st(),tok);await sl(q.wait||1500);if(tok!==G.tok)return;G.qi++;nextQ()}
 async function bad(tok){G.miss++;sfx('no');const q=G.q;
 if(G.miss===1){G.lock=true;say(q.oops||pick(['괜찮아, 같이 볼까?','앗, 다시 살펴보자!']));if(q.hint)await q.hint(st(),tok);if(tok!==G.tok)return;G.lock=false;if(q.retry)say(q.retry)}
 else{const r=$('#play').querySelector(`[data-v="${q.ans}"]`);if(r)r.classList.add('glow');say(q.show||`정답은 <b>${q.lab?q.lab(q.ans):q.ans}</b>! 반짝이는 걸 눌러 봐.`)}}
-function finish(){const sc=G.ok,s=sc>=5?3:sc>=4?2:sc>=3?1:0,k=G.mid+G.lv;
+async function finish(){const sc=G.ok,s=sc>=5?3:sc>=4?2:sc>=3?1:0,k=G.mid+G.lv,tok=G.tok;
+const chWas=CH.map((_,i)=>chOpen(i)),nxWas=G.lv<2&&unlocked(G.mid,G.lv+1);
 const prev=S.stars[k]||0;S.stars[k]=Math.max(prev,s);const t=S.stats[k]||{ok:0,n:0};t.ok+=sc;t.n+=MQ;S.stats[k]=t;
 S.log.unshift({t:Date.now(),k,ok:sc});S.log=S.log.slice(0,40);
 // 보상: 별 2개 몬스터볼, 별 3개 슈퍼볼, 그 단계에서 처음 별 3개면 하이퍼볼
 const ball=s===3&&prev<3?'ultra':s===3?'great':s===2?'poke':null;if(ball)S.bag[ball]++;save();
-sfx(s?'win':'tap');if(s)fx();
+// 통과(별 2개 이상)하면 미션 성공 영상, 새 장이 열렸으면 이어서 장 열림 영상
+const newCh=CH.findIndex((_,i)=>!chWas[i]&&chOpen(i));
+if(s>=PASS&&S.opt.cine){const bud=artImg(S.buddy);
+ await film('clear',{s,im:bud,ball,ballName:ball&&BALLS[ball].name,next:!nxWas&&G.lv<2&&unlocked(G.mid,G.lv+1)});
+ if(newCh>0)await film('chapter',{name:CH[newCh].name,sub:'새로운 모험이 열렸어요!',im:bud});
+ if(tok!==G.tok||!$('#play').classList.contains('on'))return}
+else{sfx(s?'win':'tap');if(s)fx()}
+if(newCh>0)S.chap=newCh,save();
 $('#resT').textContent=['한 번 더 해 볼까?','좋아요!','잘했어요!','완벽해요!'][s];
 $('#resS').innerHTML=[0,1,2].map(i=>`<span class="${i<s?'on':''}" style="animation-delay:${i*.25}s">${ic('⭐')}</span>`).join('');
 $('#resP').textContent=`${MQ}문제 중 ${sc}문제를 한 번에 맞혔어요`;
-$('#resN').innerHTML=ball?`<div class="newst"><span class="ball ${ball}"></span>${BALLS[ball].name}을 받았어요!</div>`:'<p class="pnote">별 2개를 받으면 몬스터볼을 줘요!</p>';
+$('#resN').innerHTML=(ball?`<div class="newst"><span class="ball ${ball}"></span>${BALLS[ball].name}을 받았어요!</div>`:'<p class="pnote">4문제 이상 한 번에 맞히면 별 2개! 몬스터볼도 받고 다음 단계도 열려요.</p>')+(newCh>0?`<div class="tip">${ic('🎉','in')} <b>${jg(CH[newCh].name,'이','가')}</b> 열렸어요!</div>`:'');
 const {mid,lv}=G,nx=lv<2&&unlocked(mid,lv+1);
 $('#resB').innerHTML=`<button class="btn" id="rH">${ic('🏠','in')} 마을</button><button class="btn" id="rA">${ic('🔁','in')} 다시</button>`+(nx?`<button class="btn grn" id="rN">다음 단계 ${ic('➡️','in')}</button>`:'')+(ball?`<button class="btn pri" id="rO">지금 열기!</button>`:'');
 $('#ovRes').classList.add('on');speak($('#resT').textContent+(ball?` ${BALLS[ball].name}을 받았어요!`:''));
@@ -817,17 +836,21 @@ const typesH=id=>DEX[id-1][4].map(t=>`<span class="tb" style="background:${TYPE_
 const no3=id=>'#'+String(id).padStart(4,'0');
 function openBall(k){return new Promise(async res=>{if(S.bag[k]<=0)return res();S.bag[k]--;
  const id=roll(k),isNew=!S.dex[id];S.dex[id]=(S.dex[id]||0)+1;const ng=checkGen();save();
- const leg=DEX[id-1][3]>0,img=new Image();img.src=ART(id);
- $('#cT').textContent=`${BALLS[k].name}을 열어요!`;$('#cP').textContent='두근두근…';$('#cB').innerHTML='';
- $('#cS').innerHTML=`<span class="ball big ${k} shk"></span>`;$('#ovCatch').classList.add('on');sfx('shake');speak(`${BALLS[k].name}을 열어요! 두근두근`);
- await sl(2500);sfx('catch');if(leg)fx();
+ const leg=DEX[id-1][3]>0,img=artImg(id);$('#cB').innerHTML='';
+ if(S.opt.cine){speak(`${BALLS[k].name}을 열어요! 두근두근`);await film('ball',{kind:k,im:img,leg,isNew,name:PN(id),kindName:leg?kind(id)+'!':''});$('#ovCatch').classList.add('on')}
+ else{$('#cT').textContent=`${BALLS[k].name}을 열어요!`;$('#cP').textContent='두근두근…';
+  $('#cS').innerHTML=`<span class="ball big ${k} shk"></span>`;$('#ovCatch').classList.add('on');sfx('shake');speak(`${BALLS[k].name}을 열어요! 두근두근`);
+  await sl(2500);sfx('catch');if(leg)fx()}
  $('#cS').innerHTML=`<div class="mon ${leg?'leg':''}">${pm(id)}</div>`;
  $('#cT').innerHTML=`${leg?'✨ ':''}${PN(id)}${isNew?'<span class="newb">NEW</span>':''}`;
  $('#cP').innerHTML=`${no3(id)} · ${DEX[id-1][1]}세대 ${typesH(id)}${leg?`<br><b>${kind(id)}!</b>`:''}<br>${isNew?'도감에 새로 등록했어요!':`${S.dex[id]}번째 ${jg(PN(id),'이에요','예요')}`}`+(ng?`<div class="tip">${ic('🎉','in')} 이제 <b>${ng}세대</b> 포켓몬도 나오기 시작해요!</div>`:'');
  speak(`와! ${jg(PN(id),'을','를')} 만났어요!`+(ng?` 이제 ${ng}세대 포켓몬도 나와요!`:''));
  const more=S.bag[k]>0;$('#cB').innerHTML=`<button class="btn grn" id="cOk">좋아!</button>`+(more?`<button class="btn pri" id="cMore">${BALLS[k].name} 또 열기 (${S.bag[k]})</button>`:'');
- $('#cOk').onclick=()=>{sfx('tap');$('#ovCatch').classList.remove('on');drawHome();res()};
- if(more)$('#cMore').onclick=async()=>{sfx('tap');$('#ovCatch').classList.remove('on');await openBall(k);res()}})}
+ // 새 세대가 열렸으면 카드를 닫을 때 그 세대 포켓몬 그림자 행렬을 보여 줌
+ const genIms=ng&&S.opt.cine?shuf(DEX.map((d,i)=>i+1).filter(i=>DEX[i-1][1]===ng&&!DEX[i-1][3])).slice(0,5).map(artImg):null;
+ const genFilm=()=>genIms?film('gen',{g:ng,ims:genIms}):Promise.resolve();
+ $('#cOk').onclick=async()=>{sfx('tap');$('#ovCatch').classList.remove('on');await genFilm();drawHome();res()};
+ if(more)$('#cMore').onclick=async()=>{sfx('tap');$('#ovCatch').classList.remove('on');await genFilm();await openBall(k);res()}})}
 function drawBag(){$('#bagL').innerHTML=Object.entries(BALLS).map(([k,b])=>`<div class="bagi"><span class="ball ${k}"></span><b>${b.name} × ${S.bag[k]}<small>${k==='poke'?'별 2개, 집중 타이머 성공':k==='great'?'별 3개':'한 단계에서 처음 별 3개'}</small></b><button class="btn pri" data-k="${k}" ${S.bag[k]?'':'disabled'}>열기</button></div>`).join('');
 $('#bagL').querySelectorAll('[data-k]').forEach(b=>b.onclick=async()=>{sfx('tap');$('#ovBag').classList.remove('on');await openBall(b.dataset.k);drawBag();$('#ovBag').classList.add('on')})}
 $('#bBag').onclick=()=>{sfx('tap');drawBag();$('#ovBag').classList.add('on')};
@@ -881,7 +904,13 @@ const tick=()=>{const p=Math.min(1,(performance.now()-t0)/ms);bar.style.width=p*
 b.addEventListener('pointerdown',e=>{e.preventDefault();t0=performance.now();raf=requestAnimationFrame(tick)});['pointerup','pointerleave','pointercancel'].forEach(k=>b.addEventListener(k,stop))}
 
 // ---- 설정
-const OPTS=[['pixel','도트 그림','과일·아이콘을 도트(픽셀)로 보여 줘요'],['voice','목소리','문제와 수를 소리 내어 읽어 줘요'],['sound','효과음','맞힘·틀림 소리']];
+const OPTS=[['pixel','도트 그림','과일·아이콘을 도트(픽셀)로 보여 줘요'],['voice','목소리','문제와 수를 소리 내어 읽어 줘요'],['sound','효과음','맞힘·틀림 소리'],['cine','영상 연출','볼 열기·미션 성공·새 장이 열릴 때 짧은 영상을 보여 줘요']];
+// ---- 전체화면 (지원하지 않는 브라우저(아이폰 사파리 등)에서는 버튼을 숨김)
+const FS_ON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>',FS_OFF='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg>';
+const fsEl=()=>document.fullscreenElement||document.webkitFullscreenElement;
+function drawFull(){const b=$('#bFull');b.hidden=!(document.fullscreenEnabled||document.webkitFullscreenEnabled);b.innerHTML=fsEl()?FS_OFF:FS_ON;b.setAttribute('aria-label',fsEl()?'전체화면 끝내기':'전체화면')}
+$('#bFull').onclick=()=>{sfx('tap');const d=document,e=d.documentElement;try{if(fsEl())(d.exitFullscreen||d.webkitExitFullscreen).call(d);else{const r=(e.requestFullscreen||e.webkitRequestFullscreen).call(e,{navigationUI:'hide'});if(r&&r.catch)r.catch(()=>{})}}catch(_){}};
+['fullscreenchange','webkitfullscreenchange'].forEach(k=>document.addEventListener(k,drawFull));drawFull();
 function drawSet(){$('#setL').innerHTML=OPTS.map(([k,t,d])=>`<div class="tg"><span>${t}<small>${d}</small></span><button class="sw ${S.opt[k]?'on':''}" data-k="${k}" aria-label="${t}"></button></div>`).join('');
 $('#setL').querySelectorAll('.sw').forEach(b=>b.onclick=()=>{const k=b.dataset.k;S.opt[k]=S.opt[k]?0:1;save();sfx('tap');drawSet();if(k==='pixel'){paint();drawHome()}})}
 $('#bSet').onclick=()=>{sfx('tap');drawSet();$('#ovSet').classList.add('on')};
@@ -927,7 +956,7 @@ const PTF=()=>[
 <h4>놀이 속 수학</h4><p>바구니마다 같은 개수의 과일이 들어 있습니다. 바구니를 하나씩 누르면 묶음 단위로 세어 주고, 정답을 맞히면 '2+2+2+2 = 8' 같은 식이 함께 나옵니다.</p>
 <h4>배경이 되는 생각</h4><p>같은 양이 되풀이되는 장면을 <b>'몇씩 몇 묶음'</b>으로 바라보는 것이 곱셈적 사고의 시작입니다. 2씩, 5씩 셀 때 끝자리가 되풀이되는 리듬은 2학년 곱셈구구의 바탕이 됩니다.</p>`},
 {t:'1학년 놀이',h:`<h3>2장·3장 · 1학년 수학으로 이어 가기</h3>
-<p>1장에서 기른 감각을 1학년 교과 내용에 그대로 이어 붙였습니다. 2장은 1장의 별을 18개, 3장은 2장의 별을 15개 모으면 열립니다(설정에서 모두 열 수 있습니다).</p>
+<p>1장에서 기른 감각을 1학년 교과 내용에 그대로 이어 붙였습니다. 한 단계는 5문제 중 4문제 이상(80%)을 한 번에 맞혀 별 2개를 받아야 <b>통과</b>이고, 통과해야 다음 단계가 열립니다. 2장은 1장 18단계 중 15단계, 3장은 2장 15단계 중 12단계(각각 80%)를 통과하면 열립니다(설정에서 모두 열 수 있습니다).</p>
 <h4>2장 · 1학년 1학기</h4><table><tr><th>장소</th><th>내용</th><th>이어지는 1장 감각</th></tr>
 <tr><td>9까지의 수</td><td>세기, 몇째(순서수), 1 큰 수·1 작은 수, 0</td><td>반짝 풀숲</td></tr>
 <tr><td>모으기 덧셈</td><td>두 무리 모으기 → 덧셈식 → 이어 세기</td><td>포켓몬 열차</td></tr>
@@ -970,7 +999,7 @@ function optHTML(){return `<h3>설정·도움말</h3>
 <div class="tg"><span>모든 단계·장 열기<small>별을 받지 않아도 다음 단계와 2·3장을 고를 수 있어요</small></span><button class="sw ${S.opt.openAll?'on':''}" data-k="openAll"></button></div>
 <div class="tg"><span>모든 세대 열기<small>1~9세대 포켓몬이 처음부터 모두 나와요</small></span><button class="sw ${S.opt.allGens?'on':''}" data-k="allGens"></button></div>
 ${OPTS.map(([k,t,d])=>`<div class="tg"><span>${t}<small>${d}</small></span><button class="sw ${S.opt[k]?'on':''}" data-k="${k}"></button></div>`).join('')}
-<h4>이렇게 놀아요</h4><ul><li>장소를 고르고 단계를 고르면 5문제가 나옵니다.</li><li>처음 고른 답이 맞으면 초록 동그라미, 다시 골라서 맞히면 주황 동그라미가 됩니다.</li><li>한 번에 맞힌 문제 수로 별(3개 → 1개, 4개 → 2개, 5개 → 3개)을 받고, 별에 따라 볼을 받습니다.</li><li>도감에서 잡은 포켓몬을 누르면 '내 파트너'로 정할 수 있습니다. 파트너는 화면 곳곳에서 아이를 응원합니다.</li></ul>
+<h4>이렇게 놀아요</h4><ul><li>장소를 고르고 단계를 고르면 5문제가 나옵니다.</li><li>처음 고른 답이 맞으면 초록 동그라미, 다시 골라서 맞히면 주황 동그라미가 됩니다.</li><li>한 번에 맞힌 문제 수로 별(3개 → 1개, 4개 → 2개, 5개 → 3개)을 받고, 별에 따라 볼을 받습니다.</li><li>별 2개(5문제 중 4문제, 80%) 이상이면 그 단계를 <b>통과</b>해 다음 단계가 열립니다. 다음 장은 앞 장 단계의 80%를 통과하면 열립니다. 기준을 올리기 전에 이미 별을 받은 단계·장은 그대로 열려 있습니다.</li><li>통과하면 미션 성공 영상, 볼을 열면 볼 여는 영상, 새 장·새 세대가 열리면 축하 영상이 나옵니다. 3문제를 연달아 한 번에 맞히면 짧은 콤보 장면이 지나갑니다. 위의 '영상 연출'로 끌 수 있고, 영상 중에는 '건너뛰기'를 누르면 됩니다.</li><li>도감에서 잡은 포켓몬을 누르면 '내 파트너'로 정할 수 있습니다. 파트너는 화면 곳곳에서 아이를 응원합니다.</li></ul>
 <h4>기록 지우기</h4><p>별·도감·가방·기록을 모두 처음 상태로 되돌립니다.</p><button class="btn" id="bReset">${ic('🗑️','in')} 모든 기록 지우기</button>`+REF}
 function bindOpt(){$('#pdoc').querySelectorAll('.sw').forEach(b=>b.onclick=()=>{const k=b.dataset.k;S.opt[k]=S.opt[k]?0:1;save();sfx('tap');if(k==='pixel')paint();drawPT()});
 $('#bReset').onclick=()=>{if(confirm('별, 도감, 가방, 기록을 모두 지울까요?')){Object.assign(S,{stars:{},stats:{},log:[],bag:{poke:0,great:0,ultra:0},dex:{},gens:[1],buddy:25,chap:0,pomo:null,pday:{d:'',n:0}});save();drawPT()}}}
