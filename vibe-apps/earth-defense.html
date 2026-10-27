@@ -109,15 +109,15 @@ body.menu #tbtn{display:flex}
 .lbtn{position:absolute;left:4%;right:4%;top:auto;bottom:3%;width:auto;display:flex;gap:6px}.lbtn .b{margin:0;font-size:12px;padding:8px 2px}
 .lt{font-size:17px;top:4%}.cg{grid-auto-columns:150px}
 }
-</style></head><body class="menu">
-<canvas id="cv"></canvas>
+/*OPCSS*/#opskip,#opsnd{position:fixed;z-index:90;display:none;font-family:inherit;color:#fff;background:rgba(8,12,34,.72);border:2px solid #9fb3e6;padding:7px 12px;font-size:13px;cursor:pointer;border-radius:0;box-shadow:0 3px 0 #0b1220}#opskip{top:max(10px,env(safe-area-inset-top));right:10px}#opsnd{top:max(10px,env(safe-area-inset-top));left:10px}body.op #opskip{display:block}body.op #tbtn,body.op .ui{display:none!important}/*/OPCSS*/</style></head><body class="menu">
+<canvas id="cv"></canvas><!--OPHTML--><button id="opskip">SKIP ▶▶</button><button id="opsnd">🔊 소리 켜기</button><!--/OPHTML-->
 <div id="st" class="ui"></div>
 <div id="tl" class="ui"></div>
 <div id="msg" class="ui"></div>
 <div id="info" class="ui"></div>
 <div id="ctl" class="ui"><button class="cb" id="bp">⏸</button><button class="cb" id="bf">1x</button><button class="cb" id="bi">i</button><button class="cb" id="ba">auto</button><button class="cb" id="bz">전체</button></div>
 <div id="toast"></div>
-<div id="well" class="ui">♻<small>재활용</small></div><div id="tbtn"><button class="b df" data-d="0">🌱 쉬움</button><button class="b df" data-d="1">🌍 보통</button><button class="b df" data-d="2">🔥 어려움</button><button class="b" id="tstart">▶ 게임 시작</button><button class="b" id="tguide">📖 방법·도감·랭킹</button><button class="b" id="tfs">전체화면</button></div>
+<div id="well" class="ui">♻<small>재활용</small></div><div id="tbtn"><button class="b df" data-d="0">🌱 쉬움</button><button class="b df" data-d="1">🌍 보통</button><button class="b df" data-d="2">🔥 어려움</button><button class="b" id="tstart">▶ 게임 시작</button><button class="b" id="top">🎬 오프닝</button><button class="b" id="tguide">📖 방법·도감·랭킹</button><button class="b" id="tfs">전체화면</button></div>
 <button id="go" class="ui">⚔ 전투</button>
 <div id="bars" class="ui"><div class="bw">🏛 본부 <span id="hqn"></span><div class="bar"><i id="b1" style="background:#5a8ae8"></i></div></div><div class="bw">👽 외계 함대<div class="bar"><i id="b2" style="background:#d04648"></i></div></div></div>
 <div id="hand" class="ui"></div>
@@ -531,7 +531,7 @@ const ts=11*Math.max(2,Math.min(4,Math.floor(H/80),Math.floor(W*.85/62))),ty=Mat
 for(let i=0;i<6;i++){const a=tt*.55+i*1.047,r=sz*.78,x=cx+Math.cos(a)*r*(W<H?.8:1.7),y=cy+Math.sin(a)*r*.38-8;if(Math.sin(a)>=0)sp('🛸',x,y,17);}
 tx('EARTH DEFENSE · 1800→2200',cx,ty+ts*.62+26,'#9fb3e6',9);ctx.restore()}
 function flush(){const q=TQ;TQ=null;ctx=HX;HX.setTransform(SS,0,0,SS,0,0);HX.imageSmoothingEnabled=false;HX.drawImage(LO,0,0,W,H);HX.translate(SHX,SHY);q.forEach(f=>f());ctx=LX}
-function render(dt){ctx=LX;TQ=[];SHX=SHY=0;ctx.imageSmoothingEnabled=false;if(G.phase==='menu'){title(dt);flush();return}
+function render(dt){ctx=LX;TQ=[];SHX=SHY=0;ctx.imageSmoothingEnabled=false;if(typeof OP!=='undefined'&&OP.on){opDraw();if(OP.on){flush();return}}if(G.phase==='menu'){title(dt);flush();return}
 ctx.save();if(shake>0){shake-=dt;SHX=Math.round((R()-.5)*4);SHY=Math.round((R()-.5)*4);ctx.translate(SHX,SHY)}
 const tt=performance.now()/1000,z=V.z,hw=TW*z,hh2=TH*z,dg=cl((100-G.nat)/80,0,1);
 const TT2=T_(),hz=cl((TT2-.6)/2.6,0,1),fb=cl((TT2-.7)/2.3,0,1),ice=cl(1-TT2/2.4,0,1);
@@ -586,4 +586,166 @@ function updDf(){document.querySelectorAll('.df').forEach(b=>b.classList.toggle(
 document.querySelectorAll('.df').forEach(b=>b.onclick=()=>{DFI=+b.dataset.d;LS.set('ed_df',DFI);G.df=DFI;TARGET=TGS[DFI];updDf()});updDf();
 $('#tstart').onclick=()=>{document.body.classList.remove('menu');G.df=DFI;TARGET=TGS[DFI];planning()};
 requestAnimationFrame(loop);
+</script><script>/*OPENING*/
+// ---- 오프닝 시네마틱: 게임 그리기 함수(sp·dia·tx·bigText·globe)로 그리는 44초 영상 + Web Audio 칩튠
+// 장면: 지구로 다이브 → 번영(1800→2000) → 침공 → 대포 전투 → 대포 진화·보스 → 황폐 → 회복 → 타이틀
+// 시간 t만으로 그려서(결정적) 어느 프레임이든 같은 그림. 건너뛰기: SKIP 버튼 · Esc · Enter · Space
+const OPQ=location.search.match(/[?&]opt=([\d.]+)/),OP={fix:OPQ?+OPQ[1]:null,on:false,t0:0,end:44.5,sched:[],si:0,ac:null,mg:null,nz:null};
+const opR=s=>()=>{s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
+const oc=(v,a=0,b=1)=>v<a?a:v>b?b:v,oss=t=>{t=oc(t);return t*t*(3-2*t)},oseg=(t,a,b)=>oc((t-a)/(b-a)),oback=t=>{t=oc(t)-1;return 1+t*t*(2.7*t+1.7)};
+// 땅 7×7 + 바다 고리
+const OT=[];for(let i=-4;i<=10;i++)for(let j=-4;j<=10;j++){const d=Math.hypot(i-3,j-3);if(i>=0&&i<7&&j>=0&&j<7)OT.push({i,j,L:1,d});else if(d<6.2)OT.push({i,j,L:0,d})}
+const OB=[[1,0,'🏠'],[5,1,'🏠'],[0,4,'🏭'],[4,5,'🏭'],[2,1,'🚂'],[6,3,'🛢️'],[1,2,'🏢'],[5,4,'🏭'],[0,1,'⚛️'],[3,6,'🏙️'],[2,5,'🏢'],[4,0,'🏙️'],[1,5,'🏭'],[6,5,'🛢️'],[3,0,'🏙️'],[5,6,'🏢'],[0,6,'🏙️'],[6,0,'⚛️']]
+  .map(([i,j,e],k)=>({i,j,e,t0:k<8?4.5+k*.5:8.5+(k-8)*.25}));
+const OPC=[[3,2],[2,3],[4,3],[3,4]],EVO=['💣','🗼','🛰️','☄️'],EVN=['증기 시대 · 대포','전기 시대 · 레이저탑','정보 시대 · 위성포','우주 시대 · 반물질포'],EVT=[23,24.5,26,27.5];
+// 외계인: 14기는 침공 장면에서 내려오고, 나머지는 전투 중에 날아온다. 전투에서 0.27초마다 하나씩 격추
+const OA=[];{const r=opR(7);for(let k=0;k<28;k++){const a=k*2.39996+r()*.4;OA.push({a,s:k<14?12.6+k*.15:15+(k-14)*.5,r0:k<14?4.6:6.2,e:['🛸','👽','🛸','🐙'][k%4],kt:15.6+k*.27,c:k%4})}}
+const OE=[];{for(let k=0;k<12;k++)OE.push({kt:23.4+k*.375,y:-40-((k*37)%50),x:60+((k*53)%70)})}
+const OTR=OT.filter(o=>o.L&&!OB.some(b=>b.i===o.i&&b.j===o.j)&&!OPC.some(([a,b])=>a===o.i&&b===o.j)&&!(o.i===3&&o.j===3));
+const OCAP=[[4.3,7.8,'증기에서 원자력까지, 인류는 번영했다'],[8.0,11.8,'번영의 대가는… 뜨거워진 하늘'],[12.6,14.9,'⚠ 그리고, 그들이 왔다','#ff8a8a'],[15.2,18.4,'지구를 지켜라!','#ffd24a'],
+  [29.3,32.8,'하지만 지구는 이미 아프다','#ff9a7a'],[33.3,36.8,'숲을 심고, 바람과 햇빛으로','#9be7a8'],[37.0,40.6,'지구를 되살려라','#7dffa0']];
+// 카메라 키: [t, x, y, z, 'c'=컷]
+const OK=[[4,0,30,.75],[12,0,-10,1.05],[12.5,0,-40,.85,'c'],[15,0,-20,.85],[15,0,0,1,'c'],[17,0,0,1.04],[17,-50,-10,1.4,'c'],[19,-42,-12,1.45],[19,50,-10,1.4,'c'],[21,44,-8,1.45],[21,0,-10,.92,'c'],[23,0,-14,.95],
+  [23,0,-30,1.15,'c'],[27.7,0,-32,1.22],[28.1,0,-40,1.0],[29,0,-20,1.0,'c'],[33,0,-10,1.08],[38,0,10,.95],[40.8,0,20,.8]];
+function opCam(t){let a=OK[0],b=OK[0];for(let k=0;k<OK.length;k++){if(OK[k][0]<=t)a=OK[k];if(OK[k][0]>t){b=OK[k];break}}if(b===a||b[4]==='c')return{x:a[1],y:a[2],z:a[3]};
+  const u=oss((t-a[0])/(b[0]-a[0]));return{x:a[1]+(b[1]-a[1])*u,y:a[2]+(b[2]-a[2])*u,z:a[3]*Math.pow(b[3]/a[3],u)}}
+const opDg=(o,t)=>t<4?0:t<12?oseg(t,4,12)*.55:t<23?.55+oseg(t,22,29)*.1:t<33?.6+oseg(t,28.8,30.5)*.4:1-oss((t-33-o.d/.9)/.8);
+const opFl=(o,t)=>o.L&&o.d>2.9?(t<29?0:t<33?oss((t-29.4-(4.4-o.d))/1.2):1-oss((t-33-o.d/.9)/1)):0;
+const opHz=t=>t<4?0:t<12?oseg(t,4,12)*.55:t<29?.55+oseg(t,12.5,13)*.15:t<33?.7+oseg(t,29,30)*.3:1-oss((t-33)/5);
+
+function opDraw(){const t=OP.fix!=null?OP.fix:(performance.now()-OP.t0)/1000;if(t>=OP.end){opStop();return}opAudio(t);ctx=LX;ctx.save();
+  if(t<4)opSpace(t);else if(t>=41)opTitle(t);else opBoard(t);
+  // 시네마 레터박스와 자막
+  const lb=Math.round(H*.09*(t<4?oss(t-3):t>=41?1-oss((t-41)/.6):1));if(lb>0){ctx.fillStyle='#000';ctx.fillRect(0,0,W,lb);ctx.fillRect(0,H-lb,W,lb)}
+  const c=OCAP.find(c=>t>=c[0]&&t<c[1]);if(c){const k=oss((t-c[0])/.25)*oss((c[1]-t)/.25),cy=H-Math.max(lb,14)/2-(W<H?40:0);ctx.globalAlpha=k;tx(c[2],W/2,cy+4,c[3]||'#fff',11);ctx.globalAlpha=1}
+  // 플래시
+  const fl=Math.max(t<4?oss((t-3.55)/.4)*(1-oseg(t,3.95,4.4)):0,t>=4&&t<4.5?1-oseg(t,4,4.5):0,...EVT.slice(1).map(e=>t>=e&&t<e+.3?1-(t-e)/.3:0),t>=28.6&&t<29.6?Math.min(1,(t-28.6)/.1)*(1-oseg(t,28.8,29.6)):0,t>=40.6&&t<41.5?Math.min(1,(t-40.6)/.4)*(1-oseg(t,41,41.5)):0);
+  if(fl>0){ctx.fillStyle=`rgba(255,255,255,${fl})`;ctx.fillRect(0,0,W,H)}
+  if(t>=12.5&&t<15){const a=(Math.sin((t-12.5)*Math.PI*4)*.5+.5)*.22;ctx.fillStyle=`rgba(255,40,40,${a})`;ctx.fillRect(0,0,W,H)}
+  ctx.restore()}
+
+function opStars(t,k=1){STARS.forEach(s=>{if((t*1.5+s.s)%3<2.4){ctx.fillStyle=s.s>4.6?'#ffd24a':'#fff';ctx.fillRect((s.x*W)|0,(s.y*H)|0,k,k)}})}
+function opSpace(t){ctx.fillStyle='#02030c';ctx.fillRect(0,0,W,H);opStars(t);
+  const sz=Math.min(H,W)*(.18+Math.pow(oseg(t,.6,4),3)*4.5),cx=W/2,cy=H/2;globe(t*6);ctx.globalAlpha=oseg(t,.2,1.2);
+  ctx.fillStyle='rgba(90,170,255,.16)';ctx.beginPath();ctx.arc(cx,cy,sz/2+6,0,6.3);ctx.fill();ctx.drawImage(GC,cx-sz/2,cy-sz/2,sz,sz);ctx.globalAlpha=1;
+  const y=1800,k=oseg(t,.5,1.6)*(1-oseg(t,3,3.5));if(k>0){ctx.globalAlpha=k;bigText('AD '+y,cx,H*.2,22,'#ffec78','#ff8c28');tx('지구, 산업혁명의 아침',cx,H*.2+22,'#aae6ff',11);ctx.globalAlpha=1}}
+
+function opBoard(t){const c=opCam(t),s0=Math.min(W/330,H/190),z=c.z*s0;let shx=0,shy=0;
+  const sk=(t>=15&&t<23?.6:0)+(t>=21&&t<23?1.2:0)+(t>=28.6&&t<29.3?3:0)+OA.reduce((a,al)=>a+(t>=al.kt&&t<al.kt+.12?1.2:0),0)+(t>=12.5&&t<12.8?2:0);
+  if(sk>0){const r=opR((t*24|0)+1);shx=Math.round((r()-.5)*2*sk);shy=Math.round((r()-.5)*2*sk)}
+  const Q=(i,j,h=0)=>({x:W/2+(((i-j)*28)-c.x)*z+shx,y:H*.55+(((i+j-6)*14)-c.y)*z-h*z+shy});
+  const hz=opHz(t),hw=56*z,hh2=28*z;
+  const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,mix([7,11,36],[50,10,24],hz));g.addColorStop(1,mix([30,60,130],[120,50,36],hz));ctx.fillStyle=g;ctx.fillRect(0,0,W,H);opStars(t);
+  if(t>=33){const k=oss((t-34)/4);ctx.fillStyle=`rgba(120,190,255,${k*.35})`;ctx.fillRect(0,0,W,H)}
+  // 바다, 땅
+  OT.filter(o=>!o.L).forEach(o=>{const p=Q(o.i,o.j),a=(o.i+o.j)&1,dg=opDg(o,t);dia(p.x,p.y,hw*1.02,hh2*1.02);ctx.fillStyle=mix(OC[a],[88,100,84],dg);ctx.fill();if(hh(o.i+3,o.j)>.88){ctx.fillStyle=`rgba(255,255,255,${.35*(1-dg)})`;ctx.fillRect(p.x-3*z,p.y+Math.sin(t*2+o.i),6*z,1)}});
+  OT.filter(o=>o.L).sort((a,b)=>a.i+a.j-b.i-b.j).forEach(o=>{const p=Q(o.i,o.j),a=(o.i+o.j)&1,dg=opDg(o,t),f=opFl(o,t);
+    if(f>.5){dia(p.x,p.y+3*z,hw*1.02,hh2*1.02);ctx.fillStyle=mix([70,150,220],[96,120,110],dg);ctx.fill();return}
+    dia(p.x,p.y+9*z,hw*1.02,hh2*1.02);ctx.fillStyle='#4a3322';ctx.fill();dia(p.x,p.y+4*z,hw*1.02,hh2*1.02);ctx.fillStyle='#6d4b33';ctx.fill();
+    dia(p.x,p.y,hw*1.02,hh2*1.02);ctx.fillStyle=mix(GR[a],DD[a],dg);ctx.fill();ctx.strokeStyle='rgba(235,255,245,.16)';ctx.lineWidth=1;ctx.stroke();
+    if(dg>.6&&hh(o.j,o.i)>.45){ctx.strokeStyle='rgba(40,25,15,.75)';ctx.beginPath();ctx.moveTo(p.x-8*z,p.y-2*z);ctx.lineTo(p.x-2*z,p.y+z);ctx.lineTo(p.x+4*z,p.y-z);ctx.stroke()}});
+  // 물체: 깊이순
+  const dr=[],pop=(t0,d=.3)=>oback((t-t0)/d);
+  dr.push({d:6,f:()=>{const p=Q(3,3);sp('🏛️',p.x,p.y-10*z,40*z)}});
+  OB.forEach(b=>{if(t<b.t0)return;const p=Q(b.i,b.j),o=OT.find(o=>o.i===b.i&&o.j===b.j);let e=b.e;const rt=33+o.d/.9;
+    if(opFl(o,t)>.5)return;
+    const swap=(e==='🏭'||e==='🛢️'||e==='🚂')&&t>=rt;if(swap)e=(b.i+b.j)%2?'🌬️':'☀️';
+    const k=swap?pop(rt,.35):pop(b.t0);
+    dr.push({d:b.i+b.j,f:()=>{ctx.fillStyle='rgba(0,0,0,.25)';dia(p.x,p.y+2*z,hw*.5,hh2*.5);ctx.fill();sp(e,p.x,p.y-9*z*k,25*z*k);
+      if(t<b.t0+.35)opPuff(p.x,p.y,z,(t-b.t0)/.35);if(swap&&t<rt+.4)opPuff(p.x,p.y,z,(t-rt)/.4,'#bfffd0');
+      if(!swap&&(e==='🏭'||e==='🛢️'||e==='🚂')&&t>b.t0+.4&&t<33)sp('💨',p.x+7*z,p.y-28*z-((t*14+b.i*9)%14)*z,12*z,.75)}})});
+  // 대포 4기(전투). 진화 장면에서는 보드 위 대포를 감추고 앞쪽 주인공 한 기로 그린다
+  const st=t<EVT[1]?0:t<EVT[2]?1:t<EVT[3]?2:3,wep=t<23?0:st;
+  if(t>=15&&!(t>=23&&t<29.2))OPC.forEach(([i,j],k)=>{const p=Q(i,j),kk=pop(15+k*.12,.3);dr.push({d:i+j+.1,f:()=>sp(EVO[wep],p.x,p.y-9*z*kk,24*z*kk)})});
+  // 외계인: 내려오기·다가오기·격추
+  OA.forEach(al=>{if(t<al.s||t>=al.kt+.5||t<12.5)return;const dead=t>=al.kt,tt2=Math.min(t,al.kt),r=Math.max(1.8,al.r0-(tt2-al.s)*.32),gx=3+Math.cos(al.a)*r,gy=3+Math.sin(al.a)*r,h=al.s<15?36+170*(1-oss((tt2-al.s)/1.3)):34-oss((tt2-al.s)/2)*10;
+    const p=Q(gx,gy,h+Math.sin(t*5+al.a)*2);dr.push({d:gx+gy+.5,f:()=>{if(!dead){ctx.fillStyle='rgba(0,0,0,.3)';const q=Q(gx,gy);ctx.fillRect(q.x-4*z,q.y,8*z,2);sp(al.e,p.x,p.y,20*z)}else opBoom(p.x,p.y,z,(t-al.kt)/.5,1)}});
+    if(t>=15&&t>=al.kt-.25&&t<al.kt){const [ci,cj]=OPC[al.c],a=Q(ci,cj,20),u=(t-al.kt+.25)/.25;dr.push({d:99,f:()=>{const x=a.x+(p.x-a.x)*u,y=a.y+(p.y-a.y)*u-Math.sin(u*Math.PI)*18*z;ctx.fillStyle='#ffd24a';ctx.fillRect(x-1.5*z,y-1.5*z,3*z,3*z);ctx.fillStyle='#fff';ctx.fillRect(x-.6*z,y-.6*z,1.2*z,1.2*z)}})}});
+  // 회복: 나무가 파도처럼 돋아난다, 새
+  if(t>=33)OTR.forEach(o=>{const t1=33+o.d/.9+.15;if(t<t1||opFl(o,t)>.5)return;const p=Q(o.i,o.j),k=pop(t1,.3);dr.push({d:o.i+o.j,f:()=>sp(hh(o.i,o.j)>.5?'🌳':'🌲',p.x+(hh(o.j,o.i)-.5)*10*z,p.y-8*z*k,(20+hh(o.i*3,o.j)*8)*z*k)})});
+  if(t>=36.5)for(let n=0;n<3;n++){const u=(t-36.5-n*.6)/3.5;if(u<0||u>1)continue;dr.push({d:120,f:()=>sp('🕊️',-20+u*(W+40),H*(.22+n*.06)+Math.sin(t*6+n)*3,14*s0)})}
+  dr.sort((a,b)=>a.d-b.d).forEach(o=>o.f());
+  // 진화 장면: 보드를 어둡게 깔고, 앞쪽의 주인공 대포가 시대마다 진화하며 날아오는 적을 쏜다 → 보스를 반물질포로
+  if(t>=23&&t<29.2){const ov=t<27.6?.62:t<28.7?.62-.37*oseg(t,27.6,28.1):.25*(1-oseg(t,28.7,29.2));ctx.fillStyle=`rgba(4,6,22,${ov})`;ctx.fillRect(0,0,W,H);
+    const hx=W*.36,hy=H*.68+Math.sin(t*4)*2*s0,hs=64*s0,kk=oback((t-EVT[st])/.35),gx=hx+hs*.12,gy=hy-hs*.32;
+    if(t<28.9){ctx.fillStyle='rgba(0,0,0,.4)';ctx.beginPath();ctx.ellipse(hx,hy+hs*.46,hs*.42,hs*.1,0,0,6.3);ctx.fill();sp(EVO[st],hx,hy,hs*(.55+.45*kk))}
+    if(t-EVT[st]<.6){const u=(t-EVT[st])/.6;for(let n=0;n<10;n++){const a=n*.628+u*2;sp('⭐',hx+Math.cos(a)*u*hs*1.2,hy+Math.sin(a)*u*hs*.8,10*s0,1-u)}}
+    if(t<27.9)OE.forEach(e=>{if(t<e.kt-1.2||t>=e.kt+.4)return;const dead=t>=e.kt,x=W*.56+(e.x-60)*s0*1.3+(1-oseg(t,e.kt-1.2,e.kt))*W*.5,y=H*.3+(e.y+70)*s0*.6;
+      if(!dead)sp(['🛸','👽','🐙'][e.kt*8%3|0],x,y+Math.sin(t*7+e.x)*2,22*s0);else opBoom(x,y,s0,(t-e.kt)/.4,1.2);
+      const w=e.kt<EVT[1]?0:e.kt<EVT[2]?1:e.kt<EVT[3]?2:3,u=oseg(t,e.kt-.18,e.kt);
+      if(t>=e.kt-.18&&t<e.kt+.08){ctx.lineWidth=[2,2,3,5][w]*s0;ctx.strokeStyle=['#ffd24a','#ff5a5a','#7ad7ff','#a0fff0'][w];ctx.beginPath();
+        if(w===0){const bx=gx+(x-gx)*u,by=gy+(y-gy)*u-Math.sin(u*Math.PI)*30*s0;ctx.fillStyle='#ffd24a';ctx.fillRect(bx-3*s0,by-3*s0,6*s0,6*s0)}
+        else if(w===2){ctx.moveTo(x,-5);ctx.lineTo(x,y);ctx.stroke();ctx.moveTo(gx,gy);ctx.lineTo(gx,-5);ctx.stroke()}else{ctx.moveTo(gx,gy);ctx.lineTo(x,y);ctx.stroke()}}});
+    if(t>=27.6){const bx=W*.64,by=H*.3-(1-oss((t-27.6)/.5))*H*.5;
+      if(t<28.6)sp('👾',bx,by+Math.sin(t*9)*2,80*s0);else opBoom(bx,by,s0*2.4,(t-28.6)/.6,2);
+      if(t>=28.1&&t<28.7){const w=(6+Math.sin(t*80)*2)*s0;ctx.lineCap='round';ctx.strokeStyle='rgba(120,255,240,.45)';ctx.lineWidth=w*2.4;ctx.beginPath();ctx.moveTo(gx,gy);ctx.lineTo(bx,by);ctx.stroke();ctx.strokeStyle='#eafffb';ctx.lineWidth=w;ctx.stroke();ctx.lineCap='butt'}}}
+  // 연도 · 기온 · 시대 이름
+  if(t>=4.3&&t<12.2){const y=Math.round(1800+200*oss((t-4.3)/7));bigText(String(y),W/2,H*.18,22,'#ffec78','#ff8c28')}
+  if(t>=29&&t<41){const T=t<33?2.0:2.0-.8*oss((t-33)/5),bad=T>1.5,pu=bad?1+Math.sin(t*10)*.06:1;bigText(`🌡 +${T.toFixed(1)}℃`.replace('🌡 ',''),W/2,H*.18,Math.round(22*pu),bad?'#ffb09a':'#b8ffcc',bad?'#ff3c28':'#3cc864');sp('🌡️',W/2-50,H*.18,18)}
+  if(t>=23&&t<28.1){const k=EVT[st],a=oss((t-k)/.2);ctx.globalAlpha=a;bigText(EVN[st],W/2,H*.2,11*(W>400?2:1),'#aae6ff','#5aa0ff');ctx.globalAlpha=1}}
+function opPuff(x,y,z,u,col='#e8e0d0'){u=oc(u);ctx.globalAlpha=1-u;ctx.fillStyle=col;for(let n=0;n<6;n++){const a=n*1.047,r=(6+u*16)*z;ctx.fillRect(Math.round(x+Math.cos(a)*r-2*z),Math.round(y+Math.sin(a)*r*.5-2*z),4*z,4*z)}ctx.globalAlpha=1}
+function opBoom(x,y,z,u,k=1){u=oc(u);if(u>=1)return;const r=(5+u*18)*z*k;ctx.globalAlpha=1-u*u;
+  ctx.fillStyle=u<.3?'#fff':'#ffd24a';ctx.beginPath();ctx.arc(x,y,r*.6,0,6.3);ctx.fill();ctx.fillStyle='#d27d2c';for(let n=0;n<8;n++){const a=n*.785+k;ctx.fillRect(Math.round(x+Math.cos(a)*r-1.5*z*k),Math.round(y+Math.sin(a)*r-1.5*z*k),3*z*k,3*z*k)}
+  if(u<.6)sp('💥',x,y,14*z*k*(1+u));ctx.globalAlpha=1}
+function opTitle(t){// title()과 같은 구도로 끝나서 메뉴로 이음새 없이 넘어간다
+  const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#04061a');g.addColorStop(1,'#1a2a64');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);opStars(t);
+  const sz0=Math.min(H*.5,134,W*.62),u=oss((t-41)/1.4),sz=sz0*(2.6-1.6*u),cx=W/2,cy=H*(W<H?.5:.62);globe(t*3);
+  ctx.fillStyle='rgba(90,170,255,.16)';ctx.beginPath();ctx.arc(cx,cy,sz/2+6,0,6.3);ctx.fill();ctx.drawImage(GC,cx-sz/2,cy-sz/2,sz,sz);
+  for(let i=0;i<6;i++){const a=t*.55+i*1.047,r=sz0*.78,x=cx+Math.cos(a)*r*(W<H?.8:1.7),y=cy+Math.sin(a)*r*.38-8;sp('🛸',x,y,Math.sin(a)<0?15:17,u)}
+  const ts=11*Math.max(2,Math.min(4,Math.floor(H/80),Math.floor(W*.85/62))),ty=Math.round(H*.05)+ts*.5,k=oseg(t,41.2,41.5);
+  if(k>0){ctx.save();const s=1+(1-k)*1.4;ctx.translate(cx,ty);ctx.scale(s,s);ctx.translate(-cx,-ty);ctx.globalAlpha=k;bigText('지구 방위',cx,ty,ts,'#ffec78','#ff8c28');ctx.restore()}
+  const k2=oseg(t,42,42.6);if(k2>0){ctx.globalAlpha=k2;bigText('에너지 · 환경 · 자원순환',cx,ty+ts*.62+8,11,'#aae6ff','#5aa0ff');tx('EARTH DEFENSE · 1800→2200',cx,ty+ts*.62+26,'#9fb3e6',9);ctx.globalAlpha=1}}
+
+// ---- 소리: 시간표(sched)를 미리 만들어 두고 재생 중 0.2초 앞까지만 예약한다 (소리가 늦게 켜져도 그 지점부터 맞게 나옴)
+const mf=m=>440*Math.pow(2,(m-69)/12);
+function opBuild(){const S=[],at=(t,f)=>S.push({t,f}),B=.5;
+  const osc=(type,m,d,v,slide)=>w=>{const a=OP.ac,o=a.createOscillator(),g=a.createGain();o.type=type;o.frequency.setValueAtTime(m>20?mf(m):-m,w);if(slide)o.frequency.exponentialRampToValueAtTime(slide>20?mf(slide):-slide,w+d);
+    g.gain.setValueAtTime(0,w);g.gain.linearRampToValueAtTime(v,w+.005);g.gain.exponentialRampToValueAtTime(.0008,w+d);o.connect(g);g.connect(OP.mg);o.start(w);o.stop(w+d+.05)};
+  const nz=(d,v,f,q=1,type='bandpass',f2)=>w=>{const a=OP.ac,s=a.createBufferSource(),fl=a.createBiquadFilter(),g=a.createGain();s.buffer=OP.nz;fl.type=type;fl.frequency.setValueAtTime(f,w);if(f2)fl.frequency.exponentialRampToValueAtTime(f2,w+d);fl.Q.value=q;
+    g.gain.setValueAtTime(v,w);g.gain.exponentialRampToValueAtTime(.0008,w+d);s.connect(fl);fl.connect(g);g.connect(OP.mg);s.start(w);s.stop(w+d+.05)};
+  const kick=v=>w=>{osc('sine',-150,.3,v*.9,-40)(w);nz(.02,v*.3,3000)(w)},snare=v=>w=>{nz(.16,v*.5,2200,.7)(w);osc('triangle',-190,.08,v*.3,-120)(w)},hat=v=>nz(.04,v*.18,9000,1,'highpass');
+  const boom=v=>w=>{osc('sine',-90,.7,v,-30)(w);nz(.5,v*.6,800,.5,'lowpass',120)(w)};
+  const chord=(ms,d,v,type='sawtooth')=>w=>ms.forEach(m=>osc(type,m,d,v/ms.length)(w));
+  // 0~4 다이브: 낮은 드론, 심장박동, 마지막에 상승음
+  at(0,chord([38,45,50],4.2,.18));at(.8,kick(.5));at(1.7,kick(.5));at(2.5,kick(.6));at(3.2,kick(.7));at(2.6,nz(1.4,.25,400,1.5,'bandpass',6000));at(3.95,boom(.9));
+  // 4~12 번영: 베이스 아르페지오, 건물이 박자마다 '쿵'
+  const P1=[38,34,41,36];for(let k=0;k<32;k++){const t=4+k*B/2,r=P1[(k/8|0)%4];at(t,osc('square',r+[0,7,12,7][k%4],.2,.07));}
+  for(let t=4;t<12;t+=B){at(t,kick(.6));if(t>=6)at(t+B/2,hat(.8))}OB.forEach(b=>{at(b.t0,osc('square',62+(b.t0*7%5|0)*2,.12,.1));at(b.t0,nz(.12,.25,600))});
+  [[8,74],[8.5,77],[9,81],[9.5,79],[10,77],[10.5,76],[11,74],[11.5,72]].forEach(([t,m])=>at(t,osc('square',m,.4,.05)));
+  // 12~15 침공: 정적 → 사이렌, 큰북
+  at(12.5,boom(1));for(let k=0;k<5;k++)at(12.5+k*.5,osc('square',k%2?79:72,.48,.07,k%2?72:79));at(13.5,boom(.7));at(14.5,boom(.8));for(let k=0;k<8;k++)at(14.5+k*.0625,snare(.3+k*.08));
+  // 15~23 전투: 드럼, 16분 베이스, 영웅적인 멜로디, 대포 발사·폭발
+  for(let t=15;t<23;t+=B){at(t,kick(.8));if(((t-15)/B|0)%2)at(t,snare(.8));for(let s=0;s<4;s++)at(t+s*B/4,hat(.5));}
+  for(let k=0;k<64;k++){const t=15+k*B/4,r=[38,38,41,36][(k/16|0)%4];at(t,osc('sawtooth',r+(k%4===3?12:0),.1,.06))}
+  {let t=15;[[74,1],[81,1],[79,.5],[77,.5],[76,1],[74,.5],[76,.5],[77,1],[72,1],[74,2],[81,1],[84,1],[83,.5],[81,.5],[79,1],[81,1],[77,1]].forEach(([m,d])=>{at(t,osc('square',m,d*B*.9,.06));at(t,osc('square',m+12,d*B*.5,.015));t+=d*B})}
+  OA.forEach(a=>{if(a.kt<23){at(a.kt-.25,osc('square',-220,.12,.06,-90));at(a.kt,nz(.3,.35,900,.6,'lowpass',200))}});
+  // 23~29 진화: 단계마다 한 음씩 올라가고, 파워업 아르페지오
+  EVT.forEach((e,i)=>{const tr=[0,2,4,5][i];for(let k=0;k<12;k++)at(e+k*.025,osc('square',62+tr+[0,4,7,12][k%4]+12*(k/4|0),.08,.06));for(let k=0;k<(i<3?6:1);k++){const t=e+k*B/2;at(t,osc('sawtooth',38+tr,.22,.09));at(t,kick(.6))}at(e,nz(.5,.3,2000,1,'bandpass',8000))});
+  for(let t=23;t<27.5;t+=B)at(t+B/2,snare(.5));OE.forEach(e=>{at(e.kt-.18,osc('square',e.kt<EVT[1]?-300:-900,.15,.05,e.kt<EVT[1]?-120:-400));at(e.kt,nz(.2,.25,1200))});
+  at(27.6,nz(.5,.35,300,1.5,'bandpass',4000));at(28.1,osc('sawtooth',-1400,.6,.12,-200));at(28.1,nz(.6,.4,6000,.8,'bandpass',800));at(28.6,boom(1.2));at(28.62,nz(1.2,.5,2500,.4,'lowpass',200));
+  // 29~33 황폐: 낮은 단조 패드, 심장박동, 바람
+  at(29.4,chord([38,41,45],3.8,.16));at(29.4,nz(3.6,.12,500,.8,'bandpass',300));[29.6,30.4,31.2,32.0].forEach(t=>at(t,kick(.5)));
+  // 33~41 회복: 장조 아르페지오, 나무가 돋을 때마다 맑은 소리, 리드
+  const P2=[[50,54,57],[55,59,62],[47,50,54],[45,49,52]];for(let k=0;k<64;k++){const t=33+k*B/4,ch=P2[(k/16|0)%4];at(t,osc('triangle',ch[k%3]+12,.14,.1))}
+  for(let t=35;t<40.5;t+=B){at(t,kick(.6));at(t+B/2,hat(.6))}for(let k=0;k<4;k++)at(33+k*2,osc('triangle',[38,43,35,33][k],1.9,.15));
+  OTR.forEach(o=>{const t1=33+o.d/.9+.15;at(t1,osc('sine',[74,76,78,81,83,86][(o.i*3+o.j)%6],.25,.05))});
+  {let t=37;[[78,1],[81,1],[83,1],[86,2],[85,1],[83,1],[81,1]].forEach(([m,d])=>{at(t,osc('square',m,d*B*.9,.045));t+=d*B})}
+  // 41~ 타이틀: 화음 + 심벌 + 쿵
+  at(40.6,nz(.5,.3,500,1.2,'bandpass',8000));at(41.2,boom(1.1));at(41.2,chord([50,54,57,62,66],3.2,.3));at(41.2,chord([62,66,69,74],2.6,.12,'square'));at(41.2,nz(2.8,.25,7000,.6,'highpass'));
+  S.sort((a,b)=>a.t-b.t);return S}
+function opAudioInit(){if(OP.ac)return;const A=window.AudioContext||window.webkitAudioContext;if(!A)return;try{OP.ac=new A();const b=OP.ac.createBuffer(1,OP.ac.sampleRate,OP.ac.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;OP.nz=b}catch(_){OP.ac=null}}
+function opMaster(){const a=OP.ac,g=a.createGain(),c=a.createDynamicsCompressor();g.gain.value=.55;g.connect(c);c.connect(a.destination);OP.mg=g}
+function opAudio(t){const a=OP.ac;if(!a||a.state!=='running'||!OP.mg)return;while(OP.si<OP.sched.length&&OP.sched[OP.si].t<t+.2){const e=OP.sched[OP.si++];if(e.t>=t-.05)try{e.f(a.currentTime+Math.max(0,e.t-t))}catch(_){}}
+  $('#opsnd').style.display='none'}
+function opStart(){opAudioInit();if(!OP.sched.length)OP.sched=opBuild();OP.si=0;if(OP.ac){opMaster();if(OP.ac.state!=='running')OP.ac.resume().catch(()=>{})}
+  OP.on=true;OP.t0=performance.now();document.body.classList.add('op');$('#opsnd').style.display=OP.ac&&OP.ac.state==='running'?'none':'block'}
+function opStop(){if(!OP.on)return;OP.on=false;LS.set('ed_op',1);document.body.classList.remove('op');
+  if(OP.ac&&OP.mg){const g=OP.mg;g.gain.setTargetAtTime(0,OP.ac.currentTime,.15);setTimeout(()=>{try{g.disconnect()}catch(_){}},800);OP.mg=null}}
+// 소리 켜기: 브라우저는 첫 터치 전에는 소리를 막는다. 켜는 순간 그 장면부터 소리가 맞춰 나온다
+$('#opsnd').onclick=e=>{e.stopPropagation();opAudioInit();if(!OP.ac)return;if(!OP.mg)opMaster();OP.ac.resume().then(()=>{const t=(performance.now()-OP.t0)/1000;OP.si=OP.sched.findIndex(s=>s.t>=t);if(OP.si<0)OP.si=OP.sched.length}).catch(()=>{})};
+$('#opskip').onclick=e=>{e.stopPropagation();opStop()};
+$('#top').onclick=()=>opStart();
+addEventListener('keydown',e=>{if(OP.on&&(e.key==='Escape'||e.key==='Enter'||e.key===' ')){e.preventDefault();opStop()}});
+if(!LS.get('ed_op',0)||/[?&]op=1/.test(location.search))opStart();
+cv.addEventListener('pointerdown',e=>{if(OP.on&&(!OP.ac||OP.ac.state!=='running'))$('#opsnd').onclick(e)});
 </script></body></html>
