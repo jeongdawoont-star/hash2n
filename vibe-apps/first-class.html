@@ -2920,7 +2920,26 @@ const DEFAULT_FB = {
   messagingSenderId: "66806364892",
   appId: "1:66806364892:web:e128208bbc84d52fc71219"
 };
-const lg={cfg:{},F:null,db:null,unsub:null,timer:null,pen:{}};
+const lg={cfg:{},F:null,db:null,unsub:null,timer:null,pen:{},sec:null,auth:null,FA:null,asked:false,aucUnsub:null,aucs:[]};
+/* 보안 모드: hash2n 서버(/api/fc)가 켜져 있으면 선생님 PIN으로 로그인해야 라운지에 쓸 수 있음 (이 PC에 로그인 유지) */
+const LG_API=(location.protocol.startsWith('http')?location.origin:'https://hash2n.vercel.app')+'/api/fc';
+async function lgApi(body,withAuth){
+  try{const h={'Content-Type':'application/json'};if(withAuth&&lg.auth&&lg.auth.currentUser)h.Authorization='Bearer '+await lg.auth.currentUser.getIdToken();
+    const r=await fetch(LG_API,{method:'POST',headers:h,body:JSON.stringify({code:lg.cfg.code,...body})});const j=await r.json().catch(()=>({}));return{status:r.status,...j,ok:r.ok&&j.ok!==false};}
+  catch(e){return{ok:false,status:0,error:'서버에 연결하지 못했습니다'};}
+}
+async function lgSecure(){if(lg.sec!==null)return lg.sec;const r=await lgApi({a:'ping'});lg.sec=!!r.secure;return lg.sec;}
+function lgPinDialog(){return new Promise(res=>{const d=document.createElement('dialog');d.className='ct-modal';d.innerHTML=`<form method="dialog" style="display:flex;flex-direction:column;gap:10px;padding:18px;min-width:280px"><b>🔒 학생 라운지 선생님 로그인</b><span class="muted" style="font-size:13px">라운지 교사 PIN (이 PC에서 한 번만)</span><input type="password" inputmode="numeric" autocomplete="off" style="font-size:20px;padding:6px 10px" required><div style="display:flex;gap:6px;justify-content:flex-end"><button value="" class="btn sm" type="button">취소</button><button value="ok" class="btn sm primary">로그인</button></div></form>`;document.body.appendChild(d);const inp=d.querySelector('input');d.querySelector('button[type=button]').onclick=()=>d.close('');d.onclose=()=>{const v=d.returnValue==='ok'?inp.value.replace(/\D/g,''):null;d.remove();res(v);};d.showModal();inp.focus();});}
+/** 보안 모드면 선생님 로그인 확인 (ask=true면 PIN 창을 띄움). 쓸 수 있으면 true */
+async function lgTeacher(ask){
+  if(!(await lgSecure()))return true;
+  const u=lg.auth.currentUser;if(u){const c=(await u.getIdTokenResult()).claims;if(c.role==='t'&&c.cls===lg.cfg.code)return true;}
+  if(!ask)return false;
+  const pin=await lgPinDialog();if(!pin)return false;
+  const r=await lgApi({a:'tlogin',pin});if(!r.ok){toast(r.error||'로그인 실패');return false;}
+  await lg.FA.signInWithCustomToken(lg.auth,r.token);if(r.weak)toast('⚠ 교사 PIN이 짧습니다. 라운지 ⚙ 선생님 > 비밀번호에서 6자리 이상으로 바꿔 주세요');
+  return true;
+}
 try{lg.cfg=JSON.parse(localStorage.getItem(LG_KEY)||'{}');}catch(e){lg.cfg={};}
 if(!lg.cfg.fb) lg.cfg.fb = DEFAULT_FB;
 if(!lg.cfg.code) lg.cfg.code = 'firstclass-lounge';
@@ -2959,22 +2978,29 @@ async function lgConnect(){
   const c=lg.cfg;if(!c.fb||!c.code)return false;if(lg.db)return true;
   const {initializeApp}=await import(`https://www.gstatic.com/firebasejs/${LG_FB}/firebase-app.js`);
   lg.F=await import(`https://www.gstatic.com/firebasejs/${LG_FB}/firebase-firestore.js`);
-  lg.db=lg.F.getFirestore(initializeApp(c.fb,'fc-lounge'));
+  lg.FA=await import(`https://www.gstatic.com/firebasejs/${LG_FB}/firebase-auth.js`);
+  const app=initializeApp(c.fb,'fc-lounge');lg.db=lg.F.getFirestore(app);lg.auth=lg.FA.getAuth(app);await lg.auth.authStateReady();
   lgWatch();return true;
 }
 const lgRef=p=>lg.F.doc(lg.db,'fc',lg.cfg.code,...p.split('/'));
 function lgPayload(){const c=lgCls(),ptOf=sid=>+c.scores[sid]||0,stuById=id=>c.students.find(s=>s.id===id);return{cname:c.name,at:Date.now(),roster:c.students.map(s=>({id:s.id,no:s.no,name:s.name,g:s.gender||''})),layout:{rows:c.layout.rows,cols:c.layout.cols,seats:c.layout.seats||[]},current:Object.fromEntries(Object.entries(c.current||{}).filter(e=>e[1])),boardTop:c.settings.boardTop!==false,scores:Object.fromEntries(c.students.map(s=>[s.id,ptOf(s.id)])),pinH:Object.fromEntries(Object.entries(c.lpins||{}).filter(e=>e[1]&&e[1].pin&&stuById(e[0])).map(([id,v])=>[id,pinHash(id,v.pin)]))};}
 async function lgPush(manual){
   try{if(!(await lgConnect())){if(manual)toast('학급 코드와 Firebase 설정을 먼저 저장하세요');return;}
+    /* 보안 모드: 선생님 로그인이 없으면 자동 보내기는 쉬고, 처음 한 번(또는 '지금 보내기')만 PIN을 물음 */
+    if(!(await lgTeacher(manual||!lg.asked))){lg.asked=true;lgStatus('🔒 선생님 로그인이 필요합니다 — [지금 보내기]를 눌러 라운지 교사 PIN을 입력하세요');return;}
+    lg.asked=true;
     /* 점수와 '반영 완료' 표시를 한 번에(batch) 보냄 → 라운지에서 잠깐이라도 두 번 빠져 보이지 않게 */
     const done=lgCls().lgDone||{},ids=Object.keys(lg.pen).filter(id=>done[id]&&!lg.pen[id].applied);
     /* 학생 구글 계정: 계정·PIN이 바뀌었거나 '지금 전송'일 때만 다시 잠가서 보냄 */
     const gc=lgCls(),gSig=gaSig(gc),gKey='firstclass.gaSig.'+lg.cfg.code+'.'+gc.id;let gSend=manual||localStorage.getItem(gKey)!==gSig;
     const gDoc=gSend?await gaDoc(gc):null;
-    const b=lg.F.writeBatch(lg.db);b.set(lgRef('app/main'),lgPayload());if(gDoc)b.set(lgRef('app/gacc'),gDoc);
+    /* 보안 모드: 학생 비밀번호 해시는 공개 문서(app/main)에서 빼고 선생님만 읽는 pins/main 으로 */
+    const pay=lgPayload(),b=lg.F.writeBatch(lg.db);
+    if(lg.sec){const h=pay.pinH;delete pay.pinH;if(Object.keys(h).length)b.set(lgRef('pins/main'),{h,at:Date.now()});}
+    b.set(lgRef('app/main'),pay);if(gDoc)b.set(lgRef('app/gacc'),gDoc);
     if(ids.length){const f={};ids.forEach(id=>f[`pen.${id}.applied`]=true);b.update(lgRef('app/attitude'),f);}
     await b.commit();if(gDoc)try{localStorage.setItem(gKey,gSig);}catch(e){}
-    lgStatus('보냄 ✓ '+new Date().toLocaleTimeString());if(manual)toast('학생 라운지로 보냈습니다');
+    lgStatus((lg.sec?'🔒 보안 연결 · ':'')+'보냄 ✓ '+new Date().toLocaleTimeString());if(manual)toast('학생 라운지로 보냈습니다');
   }catch(e){console.error(e);lgStatus('보내기 실패: '+(e.code||e.message));}
 }
 function lgSchedule(){try{if(!lgOnOf(lg.cfg)||!lg.cfg.fb)return;clearTimeout(lg.timer);lg.timer=setTimeout(()=>lgPush(false),1500);}catch(e){}}
@@ -2994,6 +3020,30 @@ function lgWatch(){
     if(nMinus||nPlus||nBuy){persist();if(DB.tab==='score'&&c===cls())renderScore();toast('학생 라운지에서 받음: '+[nMinus?`태도 감점 ${nMinus}건(머쓱 −)`:'',nBuy?`포인트→주식 돈 ${nBuy}건(칭찬 −)`:'',nPlus?`주식 돈→포인트 ${nPlus}건(칭찬 +)`:''].filter(Boolean).join(', '));}
     if(nMinus||nPlus||nBuy||resend){clearTimeout(lg.timer);lg.timer=setTimeout(()=>lgPush(false),300);}
   },e=>lgStatus('감점 받기 오류: '+(e.code||e.message)));
+  /* 🔨 자리 경매 낙찰 → 매석(자리 잠금) 적용 버튼 */
+  if(lg.aucUnsub)lg.aucUnsub();
+  lg.aucUnsub=lg.F.onSnapshot(lg.F.collection(lg.db,'fc',lg.cfg.code,'auctions'),q=>{lg.aucs=q.docs.map(d=>({id:d.id,...d.data()}));lgAucBar();},e=>console.warn(e));
+}
+function lgAucBar(){
+  const L=lg.aucs.filter(a=>a.kind==='seat'&&a.status==='closed'&&!a.applied&&Object.keys(a.result||{}).length);
+  let bar=$('#lgAucBar');if(!L.length){if(bar)bar.remove();return;}
+  if(!bar){bar=document.createElement('div');bar.id='lgAucBar';bar.style.cssText='position:fixed;left:50%;top:12px;transform:translateX(-50%);z-index:90;background:#14213D;color:#fff;border:2px solid #C9A227;border-radius:14px;padding:10px 14px;display:flex;gap:10px;align-items:center;box-shadow:0 8px 24px rgba(0,0,0,.25);font-weight:700';document.body.appendChild(bar);}
+  const a=L[0];bar.innerHTML=`🔨 학생 라운지 '${esc(a.title)}' 경매 낙찰 ${Object.keys(a.result).length}자리 <button class="btn sm primary" id="lgAucApply">매석 적용 (자리 잠금)</button><button class="btn sm ghost" id="lgAucLater" style="color:#fff">나중에</button>`;
+  $('#lgAucApply').onclick=()=>lgAucApply(a);$('#lgAucLater').onclick=()=>bar.remove();
+}
+async function lgAucApply(a){
+  const c=lgCls();if(!c)return;if(!(await lgTeacher(true)))return;
+  if(c===cls())pushUndo();let n=0;
+  for(const [k,sid] of Object.entries(a.result||{})){
+    if(!c.students.some(s=>s.id===sid))continue;
+    const old=Object.keys(c.current).find(x=>c.current[x]===sid),occ=c.current[k];
+    if(old&&old!==k){delete c.current[old];delete c.locks[old];}
+    if(occ&&occ!==sid){if(old&&old!==k)c.current[old]=occ;}
+    c.current[k]=sid;c.locks[k]=true;n++;
+  }
+  commit();
+  try{await lg.F.updateDoc(lgRef('auctions/'+a.id),{applied:Date.now()});}catch(e){console.error(e);toast('라운지에 적용 표시를 하지 못했습니다: '+(e.code||e.message));}
+  toast(`🔒 매석 ${n}자리를 잠갔습니다 → 이제 [랜덤 배치]를 누르면 나머지 자리가 규칙대로 채워집니다`);
 }
 $('#lgSave').onclick=()=>{
   const fbTxt=$('#lgFb').value.trim(),fb=lgParse(fbTxt);
@@ -3011,10 +3061,16 @@ function getLoungeUrlAndConfig() {
   const enc = btoa(unescape(encodeURIComponent(JSON.stringify({ code: c.code || 'demo', fb: c.fb || null }))));
   return { u, enc };
 }
-function openLounge(teacher = false) {
+async function openLounge(teacher = false) {
   const { u, enc } = getLoungeUrlAndConfig();
-  const targetUrl = u + '#c=' + encodeURIComponent(enc) + (teacher ? '&teacher=1' : '');
-  window.open(targetUrl, '_blank');
+  /* 보안 모드: 이 PC의 선생님 로그인으로 1시간짜리 토큰을 받아 건넴 (주소의 #은 서버로 가지 않음) */
+  let tk = '', win = null;
+  if (teacher && lg.cfg.fb) win = window.open('about:blank', '_blank'); // 기다리는 동안 팝업 차단되지 않게 창부터 엶
+  if (teacher && lg.cfg.fb && await lgConnect().catch(() => false) && lg.sec) {
+    if (await lgTeacher(true)) { const r = await lgApi({ a: 'handoff' }, true); if (r.ok) tk = '&tk=' + encodeURIComponent(r.token); }
+  }
+  const targetUrl = u + '#c=' + encodeURIComponent(enc) + (teacher ? '&teacher=1' : '') + tk;
+  if (win) win.location.href = targetUrl; else window.open(targetUrl, '_blank');
 }
 $('#lgOpen').onclick = () => openLounge(false);
 if ($('#lgAdminOpen')) $('#lgAdminOpen').onclick = () => openLounge(true);

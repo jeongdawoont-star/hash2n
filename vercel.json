@@ -6,5 +6,11 @@
       "source": "/robots.txt",
       "destination": "/robots-vercel.txt"
     }
-  ]
+  ],
+  "functions": {
+    "api/fc.js": {
+      "includeFiles": "vibe-apps/fc-econ.js",
+      "maxDuration": 10
+    }
+  }
 }

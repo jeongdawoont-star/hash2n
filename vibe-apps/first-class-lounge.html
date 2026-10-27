@@ -5,6 +5,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=Black+Han+Sans&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="fc-econ.js"></script>
 <style>
 /* 퍼스트클래스(교사용)와 같은 항공 테마: 네이비 + 골드. 학생용이라 버튼을 크게, 화면 한 장 고정. */
 :root{
@@ -339,6 +340,27 @@ img.px{display:inline-block;width:1.2em;height:1.2em;vertical-align:-.24em;image
   .ibar .seg,.ibar .meter{min-width:100%}
   .todo{flex-wrap:wrap}.todo .tx{flex:1 1 60%}.todo>.row,.todo>.btn{margin-left:46px}
 }
+/* 🛒 장터 */
+.shopg{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));grid-auto-rows:min-content;gap:10px;align-content:start}
+.shopc{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.shopc .em{font-size:46px;line-height:1.1}.shopc .pr{font-family:var(--f-d);font-size:24px;color:var(--navy)}
+.shopc.out{opacity:.55}
+.acell{border:1px solid var(--line);border-radius:10px;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-height:0;min-width:0;overflow:hidden;padding:2px 4px;font:inherit;color:var(--ink);cursor:default}
+button.acell{cursor:pointer}button.acell:hover{border-color:var(--navy)}
+.acell small{font-size:10.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.acell b{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.acell.has{background:var(--gold-2);border-color:var(--gold)}
+.acell.me{background:#DCEBFF;border-color:var(--navy);box-shadow:inset 0 0 0 2px var(--navy)}
+.acell.won{background:#E3F4EA;border-color:#B7E0C7}
+.acell.no{background:var(--surface-2);border-style:dashed;color:var(--muted);font-size:16px}
+.acell.swap{outline:3px solid var(--up)}
+[data-a=busSwap]{cursor:pointer}
+.sgrid.bus{grid-template-columns:repeat(2,minmax(0,1fr)) minmax(0,.55fr) repeat(2,minmax(0,1fr));grid-template-rows:repeat(12,minmax(0,1fr));max-width:460px;width:100%;margin:0 auto;border:3px solid var(--navy);border-radius:26px 26px 12px 12px;padding:10px}
+.cd{font-size:18px}.cd b{font-family:var(--f-d);color:var(--up)}
+.bars{display:flex;align-items:flex-end;gap:6px;min-height:140px}
+.bars>div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;min-width:0;font-size:11px}
+.bars i{display:block;width:70%;background:var(--gold);border-radius:6px 6px 0 0;min-height:3px}
+.bars small{color:var(--muted)}.bars b{font-size:10.5px;white-space:nowrap}
 </style>
 </head><body>
 <div id="app">
@@ -446,6 +468,8 @@ const TEACHER_AUTO = (() => {
 })();
 // 폰 모드 판정은 loadCfg가 주소의 #c=…&phone을 지우기 전에 해야 함 (새로고침해도 유지되게 sessionStorage에도 기억)
 const PHONE = (() => { const on = /[?&]phone\b/.test(location.search) || /[#&]phone\b/.test(location.hash); try { if (on) sessionStorage.setItem('fclounge.phone', '1'); return on || sessionStorage.getItem('fclounge.phone') === '1'; } catch (e) { return on; } })();
+/* 퍼스트클래스 '라운지 관리' 버튼이 주소 #tk= 로 건네는 선생님 로그인 토큰 (loadCfg가 주소를 지우기 전에 읽음) */
+const HANDOFF = (() => { const m = location.hash.match(/[#&]tk=([^&]+)/); return m ? decodeURIComponent(m[1]) : null; })();
 const CFG = loadCfg();
 const IDLE_LIMIT = (PHONE ? 15 * 60 : 120) * 1000, T_IDLE_LIMIT = 10 * 60 * 1000;
 
@@ -458,13 +482,29 @@ function deepMerge(a, b) { for (const k in b) { const v = b[k]; if (v && typeof 
 async function makeCloud(cfg) {
   const { initializeApp } = await import(`https://www.gstatic.com/firebasejs/${FB_VER}/firebase-app.js`);
   const F = await import(`https://www.gstatic.com/firebasejs/${FB_VER}/firebase-firestore.js`);
+  const FA = await import(`https://www.gstatic.com/firebasejs/${FB_VER}/firebase-auth.js`);
   const app = initializeApp(cfg.fb, 'lounge'); const db = F.getFirestore(app);
+  /* 로그인은 이 탭에서만 유지 (공용 태블릿: 창을 닫으면 로그아웃) */
+  const auth = FA.getAuth(app); await FA.setPersistence(auth, FA.browserSessionPersistence).catch(() => { });
   const ref = p => F.doc(db, 'fc', cfg.code, ...p.split('/'));
   const onErr = e => { console.error(e); setConn('err', '연결 오류: ' + (e.code || e.message)); };
   return {
     kind: 'cloud',
+    signIn: async tk => (await FA.signInWithCustomToken(auth, tk)).user,
+    signOut: () => auth.currentUser ? FA.signOut(auth) : Promise.resolve(),
+    idToken: () => auth.currentUser ? auth.currentUser.getIdToken() : Promise.resolve(null),
+    claims: async () => auth.currentUser ? (await auth.currentUser.getIdTokenResult()).claims : null,
     watchDoc: (p, cb) => F.onSnapshot(ref(p), s => cb(s.exists() ? s.data() : null), onErr),
     watchCol: (c, cb) => F.onSnapshot(F.collection(db, 'fc', cfg.code, c), q => cb(q.docs.map(d => ({ id: d.id, ...d.data() }))), onErr),
+    /** 최근 n개만 (장부·교환권처럼 계속 쌓이는 것) */
+    watchRecent: (c, n, cb) => F.onSnapshot(F.query(F.collection(db, 'fc', cfg.code, c), F.orderBy('at', 'desc'), F.limit(n)), q => cb(q.docs.map(d => ({ id: d.id, ...d.data() }))), onErr),
+    getCol: async c => (await F.getDocs(F.collection(db, 'fc', cfg.code, c))).docs.map(d => ({ id: d.id, ...d.data() })),
+    /** 화폐 엔진 결과 저장 (보안 전환 전·체험용). upd = 점 경로 update, put = 통째로 */
+    async batch(ops, exists) {
+      const b = F.writeBatch(db);
+      for (const o of ops) { if (o.op === 'put') b.set(ref(o.path), san(o.d)); else if (exists.has(o.path)) b.update(ref(o.path), Object.fromEntries(Object.entries(o.f).map(([k, v]) => [k, san(v)]))); else b.set(ref(o.path), san(FCEcon.expand(o.f)), { merge: true }); }
+      await b.commit();
+    },
     set: (p, data, merge = true) => F.setDoc(ref(p), san(data), { merge }),
     async update(p, fields) {
       const f = {}; for (const k in fields) f[k] = fields[k] === DEL ? F.deleteField() : san(fields[k]);
@@ -496,6 +536,10 @@ function makeLocal(code) {
     kind: 'demo',
     watchDoc(p, cb) { const w = { p, cb }; dw.add(w); setTimeout(() => cb(clone(getDoc(p))), 0); return () => dw.delete(w); },
     watchCol(c, cb) { const w = { c, cb }; cw.add(w); setTimeout(() => cb(colOf(c)), 0); return () => cw.delete(w); },
+    watchRecent(c, n, cb) { return this.watchCol(c, l => cb(l.sort((a, b) => (b.at || 0) - (a.at || 0)).slice(0, n))); },
+    async getCol(c) { return colOf(c); },
+    async batch(ops) { for (const o of ops) { if (o.op === 'put') data[o.path] = san(o.d); else { data[o.path] = data[o.path] || {}; for (const k in o.f) setPath(data[o.path], k, san(o.f[k])); } } save(); },
+    signIn: async () => null, signOut: async () => { }, idToken: async () => null, claims: async () => null,
     async set(p, d, merge = true) { data[p] = merge && data[p] ? deepMerge(data[p], san(d)) : san(d); save(); },
     async update(p, fields) { data[p] = data[p] || {}; for (const k in fields) setPath(data[p], k, san(fields[k])); save(); },
     async del(p) { delete data[p]; save(); },
@@ -522,7 +566,7 @@ function SAMPLE_MAIN() {
 }
 
 /* ---------------- state ---------------- */
-const S = { main: null, secret: null, set: null, stock: null, mani: null, att: null, gacc: null, wallets: {}, manis: {}, contests: [], board: [], polls: [], relay: [], reports: [], wall: [] };
+const S = { main: null, secret: null, set: null, stock: null, mani: null, att: null, gacc: null, wallets: {}, manis: {}, contests: [], board: [], polls: [], relay: [], reports: [], wall: [], econ: null, shop: [], orders: [], auctions: [], ledger: [], pinsH: null };
 const U = { view: 'home', me: null, teacher: false, sub: { stock: 'board', contest: 'poster', plaza: 'board', teacher: 'todo', wall: 'all' }, wallOpen: null, seatView: innerWidth < 760 ? 'no' : 'seat', inv: null, invSaving: false, step: 1, contest: null, repPeriod: 'today', repSel: new Set(), last: Date.now() };
 let DB;
 
@@ -541,9 +585,9 @@ const pendingPen = id => Object.values(S.att?.pen || {}).filter(p => p.sid === i
 /** 주식에 쓰는 점수 = 퍼스트클래스 칭찬 점수 − 아직 퍼스트클래스에 반영되지 않은 조정(감점·환전) */
 const sc = id => (+(S.main?.scores?.[id]) || 0) - pendingPen(id);
 const curRound = () => S.stock?.cur ? S.stock.rounds?.[S.stock.cur] : null;
-/** 포인트↔주식 돈 교환으로 빠져나간 포인트 합 (buy +, sell −, 예전 방식 승인된 환전 −) */
+/** 포인트↔화폐 교환으로 빠져나간 포인트 합 (buy +, sell −, 예전 방식 승인된 환전 −) */
 function xNet(id) { const w = S.wallets[id] || {}; let n = 0; for (const x of w.xl || []) n += x.dir === 'buy' ? +x.pts : -x.pts; for (const e of w.ex || []) if (e.st === 'ok') n -= +e.pts; return n; }
-/** 주가 = 칭찬 점수 + 교환으로 오간 포인트 → 포인트를 주식 돈으로 바꿔도 내 주가는 떨어지지 않음 (실제로 받은 칭찬·머쓱만 반영) */
+/** 주가 = 칭찬 점수 + 교환으로 오간 포인트 → 포인트를 화폐로 바꿔도 내 주가는 떨어지지 않음 (실제로 받은 칭찬·머쓱만 반영) */
 const stockSc = id => sc(id) + xNet(id);
 const priceOf = (id, R = curRound()) => R?.v >= 2 ? stockSc(id) : sc(id);
 function growth(id, R = curRound()) {
@@ -608,7 +652,7 @@ const needMe = () => U.me ? '' : `<div class="empty"><div class="big">🔒</div>
 const seg = (key, items) => `<div class="seg">${items.map(([v, l]) => `<button data-a="sub" data-k="${key}" data-v="${v}" aria-pressed="${U.sub[key] === v}">${l}</button>`).join('')}</div>`;
 
 /* ---------------- render loop ---------------- */
-const NAV = [['home', '🏠', '홈'], ['stock', '📈', '주식'], ['mani', '🎁', '마니또'], ['contest', '🏆', '대회'], ['wall', '🎨', '그림'], ['plaza', '💬', '광장']];
+const NAV = [['home', '🏠', '홈'], ['stock', '📈', '주식'], ['mkt', '🛒', '장터'],['mani', '🎁', '마니또'], ['contest', '🏆', '대회'], ['wall', '🎨', '그림'], ['plaza', '💬', '광장']];
 let rq = 0, pending = false;
 function render() { if (rq) return; rq = requestAnimationFrame(() => { rq = 0; doRender(); }); }
 function typing() { const a = document.activeElement; return a && $('#main').contains(a) && /INPUT|TEXTAREA|SELECT/.test(a.tagName) && a.type !== 'checkbox' && a.type !== 'radio'; }
@@ -616,7 +660,7 @@ function doRender() {
   if (typing()) { pending = true; return; } pending = false;
   const nav = NAV.concat(U.teacher ? [['teacher', '⚙️', '선생님']] : []);
   if (U.view === 'teacher' && !U.teacher) U.view = 'home';
-  const dots = studentTodo(); if (U.teacher) { const t = teacherTodo(); dots.teacher = t.ex + t.prop + t.rep + t.bnew + t.hid + t.aiErr; }
+  const dots = studentTodo(); if (U.teacher) { const t = teacherTodo(); dots.teacher = t.ex + t.prop + t.rep + t.bnew + t.hid + t.aiErr; dots.mkt = S.orders.filter(o => o.st === 'paid').length; }
   $('#dock').innerHTML = nav.map(([v, i, l]) => `<button data-a="go" data-v="${v}" aria-current="${U.view === v}"><span class="i">${i}</span>${l}${dots[v] ? `<span class="dot">${v === 'stock' || v === 'mani' ? '!' : dots[v]}</span>` : ''}</button>`).join('');
   $('#tBtn').classList.toggle('on', U.teacher); $('#tBtn').textContent = U.teacher ? '🔑 선생님 모드' : '🔑';
   $('#meSlot').innerHTML = U.me ? `<span class="chip-me">${esc(nm(U.me))}<span class="idle" id="idleT"></span><button data-a="logout">나가기</button></span>` : '';
@@ -633,15 +677,16 @@ document.addEventListener('click', e => { const el = e.target.closest('[data-a]'
 A.closeModal = () => closeModal();
 A.go = d => { invFlush(); U.view = d.v; if (d.sub) U.sub[d.v] = d.sub; U.inv = null; if (d.cid) U.contest = d.cid; render(); };
 A.sub = d => { invFlush(); U.sub[d.k] = d.v; U.inv = null; render(); };
-A.logout = () => { invFlush(); U.me = null; U.pin = null; U.inv = null; U.view = 'home'; render(); toast('로그아웃했어요 · 다음 친구 차례!'); }; // 공용 태블릿: 나가면 바로 이름 목록
+A.logout = () => { invFlush(); authOut(); U.me = null; U.pin = null; U.inv = null; U.view = 'home'; render(); toast('로그아웃했어요 · 다음 친구 차례!'); }; // 공용 태블릿: 나가면 바로 이름 목록
 
 /* idle auto logout (공용 태블릿) */
 ['pointerdown', 'keydown'].forEach(ev => addEventListener(ev, () => U.last = Date.now(), true));
 let attWas = null;
 setInterval(() => {
   const idle = Date.now() - U.last;
-  if (U.me) { const left = Math.ceil((IDLE_LIMIT - idle) / 1000); const el = $('#idleT'); if (el) el.textContent = left <= 20 ? left + '초' : ''; if (left <= 0) { invFlush(); closeModal(); U.me = null; U.pin = null; U.inv = null; U.view = 'home'; render(); toast('자리를 비워서 자동으로 나갔어요'); } }
-  if (U.teacher && idle > T_IDLE_LIMIT) { U.teacher = false; render(); }
+  if (U.me) { const left = Math.ceil((IDLE_LIMIT - idle) / 1000); const el = $('#idleT'); if (el) el.textContent = left <= 20 ? left + '초' : ''; if (left <= 0) { invFlush(); closeModal(); authOut(); U.me = null; U.pin = null; U.inv = null; U.view = 'home'; render(); toast('자리를 비워서 자동으로 나갔어요'); } }
+  if (U.teacher && idle > T_IDLE_LIMIT) { U.teacher = false; authOut(); render(); }
+  mktTick();
   const a = attOpen(); if (attWas !== null && a !== attWas) render(); attWas = a; // 신고 받기 시간이 끝나면 화면 갱신
 }, 1000);
 
@@ -654,21 +699,28 @@ A.pick = d => {
     return;
   }
   pinPad(stu(d.id)?.name, async pin => {
+    if (SEC) { // 보안 모드: 서버가 비밀번호를 확인하고 로그인 토큰을 줌
+      const r = await api({ a: 'slogin', sid: d.id, pin });
+      if (!r.ok) { if (r.status === 401) return false; toast(r.error); return 'close'; }
+      await DB.signIn(r.token);
+    } else {
     const real = S.main?.pinH?.[d.id];
     if (!real) { toast('아직 비밀번호가 없어요. 선생님께 말씀드려요'); return 'close'; }
     if (pinHash(d.id, pin) !== real) return false;
+    }
     // 공용 태블릿: 선생님 모드가 켜진 채로 학생이 들어오면 학생이 운영 권한을 갖게 되므로 끔
     const wasT = U.teacher; U.teacher = false; if (U.view === 'teacher') U.view = 'home';
     U.me = d.id; U.pin = pin; U.inv = null; U.last = Date.now(); render(); toast(`${nm(d.id)}, 어서 와요! ✈️${wasT ? ' (선생님 모드는 꺼졌어요)' : ''}`); return 'close';
   }, 6);
 };
 A.teacherToggle = () => {
-  if (U.teacher) { U.teacher = false; if (U.view === 'teacher') U.view = 'home'; render(); toast('선생님 모드를 껐어요'); return; }
+  if (U.teacher) { U.teacher = false; authOut(); if (U.view === 'teacher') U.view = 'home'; render(); toast('선생님 모드를 껐어요'); return; }
   if (DB.kind === 'demo') {
     if (U.me) { invFlush(); U.me = null; U.pin = null; U.inv = null; }
     U.teacher = true; U.last = Date.now(); if (U.view === 'home') { U.view = 'teacher'; U.sub.teacher = 'todo'; } render(); aiWork();
     toast('체험 모드: 비밀번호 없이 선생님 모드로 들어왔어요! 🎓'); return;
   }
+  if (SEC) return teacherLogin();
   pinPad('선생님', async pin => {
     if (pin !== String(S.secret?.tpin || '1234')) return false;
     if (U.me) { invFlush(); U.me = null; U.pin = null; U.inv = null; } // 학생 화면 위에서 선생님 모드를 켜면 학생은 나가게
@@ -678,18 +730,23 @@ A.teacherToggle = () => {
 };
 A.demoReset = () => confirmBox('체험 데이터를 모두 초기화하고 처음 상태로 되돌릴까요?', () => { DB.wipe(); location.reload(); });
 function pinPad(who, check, len = 4) {
-  let v = '';
+  let v = '', busy = false; const vary = !len, max = vary ? 12 : len; // len 0 = 길이 자유(4~12자리, 확인 버튼)
   const m = modal(`${mHead('비밀번호')}<div class="mb"><div class="pin"><div class="who">${esc(who || '')}</div><div class="dots">${'<i></i>'.repeat(len)}</div>
-  <div class="pad">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => `<button data-k="${n}">${n}</button>`).join('')}<button data-k="c">⌫</button><button data-k="0">0</button><button data-k="x">✕</button></div>
-  <p class="muted small" style="margin:0">숫자 ${len}자리를 눌러요${len === 6 ? ' · 🎂 내 생일 4자리 앞이나 뒤에 2자리가 붙어 있어요' : ''}</p></div></div>`);
-  const paint = () => m.querySelectorAll('.dots i').forEach((i, k) => i.classList.toggle('on', k < v.length));
+  <div class="pad">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => `<button data-k="${n}">${n}</button>`).join('')}<button data-k="c">⌫</button><button data-k="0">0</button><button data-k="x">✕</button>${vary ? '<button data-k="ok" style="grid-column:1/-1;background:var(--navy);color:#fff">확인</button>' : ''}</div>
+  <p class="muted small" style="margin:0">${vary ? '숫자를 누르고 확인' : `숫자 ${len}자리를 눌러요${len === 6 ? ' · 🎂 내 생일 4자리 앞이나 뒤에 2자리가 붙어 있어요' : ''}`}</p></div></div>`);
+  const paint = () => { if (vary) m.querySelector('.dots').innerHTML = '<i class="on"></i>'.repeat(v.length) || '<i></i>'; else m.querySelectorAll('.dots i').forEach((i, k) => i.classList.toggle('on', k < v.length)); };
+  const submit = async () => {
+    busy = true; const r = await check(v).catch(e => { console.error(e); toast('로그인하지 못했어요'); return 'close'; }); busy = false;
+    if (r === 'close') closeModal(); else if (r === false) { const d = m.querySelector('.dots'); d.classList.add('shake'); setTimeout(() => { d.classList.remove('shake'); v = ''; paint(); }, 380); }
+  };
   const press = async k => {
-    if (k === 'x') return closeModal(); if (k === 'c') { v = v.slice(0, -1); return paint(); }
-    if (v.length >= len) return; v += k; paint();
-    if (v.length === len) { const r = await check(v); if (r === 'close') closeModal(); else if (r === false) { const d = m.querySelector('.dots'); d.classList.add('shake'); setTimeout(() => { d.classList.remove('shake'); v = ''; paint(); }, 380); } }
+    if (busy) return; if (k === 'x') return closeModal(); if (k === 'c') { v = v.slice(0, -1); return paint(); }
+    if (k === 'ok') { if (v.length >= 4) submit(); return; }
+    if (v.length >= max) return; v += k; paint();
+    if (!vary && v.length === len) submit();
   };
   m.querySelector('.pad').addEventListener('click', e => { const b = e.target.closest('[data-k]'); if (b) press(b.dataset.k); });
-  const kd = e => { if (!$('#modalRoot .pin')) return removeEventListener('keydown', kd); if (/^\d$/.test(e.key)) press(e.key); else if (e.key === 'Backspace') press('c'); };
+  const kd = e => { if (!$('#modalRoot .pin')) return removeEventListener('keydown', kd); if (/^\d$/.test(e.key)) press(e.key); else if (e.key === 'Backspace') press('c'); else if (e.key === 'Enter' && vary) press('ok'); };
   addEventListener('keydown', kd);
 }
 
@@ -739,7 +796,7 @@ V.home = () => {
   return `<div class="hero"><div style="font-size:42px">👋</div><div><h1>${esc(nm(U.me))}, 반가워요!</h1><p>${stu(U.me)?.no}번 · 오늘도 퍼스트클래스로 출발!</p></div>${S.gacc?.d?.[U.me] ? '<span class="sp" style="flex:1"></span><button class="btn gbtn" data-a="gacc">🔑 내 구글 계정</button>' : ''}</div>${notice}
   <div class="tiles">
     <button class="tile" data-a="go" data-v="stock"><span class="em">⭐</span><span class="k">내 칭찬 점수</span><span class="v">${sc(U.me)}점</span><span class="s ${cls(g)}">${R ? '이번 라운드 ' + pct(g) : '주식 라운드 준비 중'}</span></button>
-    <button class="tile" data-a="go" data-v="stock" data-sub="${R?.status === 'open' ? 'invest' : 'wallet'}"><span class="em">💰</span><span class="k">내 주식 돈</span><span class="v">${won(w.cash || 0)}</span><span class="s">${R ? (R.status === 'open' ? (Object.keys(w.inv?.[R.id] || {}).length ? '✅ 투자했어요 · 바꿀 수 있어요' : '👉 지금 투자할 수 있어요!') : R.status === 'closed' ? '투자 마감 · 정산 기다리는 중' : '정산 완료') : ''}</span></button>
+    <button class="tile" data-a="go" data-v="stock" data-sub="${R?.status === 'open' ? 'invest' : 'wallet'}"><span class="em">💰</span><span class="k">내 화폐</span><span class="v">${won(w.cash || 0)}</span><span class="s">${R ? (R.status === 'open' ? (Object.keys(w.inv?.[R.id] || {}).length ? '✅ 투자했어요 · 바꿀 수 있어요' : '👉 지금 투자할 수 있어요!') : R.status === 'closed' ? '투자 마감 · 정산 기다리는 중' : '정산 완료') : ''}</span></button>
     <button class="tile" data-a="go" data-v="mani"><span class="em">🎁</span><span class="k">마니또</span><span class="v" style="font-size:22px">${maniTxt}</span><span class="s">${M.phase === 'running' ? `내가 한 미션 ${(mm.did || []).length}개` : ''}</span></button>
     <button class="tile" data-a="go" data-v="contest"><span class="em">🏆</span><span class="k">신청 받는 대회</span><span class="v">${openC.length}개</span><span class="s">${esc(openC.map(c => c.title).slice(0, 2).join(' · '))}</span></button>
     <button class="tile" data-a="go" data-v="plaza" data-sub="poll"><span class="em">🗳️</span><span class="k">아직 안 한 투표</span><span class="v">${polls.length}개</span><span class="s">${polls.length ? '👉 눌러서 투표해요' : '모두 했어요 ✅'}</span></button>
@@ -812,7 +869,7 @@ V.stock = () => {
   return `<div class="vhead"><h1>📈 우리반 주식</h1>${rinfo}<button class="help" data-a="help" data-v="stock">❓ 어떻게 해요?</button><span class="sp"></span>${seg('stock', subs)}</div>${body}`;
 };
 A.seatView = d => { U.seatView = d.v; render(); };
-/** 투자 한도(칸 수): 지갑의 주식 돈 ÷ 100만원. 예전 방식 라운드는 라운드 시작 때 칭찬 점수(최소 예산 보장) */
+/** 투자 한도(칸 수): 지갑의 화폐 ÷ 100만원. 예전 방식 라운드는 라운드 시작 때 칭찬 점수(최소 예산 보장) */
 function budgetOf(id, R) { const st = ST(); if (R?.v >= 2) return Math.max(0, Math.floor((+S.wallets[id]?.cash || 0) / st.unit)); return st.budget === 'fixed' ? st.fixed : Math.max(+st.minBudget || 0, +(R.base?.[id] ?? 0)); }
 /* 도움말 — 카드뉴스 형태 초등학생 눈높이 설명 */
 const HELP_CARDS = {
@@ -823,15 +880,15 @@ const HELP_CARDS = {
       cards: [
         {
           step: '1단계',
-          title: '⭐ → 💰 포인트를 주식 돈으로 바꾸기',
-          desc: `주식은 <b>주식 돈</b>으로 해요. <b>👛 내 지갑</b>에서 칭찬 포인트를 주식 돈으로 바꿔요. 1P = ${won(st.rate)}이고, 바꿀 때 <b>수수료 ${st.buyFee}%</b>를 내요. 바꾼 만큼 내 칭찬 점수는 줄어요.`,
+          title: '⭐ → 💰 포인트를 화폐로 바꾸기',
+          desc: `주식은 <b>화폐</b>로 해요. <b>👛 내 지갑</b>에서 칭찬 포인트를 화폐로 바꿔요. 1P = ${won(st.rate)}이고, 바꿀 때 <b>수수료 ${st.buyFee}%</b>를 내요. 바꾼 만큼 내 칭찬 점수는 줄어요.`,
           mock: `<div class="cnews-mock-head">💱 카지노 칩처럼 바꿔요</div>
             <div class="cnews-mock-ui" style="flex-direction:column;align-items:stretch;gap:4px">
               <div style="display:flex;justify-content:space-between"><span>⭐ 10P</span><b>${won(b1.gross)}</b></div>
               <div style="display:flex;justify-content:space-between"><span>수수료 ${st.buyFee}%</span><b>− ${won(b1.fee)}</b></div>
-              <div style="display:flex;justify-content:space-between;border-top:1px dashed #cbd5e1;padding-top:4px"><span>💰 받는 주식 돈</span><b style="color:var(--navy)">${won(b1.net)}</b></div>
+              <div style="display:flex;justify-content:space-between;border-top:1px dashed #cbd5e1;padding-top:4px"><span>💰 받는 화폐</span><b style="color:var(--navy)">${won(b1.net)}</b></div>
             </div>`,
-          tip: '💡 포인트와 주식 돈은 따로 관리돼요. 필요한 만큼만 바꿔요!'
+          tip: '💡 포인트와 화폐는 따로 관리돼요. 필요한 만큼만 바꿔요!'
         },
         {
           step: '2단계',
@@ -864,7 +921,7 @@ const HELP_CARDS = {
         {
           step: '4단계',
           title: '💰 → ⭐ 남길까, 바꿀까? 내 마음대로',
-          desc: `주식 돈은 지갑에 <b>그대로 남겨 두고</b> 다음 라운드에 또 투자해도 되고, <b>일부나 전부</b>를 칭찬 포인트로 바꿔도 돼요. 포인트로 바꿀 때도 <b>수수료 ${st.fee}%</b>가 있어요.`,
+          desc: `화폐는 지갑에 <b>그대로 남겨 두고</b> 다음 라운드에 또 투자해도 되고, <b>일부나 전부</b>를 칭찬 포인트로 바꿔도 돼요. 포인트로 바꿀 때도 <b>수수료 ${st.fee}%</b>가 있어요.`,
           mock: `<div class="cnews-mock-head">📱 환전 예시</div>
             <div class="cnews-mock-ui" style="justify-content:space-between">
               <div style="font-size:13px">⭐ <b>1P</b> 받으려면</div>
@@ -978,12 +1035,12 @@ function investView(R) {
     </div>`;
   }).join('');
   const noMoney = open && v2 && !B;
-  return `<div class="ibar"><div><div class="small muted">${v2 ? '💰 내 주식 돈' : '내 투자 예산'}</div><div class="bud">${v2 ? won(w.cash || 0) : `${B}P = ${won(B * st.unit)}`}</div></div>
+  return `<div class="ibar"><div><div class="small muted">${v2 ? '💰 내 화폐' : '내 투자 예산'}</div><div class="bud">${v2 ? won(w.cash || 0) : `${B}P = ${won(B * st.unit)}`}</div></div>
     <div class="meter"><i id="meterBar" style="width:${B ? Math.min(100, used / B * 100) : 0}%"></i></div>
     <div><b id="ibarUsed">${won(used * st.unit)}</b> 투자 중 · <b id="ibarLeft">${won(left * st.unit)}</b> 남음</div>
     ${open ? `<div class="seg"><button data-a="step" data-v="1" aria-pressed="${U.step === 1}">${won(st.unit)}씩</button><button data-a="step" data-v="5" aria-pressed="${U.step === 5}">${won(st.unit * 5)}씩</button><button data-a="step" data-v="10" aria-pressed="${U.step === 10}">${won(st.unit * 10)}씩</button></div>
     ${used ? '<button class="btn sm ghost" data-a="invReset">모두 빼기</button>' : ''}<span class="saved ${dirty || U.invSaving ? 'ing' : ''}">${dirty || U.invSaving ? '⏳ 저장 중…' : used ? '✅ 자동 저장됨' : ''}</span>` : '<span class="pill warn">투자 마감 — 바꿀 수 없어요</span>'}</div>
-    ${noMoney ? `<div class="notice">💡 주식 돈이 없어요. <b>👛 내 지갑</b>에서 칭찬 포인트를 주식 돈으로 바꾼 다음 투자해요 (1P = ${won(st.rate)}, 수수료 ${st.buyFee}%). <button class="btn sm p" data-a="sub" data-k="stock" data-v="wallet">내 지갑으로</button></div>` : ''}
+    ${noMoney ? `<div class="notice">💡 화폐가 없어요. <b>👛 내 지갑</b>에서 칭찬 포인트를 화폐로 바꾼 다음 투자해요 (1P = ${won(st.rate)}, 수수료 ${st.buyFee}%). <button class="btn sm p" data-a="sub" data-k="stock" data-v="wallet">내 지갑으로</button></div>` : ''}
     <p class="small muted" style="margin:0">🔒 내 투자는 나만 봐요 · 친구 주가(칭찬 점수)가 오르면 벌고, 내리면 잃어요 · 최소 단위: <b>${won(st.unit)}</b> (금액을 누르면 직접 입력 / 슬라이더로 조절 가능)${v2 && +st.div ? ` · 투자를 많이 받은 친구는 정산 때 받은 돈의 ${st.div}%를 배당금으로 받아요` : ''}</p>
     <div class="igrid scroll">${cells}</div>`;
 }
@@ -996,7 +1053,7 @@ function invFlush() {
   const R = curRound(), me = U.me; if (!me || !U.inv || !R || R.status !== 'open') return;
   const saved = S.wallets[me]?.inv?.[R.id] || {}; if (!invDirty(saved)) return;
   const clean = invClean(U.inv); U.invSaving = true;
-  DB.update('wallets/' + me, { ['inv.' + R.id]: clean, name: nm(me) }).catch(e => { console.error(e); toast('저장하지 못했어요. 다시 눌러 주세요'); }).finally(() => { U.invSaving = false; render(); });
+  money('invest', { inv: clean }, { quiet: true }).then(r => { if (r === false) U.inv = null; }).finally(() => { U.invSaving = false; render(); });
 }
 A.step = d => { U.step = +d.v; render(); };
 A.inv = d => { const R = curRound(); if (!R || R.status !== 'open') return; const B = budgetOf(U.me, R); const used = unitsOf(U.inv); let n = (+U.inv[d.id] || 0) + (+d.d) * (U.step || 1); if (+d.d > 0) n = Math.min(n, (+U.inv[d.id] || 0) + (B - used)); U.inv[d.id] = Math.max(0, n); if (!U.inv[d.id]) delete U.inv[d.id]; clearTimeout(invT); invT = setTimeout(invFlush, 700); render(); };
@@ -1074,7 +1131,7 @@ A.invDirect = d => {
     toast(`${s.name}에게 ${won(finalUnits * st.unit)} 설정 완료!`);
   };
 };
-/** 교환 계산 (만원 단위로 반올림). buy: 포인트 → 주식 돈(수수료 빼고 받음) / sell: 주식 돈 → 포인트(수수료 더해서 냄) */
+/** 교환 계산 (만원 단위로 반올림). buy: 포인트 → 화폐(수수료 빼고 받음) / sell: 화폐 → 포인트(수수료 더해서 냄) */
 const r10k = n => Math.round(n / 10000) * 10000;
 const buyCalc = pts => { const st = ST(), gross = pts * st.rate, fee = r10k(gross * (+st.buyFee || 0) / 100); return { gross, fee, net: gross - fee }; };
 const sellCalc = pts => { const st = ST(), gross = pts * st.rate, fee = r10k(gross * (+st.fee || 0) / 100); return { gross, fee, cost: gross + fee }; };
@@ -1083,11 +1140,11 @@ function walletView() {
   const xl = (w.xl || []).slice(-6).reverse(), legacy = (w.ex || []).filter(e => e.st === 'req');
   const log = (w.log || []).slice().reverse();
   return `<div class="body"><div class="col" style="flex:1">
-    <div class="card"><h2>👛 내 주식 돈</h2><div style="font-family:var(--f-d);font-size:38px">${won(w.cash || 0)}</div>
+    <div class="card"><h2>👛 내 화폐</h2><div style="font-family:var(--f-d);font-size:38px">${won(w.cash || 0)}</div>
       <p class="small" style="margin:4px 0 0">${locked ? `📈 투자 중 <b>${won(locked)}</b> · ` : ''}쓸 수 있는 돈 <b>${won(free)}</b> · ⭐ 내 칭찬 포인트 <b>${my}P</b></p></div>
-    <div class="card"><h2>⭐ → 💰 포인트를 주식 돈으로</h2><div class="row"><input type="number" id="buyPts" min="1" max="${Math.max(1, my)}" value="1" style="width:90px"> P 바꾸기 <button class="btn p" data-a="buy" ${my > 0 ? '' : 'disabled'}>바꾸기</button></div>
+    <div class="card"><h2>⭐ → 💰 포인트를 화폐로</h2><div class="row"><input type="number" id="buyPts" min="1" max="${Math.max(1, my)}" value="1" style="width:90px"> P 바꾸기 <button class="btn p" data-a="buy" ${my > 0 ? '' : 'disabled'}>바꾸기</button></div>
       <p class="small muted" style="margin:6px 0 0" id="buyPrev">1P = ${won(st.rate)} · 수수료 ${st.buyFee}% 빼고 <b>${won(b1.net)}</b> 받아요 · 내 칭찬 점수가 그만큼 줄어요</p></div>
-    <div class="card"><h2>💰 → ⭐ 주식 돈을 포인트로 (환전)</h2><div class="row"><input type="number" id="sellPts" min="1" value="1" style="width:90px"> P 받기 <button class="btn g" data-a="sell" ${maxSell ? '' : 'disabled'}>환전</button></div>
+    <div class="card"><h2>💰 → ⭐ 화폐를 포인트로 (저축)</h2><div class="row"><input type="number" id="sellPts" min="1" value="1" style="width:90px"> P 받기 <button class="btn g" data-a="sell" ${maxSell ? '' : 'disabled'}>환전</button></div>
       <p class="small muted" style="margin:6px 0 0" id="sellPrev">1P 받으려면 <b>${won(s1.cost)}</b> (수수료 ${st.fee}% 포함) · 지금 최대 ${maxSell}P · 남겨 둬도 괜찮아요</p>
       ${legacy.length ? `<p class="small" style="margin:6px 0 0">⏳ 예전 방식 환전 신청 ${legacy.length}건 — 선생님 확인 중</p>` : ''}
       <div class="log" style="margin-top:6px">${xl.map(x => `<div><time>${fmtT(x.at)}</time><span>${x.dir === 'buy' ? `⭐${x.pts}P → 💰${won(x.won)}` : `💰${won(x.won)} → ⭐${x.pts}P`}</span><span class="pill">수수료 ${won(x.fee)}</span></div>`).join('')}</div></div></div>
@@ -1131,25 +1188,19 @@ A.buy = () => {
   const pts = Math.floor(+$('#buyPts').value), me = U.me; if (!(pts > 0)) return toast('1P 이상 적어요');
   if (pts > sc(me)) return toast(`칭찬 포인트가 모자라요 (지금 ${sc(me)}P)`);
   const c = buyCalc(pts);
-  confirmBox(`칭찬 포인트 ${pts}P를 주식 돈으로 바꿀까요?\n${won(c.gross)} − 수수료 ${won(c.fee)} = ${won(c.net)}\n내 칭찬 점수가 ${pts}점 줄어들어요.`, async () => {
+  confirmBox(`칭찬 포인트 ${pts}P를 화폐로 바꿀까요?\n${won(c.gross)} − 수수료 ${won(c.fee)} = ${won(c.net)}\n내 칭찬 점수가 ${pts}점 줄어들어요.`, async () => {
     if (U.me !== me || pts > sc(me)) return toast('칭찬 포인트가 모자라요');
-    const w = S.wallets[me] || {}, id = uid(), at = Date.now();
-    await DB.multi([['wallets/' + me, { cash: (w.cash || 0) + c.net, xl: [...(w.xl || []), { id, dir: 'buy', pts, won: c.net, fee: c.fee, at }], name: nm(me) }],
-      ['app/attitude', { pen: { ['buy' + id]: { sid: me, pts, at, applied: false, kind: 'buy', reason: `주식 돈으로 바꿈 ${won(c.net)}` } } }]]);
-    toast(`💰 ${won(c.net)}이 지갑에 들어왔어요`);
+    await money('xbuy', { pts });
   }, '바꾸기');
 };
 A.sell = () => {
   const pts = Math.floor(+$('#sellPts').value), me = U.me; if (!(pts > 0)) return toast('1P 이상 적어요');
   const c = sellCalc(pts);
   if (c.cost > freeCash(me)) return toast(`쓸 수 있는 돈이 모자라요 (${won(c.cost)} 필요)`);
-  confirmBox(`주식 돈 ${won(c.cost)}을 칭찬 포인트 ${pts}P로 바꿀까요?\n${won(c.gross)} + 수수료 ${won(c.fee)}`, async () => {
+  confirmBox(`화폐 ${won(c.cost)}을 칭찬 포인트 ${pts}P로 바꿀까요?\n${won(c.gross)} + 수수료 ${won(c.fee)}`, async () => {
     if (U.me !== me || c.cost > freeCash(me)) return toast('쓸 수 있는 돈이 모자라요');
-    const w = S.wallets[me] || {}, id = uid(), at = Date.now();
-    await DB.multi([['wallets/' + me, { cash: (w.cash || 0) - c.cost, xl: [...(w.xl || []), { id, dir: 'sell', pts, won: c.cost, fee: c.fee, at }], name: nm(me) }],
-      ['app/attitude', { pen: { ['ex' + id]: { sid: me, pts: -pts, at, applied: false, kind: 'ex', reason: `주식 돈 환전 ${won(c.cost)}` } } }]]);
-    toast(`⭐ 칭찬 포인트 +${pts}P! 퍼스트클래스에도 자동으로 들어가요`);
-  }, '환전하기');
+    await money('xsell', { pts });
+  }, '저축하기');
 };
 function stockAdmin(R) {
   const st = ST(), reqs = [], xs = [];
@@ -1164,7 +1215,7 @@ function stockAdmin(R) {
       ${R?.status === 'open' ? '<button class="btn" data-a="roundClose">투자 마감</button>' : ''}
       ${R && R.status !== 'settled' ? '<button class="btn g" data-a="roundSettle">지금 점수로 정산</button>' : ''}</div>
       ${R && R.status !== 'settled' && recvTop.length ? `<p class="small" style="margin:8px 0 0">💰 투자 많이 받은 친구: ${recvTop.map(([k, v]) => `<b>${esc(nm(k))}</b> ${won(v * st.unit)}`).join(' · ')}</p>` : ''}
-      <p class="small muted" style="margin:8px 0 0">새 라운드를 열면 그 순간의 주가(칭찬 점수, 주식 돈 교환은 빼고)를 시작 점수로 기록해요. 정산하면 ① 투자한 학생은 성장률만큼 벌거나 잃고 ② 투자를 받은 학생은 받은 돈의 ${st.div}%를 배당금으로 받아요.</p></div>
+      <p class="small muted" style="margin:8px 0 0">새 라운드를 열면 그 순간의 주가(칭찬 점수, 화폐 교환은 빼고)를 시작 점수로 기록해요. 정산하면 ① 투자한 학생은 성장률만큼 벌거나 잃고 ② 투자를 받은 학생은 받은 돈의 ${st.div}%를 배당금으로 받아요.</p></div>
     <div class="card"><h2>⚙ 설정</h2><div class="row" style="flex-wrap:wrap;gap:8px">
       <label class="f">최소 투자 단위(만원)<input type="number" id="stUnit" value="${Math.max(1, Math.round((st.unit || 100000) / 10000))}" min="1" step="1" style="width:85px"></label>
       <label class="f">1P 가치(만원)<input type="number" id="stRate" value="${st.rate / 10000}" style="width:90px"></label>
@@ -1174,7 +1225,7 @@ function stockAdmin(R) {
       <label class="f">성장률 최소 분모<input type="number" id="stFloor" value="${st.floor}" style="width:85px"></label>
       <label class="f">자기 투자<select id="stSelf"><option value="0">금지</option><option value="1" ${st.allowSelf ? 'selected' : ''}>허용</option></select></label>
       <button class="btn sm p" data-a="stSave">저장</button></div></div></div>
-    <div class="col" style="flex:1"><div class="card col fill" style="flex:1.3"><h2>💱 포인트↔주식 돈 기록</h2><p class="small muted" style="margin:0 0 6px">학생이 누르면 바로 처리되고 퍼스트클래스 점수에 자동 반영돼요. 반 전체 주식 돈 ${won(cashSum)} · 지금까지 수수료 ${won(feeSum)}</p><div class="scroll fill">
+    <div class="col" style="flex:1"><div class="card col fill" style="flex:1.3"><h2>💱 포인트↔화폐 기록</h2><p class="small muted" style="margin:0 0 6px">학생이 누르면 바로 처리되고 퍼스트클래스 점수에 자동 반영돼요. 반 전체 화폐 ${won(cashSum)} · 지금까지 수수료 ${won(feeSum)}</p><div class="scroll fill">
       ${reqs.length ? `<p class="small"><b>예전 방식 환전 신청 ${reqs.length}건</b></p>` + reqs.map(r => `<div class="row" style="padding:6px 0;border-bottom:1px solid var(--line)"><b>${esc(nm(r.sid))}</b> ${r.pts}점 (${won(r.cost)}) <span class="small muted">${fmtT(r.at)}</span><span class="sp" style="flex:1"></span><button class="btn sm" data-a="exDo" data-sid="${r.sid}" data-id="${r.id}" data-ok="0">반려</button><button class="btn sm p" data-a="exDo" data-sid="${r.sid}" data-id="${r.id}" data-ok="1">승인</button></div>`).join('') : ''}
       <table class="t"><tr><th>시각</th><th>학생</th><th>내용</th><th class="r">수수료</th></tr>${xs.slice(0, 60).map(x => `<tr><td class="small">${fmtT(x.at)}</td><td>${esc(nm(x.sid))}</td><td>${x.dir === 'buy' ? `⭐${x.pts}P → 💰${won(x.won)}` : `💰${won(x.won)} → ⭐${x.pts}P`}</td><td class="r">${won(x.fee)}</td></tr>`).join('') || '<tr><td colspan="4" class="muted">아직 기록이 없어요</td></tr>'}</table></div></div>
     <div class="card col fill" style="flex:1"><h2>📚 지난 라운드</h2><div class="scroll fill"><table class="t"><tr><th>라운드</th><th>상태</th><th class="r">최고 성장</th><th class="r">배당 1위</th></tr>
@@ -1195,7 +1246,7 @@ A.stSave = async () => {
 };
 A.roundNew = () => {
   const n = Object.keys(S.stock?.rounds || {}).length + 1, end = new Date(Date.now() + 7 * DAY).toLocaleDateString('sv');
-  const m = modal(`${mHead('새 주식 라운드')}<div class="mb"><label class="f">라운드 이름<input type="text" id="rT" value="${n}회차 주식 (${new Date().getMonth() + 1}월)"></label><label class="f">마감 예정일<input type="date" id="rE" value="${end}"></label><p class="small muted" style="margin:0">지금 주가(칭찬 점수, 주식 돈 교환은 빼고)가 시작 점수로 기록돼요. 학생들은 지갑의 주식 돈으로 투자해요.</p></div><div class="mf"><button class="btn" data-a="closeModal">취소</button><button class="btn p" id="rOk">열기</button></div>`);
+  const m = modal(`${mHead('새 주식 라운드')}<div class="mb"><label class="f">라운드 이름<input type="text" id="rT" value="${n}회차 주식 (${new Date().getMonth() + 1}월)"></label><label class="f">마감 예정일<input type="date" id="rE" value="${end}"></label><p class="small muted" style="margin:0">지금 주가(칭찬 점수, 화폐 교환은 빼고)가 시작 점수로 기록돼요. 학생들은 지갑의 화폐로 투자해요.</p></div><div class="mf"><button class="btn" data-a="closeModal">취소</button><button class="btn p" id="rOk">열기</button></div>`);
   m.querySelector('#rOk').onclick = async () => {
     const id = uid(), base = Object.fromEntries(roster().map(s => [s.id, stockSc(s.id)]));
     await DB.set('app/stock', { cur: id, rounds: { [id]: { id, v: 2, title: $('#rT').value || '주식 라운드', end: $('#rE').value, at: Date.now(), status: 'open', base } } });
@@ -1941,7 +1992,7 @@ V.teacher = () => {
       ${qr && DB.kind === 'cloud' ? `<div class="row" style="align-items:flex-start"><div data-qr="${esc(qr)}" data-s="210"></div><div class="small">폰 카메라로 찍으면 바로 들어와요.<br>폰은 15분 동안 로그인 유지.<br><button class="btn sm g" data-a="qrBig" style="margin-top:8px">크게 보기 (TV·인쇄)</button><br><button class="btn sm" data-a="copyLink" style="margin-top:6px">🔗 우리 반 링크 복사</button></div></div>` : ''}
       ${DB.kind === 'cloud' ? `<details class="small"><summary>다른 사이트(Netlify 등)에 직접 올리고 싶을 때</summary><p style="margin:6px 0">연결 설정을 넣은 파일을 만들어요. <b>공개 저장소(GitHub)에는 올리지 마세요</b> — 설정이 다 보여요.</p><button class="btn sm" data-a="deploy">📦 설정 넣은 index.html 내려받기</button></details>` : ''}</div></div>`;
   } else if (t === 'pins') {
-    const H = S.main?.pinH || {}, local = getStoredPins(), r = roster();
+    const H = pinHMap(), local = getStoredPins(), r = roster();
     const n = r.filter(s => H[s.id]).length;
     body = `<div class="card col" style="gap:10px">
       <div class="row" style="justify-content:space-between;align-items:center;flex-wrap:wrap">
@@ -1972,8 +2023,8 @@ V.teacher = () => {
       }).join('')}
     </div>
     <div class="card row" style="align-items:center;gap:8px">
-      <b>교사 PIN (4자리)</b>
-      <input type="password" id="tpin" maxlength="4" inputmode="numeric" placeholder="새 4자리" style="width:110px">
+      <b>교사 PIN (${SEC ? "6~12자리 · 서버에만 저장" : "4자리"})</b>
+      <input type="password" id="tpin" maxlength="${SEC ? 12 : 4}" inputmode="numeric" placeholder="${SEC ? "새 6자리 이상" : "새 4자리"}" style="width:110px">
       <button class="btn sm" data-a="tpinSave">PIN 변경</button>
     </div>`;
   } else {
@@ -1986,7 +2037,7 @@ const ago = t => { const m = Math.round((Date.now() - t) / 60000); return m < 1 
 /** 흩어진 운영 기능을 한 화면에: 지금 처리할 것 + 바로 가기 */
 function todoView() {
   const T = teacherTodo(), R = curRound(), M = S.mani || {}, ph = M.phase || 'off', ppl = roster(), N = ppl.length;
-  const H = S.main?.pinH || {}, pinN = ppl.filter(s => H[s.id]).length;
+  const H = pinHMap(), pinN = ppl.filter(s => H[s.id]).length;
   const invN = R ? Object.values(S.wallets).filter(w => Object.keys(w.inv?.[R.id] || {}).length).length : 0;
   const wishN = ppl.filter(s => (S.manis[s.id]?.wish || []).length).length, guessN = ppl.filter(s => S.manis[s.id]?.guess).length;
   const pendFC = Object.values(S.att?.pen || {}).filter(p => !p.applied).length;
@@ -2104,8 +2155,9 @@ function studentLink() {
   return link + '#c=' + encodeURIComponent(b64e(JSON.stringify({ code: CFG.code, fb }))) + '&phone';
 }
 /** 지금 열린 라운지에 연결 설정(학급 코드·Firebase)을 넣은 index.html을 만들어 내려받기 → Netlify Drop에 올리면 끝 */
-A.deploy = () => {
+A.deploy = async () => {
   if (!CFG.fb) return toast('Firestore 연결 후에 만들 수 있어요');
+  let econSrc; try { econSrc = await (await fetch('fc-econ.js')).text(); } catch (e) { return toast('fc-econ.js를 읽지 못했어요 (라운지 파일 옆에 있어야 해요)'); }
   const root = document.documentElement.cloneNode(true);
   root.querySelectorAll('#main,#dock,#meSlot,#modalRoot,#printArea').forEach(e => e.innerHTML = '');
   root.querySelectorAll('body > :not(#app):not(#modalRoot):not(#printArea):not(script)').forEach(e => e.remove());
@@ -2115,6 +2167,7 @@ A.deploy = () => {
   const line = `const FILE_CONFIG = { code: ${JSON.stringify(CFG.code)}, firebase: ${JSON.stringify(CFG.fb)} };`;
   if (!/const FILE_CONFIG = \{[^\n]*\};/.test(sc.textContent)) return toast('파일을 만들지 못했어요');
   sc.textContent = sc.textContent.replace(/const FILE_CONFIG = \{[^\n]*\};/, () => line);
+  const ef = root.querySelector('script[src="fc-econ.js"]'); if (ef) { ef.removeAttribute('src'); ef.textContent = econSrc; } // 화폐 엔진을 파일 안에 넣음
   const blob = new Blob(['<!doctype html>' + root.outerHTML], { type: 'text/html' });
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'index.html'; document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 5000); toast('index.html을 내려받았어요 → Netlify Drop에 끌어다 놓아요');
@@ -2162,13 +2215,13 @@ A.stuPinSave = async d => {
   const input = document.querySelector(`input[data-spin="${sid}"]`);
   if (!input) return;
   const pin = input.value.trim().replace(/\D/g, '');
-  const curH = Object.assign({}, S.main?.pinH || {});
+  const curH = Object.assign({}, pinHMap());
   const local = getStoredPins();
   if (!pin) {
     if (!confirm(`${nm(sid)} 학생의 비밀번호를 삭제할까요?`)) return;
     delete curH[sid];
     delete local[sid];
-    await DB.update('app/main', { pinH: curH });
+    await savePinH(curH);
     saveStoredPins(local);
     toast(`${nm(sid)} 비밀번호 삭제됨`);
     return;
@@ -2176,13 +2229,13 @@ A.stuPinSave = async d => {
   if (pin.length !== 6) return toast('비밀번호는 숫자 6자리여야 해요');
   curH[sid] = pinHash(sid, pin);
   local[sid] = pin;
-  await DB.update('app/main', { pinH: curH });
+  await savePinH(curH);
   saveStoredPins(local);
   toast(`${nm(sid)} 비밀번호를 '${pin}'(으)로 저장했어요`);
 };
 A.stuPinAuto = async () => {
   const r = roster();
-  const curH = Object.assign({}, S.main?.pinH || {});
+  const curH = Object.assign({}, pinHMap());
   const local = getStoredPins();
   const used = new Set(Object.values(local));
   let count = 0;
@@ -2195,7 +2248,7 @@ A.stuPinAuto = async () => {
     count++;
   }
   if (!count) return toast('이미 모든 학생의 비밀번호가 설정되어 있어요');
-  await DB.update('app/main', { pinH: curH });
+  await savePinH(curH);
   saveStoredPins(local);
   toast(`${count}명의 6자리 비밀번호를 생성했어요!`);
 };
@@ -2211,14 +2264,14 @@ A.stuPinAll = async () => {
     local[s.id] = pin;
     curH[s.id] = pinHash(s.id, pin);
   }
-  await DB.update('app/main', { pinH: curH });
+  await savePinH(curH);
   saveStoredPins(local);
   toast(`학생 ${r.length}명 전원 새 비밀번호를 생성했어요!`);
 };
 A.stuPinList = () => {
   const r = roster();
   const local = getStoredPins();
-  const H = S.main?.pinH || {};
+  const H = pinHMap();
   const lines = r.map(s => {
     const p = local[s.id] || (S.main?.sample ? '111111' : (H[s.id] ? '(설정됨)' : '(미설정)'));
     return `${s.no}번 ${s.name}: ${p}`;
@@ -2236,23 +2289,355 @@ A.stuPinList = () => {
     navigator.clipboard.writeText(text).then(() => toast('명단을 클립보드에 복사했어요!')).catch(() => toast('복사에 실패했습니다'));
   };
 };
-A.tpinSave = async () => { const v = $('#tpin').value.replace(/\D/g, ''); if (v.length !== 4) return toast('숫자 4자리'); await DB.set('app/secret', { tpin: v }); $('#tpin').value = ''; toast('교사 PIN을 바꿨어요'); };
+A.tpinSave = async () => {
+  const v = $('#tpin').value.replace(/\D/g, '');
+  if (SEC) { if (v.length < 6) return toast('숫자 6자리 이상'); const r = await api({ a: 'tpin', pin: v }, true); $('#tpin').value = ''; return toast(r.ok ? '교사 PIN을 바꿨어요 (서버에만 저장)' : r.error); }
+  if (v.length !== 4) return toast('숫자 4자리'); await DB.set('app/secret', { tpin: v }); $('#tpin').value = ''; toast('교사 PIN을 바꿨어요');
+};
 A.ntSave = async () => { await DB.set('app/settings', { notice: $('#ntx').value.trim() }); toast('공지를 저장했어요'); };
 
 window.__lg = { S, sc, stockSc, growth, freeCash, gaUnseal }; // 점검용 (콘솔·자동 테스트)
+
+/* =========================================================
+   🔒 보안 모드 · 💰 화폐 · 🛒 장터 (매점 · 경매 · 은행 · 시세)
+   - 보안 모드(SEC): 서버 /api/fc 가 비밀번호 확인·로그인 토큰 발급, 돈이 움직이는 일은 모두 서버 트랜잭션
+   - 보안 전환 전·체험 모드: 같은 화폐 엔진(fc-econ.js)을 이 브라우저에서 실행
+   ========================================================= */
+const X = globalThis.FCEcon;
+const API = (location.protocol.startsWith('http') ? location.origin : new URL(HOSTED).origin) + '/api/fc';
+let SEC = false;
+async function api(body, withAuth = false) {
+  try {
+    const h = { 'Content-Type': 'application/json' };
+    if (withAuth) { const t = await DB.idToken(); if (t) h.Authorization = 'Bearer ' + t; }
+    const r = await fetch(API, { method: 'POST', headers: h, body: JSON.stringify({ code: CFG.code, ...body }) });
+    const j = await r.json().catch(() => ({}));
+    return { status: r.status, ...j, ok: r.ok && j.ok !== false };
+  } catch (e) { return { ok: false, status: 0, error: '서버에 연결하지 못했어요. 인터넷을 확인해요' }; }
+}
+async function detectSec() {
+  if (DB.kind !== 'cloud') return false;
+  const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 5000);
+  try { const r = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{"a":"ping"}', signal: ctl.signal }); return !!(await r.json()).secure; }
+  catch (e) { return false; } finally { clearTimeout(t); }
+}
+function authOut() { S.pinsH = null; if (SEC) DB.signOut().catch(() => { }); }
+function teacherLogin() {
+  pinPad('선생님', async pin => {
+    const r = await api({ a: 'tlogin', pin });
+    if (!r.ok) { if (r.status === 401) return false; toast(r.error); return 'close'; }
+    await DB.signIn(r.token); teacherOn();
+    toast(r.weak ? '⚠ 교사 PIN이 짧아요. ⚙ 선생님 > 🔐 비밀번호에서 6자리 이상으로 바꿔 주세요' : '선생님 모드 켜짐'); return 'close';
+  }, 0);
+}
+function teacherOn() {
+  if (U.me) { invFlush(); U.me = null; U.pin = null; U.inv = null; }
+  U.teacher = true; U.last = Date.now(); if (U.view === 'home') { U.view = 'teacher'; U.sub.teacher = 'todo'; } render(); aiWork(); loadPins();
+}
+/* 학생 비밀번호 해시: 보안 모드에서는 선생님만 읽는 pins/main (app/main 에서 빠짐) */
+async function loadPins() { if (!SEC || !U.teacher) return; try { S.pinsH = (await DB.get('pins/main'))?.h || {}; } catch (e) { S.pinsH = {}; } render(); }
+const pinHMap = () => SEC ? (S.pinsH || {}) : (S.main?.pinH || {});
+async function savePinH(h) { if (SEC) { await DB.set('pins/main', { h, at: Date.now() }, false); S.pinsH = h; render(); } else await DB.update('app/main', { pinH: h }); }
+
+/** 돈이 움직이는 모든 일. 성공하면 true */
+async function money(name, args = {}, { quiet = false } = {}) {
+  try {
+    let msg;
+    if (SEC) {
+      const r = await api({ a: 'run', name, args }, true);
+      if (!r.ok) { if (r.status === 401 && !quiet) { toast(r.error); if (U.me) A.logout(); } throw Object.assign(new Error(r.error || '처리하지 못했어요'), { shown: r.status === 401 }); }
+      msg = r.msg;
+    } else {
+      const exists = new Set();
+      const tx = { now: Date.now(), get: async p => { const d = await DB.get(p); if (d) exists.add(p); return d; }, col: async c => { const l = await DB.getCol(c); l.forEach(d => exists.add(c + '/' + d.id)); return l; } };
+      const r = await X.run(tx, { role: U.teacher ? 't' : U.me ? 's' : '', sid: U.me }, name, args);
+      if (r.ops.length) await DB.batch(r.ops, exists);
+      msg = r.msg;
+    }
+    if (msg && !quiet) toast(msg); return true;
+  } catch (e) { console.error(e); if (!quiet && !e.shown) toast(e.message || '처리하지 못했어요'); return false; }
+}
+const ectx = () => ({ main: S.main, att: S.att, set: S.set, stock: S.stock, econ: S.econ, wallets: S.wallets, auctions: S.auctions });
+const isBanker = () => U.teacher || (!!U.me && (X.EC(S.set).bankers || []).includes(U.me));
+const cdTxt = ms => { const s = Math.floor(ms / 1000), d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60); return d ? `${d}일 ${h}시간 남음` : h ? `${h}시간 ${m}분 남음` : `${m}분 ${s % 60}초 남음`; };
+const mktT = {};
+/** 1초마다: 남은 시간 표시, 마감 시간이 지난 경매 확정, 하루 물가 고정 */
+function mktTick() {
+  $$('[data-cd]').forEach(el => { const ms = +el.dataset.cd - Date.now(); el.textContent = ms > 0 ? cdTxt(ms) : '마감 처리 중…'; });
+  if (!DB || !(U.me || U.teacher)) return;
+  for (const a of S.auctions) if (a.status === 'open' && Date.now() >= +a.end && !mktT[a.id]) { mktT[a.id] = 1; money('close', { auc: a.id }, { quiet: true }).finally(() => setTimeout(() => delete mktT[a.id], 15000)); }
+  const d = X.dayKey(); if (S.main && (S.econ?.day || '') !== d && mktT.tick !== d) { mktT.tick = d; money('tick', {}, { quiet: true }); }
+}
+
+V.mkt = () => {
+  const subs = [['shop', '🍬 매점'], ['auc', '🔨 경매'], ['price', '📊 시세']].concat(isBanker() ? [['bank', '🏦 은행']] : []).concat(canT() ? [['admin', '⚙ 운영']] : []);
+  if (!subs.some(s => s[0] === U.sub.mkt)) U.sub.mkt = 'shop';
+  const eco = X.econNow(ectx()), t = U.sub.mkt;
+  const head = `<span class="pill navy">오늘 물가 기준 · 1인당 ${won(eco.perCap)}</span>${U.me ? `<span class="pill">💰 쓸 수 있는 돈 ${won(X.free(ectx(), U.me))}</span>` : ''}`;
+  const body = t === 'shop' ? shopView(eco) : t === 'auc' ? aucView() : t === 'bank' ? bankView() : t === 'admin' ? mktAdmin(eco) : priceView(eco);
+  return `<div class="vhead"><h1>🛒 우리반 장터</h1>${head}<span class="sp"></span>${seg('mkt', subs)}</div>${body}`;
+};
+
+/* ---------- 🍬 매점 ---------- */
+const shopItems = () => S.shop.slice().sort((a, b) => (+a.ord || 0) - (+b.ord || 0) || String(a.name).localeCompare(b.name));
+function shopView(eco) {
+  const d = X.dayKey(), items = shopItems().filter(i => i.on || canT());
+  const cards = items.map(it => {
+    const p = X.itemPrice(it, eco), my = U.me ? X.myToday(it, d, U.me) : 0, lim = +it.daily || 0, out = (+it.stock || 0) < 1;
+    return `<div class="card shopc ${out || !it.on ? 'out' : ''}"><div class="em">${esc(it.emoji || '🎁')}</div><b>${esc(it.name)}</b><div class="pr">${won(p)}</div>
+      <div class="small muted">남은 수량 ${+it.stock || 0}개${lim ? ` · 하루 ${lim}개까지${U.me ? ` (오늘 ${my}개)` : ''}` : ''}</div>
+      ${!it.on ? '<span class="pill">판매 쉬는 중</span>' : out ? '<span class="pill bad">품절</span>' : U.me ? `<button class="btn p" data-a="shopBuy" data-id="${it.id}" data-p="${p}" ${lim && my >= lim ? 'disabled' : ''}>사기</button>` : '<span class="small muted">이름으로 들어와야 살 수 있어요</span>'}</div>`;
+  }).join('');
+  const mine = U.me ? S.orders.filter(o => o.sid === U.me && o.st === 'paid') : [];
+  const side = U.me ? `<div class="card col" style="width:300px"><h2>🎟 내 교환권</h2>${mine.length ? mine.map(o => `<div class="row"><span>${esc(o.label)}</span><span class="small muted">${fmtT(o.at)}</span><span style="flex:1"></span><button class="btn sm ghost" data-a="ordRefund" data-id="${o.id}">취소</button></div>`).join('') : '<p class="small muted" style="margin:0">아직 없어요. 사면 여기에 생기고, 선생님께 간식을 받으면 사라져요.</p>'}</div>`
+    : canT() ? giveList() : '';
+  return `<div class="body"><div class="col fill" style="flex:1;gap:8px"><div class="shopg scroll fill">${cards || '<div class="empty"><div class="big">🍬</div>아직 파는 물건이 없어요</div>'}</div>
+    <p class="small muted" style="margin:0">💡 가격은 날마다 반 전체 통화량(포인트 + 화폐)을 보고 정해져요. 어제 다 팔렸으면 오르고, 절반도 안 팔렸으면 내려요.</p></div>${side}</div>`;
+}
+function giveList() {
+  const L = S.orders.filter(o => o.st === 'paid').sort((a, b) => a.at - b.at);
+  return `<div class="card col" style="width:340px"><h2>🧺 나눠 줄 간식 <span class="pill ${L.length ? 'warn' : ''}">${L.length}</span>${L.length ? '<button class="btn sm g" data-a="giveAll" style="margin-left:auto">모두 나눠 줌</button>' : ''}</h2>
+    <div class="scroll fill col" style="gap:4px">${L.map(o => `<div class="row"><b>${esc(o.name)}</b><span>${esc(o.label)}</span><span class="small muted">${fmtT(o.at)}</span><span style="flex:1"></span><button class="btn sm p" data-a="give" data-id="${o.id}">줌</button><button class="btn sm ghost" data-a="ordRefund" data-id="${o.id}">환불</button></div>`).join('') || '<p class="small muted">없어요</p>'}</div></div>`;
+}
+A.shopBuy = d => { const it = S.shop.find(x => x.id === d.id); if (!it) return; confirmBox(`${it.emoji || ''} ${it.name}을(를) ${won(+d.p)}에 살까요?\n교환권이 생기고, 선생님께 보여 주면 받아요.`, () => money('buy', { item: d.id, expect: +d.p }), '사기'); };
+A.ordRefund = d => confirmBox('이 교환권을 취소하고 돈을 돌려받을까요?', () => money('refund', { id: d.id }), '취소하기');
+A.give = d => money('give', { id: d.id });
+A.giveAll = async () => { const L = S.orders.filter(o => o.st === 'paid'); for (const o of L) await money('give', { id: o.id }, { quiet: true }); toast(`${L.length}개 나눠 줬어요`); };
+
+/* ---------- 🔨 경매 (교실 자리 · 소풍 버스) ---------- */
+/** 45인승 버스: 1줄 왼쪽 2(학생)·오른쪽 2(교사·짐), 2줄부터 4명씩, 맨 뒤 5자리와 남는 자리는 금지 */
+function busTpl(n) {
+  const cells = {}, keys = []; let no = 0, left = n;
+  for (let r = 0; r < 10; r++) for (const c of [0, 1, 3, 4]) { no++; const k = r + '-' + c; let t; if (r === 0 && c >= 3) t = 'T'; else if (left > 0) { t = 'S'; left--; keys.push(k); } else t = 'X'; cells[k] = { t, no }; }
+  for (let c = 0; c < 5; c++) { no++; cells['10-' + c] = { t: 'X', no }; }
+  return { cells, keys };
+}
+const aucList = () => S.auctions.filter(a => a.status !== 'void' || canT()).sort((a, b) => (a.status === 'open' ? 0 : 1) - (b.status === 'open' ? 0 : 1) || (b.at || 0) - (a.at || 0));
+/** 고른 경매 (방금 만든 경매가 목록에 아직 없으면 첫 번째) */
+const curAuc = () => S.auctions.find(a => a.id === U.auc) || aucList()[0];
+const seatNo = (Au, k) => Au.kind === 'bus' ? (Au.bus?.cells?.[k]?.no || '') : (Au.keys || []).indexOf(k) + 1;
+function aucCell(Au, k) {
+  const inA = (Au.keys || []).includes(k), lab = seatNo(Au, k);
+  if (!inA) { const t = Au.kind === 'bus' ? Au.bus?.cells?.[k]?.t : ''; return `<div class="acell no">${t === 'T' ? '👩‍🏫<small>교사·짐</small>' : t === 'X' ? '🚫<small>금지</small>' : '<small>랜덤</small>'}</div>`; }
+  const sw = U.swap === k ? ' swap' : '';
+  if (Au.status !== 'open') {
+    const w = Au.result?.[k], sold = Au.top?.[k] && (Au.sales || []).some(s => s.k === k);
+    return `<div class="acell ${w ? 'won' : ''}${w === U.me && w ? ' me' : ''}${sw}" ${canT() && Au.status === 'done' ? `data-a="busSwap" data-k="${k}"` : ''}><small>${lab}</small><b>${w ? esc(nm(w)) : '–'}</b>${sold ? `<small>${wonS(Au.top[k].amt)} 낙찰</small>` : w ? '<small>랜덤</small>' : ''}</div>`;
+  }
+  const top = Au.top?.[k], mine = top && top.sid === U.me;
+  return `<button class="acell ${top ? 'has' : ''} ${mine ? 'me' : ''}" data-a="aucBid" data-k="${k}"><small>${lab}${mine ? ' · 내 입찰' : ''}</small><b>${top ? wonS(top.amt) : '최저 ' + wonS(+Au.min)}</b>${canT() && top ? `<small>${esc(nm(top.sid))}</small>` : ''}</button>`;
+}
+function aucSeatGrid(Au) {
+  const L = S.main?.layout; if (!L?.seats?.length) return '<div class="empty">퍼스트클래스에서 좌석 배치를 먼저 보내 주세요</div>';
+  const flip = S.main.boardTop === false, keys = L.seats.filter(k => { const [r, x] = k.split('-').map(Number); return r < L.rows && x < L.cols; });
+  const rU = [...new Set(keys.map(k => +k.split('-')[0]))].sort((a, b) => a - b), cU = [...new Set(keys.map(k => +k.split('-')[1]))].sort((a, b) => a - b), set = new Set(keys);
+  let rows = [], cols = []; for (let r = rU[0]; r <= rU.at(-1); r++) rows.push(r); for (let x = cU[0]; x <= cU.at(-1); x++) cols.push(x);
+  if (flip) { rows.reverse(); cols.reverse(); }
+  let h = ''; for (const r of rows) for (const x of cols) { if (!cU.includes(x)) { h += '<div class="aisle"></div>'; continue; } const k = r + '-' + x; h += set.has(k) ? aucCell(Au, k) : '<div></div>'; }
+  const chalk = '<div class="chalk">칠 판</div>';
+  return `<div class="board">${flip ? '' : chalk}<div class="sgrid" style="grid-template-columns:${cols.map(x => cU.includes(x) ? 'minmax(0,1fr)' : '12px').join(' ')};grid-template-rows:repeat(${rows.length},minmax(0,1fr))">${h}</div>${flip ? chalk : ''}</div>`;
+}
+function busGrid(Au) {
+  const C = Au.bus?.cells || {}; let h = '<div class="acell no">🚌<small>기사</small></div><div class="acell no"></div><div class="aisle"></div><div class="acell no"></div><div class="acell no">🚪<small>문</small></div>';
+  for (let r = 0; r < 10; r++) for (const c of [0, 1, 2, 3, 4]) h += c === 2 ? '<div class="aisle"></div>' : aucCell(Au, r + '-' + c);
+  for (let c = 0; c < 5; c++) h += aucCell(Au, '10-' + c);
+  return `<div class="board"><div class="sgrid bus">${h}</div></div>`;
+}
+function aucView() {
+  const L = aucList();
+  if (!L.length) return `<div class="empty"><div class="big">🔨</div>아직 열린 경매가 없어요${canT() ? '<button class="btn p" data-a="sub" data-k="mkt" data-v="admin">⚙ 운영에서 경매 만들기</button>' : ''}</div>`;
+  const Au = curAuc(), ec = X.EC(S.set), open = Au.status === 'open', mine = U.me && X.myTop(Au, U.me);
+  const st = { open: ['입찰 중', 'ok'], closed: ['마감 · 낙찰 확정', 'warn'], done: ['배정 완료', ''], void: ['취소됨', 'bad'] }[Au.status] || ['', ''];
+  const tabs = L.length > 1 ? `<div class="seg">${L.slice(0, 6).map(a => `<button data-a="aucPick" data-id="${a.id}" aria-pressed="${a.id === Au.id}">${a.kind === 'bus' ? '🚌' : '🪑'} ${esc(a.title)}</button>`).join('')}</div>` : '';
+  const hist = (Au.hist || []).filter(x => x.x === 'bid').slice(-12).reverse();
+  const nTop = Object.values(Au.top || {}).filter(Boolean).length;
+  const side = `<div class="card col" style="width:300px;gap:8px">
+    <h2>${Au.kind === 'bus' ? '🚌' : '🪑'} ${esc(Au.title)} <span class="pill ${st[1]}">${st[0]}</span></h2>
+    ${open ? `<div class="cd">⏱ <b data-cd="${+Au.end}">${cdTxt(+Au.end - Date.now())}</b></div><div class="small muted">마감 ${fmtT(+Au.end)}</div>` : `<div class="small muted">${Au.closedAt ? '마감 ' + fmtT(Au.closedAt) : ''}</div>`}
+    <div class="small">최저 입찰가 <b>${won(+Au.min)}</b> · 최소 인상 <b>${won(+Au.step || ec.step)}</b><br>입찰된 자리 <b>${nTop}</b> / ${(Au.keys || []).length}</div>
+    ${U.me && open ? `<div class="notice small">${mine ? `🔨 내 입찰: <b>${seatNo(Au, mine[0])}번 ${won(mine[1].amt)}</b> (지갑에서 빠져 있어요)` : '아직 입찰하지 않았어요. 원하는 자리를 눌러요.'}</div>` : ''}
+    <details class="small"><summary>📜 경매 규칙</summary><ul style="margin:4px 0;padding-left:18px"><li>입찰하면 돈이 바로 빠지고, 친구가 더 높게 부르면 <b>자동으로 돌려받아요</b></li><li>한 사람은 한 자리에만 입찰해요 (다른 자리를 누르면 옮겨져요)</li><li>마감 ${+Au.lock >= 0 ? +Au.lock : ec.lock}분 전부터는 취소할 수 없어요</li><li>마감 ${+Au.ext >= 0 ? +Au.ext : ec.ext}분 안에 입찰이 들어오면 ${+Au.ext >= 0 ? +Au.ext : ec.ext}분 늘어나요</li><li>낙찰되지 않은 친구는 ${Au.kind === 'bus' ? '남은 자리에' : '선생님 규칙대로'} 랜덤 배정돼요</li></ul></details>
+    <h2 style="margin-top:4px">📈 최근 입찰</h2><div class="scroll fill small">${hist.map(x => `<div class="row"><span>${seatNo(Au, x.k)}번</span><b>${won(x.amt)}</b><span class="muted">${canT() ? esc(nm(x.sid)) : x.sid === U.me ? '나' : ''}</span><span class="muted" style="margin-left:auto">${fmtT(x.at)}</span></div>`).join('') || '<span class="muted">아직 없어요</span>'}</div>
+    ${canT() ? `<div class="row" style="flex-wrap:wrap;gap:6px">${open ? `<button class="btn sm p" data-a="aucClose">지금 마감</button><button class="btn sm ghost" data-a="aucVoid">경매 취소(모두 환불)</button>` : ''}
+      ${Au.kind === 'bus' && Au.status === 'closed' ? '<button class="btn sm p" data-a="busRand">🎲 남은 학생 랜덤 배정</button>' : ''}${Au.kind === 'bus' && Au.status === 'done' ? '<button class="btn sm g" data-a="busPrint">🖨 좌석표 인쇄</button><span class="small muted">자리 두 개를 차례로 누르면 서로 바꿔요</span>' : ''}
+      ${Au.kind === 'seat' && Au.status === 'closed' ? `<span class="small">${Au.applied ? '✅ 퍼스트클래스에 매석 적용됨 → 퍼스트클래스에서 랜덤 배치하면 나머지가 채워져요' : '👉 퍼스트클래스 자리 배치 화면에 [매석 적용]이 떠요'}</span>` : ''}</div>` : ''}</div>`;
+  return `<div class="body"><div class="col fill" style="flex:1;gap:8px">${tabs}${Au.kind === 'bus' ? busGrid(Au) : aucSeatGrid(Au)}</div>${side}</div>`;
+}
+A.aucPick = d => { U.auc = d.id; U.swap = null; render(); };
+A.aucBid = d => {
+  const Au = curAuc(); if (!Au || Au.status !== 'open') return;
+  if (!U.me) return toast(canT() ? '선생님은 입찰하지 않아요' : '먼저 내 이름으로 들어와요');
+  const step = +Au.step || X.EC(S.set).step, top = Au.top?.[d.k], mine = top?.sid === U.me, minNext = top ? +top.amt + step : +Au.min;
+  const my = X.myTop(Au, U.me), back = my && my[0] !== d.k ? +my[1].amt : 0, can = X.free(ectx(), U.me) + back + (mine ? +top.amt : 0);
+  const man = n => Math.round(n / 10000), stepM = man(step);
+  const m = modal(`${mHead(`🔨 ${seatNo(Au, d.k)}번 자리 입찰`)}<div class="mb col" style="gap:10px">
+    <div class="row" style="justify-content:space-between"><span>지금 최고가</span><b>${top ? won(top.amt) + (mine ? ' (나)' : '') : '아직 없음'}</b></div>
+    <div class="row" style="justify-content:space-between"><span>입찰할 수 있는 최대</span><b>${won(can)}</b></div>
+    ${back ? `<div class="notice small">${seatNo(Au, my[0])}번 자리에 걸어 둔 ${won(back)}은 돌려받고 이 자리로 옮겨요</div>` : ''}
+    <label class="f">입찰 금액 (만원)<input type="number" id="bidM" min="${man(minNext)}" step="${stepM}" value="${man(minNext)}" style="font-size:20px;font-weight:800;text-align:right"></label>
+    <div class="row" style="gap:6px;flex-wrap:wrap">${[1, 5, 10, 50].map(k => `<button class="btn sm" data-bid-add="${stepM * k}">+${wonS(step * k)}</button>`).join('')}</div>
+    <p class="small muted" style="margin:0">최소 ${won(minNext)} · ${wonS(step)}원 단위</p></div>
+    <div class="mf">${mine ? '<button class="btn ghost" id="bidCancel">입찰 취소</button>' : ''}<button class="btn" data-a="closeModal">닫기</button><button class="btn p" id="bidOk">입찰하기</button></div>`);
+  const inp = m.querySelector('#bidM');
+  m.querySelectorAll('[data-bid-add]').forEach(b => b.onclick = () => { inp.value = (+inp.value || 0) + +b.dataset.bidAdd; });
+  m.querySelector('#bidOk').onclick = async () => { const amt = Math.round(+inp.value) * 10000; if (amt < minNext) return toast(`${won(minNext)} 이상 적어요`); if (amt - (mine ? +top.amt : 0) > can - (mine ? +top.amt : 0)) return toast('화폐가 모자라요'); if (await money('bid', { auc: Au.id, key: d.k, amt })) closeModal(); };
+  const cx = m.querySelector('#bidCancel'); if (cx) cx.onclick = () => { closeModal(); confirmBox('입찰을 취소하고 돈을 돌려받을까요?', () => money('unbid', { auc: Au.id }), '취소하기'); };
+};
+A.aucClose = () => confirmBox('지금 마감하고 낙찰을 확정할까요?', () => money('close', { auc: curAuc().id }), '마감');
+A.aucVoid = () => confirmBox('경매를 취소하고 입찰한 돈을 모두 돌려줄까요?', () => money('aCancel', { auc: curAuc().id }), '경매 취소');
+A.busRand = () => {
+  const Au = curAuc(); if (!Au) return;
+  const res = { ...(Au.result || {}) }, seated = new Set(Object.values(res)), free = shuffle((Au.keys || []).filter(k => !res[k])), rest = shuffle(roster().filter(s => !seated.has(s.id)).map(s => s.id));
+  rest.forEach((sid, i) => { if (free[i]) res[free[i]] = sid; });
+  confirmBox(`낙찰 ${seated.size}명은 그대로, 나머지 ${rest.length}명을 남은 자리에 랜덤 배정할까요?${rest.length > free.length ? `\n⚠ 자리가 ${rest.length - free.length}개 모자라요` : ''}`, () => DB.update('auctions/' + Au.id, { result: res, status: 'done', randAt: Date.now() }), '배정');
+};
+A.busSwap = d => {
+  const Au = curAuc(); if (!Au || Au.status !== 'done') return;
+  if (!U.swap) { U.swap = d.k; render(); return; }
+  if (U.swap === d.k) { U.swap = null; render(); return; }
+  const r = { ...Au.result }, a = U.swap, b = d.k;[r[a], r[b]] = [r[b], r[a]]; for (const k of [a, b]) if (!r[k]) delete r[k];
+  U.swap = null; DB.update('auctions/' + Au.id, { result: r });
+};
+A.busPrint = () => {
+  const Au = curAuc(); if (!Au) return; const C = Au.bus?.cells || {};
+  const cell = k => { const c = C[k] || {}, w = Au.result?.[k]; return `<td class="${c.t}">${c.no || ''}<b>${c.t === 'T' ? '교사·짐' : c.t === 'X' ? '' : esc(nm(w) || '')}</b></td>`; };
+  let rows = '<tr><td class="T">기사</td><td></td><td class="ai"></td><td></td><td class="T">문</td></tr>';
+  for (let r = 0; r < 10; r++) rows += `<tr>${cell(r + '-0')}${cell(r + '-1')}<td class="ai"></td>${cell(r + '-3')}${cell(r + '-4')}</tr>`;
+  rows += `<tr>${[0, 1, 2, 3, 4].map(c => cell('10-' + c)).join('')}</tr>`;
+  const w = window.open('', '_blank'); if (!w) return toast('팝업이 막혔어요');
+  w.document.write(`<!doctype html><meta charset="utf-8"><title>${esc(Au.title)}</title><style>body{font-family:sans-serif;padding:20px}h1{font-size:20px}table{border-collapse:separate;border-spacing:6px;margin:auto}td{width:110px;height:46px;border:1.5px solid #333;border-radius:8px;text-align:center;font-size:11px;color:#666;vertical-align:top;padding:3px}td b{display:block;font-size:16px;color:#000;margin-top:2px}td.ai{border:0;width:20px}td.X{background:#eee;border-style:dashed}td.T{background:#f6f0dc}</style><h1>🚌 ${esc(Au.title)} — ${esc(S.main?.cname || '')}</h1><table>${rows}</table><script>print()<\/script>`);
+  w.document.close();
+};
+
+/* ---------- 🏦 은행 (은행 직책 학생·선생님이 구매자 → 판매자 거래 입력) ---------- */
+function bankView() {
+  if (!isBanker()) return `<div class="empty"><div class="big">🏦</div>은행 직책만 쓸 수 있어요</div>`;
+  const r = roster(), L = S.ledger.filter(l => l.kind === 'bank' || l.kind === 'bankrev').slice(0, 60);
+  const opt = (id, ph) => `<select id="${id}"><option value="">${ph}</option>${r.map(s => `<option value="${s.id}">${s.no}. ${esc(s.name)}</option>`).join('')}</select>`;
+  return `<div class="body"><div class="card col" style="width:360px;gap:8px"><h2>🏦 거래 입력 ${U.me ? `<span class="pill">은행원 ${esc(nm(U.me))}</span>` : ''}</h2>
+    <label class="f">🛍 구매자 (돈을 내는 사람)${opt('bkFrom', '구매자 고르기')}</label><div class="small muted" id="bkFree"></div>
+    <label class="f">🏪 판매자 (돈을 받는 사람)${opt('bkTo', '판매자 고르기')}</label>
+    <label class="f">금액 (만원)<input type="number" id="bkAmt" min="10" step="10" placeholder="예: 50 (= 50만원)"></label>
+    <label class="f">무엇을 샀나요? (메모)<input type="text" id="bkMemo" maxlength="40" placeholder="예: 연필 2자루"></label>
+    <button class="btn p" data-a="bkSend">💸 보내기</button>
+    <p class="small muted" style="margin:0">은행원은 자기가 낀 거래를 입력할 수 없어요 (다른 은행원이나 선생님이 입력). 잘못 보낸 거래는 선생님이 되돌려요.</p></div>
+    <div class="card col fill" style="flex:1"><h2>📒 은행 장부</h2><div class="scroll fill"><table class="t"><tr><th>시각</th><th>구매자</th><th>판매자</th><th class="r">금액</th><th>메모</th><th>입력</th><th></th></tr>
+    ${L.map(l => `<tr style="${l.rev || l.kind === 'bankrev' ? 'opacity:.55' : ''}"><td>${fmtT(l.at)}</td><td>${esc(nm(l.from))}</td><td>${esc(nm(l.to))}</td><td class="r">${won(l.amt)}</td><td>${esc(l.memo || '')}</td><td>${l.by === 'T' ? '선생님' : esc(nm(l.by))}</td><td>${canT() && l.kind === 'bank' && !l.rev ? `<button class="btn sm ghost" data-a="bkRev" data-id="${l.id}">되돌리기</button>` : l.rev ? '되돌림' : ''}</td></tr>`).join('') || '<tr><td colspan="7" class="muted">아직 거래가 없어요</td></tr>'}</table></div></div></div>`;
+}
+A.bkSend = async () => {
+  const from = $('#bkFrom').value, to = $('#bkTo').value, amt = Math.round(+$('#bkAmt').value) * 10000, memo = $('#bkMemo').value.trim();
+  if (!from || !to) return toast('구매자와 판매자를 골라요'); if (!(amt > 0)) return toast('금액을 적어요');
+  confirmBox(`${nm(from)} → ${nm(to)}\n${won(amt)}${memo ? ' · ' + memo : ''}\n보낼까요?`, async () => { if (await money('transfer', { from, to, amt, memo })) { $('#bkAmt').value = ''; $('#bkMemo').value = ''; } }, '보내기');
+};
+A.bkRev = d => confirmBox('이 거래를 되돌릴까요? (판매자의 돈이 구매자에게 돌아가요)', () => money('reverse', { id: d.id }), '되돌리기');
+
+/* ---------- 📊 시세 ---------- */
+function priceView(eco) {
+  const hist = Object.entries(S.econ?.hist || {}).filter(e => e[1]).sort().slice(-14), mx = Math.max(1, ...hist.map(h => h[1].perCap));
+  const items = shopItems().filter(i => i.on);
+  const sales = S.auctions.filter(a => (a.sales || []).length).sort((a, b) => (b.closedAt || 0) - (a.closedAt || 0));
+  return `<div class="body"><div class="col" style="flex:1;gap:10px">
+    <div class="tiles" style="grid-template-columns:repeat(3,1fr);flex:none;grid-auto-rows:auto">
+      <div class="tile"><span class="k">1인당 통화량 (물가 기준)</span><span class="v">${won(eco.perCap)}</span><span class="s">${eco.frozen ? '오늘 고정됨' : '지금 계산 (첫 거래 때 고정)'}</span></div>
+      <div class="tile"><span class="k">반 전체 통화량</span><span class="v">${won(eco.M)}</span><span class="s">포인트 ${won(eco.P * X.netPt(ectx()))} · 지갑 ${won(eco.C)}${eco.X ? ' · 입찰 중 ' + won(eco.X) : ''}</span></div>
+      <div class="tile"><span class="k">중간 학생 자산 (중위)</span><span class="v">${won(eco.med)}</span><span class="s">${eco.n}명 기준</span></div></div>
+    <div class="card col fill"><h2>📈 1인당 통화량 변화</h2><div class="bars fill">${hist.map(([d, h]) => `<div title="${d} ${won(h.perCap)}"><i style="height:${(h.perCap / mx * 100).toFixed(1)}%"></i><small>${d.slice(5)}</small><b>${wonS(h.perCap)}</b></div>`).join('') || '<div class="muted small">첫 거래가 생기면 날마다 기록돼요</div>'}</div></div></div>
+    <div class="col" style="width:360px;gap:10px"><div class="card"><h2>🍬 오늘 매점 가격</h2><table class="t">${items.map(it => `<tr><td>${esc(it.emoji || '')} ${esc(it.name)}</td><td class="r"><b>${won(X.itemPrice(it, eco))}</b></td><td class="r small muted">1인당의 ${it.pct}%</td></tr>`).join('') || '<tr><td class="muted">상품 없음</td></tr>'}</table></div>
+    <div class="card col fill"><h2>🔨 경매 낙찰 시세</h2><div class="scroll fill"><table class="t"><tr><th>경매</th><th class="r">낙찰</th><th class="r">평균</th><th class="r">최고</th></tr>${sales.map(a => { const v = a.sales.map(s => s.amt), avg = v.reduce((x, y) => x + y, 0) / v.length; return `<tr><td>${a.kind === 'bus' ? '🚌' : '🪑'} ${esc(a.title)}</td><td class="r">${v.length}</td><td class="r">${wonS(avg)}<div class="tiny muted">1인당의 ${eco.perCap ? Math.round(avg / eco.perCap * 100) : 0}%</div></td><td class="r">${wonS(Math.max(...v))}</td></tr>`; }).join('') || '<tr><td colspan="4" class="muted">아직 낙찰 기록이 없어요</td></tr>'}</table></div></div></div></div>`;
+}
+
+/* ---------- ⚙ 장터 운영 (선생님) ---------- */
+function mktAdmin(eco) {
+  const c = ectx(), ec = X.EC(S.set), np = X.netPt(c), r = roster();
+  const rows = r.map(s => { const p = Math.max(0, X.pts(c, s.id)), ca = X.cash(c, s.id), lk = X.lockedInv(c, s.id), es = X.escrow(c, s.id); return { s, p, ca, lk, es, t: p * np + ca + es }; }).sort((a, b) => b.t - a.t);
+  let fee = 0; for (const w of Object.values(S.wallets)) for (const x of w.xl || []) fee += +x.fee || 0;
+  const shopSum = S.orders.filter(o => o.st !== 'refund').reduce((a, o) => a + (+o.price || 0), 0), aucSum = S.auctions.reduce((a, x) => a + (x.sales || []).reduce((y, s) => y + s.amt, 0), 0);
+  const items = shopItems(), bankers = new Set(ec.bankers || []);
+  return `<div class="body scroll" style="flex-wrap:wrap;align-content:flex-start">
+  <div class="card col" style="flex:1 1 520px;min-width:0"><h2>💹 경제 현황 <span class="small muted" style="font-weight:400">총자산 = 포인트×${won(np)}(수수료 뺀 값) + 지갑 + 입찰 중</span></h2>
+    <div class="row small" style="flex-wrap:wrap;gap:12px"><span>총 통화량 <b>${won(eco.M)}</b></span><span>1인당 <b>${won(eco.perCap)}</b></span><span>중위 <b>${won(eco.med)}</b></span><span>누적 교환 수수료 <b>${won(fee)}</b></span><span>매점 매출(최근) <b>${won(shopSum)}</b></span><span>경매 낙찰 합계 <b>${won(aucSum)}</b></span></div>
+    <div class="scroll" style="max-height:340px"><table class="t"><tr><th>번호</th><th>이름</th><th class="r">⭐포인트</th><th class="r">💰지갑</th><th class="r">📈투자 중</th><th class="r">🔨입찰 중</th><th class="r">총자산</th></tr>
+    ${rows.map(x => `<tr><td>${x.s.no}</td><td>${esc(x.s.name)}${bankers.has(x.s.id) ? ' 🏦' : ''}</td><td class="r">${x.p}P</td><td class="r">${wonS(x.ca)}</td><td class="r">${x.lk ? wonS(x.lk) : ''}</td><td class="r">${x.es ? wonS(x.es) : ''}</td><td class="r"><b>${wonS(x.t)}</b></td></tr>`).join('')}</table></div></div>
+  <div class="card col" style="flex:1 1 420px;min-width:0"><h2>🍬 매점 상품 ${items.length ? '' : '<button class="btn sm p" data-a="shopSeed">사탕·에낙 기본 상품 만들기</button>'}<button class="btn sm" data-a="shopEdit" style="margin-left:auto">＋ 상품 추가</button></h2>
+    <table class="t"><tr><th>상품</th><th class="r">오늘 가격</th><th class="r">비율(범위)</th><th class="r">재고</th><th class="r">1일</th><th></th></tr>
+    ${items.map(it => `<tr style="${it.on ? '' : 'opacity:.5'}"><td>${esc(it.emoji || '')} ${esc(it.name)}</td><td class="r"><b>${won(X.itemPrice(it, eco))}</b></td><td class="r">${it.pct}% (${it.pmin}~${it.pmax}%${it.auto === false ? ' 고정' : ''})</td><td class="r">${+it.stock || 0}</td><td class="r">${+it.daily || '∞'}</td><td><button class="btn sm ghost" data-a="shopEdit" data-id="${it.id}">수정</button></td></tr>`).join('')}</table>
+    <p class="small muted" style="margin:0">가격 = 그날 1인당 통화량 × 비율. 자동 조정을 켜면 전날 품절 시 범위 안에서 ¼씩 오르고, 절반도 안 팔리면 ¼씩 내려요.</p>
+    <h2 style="margin-top:8px">🔨 경매 ${'<button class="btn sm p" data-a="aucNew" data-k="seat">🪑 자리 경매 만들기</button><button class="btn sm p" data-a="aucNew" data-k="bus">🚌 버스 자리 경매 만들기</button>'}</h2>
+    <div class="row small" style="flex-wrap:wrap;gap:8px"><label class="row">마감 직전 연장 <input type="number" id="ecExt" value="${ec.ext}" min="0" max="10" style="width:56px">분</label><label class="row">취소 금지 <input type="number" id="ecLock" value="${ec.lock}" min="0" max="60" style="width:56px">분 전</label><label class="row">최소 인상 <input type="number" id="ecStep" value="${ec.step / 10000}" min="10" step="10" style="width:70px">만원</label><button class="btn sm" data-a="ecSave">저장</button></div>
+    <h2 style="margin-top:8px">🏦 은행 직책 <span class="small muted" style="font-weight:400">눌러서 지정/해제</span></h2>
+    <div class="row" style="flex-wrap:wrap;gap:4px">${r.map(s => `<button class="btn sm ${bankers.has(s.id) ? 'p' : 'ghost'}" data-a="bankerTog" data-id="${s.id}">${s.no}. ${esc(s.name)}</button>`).join('')}</div></div></div>`;
+}
+const ecSet = patch => DB.set('app/settings', { econ: { ...(S.set?.econ || {}), ...patch } });
+A.ecSave = async () => { await ecSet({ ext: Math.max(0, +$('#ecExt').value || 0), lock: Math.max(0, +$('#ecLock').value || 0), step: Math.max(10, +$('#ecStep').value || 10) * 10000 }); toast('경매 기본값을 저장했어요'); };
+A.bankerTog = async d => { const b = new Set(X.EC(S.set).bankers || []); b.has(d.id) ? b.delete(d.id) : b.add(d.id); await ecSet({ bankers: [...b] }); };
+A.shopSeed = async () => { for (const [i, it] of X.DEF_ITEMS.entries()) await DB.set('shop/' + it.id, { ...it, ord: i, at: Date.now() }, false); toast('사탕·에낙을 만들었어요'); };
+A.shopEdit = d => {
+  const it = S.shop.find(x => x.id === d.id) || { name: '', emoji: '🎁', pmin: 5, pmax: 10, pct: 7.5, stock: 10, daily: 1, on: true, auto: true };
+  const f = (k, l, t = 'number', ex = '') => `<label class="f">${l}<input type="${t}" id="se_${k}" value="${esc(it[k] ?? '')}" ${ex}></label>`;
+  const m = modal(`${mHead(d.id ? '상품 수정' : '상품 추가')}<div class="mb col" style="gap:8px"><div class="row">${f('emoji', '그림', 'text', 'maxlength="4" style="width:70px"')}${f('name', '이름', 'text', 'maxlength="20"')}</div>
+    <div class="row">${f('pmin', '최소 %', 'number', 'step="0.5"')}${f('pmax', '최대 %', 'number', 'step="0.5"')}${f('pct', '지금 %', 'number', 'step="0.1"')}</div>
+    <div class="row">${f('stock', '재고(개)')}${f('daily', '1인 하루 한도 (0=무제한)')}</div>
+    <label class="row"><input type="checkbox" id="se_on" ${it.on ? 'checked' : ''}> 판매 중</label><label class="row"><input type="checkbox" id="se_auto" ${it.auto !== false ? 'checked' : ''}> 팔린 양에 따라 비율 자동 조정</label>
+    <p class="small muted" style="margin:0" id="sePrev"></p></div><div class="mf">${d.id ? '<button class="btn ghost" id="seDel">삭제</button>' : ''}<button class="btn" data-a="closeModal">취소</button><button class="btn p" id="seOk">저장</button></div>`);
+  const g = k => m.querySelector('#se_' + k), eco = X.econNow(ectx());
+  const prev = () => { m.querySelector('#sePrev').textContent = `오늘 가격: ${won(X.itemPrice({ pct: +g('pct').value }, eco))} (1인당 ${won(eco.perCap)} × ${+g('pct').value}%)`; };
+  g('pct').oninput = prev; prev();
+  m.querySelector('#seOk').onclick = async () => {
+    const o = { emoji: g('emoji').value.trim(), name: g('name').value.trim(), pmin: +g('pmin').value, pmax: +g('pmax').value, pct: +g('pct').value, stock: Math.max(0, Math.floor(+g('stock').value)), daily: Math.max(0, Math.floor(+g('daily').value)), on: g('on').checked, auto: g('auto').checked };
+    if (!o.name) return toast('이름을 적어요'); if (!(o.pmin <= o.pct && o.pct <= o.pmax)) return toast('지금 %는 최소~최대 사이여야 해요');
+    const id = d.id || 'i' + uid(); await DB.set('shop/' + id, d.id ? o : { ...o, id, ord: S.shop.length, at: Date.now() }); closeModal(); toast('저장했어요');
+  };
+  const del = m.querySelector('#seDel'); if (del) del.onclick = () => { closeModal(); confirmBox(`${it.name}을(를) 지울까요? (이미 산 교환권은 남아요)`, () => DB.del('shop/' + d.id)); };
+};
+A.aucNew = d => {
+  const ec = X.EC(S.set), bus = d.k === 'bus', n = roster().length, T = bus ? busTpl(n) : null;
+  const seats = bus ? T.keys : (S.main?.layout?.seats || []).slice();
+  if (!seats.length) return toast('퍼스트클래스에서 좌석 배치를 먼저 보내 주세요');
+  const end = new Date(Date.now() + 2 * DAY); end.setHours(15, 0, 0, 0);
+  const loc = t => new Date(t - new Date(t).getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+  U.newOff = new Set();
+  const m = modal(`${mHead(bus ? '🚌 소풍 버스 자리 경매' : '🪑 교실 자리 경매')}<div class="mb col" style="gap:8px">
+    <label class="f">제목<input type="text" id="anT" value="${bus ? '소풍 버스 자리' : `${new Date().getMonth() + 2}월 자리`}" maxlength="30"></label>
+    <div class="row"><label class="f">입찰 마감<input type="datetime-local" id="anE" value="${loc(end.getTime())}"></label><label class="f">최저 입찰가 (만원)<input type="number" id="anMin" value="${(bus ? ec.busMin : ec.seatMin) / 10000}" min="10" step="10"></label></div>
+    ${bus ? `<p class="small" style="margin:0">45인승 · 기사 뒤 2자리 + 2줄부터 4명씩 = 학생 ${T.keys.length}자리 · 1줄 문쪽 2자리 교사·짐 · 맨 뒤 5자리와 남는 자리 금지</p>`
+      : `<p class="small" style="margin:0">퍼스트클래스 배치도의 자리 ${seats.length}개. <b>경매에서 뺄 자리</b>(예: 선생님 옆 고정 자리)를 눌러요.</p><div class="sgrid list" id="anSeats" style="grid-template-columns:repeat(auto-fill,minmax(64px,1fr));grid-auto-rows:34px;max-height:220px;overflow:auto">${seats.map((k, i) => `<button class="btn sm" data-k="${k}" aria-pressed="false">${i + 1}번</button>`).join('')}</div>`}
+  </div><div class="mf"><button class="btn" data-a="closeModal">취소</button><button class="btn p" id="anOk">경매 열기</button></div>`);
+  m.querySelectorAll('#anSeats [data-k]').forEach(b => b.onclick = () => { const k = b.dataset.k; U.newOff.has(k) ? U.newOff.delete(k) : U.newOff.add(k); b.classList.toggle('ghost', U.newOff.has(k)); b.style.textDecoration = U.newOff.has(k) ? 'line-through' : ''; });
+  m.querySelector('#anOk').onclick = async () => {
+    const endT = new Date($('#anE').value).getTime(), min = Math.max(10, Math.round(+$('#anMin').value || 0)) * 10000, title = $('#anT').value.trim() || '경매';
+    if (!(endT > Date.now() + 60000)) return toast('마감 시간을 지금보다 뒤로 정해요');
+    const keys = seats.filter(k => !U.newOff.has(k)), id = 'a' + uid();
+    await DB.set('auctions/' + id, { id, kind: bus ? 'bus' : 'seat', title, keys, min, step: ec.step, ext: ec.ext, lock: ec.lock, end: endT, at: Date.now(), status: 'open', top: {}, hist: [], ...(bus ? { bus: { cells: T.cells } } : {}) }, false);
+    closeModal(); U.view = 'mkt'; U.sub.mkt = 'auc'; U.auc = id; render(); toast('경매를 열었어요 🔨');
+  };
+};
+AFTER.mkt = () => {
+  const f = $('#bkFrom'); if (f) f.onchange = () => { $('#bkFree').textContent = f.value ? `${nm(f.value)}의 쓸 수 있는 돈: ${won(X.free(ectx(), f.value))}` : ''; };
+};
 
 /* ---------------- boot ---------------- */
 async function boot() {
   try { DB = CFG.fb ? await makeCloud(CFG) : makeLocal(CFG.code); }
   catch (e) { console.error(e); toast('Firestore 연결 실패 — 체험 모드로 열어요'); DB = makeLocal(CFG.code); }
-  setConn(DB.kind === 'cloud' ? 'cloud' : 'demo', DB.kind === 'cloud' ? `연결됨 · ${CFG.code}` : '체험 모드');
-  const docs = { main: 'app/main', secret: 'app/secret', set: 'app/settings', stock: 'app/stock', mani: 'app/manito', att: 'app/attitude', gacc: 'app/gacc' };
+  SEC = await detectSec();
+  if (SEC) await DB.signOut().catch(() => { }); // 공용 태블릿: 이전 로그인 정리
+  setConn(DB.kind === 'cloud' ? 'cloud' : 'demo', DB.kind === 'cloud' ? `연결됨 · ${CFG.code}${SEC ? ' · 🔒 보안' : ''}` : '체험 모드');
+  /* 보안 모드에서는 app/secret(교사 전용)을 읽지 않음 — 교사 PIN은 서버만 앎 */
+  const docs = { main: 'app/main', ...(SEC ? {} : { secret: 'app/secret' }), set: 'app/settings', stock: 'app/stock', mani: 'app/manito', att: 'app/attitude', gacc: 'app/gacc', econ: 'app/econ' };
   for (const [k, p] of Object.entries(docs)) DB.watchDoc(p, v => { S[k] = v; render(); });
+  for (const c of ['shop', 'auctions']) DB.watchCol(c, l => { S[c] = l; render(); });
+  DB.watchRecent('orders', 300, l => { S.orders = l; render(); });
+  DB.watchRecent('ledger', 200, l => { S.ledger = l; render(); });
   DB.watchCol('wallets', l => { S.wallets = Object.fromEntries(l.map(d => [d.id, d])); render(); });
   DB.watchCol('mani', l => { S.manis = Object.fromEntries(l.map(d => [d.id, d])); render(); });
   for (const c of ['contests', 'board', 'polls', 'relay', 'reports']) DB.watchCol(c, l => { S[c] = l; render(); });
   DB.watchCol('wall', l => { S.wall = l; render(); if (U.wallOpen) { if (S.wall.some(w => w.id === U.wallOpen)) wallRefresh(); else closeModal(); } aiWork(); });
-  if (TEACHER_AUTO) {
+  if (HANDOFF) history.replaceState(null, '', location.pathname + location.search);
+  if (TEACHER_AUTO && SEC) { // 보안 모드: 퍼스트클래스(선생님 로그인)가 건넨 1시간짜리 토큰이 있어야 바로 들어옴
+    try { sessionStorage.removeItem('fclounge.teacher_auto'); } catch (e) { }
+    if (HANDOFF && await DB.signIn(HANDOFF).then(() => true, () => false)) { teacherOn(); U.view = 'teacher'; U.sub.teacher = 'todo'; setTimeout(() => toast('🔑 선생님 관리 모드로 바로 접속했습니다'), 400); }
+    else setTimeout(teacherLogin, 300);
+  } else if (TEACHER_AUTO) {
     U.teacher = true;
     U.view = 'teacher';
     U.sub.teacher = 'todo';
