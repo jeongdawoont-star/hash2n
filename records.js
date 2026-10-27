@@ -32,8 +32,17 @@ export const RECORDS = [
   // ▼ 여기에 새 기록을 붙여넣으세요 (최신 항목을 맨 위에) ▼
 
   {
+    title: "톡톡 수콩마을",
+    desc: "콩이와 함께 마을을 돌며 수 감각을 키우는 태블릿 터치 게임이다.\n한눈에 세기, 10 만들기, 100판, 묶어 세기까지 6곳을 놀이로 익힌다.",
+    tags: "math, number-sense, kids, tablet, pixel, games",
+    category: "games",
+    link: "./vibe-apps/sukong-village.html",
+    image: "img-re/sukong-village.avif",
+  },
+
+  {
     title: "지구 방위 · 에너지 문명",
-    desc: "1800년부터 2200년까지 카드로 발전소와 방어 시설을 놓아 외계 침공을 막는 도트 로그라이크 디펜스 게임이다.\n석탄·석유로 빨리 번영하면 CO₂가 쌓여 기온과 해수면이 오르고, 쓰레기는 '분리배출의 날'에 바르게 나눠야 자원으로 돌아온다.\n에너지·환경·자원순환 교육을 한 판에 묶었고, 엔딩에서 시대별 자연·번영·기온 그래프로 플레이를 돌아본다.",
+    desc: "카드로 발전소와 방어 시설을 놓아 외계 침공을 막는 도트 디펜스 게임이다.\n빨리 번영할수록 지구가 더워진다. 에너지·환경·자원순환을 한 판에 배운다.",
     tags: "energy, climate, recycling, environment, roguelike, pixel, games",
     category: "games",
     link: "./vibe-apps/earth-defense.html",
@@ -51,7 +60,7 @@ export const RECORDS = [
 
   {
     title: "퍼스트클래스",
-    desc: "우리 반을 비행기 일등석처럼 꾸민 자리배치·칭찬 점수판이다.\n학생 여럿을 골라 칭찬 점수를 한 번에 주고, 머쓱 점수는 칭찬에서 빼는 방식으로 교실 화면에 띄워 쓴다.\n짝·키·이전 자리 기록을 따져 자동으로 자리를 바꿔 주고, 학급 데이터는 파일로 저장해 불러온다.",
+    desc: "우리 반을 비행기 일등석처럼 꾸민 자리배치·칭찬 점수판이다.\n칭찬 점수를 한 번에 주고, 자리도 자동으로 바꿔 준다.",
     tags: "classroom, seating, score, praise, class-tools, first-class",
     category: "class-tools",
     link: "./vibe-apps/first-class.html",
@@ -60,7 +69,7 @@ export const RECORDS = [
 
   {
     title: "붕당 - 전하, 결단하소서!",
-    desc: "1494년 연산군부터 1800년 정조까지, 붕당의 탄생과 분화를 몸으로 겪는 역사 로그라이크 게임이다.\n웹캠 앞에 서면 익선관과 곤룡포가 입혀지고, 사화·예송·환국 같은 큰 사건마다 손을 들어 어느 붕당의 상소를 받아들일지 판결한다.\n실제 역사와 다르게 고르면 목숨이 줄고, 끝나면 진짜 역사와 내가 만든 역사의 계보를 비교한다.",
+    desc: "웹캠 앞에서 왕이 되어 손을 들어 붕당의 상소를 판결하는 역사 게임이다.\n연산군부터 정조까지, 내가 만든 역사와 진짜 역사를 비교한다.",
     tags: "history, joseon, bungdang, game, mediapipe, webcam, motion, roguelike, korean-history",
     category: "games",
     link: "./vibe-apps/bungdang/bungdang.html",
