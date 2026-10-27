@@ -356,11 +356,11 @@ const shuf=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(R()*(i+1));[a[i]
 const LS={get(k,d){try{const v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(_){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(_){}}};
 const KEY='pokemath_v1';
 const S=Object.assign({stars:{},stats:{},log:[],opt:{},bag:{},dex:{},gens:[1],buddy:25,chap:0,pomo:null,pday:{d:'',n:0},pmin:15},LS.get(KEY,{}));
-S.opt=Object.assign({pixel:0,voice:1,sound:1,cine:1,openAll:0,allGens:0},S.opt);
+S.opt=Object.assign({pixel:0,voice:1,sound:1,cine:1,openAll:0,allGens:0,autoDl:0},S.opt);
 S.bag=Object.assign({poke:0,great:0,ultra:0},S.bag);
 // v2 디자인: 아이콘을 매끈한 그림으로 (예전 저장값의 도트 설정을 한 번만 바꿈)
 if((S.v||1)<2){S.opt.pixel=0;S.v=2}
-const save=()=>LS.set(KEY,S);
+const save=()=>{S.ts=Date.now();LS.set(KEY,S);keep()};
 
 // ---- 포켓몬 그림 (PokeAPI 공식 일러스트, 없으면 도트 스프라이트)
 const SP=id=>`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`;
@@ -520,7 +520,7 @@ $('#resN').innerHTML=(ball?`<div class="newst"><span class="ball ${ball}"></span
 const {mid,lv}=G,nx=lv<2&&unlocked(mid,lv+1);
 $('#resB').innerHTML=`<button class="btn" id="rH">${ic('🏠','in')} 마을</button><button class="btn" id="rA">${ic('🔁','in')} 다시</button>`+(nx?`<button class="btn grn" id="rN">다음 단계 ${ic('➡️','in')}</button>`:'')+(ball?`<button class="btn pri" id="rO">지금 열기!</button>`:'');
 $('#ovRes').classList.add('on');speak($('#resT').textContent+(ball?` ${BALLS[ball].name}을 받았어요!`:''));
-$('#rH').onclick=()=>{close();show('home')};$('#rA').onclick=()=>{close();start(mid,lv)};if(nx)$('#rN').onclick=()=>{close();start(mid,lv+1)};
+$('#rH').onclick=()=>{close();autoDl();show('home')};$('#rA').onclick=()=>{close();autoDl();start(mid,lv)};if(nx)$('#rN').onclick=()=>{close();autoDl();start(mid,lv+1)};
 if(ball)$('#rO').onclick=async()=>{close();await openBall(ball);$('#rO').remove();$('#ovRes').classList.add('on')}}
 $('#bBack').onclick=()=>{sfx('tap');if(G)G.tok++;try{speechSynthesis.cancel()}catch(_){}show('home')};
 
@@ -1000,12 +1000,56 @@ function optHTML(){return `<h3>설정·도움말</h3>
 <div class="tg"><span>모든 세대 열기<small>1~9세대 포켓몬이 처음부터 모두 나와요</small></span><button class="sw ${S.opt.allGens?'on':''}" data-k="allGens"></button></div>
 ${OPTS.map(([k,t,d])=>`<div class="tg"><span>${t}<small>${d}</small></span><button class="sw ${S.opt[k]?'on':''}" data-k="${k}"></button></div>`).join('')}
 <h4>이렇게 놀아요</h4><ul><li>장소를 고르고 단계를 고르면 5문제가 나옵니다.</li><li>처음 고른 답이 맞으면 초록 동그라미, 다시 골라서 맞히면 주황 동그라미가 됩니다.</li><li>한 번에 맞힌 문제 수로 별(3개 → 1개, 4개 → 2개, 5개 → 3개)을 받고, 별에 따라 볼을 받습니다.</li><li>별 2개(5문제 중 4문제, 80%) 이상이면 그 단계를 <b>통과</b>해 다음 단계가 열립니다. 다음 장은 앞 장 단계의 80%를 통과하면 열립니다. 기준을 올리기 전에 이미 별을 받은 단계·장은 그대로 열려 있습니다.</li><li>통과하면 미션 성공 영상, 볼을 열면 볼 여는 영상, 새 장·새 세대가 열리면 축하 영상이 나옵니다. 3문제를 연달아 한 번에 맞히면 짧은 콤보 장면이 지나갑니다. 위의 '영상 연출'로 끌 수 있고, 영상 중에는 '건너뛰기'를 누르면 됩니다.</li><li>도감에서 잡은 포켓몬을 누르면 '내 파트너'로 정할 수 있습니다. 파트너는 화면 곳곳에서 아이를 응원합니다.</li></ul>
-<h4>기록 지우기</h4><p>별·도감·가방·기록을 모두 처음 상태로 되돌립니다.</p><button class="btn" id="bReset">${ic('🗑️','in')} 모든 기록 지우기</button>`+REF}
-function bindOpt(){$('#pdoc').querySelectorAll('.sw').forEach(b=>b.onclick=()=>{const k=b.dataset.k;S.opt[k]=S.opt[k]?0:1;save();sfx('tap');if(k==='pixel')paint();drawPT()});
+${keepHTML()}
+<h4>기록 지우기</h4><p>별·도감·가방·기록을 모두 처음 상태로 되돌립니다. 지우기 전에 위의 '백업 파일 받기'를 해 두면 언제든 되돌릴 수 있습니다.</p><button class="btn" id="bReset">${ic('🗑️','in')} 모든 기록 지우기</button>`+REF}
+function bindOpt(){$('#pdoc').querySelectorAll('.sw').forEach(b=>b.onclick=()=>{const k=b.dataset.k;S.opt[k]=S.opt[k]?0:1;save();sfx('tap');if(k==='pixel')paint();drawPT()});bindKeep();
 $('#bReset').onclick=()=>{if(confirm('별, 도감, 가방, 기록을 모두 지울까요?')){Object.assign(S,{stars:{},stats:{},log:[],bag:{poke:0,great:0,ultra:0},dex:{},gens:[1],buddy:25,chap:0,pomo:null,pday:{d:'',n:0}});save();drawPT()}}}
 
 // ---- 시작
+// ================= 저장 지키기 =================
+// 1) localStorage + IndexedDB 두 곳에 저장하고, 한쪽이 비거나 오래되면 새것으로 되살린다
+// 2) 브라우저에 '지우지 말아 달라'(storage.persist)고 요청한다
+// 3) PC 크롬·엣지는 고른 .json 파일에 저장할 때마다 덮어쓴다(파일 손잡이는 IndexedDB에 보관)
+// 4) 어디서나: 백업 파일 받기·되돌리기, 원하면 하루 한 번 자동으로 백업 파일 받기
+const IDB=(()=>{let p=null;const db=()=>p||(p=new Promise((res,rej)=>{const r=indexedDB.open('pokemath',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}));
+ const run=(m,f)=>db().then(d=>new Promise((res,rej)=>{const t=d.transaction('kv',m),q=f(t.objectStore('kv'));t.oncomplete=()=>res(q.result);t.onerror=()=>rej(t.error)}));
+ return{get:k=>run('readonly',s=>s.get(k)).catch(()=>null),set:(k,v)=>run('readwrite',s=>s.put(v,k)).catch(()=>{}),del:k=>run('readwrite',s=>s.delete(k)).catch(()=>{})}})();
+const KP=Object.assign({fname:'',fts:0,dl:'',dlts:0,persist:null},LS.get('pokemath_keep',{}));const keepSave=()=>LS.set('pokemath_keep',KP);
+let FH=null,keepT=0;const canPick=!!window.showSaveFilePicker;
+function keep(){clearTimeout(keepT);keepT=setTimeout(async()=>{const j=JSON.stringify(S);await IDB.set('save',j);await fileWrite(j)},600)}
+async function fileWrite(j){if(!FH)return false;try{if(await FH.queryPermission({mode:'readwrite'})!=='granted')return false;const w=await FH.createWritable();await w.write(backupJSON(j));await w.close();KP.fts=Date.now();keepSave();return true}catch(_){return false}}
+const backupJSON=j=>`{"app":"pokemath","saved":"${new Date().toISOString()}","data":${j||JSON.stringify(S)}}`;
+const ymd=t=>{const d=new Date(t);return `${d.getMonth()+1}월 ${d.getDate()}일 ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`};
+function download(){const a=document.createElement('a'),u=URL.createObjectURL(new Blob([backupJSON()],{type:'application/json'}));a.href=u;a.download=`포켓몬수학-백업-${today()}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),2000);KP.dl=today();KP.dlts=Date.now();keepSave()}
+// 하루 한 번 자동 받기: 판이 끝나고 결과창 버튼을 누를 때(손가락 터치 안이라 브라우저가 막지 않음)
+function autoDl(){if(S.opt.autoDl&&KP.dl!==today()&&Object.keys(S.stats).length)try{download()}catch(_){}}
+function applyData(d){Object.assign(S,d);S.opt=Object.assign({pixel:0,voice:1,sound:1,cine:1,openAll:0,allGens:0,autoDl:0},d.opt);S.bag=Object.assign({poke:0,great:0,ultra:0},d.bag);LS.set(KEY,S);IDB.set('save',JSON.stringify(S))}
+async function restoreFile(f){try{const o=JSON.parse(await f.text()),d=o&&o.app==='pokemath'?o.data:o;if(!d||typeof d.stars!=='object'||typeof d.dex!=='object')throw 0;
+ if(!confirm(`이 백업으로 되돌릴까요?\n${o.saved?ymd(o.saved)+' 저장, ':''}도감 ${Object.keys(d.dex).length}종 · 별 ${Object.values(d.stars).reduce((a,b)=>a+b,0)}개\n(지금 기록은 이 백업으로 바뀝니다)`))return;
+ applyData(d);boot();drawPT();alert('되돌렸어요!')}catch(_){alert('포켓몬수학 백업 파일이 아니에요.')}}
+async function linkFile(){try{FH=await showSaveFilePicker({suggestedName:'포켓몬수학-저장.json',types:[{description:'포켓몬수학 저장 파일',accept:{'application/json':['.json']}}]});
+ await IDB.set('fh',FH);KP.fname=FH.name;keepSave();await fileWrite(JSON.stringify(S))}catch(_){}drawPT()}
+function keepHTML(){const fs=!FH?'':KP.fts?`연결됨: <b>${KP.fname}</b> · 마지막 저장 ${ymd(KP.fts)}`:`연결됨: <b>${KP.fname}</b>`;
+ return `<h4>저장 지키기</h4>
+<p>기록은 이 기기 브라우저 두 곳(기본 저장소·예비 저장소)에 함께 저장되고, 한쪽이 지워지면 다른 쪽에서 저절로 되살립니다. 저장 보호: <b>${KP.persist?'켜짐':KP.persist===false?'브라우저가 허락하지 않음':'확인 중'}</b></p>
+${canPick?`<div class="tg"><span>파일에 자동 저장 (PC 크롬·엣지)<small>${fs||'파일을 하나 고르면 저장할 때마다 그 파일에 덮어써요. 원드라이브 폴더에 두면 클라우드에도 남아요.'}</small></span><span class="row" style="margin:0">${FH?`<button class="btn" id="kRe">다시 연결</button><button class="btn" id="kOff">끊기</button>`:`<button class="btn pri" id="kLink">파일 고르기</button>`}</span></div>`:''}
+<div class="tg"><span>하루 한 번 백업 파일 자동 받기<small>그날 처음 한 판을 끝내면 '다운로드' 폴더에 백업 파일을 받아요. 마지막: ${KP.dlts?ymd(KP.dlts):'아직 없음'}</small></span><button class="sw ${S.opt.autoDl?'on':''}" data-k="autoDl"></button></div>
+<div class="row" style="justify-content:flex-start"><button class="btn" id="kDl">${ic('💾','in')} 백업 파일 받기</button><button class="btn" id="kUp">${ic('📂','in')} 백업 파일로 되돌리기</button><input type="file" id="kFile" accept=".json,application/json" hidden></div>
+<div class="tip">기록은 <b>주소마다 따로</b> 저장됩니다(hash2n.vercel.app과 github.io는 서로 다른 곳). 늘 같은 주소로 여세요. 아이패드·아이폰은 사파리에서 7일 넘게 안 열면 기록이 지워질 수 있으니 <b>공유 → 홈 화면에 추가</b>로 열고, 시크릿 모드에서는 하지 마세요. 다른 기기로 옮길 때는 백업 파일을 받아 새 기기에서 '되돌리기'를 하면 됩니다.</div>`}
+function bindKeep(){const q=s=>$('#pdoc').querySelector(s);if(!q('#kDl'))return;
+ q('#kDl').onclick=()=>{sfx('tap');download();drawPT()};q('#kUp').onclick=()=>q('#kFile').click();q('#kFile').onchange=e=>{const f=e.target.files[0];if(f)restoreFile(f)};
+ if(q('#kLink'))q('#kLink').onclick=linkFile;
+ if(q('#kRe'))q('#kRe').onclick=async()=>{try{if(await FH.requestPermission({mode:'readwrite'})==='granted')await fileWrite(JSON.stringify(S))}catch(_){}drawPT()};
+ if(q('#kOff'))q('#kOff').onclick=async()=>{FH=null;KP.fname='';KP.fts=0;keepSave();await IDB.del('fh');drawPT()}}
+async function keepBoot(){
+ try{if(navigator.storage&&navigator.storage.persist){KP.persist=await navigator.storage.persisted()||await navigator.storage.persist();keepSave()}}catch(_){}
+ // 예비 저장소와 비교해 새것으로 맞추기
+ const raw=await IDB.get('save');let d=null;try{d=raw&&JSON.parse(raw)}catch(_){}
+ if(d&&(!localStorage.getItem(KEY)||(d.ts||0)>(S.ts||0))){applyData(d);boot()}else keep();
+ // 연결해 둔 파일: 권한이 다시 필요하면 첫 터치 때 한 번 묻는다
+ if(canPick){FH=await IDB.get('fh');if(FH)try{if(await FH.queryPermission({mode:'readwrite'})==='prompt')document.addEventListener('pointerdown',async()=>{try{if(await FH.requestPermission({mode:'readwrite'})==='granted')keep()}catch(_){}},{once:true})}catch(_){FH=null}}}
 function boot(){paint();drawHome()}
+keepBoot();
 boot();
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(boot);
 </script>
