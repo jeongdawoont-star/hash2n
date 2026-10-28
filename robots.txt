@@ -1,8 +1,4 @@
-User-agent: facebookexternalhit
-Allow: /policies/
-
-User-agent: Facebot
-Allow: /policies/
-
 User-agent: *
-Disallow: /
+Allow: /
+
+Sitemap: https://hash2n.vercel.app/sitemap.xml
