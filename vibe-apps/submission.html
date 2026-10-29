@@ -308,11 +308,50 @@
 <!-- Firebase -->
 <script type="module">
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-  import { getFirestore, initializeFirestore, collection, doc, getDoc, runTransaction, serverTimestamp, query, orderBy, getDocs }
+  import { getFirestore, initializeFirestore, collection, doc, getDoc, runTransaction, serverTimestamp, query, orderBy, limit, getDocs }
     from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
   let db;
   const MIN_STORY_LENGTH = 30;
+  const MAX_EMOJI = 5;
+  const SAME_NAME_MSG = '같은 사람이 연속으로 신청할 수 없어요. 다른 친구가 신청한 다음에 다시 보내주세요.';
+  const DAILY_LIMIT = 3;
+  const DAILY_MSG = `사연은 하루에 ${DAILY_LIMIT}개까지 보낼 수 있어요. 내일 또 보내주세요!`;
+  const todayKey = () => new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' });
+
+  // 글자 수 채우기용 내용을 걷어낸 사연: 이모티콘, ㅋㅋ·ㅠㅠ 같은 자음·모음, ♡★^^ 같은 기호,
+  // 같은 글자·말 반복(하하하하, 안녕안녕안녕, !!!!!)은 한 번만 남기거나 지운다.
+  const EMOJI_RE = /\p{Extended_Pictographic}/gu;
+  function cleanStory(text) {
+    let t = text.normalize('NFC')
+      .replace(/[\p{Extended_Pictographic}\u{1F3FB}-\u{1F3FF}\u{1F1E6}-\u{1F1FF}‍️⃣]/gu, '')
+      .replace(/[ㄱ-ㆎᄀ-ᇿ]/g, '')
+      .replace(/[^\p{L}\p{N}\s.,!?~'"]/gu, ' ')
+      .replace(/([.,!?~'"])\1+/g, '$1')
+      .replace(/(.{1,4}?)\1{2,}/gu, '$1');
+    const words = t.split(/\s+/).filter(Boolean);
+    const key = w => w.replace(/[.,!?~'"]/g, '');
+    t = words.filter((w, i) => i === 0 || !key(w) || key(w) !== key(words[i - 1])).join(' ');
+    // 기호를 지우고 남은 '! ! !', ',!,,,' 같은 문장부호 덩어리는 하나로
+    t = t.replace(/\s+(?=[.,!?~'"])/g, '').replace(/([.,!?~'"])[.,!?~'"]+/g, '$1');
+    return t.replace(/^[\s.,!?~'"]+/, '').trim();
+  }
+  const meaningfulLength = text => cleanStory(text).length;
+  const emojiCount = text => (text.match(EMOJI_RE) || []).length;
+  // 이름 비교는 글자·숫자만 (띄어쓰기·이모티콘·기호를 붙여 다른 사람인 척하는 것 막기)
+  const nameKey = name => String(name || '').normalize('NFC').replace(/[^\p{L}\p{N}]/gu, '').toLowerCase();
+
+  /** 등록하면 안 되는 사연이면 경고 문구, 괜찮으면 '' */
+  function storyProblem(story) {
+    const emojis = emojiCount(story);
+    if (emojis > MAX_EMOJI) return `이모티콘은 ${MAX_EMOJI}개까지만 쓸 수 있어요. 지금은 ${emojis}개예요.`;
+    const m = meaningfulLength(story);
+    if (m >= MIN_STORY_LENGTH) return '';
+    if (story.length >= MIN_STORY_LENGTH) {
+      return `이모티콘, ㅋㅋ·ㅠㅠ, 같은 말 반복은 글자 수에 들어가지 않아요. 진짜 하고 싶은 말로 ${MIN_STORY_LENGTH}자를 채워주세요. (지금 ${m}자)`;
+    }
+    return `사연은 ${MIN_STORY_LENGTH}자 이상 써주세요. 지금은 ${m}자예요.`;
+  }
 
   function applySharedConfig() {
     const m = location.hash.match(/[#&]s=([^&]+)/);
@@ -710,19 +749,34 @@
     const newDocRef = doc(collection(db, 'stories'));
     const order = await runTransaction(db, async (tx) => {
       const counterSnap = await tx.get(counterRef);
-      let base;
-      if (counterSnap.exists()) {
-        base = counterSnap.data().value;
+      const counter = counterSnap.exists() ? counterSnap.data() : null;
+      let base = counter ? counter.value : 0;
+      // 바로 앞 사연: 카운터에 적어 둔 lastId로 찾는다 (선생님이 지운 사연이면 없음 → 통과)
+      let last = null;
+      if (counter && counter.lastId) {
+        const lastSnap = await tx.get(doc(db, 'stories', counter.lastId));
+        if (lastSnap.exists()) last = lastSnap.data();
       } else {
-        // 카운터 문서가 아직 없는 첫 실행 시점: 기존 사연들의 최댓값에서 이어간다.
+        // 카운터 문서가 없거나 lastId가 아직 없는 첫 실행 시점: 기존 사연들의 최댓값에서 이어간다.
         // (동시에 여러 명이 처음 제출하더라도 아래 tx.set(counterRef, ...)가
         //  트랜잭션 충돌 검사 대상이라 자동 재시도되어 안전하다.)
-        const q = query(collection(db, 'stories'), orderBy('order', 'desc'));
+        const q = query(collection(db, 'stories'), orderBy('order', 'desc'), limit(1));
         const maxSnap = await getDocs(q);
-        base = maxSnap.empty ? 0 : maxSnap.docs[0].data().order;
+        last = maxSnap.empty ? null : maxSnap.docs[0].data();
+        if (!counter) base = last ? last.order : 0;
       }
+      if (last && nameKey(last.name) === nameKey(data.name)) {
+        throw Object.assign(new Error(SAME_NAME_MSG), { userMsg: true });
+      }
+      // 하루 신청 횟수: 카운터에 오늘 날짜와 이름별 횟수를 적어 둔다 (사연을 지워도 줄지 않음)
+      const day = todayKey(), me = nameKey(data.name);
+      const perDay = counter && counter.day === day ? { ...(counter.perDay || {}) } : {};
+      if ((perDay[me] || 0) >= DAILY_LIMIT) {
+        throw Object.assign(new Error(DAILY_MSG), { userMsg: true });
+      }
+      perDay[me] = (perDay[me] || 0) + 1;
       const nextOrder = base + 1;
-      tx.set(counterRef, { value: nextOrder });
+      tx.set(counterRef, { value: nextOrder, lastId: newDocRef.id, day, perDay });
       tx.set(newDocRef, { ...data, order: nextOrder, createdAt: serverTimestamp() });
       return nextOrder;
     });
@@ -751,8 +805,9 @@
       showError('모든 항목을 입력해주세요.');
       return;
     }
-    if (story.length < MIN_STORY_LENGTH) {
-      showError(`사연은 ${MIN_STORY_LENGTH}자 이상 써주세요. 지금은 ${story.length}자예요.`);
+    const problem = storyProblem(story);
+    if (problem) {
+      showError(problem, 7000);
       document.getElementById('story').focus();
       return;
     }
@@ -821,7 +876,7 @@
         <div class="row"><span class="key">순서</span><span class="val">${order}번째</span></div>
       `;
     } catch(e) {
-      showError('전송 실패: ' + e.message);
+      showError(e.userMsg ? e.message : '전송 실패: ' + e.message, e.userMsg ? 7000 : 4000);
       btn.disabled = false;
       btn.textContent = '📮 사연 보내기';
     }
@@ -844,20 +899,25 @@
     btn.textContent = '📮 사연 보내기';
   };
 
-  function showError(msg) {
+  let errorTimer;
+  function showError(msg, ms = 4000) {
     const b = document.getElementById('errorBanner');
     b.textContent = '⚠️ ' + msg;
     b.style.display = 'block';
-    setTimeout(() => b.style.display = 'none', 4000);
+    clearTimeout(errorTimer);
+    errorTimer = setTimeout(() => b.style.display = 'none', ms);
   }
 
+  // 글자 수 표시는 '의미 있는 글자'만 센다 (이모티콘·ㅋㅋ·반복은 빼고)
   document.getElementById('story').addEventListener('input', function() {
     const len = this.value.length;
-    const trimmedLen = this.value.trim().length;
+    const m = meaningfulLength(this.value);
     const el = document.getElementById('charCount');
-    const remain = Math.max(0, MIN_STORY_LENGTH - trimmedLen);
-    el.textContent = remain ? `${len} / 300 · ${remain}자 더 써주세요` : `${len} / 300`;
-    el.className = 'char-count' + (len > 250 || remain ? ' warn' : '');
+    const remain = Math.max(0, MIN_STORY_LENGTH - m);
+    const emojiOver = emojiCount(this.value) > MAX_EMOJI;
+    el.textContent = `${len} / 300 · 의미 있는 글자 ${m}자` +
+      (emojiOver ? ` · 이모티콘은 ${MAX_EMOJI}개까지` : remain ? ` · ${remain}자 더 써주세요` : '');
+    el.className = 'char-count' + (len > 250 || remain || emojiOver ? ' warn' : '');
   });
 
   initFirebase();
