@@ -34,5 +34,9 @@ export default async function handler(req, res) {
   let body = req.body; if (typeof body === 'string') { try { body = JSON.parse(body); } catch (e) { body = {}; } }
   if (!core) return res.status(body?.a === 'ping' ? 200 : 503).json({ ok: body?.a === 'ping', secure: false, error: initErr });
   try { return res.status(200).json(await core.handle(body || {}, req.headers.authorization || '')); }
-  catch (e) { if (e.status) return res.status(e.status).json({ ok: false, error: e.message }); console.error(e); return res.status(500).json({ ok: false, error: '서버 오류' }); }
+  catch (e) {
+    if (e.status) return res.status(e.status).json({ ok: false, error: e.message }); console.error(e);
+    if (e.code === 8 || /RESOURCE_EXHAUSTED/.test(e.message || '')) return res.status(503).json({ ok: false, error: '오늘 쓸 수 있는 서버 사용량을 넘었어요. 선생님께 알려 주세요' });
+    return res.status(500).json({ ok: false, error: '서버 오류' });
+  }
 }

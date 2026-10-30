@@ -498,6 +498,8 @@ async function makeCloud(cfg) {
     watchCol: (c, cb) => F.onSnapshot(F.collection(db, 'fc', cfg.code, c), q => cb(q.docs.map(d => ({ id: d.id, ...d.data() }))), onErr),
     /** 최근 n개만 (장부·교환권처럼 계속 쌓이는 것) */
     watchRecent: (c, n, cb) => F.onSnapshot(F.query(F.collection(db, 'fc', cfg.code, c), F.orderBy('at', 'desc'), F.limit(n)), q => cb(q.docs.map(d => ({ id: d.id, ...d.data() }))), onErr),
+    /** 이 학생 것만 (교환권) */
+    watchMine: (c, sid, cb) => F.onSnapshot(F.query(F.collection(db, 'fc', cfg.code, c), F.where('sid', '==', sid)), q => cb(q.docs.map(d => ({ id: d.id, ...d.data() }))), onErr),
     getCol: async c => (await F.getDocs(F.collection(db, 'fc', cfg.code, c))).docs.map(d => ({ id: d.id, ...d.data() })),
     /** 화폐 엔진 결과 저장 (보안 전환 전·체험용). upd = 점 경로 update, put = 통째로 */
     async batch(ops, exists) {
@@ -537,6 +539,7 @@ function makeLocal(code) {
     watchDoc(p, cb) { const w = { p, cb }; dw.add(w); setTimeout(() => cb(clone(getDoc(p))), 0); return () => dw.delete(w); },
     watchCol(c, cb) { const w = { c, cb }; cw.add(w); setTimeout(() => cb(colOf(c)), 0); return () => cw.delete(w); },
     watchRecent(c, n, cb) { return this.watchCol(c, l => cb(l.sort((a, b) => (b.at || 0) - (a.at || 0)).slice(0, n))); },
+    watchMine(c, sid, cb) { return this.watchCol(c, l => cb(l.filter(d => d.sid === sid))); },
     async getCol(c) { return colOf(c); },
     async batch(ops) { for (const o of ops) { if (o.op === 'put') data[o.path] = san(o.d); else { data[o.path] = data[o.path] || {}; for (const k in o.f) setPath(data[o.path], k, san(o.f[k])); } } save(); },
     signIn: async () => null, signOut: async () => { }, idToken: async () => null, claims: async () => null,
@@ -657,6 +660,7 @@ let rq = 0, pending = false;
 function render() { if (rq) return; rq = requestAnimationFrame(() => { rq = 0; doRender(); }); }
 function typing() { const a = document.activeElement; return a && $('#main').contains(a) && /INPUT|TEXTAREA|SELECT/.test(a.tagName) && a.type !== 'checkbox' && a.type !== 'radio'; }
 function doRender() {
+  syncSubs();
   if (typing()) { pending = true; return; } pending = false;
   const nav = NAV.concat(U.teacher ? [['teacher', '⚙️', '선생님']] : []);
   if (U.view === 'teacher' && !U.teacher) U.view = 'home';
@@ -2366,7 +2370,7 @@ function mktTick() {
   $$('[data-cd]').forEach(el => { const ms = +el.dataset.cd - Date.now(); el.textContent = ms > 0 ? cdTxt(ms) : '마감 처리 중…'; });
   if (!DB || !(U.me || U.teacher)) return;
   for (const a of S.auctions) if (a.status === 'open' && Date.now() >= +a.end && !mktT[a.id]) { mktT[a.id] = 1; money('close', { auc: a.id }, { quiet: true }).finally(() => setTimeout(() => delete mktT[a.id], 15000)); }
-  const d = X.dayKey(); if (S.main && (S.econ?.day || '') !== d && mktT.tick !== d) { mktT.tick = d; money('tick', {}, { quiet: true }); }
+  const d = X.dayKey(); if (S.main && econOk && (S.econ?.day || '') !== d && mktT.tick !== d) { mktT.tick = d; money('tick', {}, { quiet: true }); }
 }
 
 V.mkt = () => {
@@ -2615,6 +2619,59 @@ AFTER.mkt = () => {
   const f = $('#bkFrom'); if (f) f.onchange = () => { $('#bkFree').textContent = f.value ? `${nm(f.value)}의 쓸 수 있는 돈: ${won(X.free(ectx(), f.value))}` : ''; };
 };
 
+/* ---------------- 구독: 읽기 절약 ----------------
+   Firestore는 구독 중인 문서가 바뀔 때마다 기기 수만큼 읽기가 쌓임 (34대 × 입찰 한 번에 바뀌는 문서 수).
+   그래서 지금 화면과 로그인 상태에 필요한 것만 구독:
+   - 로그아웃(이름 고르는 화면): 명단·설정만
+   - 학생: 내 지갑·내 마니또만. 반 전체 지갑은 주식 화면·은행에서만, 전체 마니또는 마니또 화면에서만
+   - 한 번 연 화면은 로그아웃할 때까지 유지 (화면을 옮길 때마다 다시 읽지 않게)
+   - 선생님: 전부 */
+const SUB_DOCS = { main: 'app/main', set: 'app/settings', secret: 'app/secret', stock: 'app/stock', mani: 'app/manito', att: 'app/attitude', gacc: 'app/gacc', econ: 'app/econ' };
+const SUB_COLS = ['shop', 'auctions', 'contests', 'board', 'polls', 'relay', 'reports', 'wall'];
+const SUB_START = {
+  ...Object.fromEntries(Object.entries(SUB_DOCS).map(([k, p]) => [k, () => DB.watchDoc(p, v => { S[k] = v; if (k === 'econ') econOk = true; render(); })])),
+  ...Object.fromEntries(SUB_COLS.map(c => [c, () => DB.watchCol(c, l => { S[c] = l; render(); if (c === 'wall') { if (U.wallOpen) { if (S.wall.some(w => w.id === U.wallOpen)) wallRefresh(); else closeModal(); } aiWork(); } })])),
+  ledger: () => DB.watchRecent('ledger', 200, l => { S.ledger = l; render(); }),
+  'orders:all': () => DB.watchRecent('orders', 300, l => { S.orders = l; render(); }),
+  'wallets:all': () => DB.watchCol('wallets', l => { S.wallets = Object.fromEntries(l.map(d => [d.id, d])); render(); }),
+  'manis:all': () => DB.watchCol('mani', l => { S.manis = Object.fromEntries(l.map(d => [d.id, d])); render(); }),
+};
+const SUB_ME = {
+  orders: sid => DB.watchMine('orders', sid, l => { S.orders = l; render(); }),
+  wallets: sid => DB.watchDoc('wallets/' + sid, v => { S.wallets = v ? { [sid]: { ...v, id: sid } } : {}; render(); }),
+  manis: sid => DB.watchDoc('mani/' + sid, v => { S.manis = v ? { [sid]: { ...v, id: sid } } : {}; render(); }),
+};
+const SUB_EMPTY = { wallets: () => ({}), manis: () => ({}), orders: () => [], ledger: () => [], ...Object.fromEntries(SUB_COLS.map(c => [c, () => []])) };
+const subs = new Map(), subStick = new Set();
+let subsOn = false, subWho = '', econOk = false;
+function wantedSubs() {
+  const v = U.view, T = U.teacher, me = U.me, w = new Set(['main', 'set', ...(SEC ? [] : ['secret'])]);
+  if (T) { ['stock', 'mani', 'att', 'gacc', 'econ', ...SUB_COLS, 'ledger', 'orders:all', 'wallets:all', 'manis:all'].forEach(k => w.add(k)); return w; }
+  if (me || v !== 'home') ['stock', 'mani', 'att', 'gacc', 'econ'].forEach(k => w.add(k));
+  if (me) ['contests', 'polls', 'relay'].forEach(k => w.add(k)); // 홈 화면과 메뉴 빨간 점
+  const page = { mkt: ['shop', 'auctions'], contest: ['contests'], wall: ['wall'], plaza: ['board', 'polls', 'relay', 'reports'] }[v] || [];
+  if (v === 'mkt' && me) page.push('orders:' + me);
+  if (v === 'mkt' && isBanker()) page.push('ledger');
+  page.forEach(k => { w.add(k); if (me) subStick.add(k); });
+  subStick.forEach(k => w.add(k));
+  /* 물가가 오늘 고정되기 전에는 전체 지갑으로 계산해 보여 줌 (로그인한 화면이 곧바로 고정) */
+  const allW = v === 'stock' || (v === 'mkt' && (U.sub.mkt === 'bank' || (econOk && S.econ?.day !== X.dayKey())));
+  if (allW) w.add('wallets:all'); else if (me) w.add('wallets:' + me);
+  if (v === 'mani') w.add('manis:all'); else if (me) w.add('manis:' + me);
+  return w;
+}
+function syncSubs() {
+  if (!subsOn) return;
+  const who = U.teacher ? 'T' : U.me || ''; if (who !== subWho) { subWho = who; subStick.clear(); }
+  const want = wantedSubs();
+  for (const [k, stop] of subs) if (!want.has(k)) {
+    stop?.(); subs.delete(k); const g = k.split(':')[0];
+    if (k === 'econ') econOk = false;
+    if (SUB_EMPTY[g] && ![...want].some(x => x.split(':')[0] === g)) S[g] = SUB_EMPTY[g]();
+  }
+  for (const k of want) if (!subs.has(k)) { const [g, sid] = k.split(':'); subs.set(k, sid && sid !== 'all' ? SUB_ME[g](sid) : SUB_START[k]()); }
+}
+
 /* ---------------- boot ---------------- */
 async function boot() {
   try { DB = CFG.fb ? await makeCloud(CFG) : makeLocal(CFG.code); }
@@ -2623,15 +2680,7 @@ async function boot() {
   if (SEC) await DB.signOut().catch(() => { }); // 공용 태블릿: 이전 로그인 정리
   setConn(DB.kind === 'cloud' ? 'cloud' : 'demo', DB.kind === 'cloud' ? `연결됨 · ${CFG.code}${SEC ? ' · 🔒 보안' : ''}` : '체험 모드');
   /* 보안 모드에서는 app/secret(교사 전용)을 읽지 않음 — 교사 PIN은 서버만 앎 */
-  const docs = { main: 'app/main', ...(SEC ? {} : { secret: 'app/secret' }), set: 'app/settings', stock: 'app/stock', mani: 'app/manito', att: 'app/attitude', gacc: 'app/gacc', econ: 'app/econ' };
-  for (const [k, p] of Object.entries(docs)) DB.watchDoc(p, v => { S[k] = v; render(); });
-  for (const c of ['shop', 'auctions']) DB.watchCol(c, l => { S[c] = l; render(); });
-  DB.watchRecent('orders', 300, l => { S.orders = l; render(); });
-  DB.watchRecent('ledger', 200, l => { S.ledger = l; render(); });
-  DB.watchCol('wallets', l => { S.wallets = Object.fromEntries(l.map(d => [d.id, d])); render(); });
-  DB.watchCol('mani', l => { S.manis = Object.fromEntries(l.map(d => [d.id, d])); render(); });
-  for (const c of ['contests', 'board', 'polls', 'relay', 'reports']) DB.watchCol(c, l => { S[c] = l; render(); });
-  DB.watchCol('wall', l => { S.wall = l; render(); if (U.wallOpen) { if (S.wall.some(w => w.id === U.wallOpen)) wallRefresh(); else closeModal(); } aiWork(); });
+  subsOn = true; syncSubs();
   if (HANDOFF) history.replaceState(null, '', location.pathname + location.search);
   if (TEACHER_AUTO && SEC) { // 보안 모드: 퍼스트클래스(선생님 로그인)가 건넨 1시간짜리 토큰이 있어야 바로 들어옴
     try { sessionStorage.removeItem('fclounge.teacher_auto'); } catch (e) { }

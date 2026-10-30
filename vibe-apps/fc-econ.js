@@ -72,6 +72,18 @@
     for (const [k, p] of Object.entries(extra)) c[k] = p.endsWith('/') ? await tx.col(p.slice(0, -1)) : await tx.get(p);
     return c;
   }
+  /** 읽기 절약: 몇 명의 지갑만 필요한 일은 전체 지갑·경매를 읽지 않음. 오늘 물가가 아직 안 정해졌으면(하루 첫 거래) 전체가 필요 */
+  async function loadLite(tx, ids, auc) {
+    const [main, att, set, stock, econ] = await Promise.all([tx.get('app/main'), tx.get('app/attitude'), tx.get('app/settings'), tx.get('app/stock'), tx.get('app/econ')]);
+    const now = tx.now || Date.now();
+    if (econ?.day !== dayKey(now)) return loadCtx(tx);
+    const c = { main, att, set, stock, econ, wallets: {}, auctions: [], now, ops: [], lite: true };
+    if (typeof auc === 'string' && /^[\w-]{1,60}$/.test(auc)) { const A = await tx.get('auctions/' + auc); if (A) c.auctions.push({ ...A, id: auc }); }
+    for (const id of ids) await needW(tx, c, id);
+    return c;
+  }
+  /** 가벼운 읽기에서 지갑 하나 더 (전체를 읽었으면 그대로) */
+  async function needW(tx, c, id) { if (c.lite && id && !c.wallets[id]) { const w = await tx.get('wallets/' + id); if (w) c.wallets[id] = { ...w, id }; } }
   const upd = (c, path, f) => { const o = c.ops.find(x => x.op === 'upd' && x.path === path); if (o) Object.assign(o.f, f); else c.ops.push({ op: 'upd', path, f: { ...f } }); };
   const put = (c, path, d) => c.ops.push({ op: 'put', path, d });
   const nm = (c, id) => roster(c).find(s => s.id === id)?.name || '';
@@ -111,7 +123,7 @@
 
   /** ⭐ 포인트 → 💰 화폐 */
   ACT.xbuy = async (tx, who, a) => {
-    const c = await loadCtx(tx); needStu(who, c); const me = who.sid, n = Math.floor(+a.pts);
+    const c = await loadLite(tx, [who.sid]); needStu(who, c); const me = who.sid, n = Math.floor(+a.pts);
     if (!(n > 0)) E('1P 이상 적어요'); if (n > pts(c, me)) E(`포인트가 모자라요 (지금 ${pts(c, me)}P)`);
     const st = ST(c.set), gross = n * st.rate, fee = r10k(gross * (+st.buyFee || 0) / 100), net = gross - fee, id = rid();
     const w = c.wallets[me] || {}; addCash(c, me, net);
@@ -121,7 +133,7 @@
   };
   /** 💰 화폐 → ⭐ 포인트 (저축) */
   ACT.xsell = async (tx, who, a) => {
-    const c = await loadCtx(tx); needStu(who, c); const me = who.sid, n = Math.floor(+a.pts);
+    const c = await loadLite(tx, [who.sid]); needStu(who, c); const me = who.sid, n = Math.floor(+a.pts);
     if (!(n > 0)) E('1P 이상 적어요');
     const st = ST(c.set), gross = n * st.rate, fee = r10k(gross * (+st.fee || 0) / 100), cost = gross + fee, id = rid();
     if (cost > free(c, me)) E(`쓸 수 있는 돈이 모자라요 (${won(cost)} 필요)`);
@@ -132,7 +144,7 @@
   };
   /** 📈 이번 라운드 투자 금액 저장 (inv = {학생id: 단위 수}) */
   ACT.invest = async (tx, who, a) => {
-    const c = await loadCtx(tx); needStu(who, c); const me = who.sid, R = curRound(c), st = ST(c.set);
+    const c = await loadLite(tx, [who.sid]); needStu(who, c); const me = who.sid, R = curRound(c), st = ST(c.set);
     if (!R || R.status !== 'open') E('지금은 투자할 수 없어요');
     const inv = {}; for (const [k, v] of Object.entries(a.inv || {})) { const u = Math.floor(+v); if (u > 0 && isStu(c, k) && (st.allowSelf || k !== me)) inv[k] = u; }
     const need = units(inv) * st.unit;
@@ -144,7 +156,7 @@
 
   /** 🛒 매점에서 사기 → 교환권(orders) */
   ACT.buy = async (tx, who, a) => {
-    const c = await loadCtx(tx, { items: 'shop/' }); needStu(who, c); const me = who.sid, eco = rollDay(c), d = eco.day;
+    const c = await loadLite(tx, [who.sid]); c.items = await tx.col('shop'); needStu(who, c); const me = who.sid, eco = rollDay(c), d = eco.day;
     const it = (c.items || []).find(x => x.id === a.item); if (!it || !it.on) E('지금 팔지 않는 물건이에요');
     if ((+it.stock || 0) < 1) E('다 팔렸어요');
     if (+it.daily && myToday(it, d, me) >= +it.daily) E(`오늘은 ${it.daily}개까지만 살 수 있어요`);
@@ -178,10 +190,11 @@
   const aucOpen = (A, now) => A.status === 'open' && now < +A.end;
   const myTop = (A, sid) => Object.entries(A.top || {}).find(e => e[1] && e[1].sid === sid);
   ACT.bid = async (tx, who, a) => {
-    const c = await loadCtx(tx); needStu(who, c); const me = who.sid, A = c.auctions.find(x => x.id === a.auc);
+    const c = await loadLite(tx, [who.sid], a.auc); needStu(who, c); const me = who.sid, A = c.auctions.find(x => x.id === a.auc);
     if (!A || !aucOpen(A, c.now)) E('입찰이 끝났어요'); if (!(A.keys || []).includes(a.key)) E('경매하지 않는 자리예요');
     const ec = EC(c.set), step = +A.step || ec.step, min = +A.min || ec.seatMin, amt = r10k(+a.amt);
     const cur = A.top?.[a.key], mine = myTop(A, me), hist = (A.hist || []).slice(-300), f = {};
+    await needW(tx, c, cur?.sid); // 밀려나는 친구 지갑
     if (cur && cur.sid === me) { if (amt < +cur.amt + step) E(`${won(+cur.amt + step)} 이상으로 올려야 해요`); }
     else if (amt < (cur ? +cur.amt + step : min)) E(`${won(cur ? +cur.amt + step : min)} 이상 입찰해야 해요`);
     let back = 0; // 내가 다른 자리에 걸어 둔 돈 (옮기면 돌려받음)
@@ -196,7 +209,7 @@
     return { c, msg: `🔨 ${won(amt)} 입찰! ${f.end ? '(마감 직전이라 시간이 늘었어요)' : ''}` };
   };
   ACT.unbid = async (tx, who, a) => {
-    const c = await loadCtx(tx); needStu(who, c); const me = who.sid, A = c.auctions.find(x => x.id === a.auc);
+    const c = await loadLite(tx, [who.sid], a.auc); needStu(who, c); const me = who.sid, A = c.auctions.find(x => x.id === a.auc);
     if (!A || !aucOpen(A, c.now)) E('입찰이 끝났어요');
     const mine = myTop(A, me); if (!mine) E('취소할 입찰이 없어요');
     const lock = (+A.lock >= 0 ? +A.lock : EC(c.set).lock) * 60000; if (+A.end - c.now < lock) E(`마감 ${lock / 60000}분 전부터는 취소할 수 없어요`);
@@ -206,6 +219,7 @@
   };
   /** 마감 → 낙찰 확정 (선생님. 시간이 지났으면 학생 화면도 자동으로 부를 수 있음) */
   ACT.close = async (tx, who, a) => {
+    const A0 = await tx.get('auctions/' + a.auc); if (!A0 || A0.status !== 'open') E('이미 마감된 경매예요'); // 여러 화면이 동시에 불러도 첫 번째 말고는 여기서 끝
     const c = await loadCtx(tx); const A = c.auctions.find(x => x.id === a.auc); if (!A || A.status !== 'open') E('이미 마감된 경매예요');
     if (who.role !== 't' && c.now < +A.end) E('아직 마감 시간이 아니에요');
     const result = {}, wins = [];
