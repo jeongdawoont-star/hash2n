@@ -32,6 +32,15 @@ export const RECORDS = [
   // ▼ 여기에 새 기록을 붙여넣으세요 (최신 항목을 맨 위에) ▼
 
   {
+    title: "할로윈네컷",
+    desc: "태블릿 카메라 앞에 서면 할로윈 분장이 실시간으로 입혀지는 네컷 사진 앱이다.\n설치 없이 브라우저에서 네 컷을 찍어 JPG로 저장한다. 영상은 기기 밖으로 나가지 않는다.",
+    tags: "halloween, camera, ar, photo, tablet, games",
+    category: "games",
+    link: "./vibe-apps/halloween4cut/",
+    image: "img-re/halloween4cut.avif",
+  },
+
+  {
     title: "포켓몬수학",
     desc: "수콩마을을 포켓몬 버전으로 키워 1학년 수학까지 이어지는 게임이다.\n문제를 풀거나 집중 타이머를 끝까지 하면 몬스터볼을 열어 1~9세대 도감을 채운다.",
     tags: "math, kids, pokemon, pomodoro, timer, pixel, games",
