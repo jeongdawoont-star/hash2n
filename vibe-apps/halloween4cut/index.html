@@ -9,21 +9,22 @@
 :root{--bg:#0c0812;--panel:#17101f;--line:#3a2a4a;--orange:#f08422;--text:#f3e8da;--muted:#a897a8}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:"Malgun Gothic","Apple SD Gothic Neo",sans-serif;overflow:hidden;touch-action:manipulation;user-select:none}
-#app{display:grid;grid-template-columns:minmax(0,1fr) minmax(190px,22vw);gap:14px;height:100%;padding:14px}
+#app{display:grid;grid-template-columns:minmax(0,1fr) minmax(240px,30vw);gap:14px;height:100%;padding:14px}
 #stage{position:relative;display:flex;align-items:center;justify-content:center;min-width:0;min-height:0}
-#frame{position:relative;aspect-ratio:4/3;max-width:100%;max-height:100%;height:100%;background:#000;border:2px solid var(--line);border-radius:8px;overflow:hidden}
+#frame{position:relative;aspect-ratio:4/3;width:min(100%,calc((100vh - 28px)*4/3));background:#000;border:2px solid var(--line);border-radius:8px;overflow:hidden}
 #gl{position:absolute;inset:0;width:100%;height:100%;transform:scaleX(-1);display:block;object-fit:cover}
 video{position:absolute;width:1px;height:1px;opacity:0}
 #count{position:absolute;inset:0;display:none;align-items:center;justify-content:center;font-size:min(36vh,280px);font-weight:900;color:#fff;text-shadow:0 0 40px var(--orange),0 6px 24px #000;pointer-events:none}
 #flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
 #flash.on{animation:fl .32s ease-out}
 @keyframes fl{0%{opacity:1}100%{opacity:0}}
+#debug{position:absolute;left:0;right:0;top:0;padding:4px 8px;font:12px monospace;background:rgba(0,0,0,.7);color:#8f8;display:none;pointer-events:none}
 #name{position:absolute;left:14px;top:12px;padding:5px 14px;border-radius:999px;background:rgba(0,0,0,.6);font-size:19px;font-weight:800;color:#fbe3c0;display:none}
 #msg{position:absolute;left:0;right:0;bottom:0;padding:14px 18px;font-size:20px;font-weight:700;text-align:center;background:linear-gradient(transparent,rgba(0,0,0,.8));pointer-events:none}
 #side{display:flex;flex-direction:column;gap:10px;min-height:0;min-width:0}
 h1{margin:0;font-size:clamp(22px,2.6vw,30px);color:var(--orange)}
-#slots{flex:1;display:grid;grid-template-rows:repeat(4,1fr);gap:7px;min-height:0}
-.slot{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:5px;overflow:hidden;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:14px;min-height:0}
+#slots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-bottom:auto}
+.slot{position:relative;aspect-ratio:4/3;background:var(--panel);border:1px solid var(--line);border-radius:5px;overflow:hidden;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:14px;min-height:0}
 .slot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .slot .tag{position:absolute;left:0;right:0;bottom:0;padding:2px 7px;font-size:12px;background:rgba(0,0,0,.65);color:#fbe3c0}
 button{font:inherit;font-weight:800;font-size:19px;padding:13px;border:0;border-radius:7px;background:var(--orange);color:#1c0c02;cursor:pointer}
@@ -34,12 +35,15 @@ button.sub{background:#2a1e33;color:var(--text);font-size:15px;padding:10px}
 #result .act{display:flex;flex-direction:column;gap:11px;width:260px}
 #result h2{margin:0 0 4px;color:var(--orange);font-size:27px}
 #result p{margin:0;font-size:14px;color:var(--muted);line-height:1.5}
+#layouts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#layouts button{background:#2a1e33;color:var(--text);font-size:15px;padding:10px}
+#layouts button.on{background:var(--orange);color:#1c0c02}
 @media (orientation:portrait){
   #app{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr) auto}
-  #frame{width:100%;height:auto}
+  #frame{width:100%}
   #side{display:contents}
   h1{display:none}
-  #slots{grid-template-rows:1fr;grid-template-columns:repeat(4,1fr)}
+  #slots{align-self:center;width:100%;margin:0}
   #result{flex-direction:column}
   #result img{height:auto;max-height:68%;max-width:100%}
   #result .act{width:100%;max-width:420px}
@@ -51,6 +55,7 @@ button.sub{background:#2a1e33;color:var(--text);font-size:15px;padding:10px}
   <div id="stage">
     <div id="frame">
       <canvas id="gl"></canvas>
+      <div id="debug"></div>
       <div id="name"></div>
       <div id="count"></div>
       <div id="flash"></div>
@@ -69,10 +74,14 @@ button.sub{background:#2a1e33;color:var(--text);font-size:15px;padding:10px}
   <div class="act">
     <h2>완성!</h2>
     <p id="file"></p>
+    <div id="layouts">
+      <button data-layout="1x4" class="on">세로 1×4</button>
+      <button data-layout="2x2">바둑판 2×2</button>
+    </div>
     <button id="save">JPG 저장</button>
     <button class="sub" id="again">다시 찍기</button>
   </div>
 </div>
-<script type="module" src="app.js"></script>
+<script type="module" src="app.js?v=2"></script>
 </body>
 </html>

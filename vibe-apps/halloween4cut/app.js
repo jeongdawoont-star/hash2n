@@ -8,6 +8,11 @@ import { Picker } from './picker.js';
 const $ = id => document.getElementById(id);
 const params = new URLSearchParams(location.search);
 const TEST = params.get('test');             // ?test=dracula 분장 고정 (점검용)
+const DEBUG = params.has('debug');           // ?debug=1 인식 상태 표시 (점검용)
+const MOBILE = /Android|iPhone|iPad/.test(navigator.userAgent) || (navigator.userAgent.includes('Macintosh') && navigator.maxTouchPoints > 1);
+// 휴대기기 GPU 인식은 분할 마스크가 깨지는 기기가 있어 CPU로 돌린다. ?delegate=gpu|cpu 로 바꿔 볼 수 있다.
+const FORCE_DELEGATE = { gpu: 'GPU', cpu: 'CPU' }[params.get('delegate')] || (MOBILE ? 'CPU' : null);
+const MAX_FACES = MOBILE ? 2 : 4;
 const CUTS = 4, MAX_PEOPLE = 4, GAP_MS = 2600;
 const EYE_L = [33, 7, 163, 144, 145, 153, 154, 155, 133, 173, 157, 158, 159, 160, 161, 246];
 const EYE_R = [263, 249, 390, 373, 374, 380, 381, 382, 362, 398, 384, 385, 386, 387, 388, 466];
@@ -503,15 +508,18 @@ async function initVision() {
   const fs = await FilesetResolver.forVisionTasks('lib/wasm');
   const make = async d => {
     const base = path => ({ baseOptions: { modelAssetPath: path, delegate: d } });
-    faceLm = await FaceLandmarker.createFromOptions(fs, { ...base('models/face_landmarker.task'), runningMode: 'VIDEO', numFaces: MAX_PEOPLE, minFaceDetectionConfidence: .4, minFacePresenceConfidence: .4 });
-    poseLm = await PoseLandmarker.createFromOptions(fs, { ...base('models/pose_landmarker_lite.task'), runningMode: 'VIDEO', numPoses: MAX_PEOPLE, minPoseDetectionConfidence: .4 });
-    segmenter = await ImageSegmenter.createFromOptions(fs, { ...base('models/selfie_multiclass_256x256.tflite'), runningMode: 'VIDEO', outputConfidenceMasks: true, outputCategoryMask: false });
+    faceLm = await FaceLandmarker.createFromOptions(fs, { ...base('models/face_landmarker.task'), runningMode: 'VIDEO', numFaces: MAX_FACES, minFaceDetectionConfidence: .4, minFacePresenceConfidence: .4 });
+    poseLm = await PoseLandmarker.createFromOptions(fs, { ...base('models/pose_landmarker_lite.task'), runningMode: 'VIDEO', numPoses: MAX_FACES, minPoseDetectionConfidence: .4 });
+    // 다중 분류 모델은 CPU에서 너무 느려 사람만 가르는 가벼운 모델을 쓴다 (피부·머리 구분은 빠진다)
+    segmenter = await ImageSegmenter.createFromOptions(fs, { ...base(d === 'CPU' ? 'models/selfie_segmenter.tflite' : 'models/selfie_multiclass_256x256.tflite'), runningMode: 'VIDEO', outputConfidenceMasks: true, outputCategoryMask: false });
   };
+  if (FORCE_DELEGATE) { delegate = FORCE_DELEGATE; await make(delegate); return; }
   try { await make('GPU'); } catch (e) { console.warn('GPU 인식 실패, CPU로 전환', e); delegate = 'CPU'; await make('CPU'); }
 }
 
 function initScene() {
   renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true, alpha: false });
+  canvas.addEventListener('webglcontextlost', () => { msg.textContent = '화면 처리가 중단됐어요. 새로고침해 주세요.'; });
   renderer.setPixelRatio(1);
   renderer.setSize(W, H, false);
   renderer.autoClear = true;
@@ -557,16 +565,17 @@ function matchPose(lm, poses) {
 
 function updateMask(res) {
   const m = res.confidenceMasks;
-  if (!m || m.length < 6) { m?.forEach(x => x.close()); return; }
+  if (!m?.length) return;
   const a = m.map(x => x.getAsFloat32Array());
+  const multi = m.length >= 6;
   const mw = m[0].width, mh = m[0].height, d = maskData;
   for (let y = 0; y < 256; y++) {
     const sy = Math.min(mh - 1, y * mh / 256 | 0);
     for (let x = 0; x < 256; x++) {
       const i = sy * mw + Math.min(mw - 1, x * mw / 256 | 0), o = (y * 256 + x) * 4;
-      d[o] = (1 - a[0][i]) * 255;
-      d[o + 1] = Math.max(a[2][i], a[3][i]) * 255;   // 피부
-      d[o + 2] = a[1][i] * 255;                      // 머리카락
+      d[o] = (multi ? 1 - a[0][i] : a[a.length - 1][i]) * 255;
+      d[o + 1] = multi ? Math.max(a[2][i], a[3][i]) * 255 : 0;   // 피부
+      d[o + 2] = multi ? a[1][i] * 255 : 0;                      // 머리카락
       d[o + 3] = 255;
     }
   }
@@ -580,15 +589,19 @@ function track(force = false) {
   if (video.currentTime === lastVideoT && !force) return;
   lastVideoT = video.currentTime;
   frameNo++;
+  // CPU는 한 프레임에 하나씩만 돌려 화면이 끊기지 않게 한다
+  const spread = delegate === 'CPU';
   let t = performance.now();
-  lastFaces = faceLm.detectForVideo(video, now).faceLandmarks || [];
-  stats.face = performance.now() - t;
-  if (frameNo % 2 === 0 || force) {
+  if (force || !spread || frameNo % 2) {
+    lastFaces = faceLm.detectForVideo(video, now).faceLandmarks || [];
+    stats.face = performance.now() - t;
+  }
+  if (force || (spread ? frameNo % 4 === 0 : frameNo % 2 === 0)) {
     t = performance.now();
     lastPoses = poseLm.detectForVideo(video, now + .1).landmarks || [];
     stats.pose = performance.now() - t;
   }
-  if (frameNo % 3 === 0 || force) {
+  if (force || (spread ? frameNo % 4 === 2 : frameNo % 3 === 0)) {
     t = performance.now();
     segmenter.segmentForVideo(video, now + .2, updateMask);
     stats.seg = performance.now() - t;
@@ -606,6 +619,7 @@ function track(force = false) {
   });
   updateLight();
   if (TEST === null) $('name').style.display = 'none';
+  if (DEBUG) $('debug').textContent = `${delegate} ${W}x${H} fps ${stats.fps.toFixed(1)} 얼굴 ${lastFaces.length} (${stats.face | 0}ms) 포즈 ${lastPoses.length} (${stats.pose | 0}ms) 분할 ${stats.seg | 0}ms`;
 }
 
 // 얼굴 좌우 밝기·평균색으로 조명을 사진에 맞춘다
@@ -675,7 +689,7 @@ function grab() {
 }
 
 let cuts = [];
-async function run() {
+async function shoot() {
   $('start').disabled = true;
   cuts = []; sessionUsed = [];
   document.querySelectorAll('.slot').forEach((d, i) => { d.innerHTML = (i + 1) + '컷'; });
@@ -684,7 +698,7 @@ async function run() {
     const first = costumeFor(0);
     setGrade(first);
     msg.textContent = `${i + 1}번째 컷! 포즈를 잡아 주세요`;
-    await sleep(i ? GAP_MS : 900);
+    await Promise.all([sleep(i ? GAP_MS : 900), loadAsset(first)]);
     for (;;) {
       await countdown();
       if (slots.some(s => s.group.visible)) break;
@@ -693,10 +707,12 @@ async function run() {
     }
     beep(1320, 200);
     paused = true;
-    track(true);
-    renderer.render(scene, camera);
-    const shot = grab();
-    paused = false;
+    let shot;
+    try {
+      try { track(true); } catch (e) { console.warn('촬영 순간 인식 실패, 직전 화면으로 찍는다', e); }
+      renderer.render(scene, camera);
+      shot = grab();
+    } finally { paused = false; }
     $('flash').classList.remove('on'); void $('flash').offsetWidth; $('flash').classList.add('on');
     const names = slots.filter(s => s.group.visible).map(s => byId[s.costume].name);
     cuts.push({ canvas: shot, names });
@@ -705,33 +721,46 @@ async function run() {
     const im = new Image(); im.src = shot.toDataURL('image/jpeg', .7); d.append(im);
     const tag = document.createElement('div'); tag.className = 'tag'; tag.textContent = names.join(' · '); d.append(tag);
   }
-  finish();
+  await finish();
+}
+
+async function run() {
+  try { await shoot(); } catch (e) {
+    console.error(e);
+    $('count').style.display = 'none';
+    msg.textContent = '촬영 중 문제가 생겼어요: ' + e.message;
+    $('start').disabled = false;
+  }
 }
 
 function roundRect(x, a, b, w, h, r) { x.beginPath(); x.roundRect(a, b, w, h, r); }
 
-async function buildStrip() {
-  const CW = 1200, CH = 3600, pad = 60, bottom = 430;
+const LAYOUTS = {
+  '1x4': { CW: 1200, CH: 3600, cols: 1, rows: 4, pad: 60, bottom: 430 },
+  '2x2': { CW: 1800, CH: 1680, cols: 2, rows: 2, pad: 50, bottom: 336 },
+};
+
+async function buildStrip(layout) {
+  const { CW, CH, cols, rows, pad, bottom } = LAYOUTS[layout];
   const c = document.createElement('canvas'); c.width = CW; c.height = CH;
   const x = c.getContext('2d');
   const bg = x.createLinearGradient(0, 0, 0, CH); bg.addColorStop(0, '#22090f'); bg.addColorStop(1, '#100608');
   x.fillStyle = bg; x.fillRect(0, 0, CW, CH);
   let seed = 31; const rnd = () => (seed = seed * 16807 % 2147483647) / 2147483647;
   for (let i = 0; i < 240; i++) { x.fillStyle = `rgba(${150 + rnd() * 90},${110 + rnd() * 60},110,.8)`; x.beginPath(); x.arc(rnd() * CW, rnd() * CH, .7 + rnd() * 1.8, 0, 7); x.fill(); }
-  const sw = CW - pad * 2, sh = Math.floor((CH - pad - bottom - pad * 3) / 4);
-  let y = pad;
-  for (const cut of cuts) {
+  const sw = Math.floor((CW - pad * (cols + 1)) / cols), sh = Math.floor((CH - pad - bottom - pad * (rows - 1)) / rows);
+  cuts.forEach((cut, i) => {
+    const px = pad + (i % cols) * (sw + pad), y = pad + Math.floor(i / cols) * (sh + pad);
     const k = Math.max(sw / cut.canvas.width, sh / cut.canvas.height);
     const dw = sw / k, dh = sh / k;
-    x.drawImage(cut.canvas, (cut.canvas.width - dw) / 2, (cut.canvas.height - dh) / 2, dw, dh, pad, y, sw, sh);
+    x.drawImage(cut.canvas, (cut.canvas.width - dw) / 2, (cut.canvas.height - dh) / 2, dw, dh, px, y, sw, sh);
     // 사진 질감을 맞추는 미세 입자는 저장 크기에서 생략하고 테두리만 넣는다
-    x.strokeStyle = '#f08422'; x.lineWidth = 3; x.strokeRect(pad - 2, y - 2, sw + 4, sh + 4);
+    x.strokeStyle = '#f08422'; x.lineWidth = 3; x.strokeRect(px - 2, y - 2, sw + 4, sh + 4);
     x.font = '700 34px "Malgun Gothic","Apple SD Gothic Neo",sans-serif';
     const name = cut.names.join(' · '), tw = x.measureText(name).width;
-    x.fillStyle = 'rgba(0,0,0,.65)'; roundRect(x, pad + 18, y + sh - 76, tw + 36, 58, 6); x.fill();
-    x.fillStyle = '#fae2be'; x.fillText(name, pad + 36, y + sh - 34);
-    y += sh + pad;
-  }
+    x.fillStyle = 'rgba(0,0,0,.65)'; roundRect(x, px + 18, y + sh - 76, tw + 36, 58, 6); x.fill();
+    x.fillStyle = '#fae2be'; x.fillText(name, px + 36, y + sh - 34);
+  });
   x.textAlign = 'center'; x.fillStyle = '#f08422';
   x.font = '900 112px "Malgun Gothic","Apple SD Gothic Neo",sans-serif';
   x.fillText('할로윈네컷', CW / 2, CH - bottom + 190);
@@ -743,11 +772,20 @@ async function buildStrip() {
   return { blob, file };
 }
 
-let finalShot = null;
+let finalShot = null, layout = '1x4', buildNo = 0;
+async function showLayout(next) {
+  layout = next;
+  document.querySelectorAll('#layouts button').forEach(b => b.classList.toggle('on', b.dataset.layout === next));
+  const no = ++buildNo, built = await buildStrip(next);
+  if (no !== buildNo) return;     // 그사이 다른 배치를 눌렀다
+  finalShot = built;
+  URL.revokeObjectURL($('strip').src);
+  $('strip').src = URL.createObjectURL(built.blob);
+}
+
 async function finish() {
   msg.textContent = '';
-  finalShot = await buildStrip();
-  $('strip').src = URL.createObjectURL(finalShot.blob);
+  await showLayout(layout);
   $('file').textContent = '사진은 이 기기에만 있어요. 저장을 눌러 보관하세요.';
   $('result').style.display = 'flex';
   assignments = [];
@@ -774,8 +812,10 @@ function reset() {
 async function main() {
   for (let i = 0; i < CUTS; i++) { const d = document.createElement('div'); d.className = 'slot'; d.id = 'slot' + i; d.textContent = (i + 1) + '컷'; $('slots').append(d); }
   $('start').onclick = run; $('save').onclick = save; $('again').onclick = reset;
+  document.querySelectorAll('#layouts button').forEach(b => { b.onclick = () => showLayout(b.dataset.layout); });
+  $('debug').style.display = DEBUG ? 'block' : 'none';
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: { width: { ideal: 1280 }, height: { ideal: 960 }, facingMode: 'user' } });
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: { width: { ideal: MOBILE ? 960 : 1280 }, height: { ideal: MOBILE ? 720 : 960 }, facingMode: 'user' } });
     video.srcObject = stream;
     await video.play();
   } catch { msg.textContent = '카메라를 켤 수 없습니다. 브라우저의 카메라 권한을 확인해 주세요.'; return; }
