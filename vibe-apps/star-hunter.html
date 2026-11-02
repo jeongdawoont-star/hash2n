@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>아는 별자리 — 별헌터</title>
+<!-- 중요: 반드시 browser 빌드를 써야 함. 버전 없는 기본 URL은 Node.js용(CommonJS) 파일이라 브라우저에서 'exports is not defined'로 즉시 죽고 Astronomy 전역이 안 생김 -->
+<script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js"></script>
+<style>
+  :root{
+    --ink:#0a0e1f;
+    --deep:#121a33;
+    --panel:#161f3d;
+    --gold:#d9b45c;
+    --gold-dim:#8a713a;
+    --paper:#e9e4d4;
+    --mist:#7d87ab;
+    --planet:#7fb3d5;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;margin:0;}
+  body{
+    background:var(--ink);
+    color:var(--paper);
+    font-family:-apple-system,"Noto Sans KR",system-ui,sans-serif;
+    overflow:hidden;
+    position:fixed; inset:0;
+  }
+  #app{position:absolute; inset:0; display:flex; flex-direction:column;}
+  .screen{position:absolute; inset:0; display:none; flex-direction:column;}
+  .screen.active{display:flex;}
+
+  .stars-bg{
+    position:absolute; inset:0;
+    background:
+      radial-gradient(1px 1px at 20% 30%, var(--paper), transparent),
+      radial-gradient(1px 1px at 70% 15%, var(--paper), transparent),
+      radial-gradient(1.5px 1.5px at 40% 60%, var(--paper), transparent),
+      radial-gradient(1px 1px at 85% 70%, var(--paper), transparent),
+      radial-gradient(1px 1px at 55% 85%, var(--paper), transparent),
+      radial-gradient(1.5px 1.5px at 10% 80%, var(--paper), transparent),
+      linear-gradient(180deg, var(--ink), var(--deep));
+    opacity:.9;
+  }
+  .eyebrow{font-size:11px; letter-spacing:.2em; color:var(--gold-dim); text-transform:uppercase; font-weight:600;}
+  h1{font-family:Georgia,"Noto Serif KR",serif; font-weight:600; margin:0;}
+  .btn{border:1px solid var(--gold); background:transparent; color:var(--gold); padding:14px 20px; border-radius:2px; font-size:15px; font-weight:600; letter-spacing:.03em; width:100%;}
+  .btn.solid{background:var(--gold); color:var(--ink); border-color:var(--gold);}
+  .btn:active{opacity:.7;}
+  .btn.ghost{border-color:var(--mist); color:var(--mist);}
+
+  #screen-start{justify-content:flex-end; padding:0 24px 40px;}
+  #screen-start .eyebrow{margin-bottom:10px;}
+  #screen-start h1{font-size:32px; line-height:1.3; color:var(--paper); margin-bottom:8px;}
+  #screen-start p{color:var(--mist); font-size:14px; line-height:1.6; margin:0 0 20px;}
+  .req-note{font-size:12px; color:var(--gold-dim); margin-bottom:16px; line-height:1.5;}
+  .engine-note{font-size:11px; color:var(--planet); margin-bottom:16px; line-height:1.5; border-left:2px solid var(--planet); padding-left:10px;}
+
+  #screen-camera{background:#000;}
+  #video{width:100%; height:100%; object-fit:cover;}
+  .cam-overlay{position:absolute; inset:0; display:flex; flex-direction:column; justify-content:space-between; pointer-events:none;}
+  .cam-top{padding:16px; display:flex; justify-content:space-between; font-size:12px; color:var(--paper); background:linear-gradient(180deg, rgba(0,0,0,.6), transparent);}
+  .cam-bottom{padding:28px; display:flex; justify-content:center; background:linear-gradient(0deg, rgba(0,0,0,.6), transparent); pointer-events:auto;}
+  .shutter{width:74px; height:74px; border-radius:50%; border:4px solid var(--gold); background:transparent;}
+  .shutter::after{content:''; display:block; width:56px; height:56px; margin:5px; border-radius:50%; background:var(--gold);}
+
+  #screen-calibrate{background:#000;}
+  #calib-canvas{width:100%; height:100%; object-fit:cover; touch-action:manipulation;}
+  .calib-hint{position:absolute; left:16px; right:16px; top:16px; background:rgba(10,14,31,.85); border:1px solid var(--gold-dim); padding:14px 16px; border-radius:4px;}
+  .calib-hint .eyebrow{margin-bottom:6px;}
+  .calib-hint p{margin:0; font-size:14px; line-height:1.5;}
+  .calib-actions{position:absolute; left:16px; right:16px; bottom:20px; display:flex; gap:10px;}
+
+  #screen-result{background:#000;}
+  #result-canvas{width:100%; height:100%; object-fit:cover;}
+  .result-top{position:absolute; left:0; right:0; top:0; padding:14px 16px; display:flex; justify-content:space-between; align-items:center; background:linear-gradient(180deg, rgba(0,0,0,.6), transparent);}
+  .badge{font-size:11px; padding:4px 8px; border:1px solid var(--gold-dim); border-radius:20px; color:var(--gold);}
+  .legend{position:absolute; left:16px; bottom:16px; font-size:11px; color:var(--mist); background:rgba(10,14,31,.7); padding:6px 10px; border-radius:20px;}
+  #debug-log{position:fixed; left:0; right:0; bottom:0; max-height:64px; overflow-y:auto; background:rgba(0,0,0,.75); color:#7fff9f; font-family:monospace; font-size:10px; line-height:1.5; padding:4px 8px; z-index:9999; white-space:pre-wrap; border-top:1px solid rgba(127,255,159,.5); pointer-events:none;}
+  #debug-log.expanded{max-height:34%;}
+  #debug-toggle{position:fixed; right:8px; bottom:8px; z-index:10000; font-family:monospace; font-size:10px; padding:4px 10px; border-radius:12px; border:1px solid #7fff9f; background:rgba(0,0,0,.6); color:#7fff9f;}
+
+  #story-sheet{position:absolute; left:0; right:0; bottom:0; background:var(--panel); border-top:1px solid var(--gold-dim); border-radius:16px 16px 0 0; padding:22px 20px 28px; transform:translateY(110%); transition:transform .3s ease; max-height:65%; overflow-y:auto;}
+  #story-sheet.open{transform:translateY(0);}
+  #story-sheet h2{font-family:Georgia,"Noto Serif KR",serif; font-size:22px; margin:2px 0 4px; color:var(--gold);}
+  #story-sheet .sub{font-size:12px; color:var(--mist); margin-bottom:14px;}
+  #story-sheet p{font-size:15px; line-height:1.75; color:var(--paper); margin:0 0 16px; white-space:pre-line;}
+  #story-sheet .close{width:36px; height:4px; background:var(--mist); border-radius:2px; margin:0 auto 14px; opacity:.5;}
+  .hidden{display:none !important;}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div class="screen active" id="screen-start">
+    <div class="stars-bg"></div>
+    <div style="position:relative; z-index:1;">
+      <div class="eyebrow">별헌터 · v3</div>
+      <h1>하늘을 비추면<br>별자리가 보여요</h1>
+      <p>카메라로 밤하늘을 찍으면 GPS·시각·방향 센서로 별자리와 행성 위치를 계산해서 겹쳐 보여줘요. 잘 안 맞으면 실제로 보이는 별 하나를 눌러서 보정할 수 있어요.</p>
+      <div class="engine-note">⚙ Astronomy Engine(NASA JPL 검증 천문 계산 라이브러리)로 실제 좌표를 계산해요</div>
+      <div class="req-note">※ Android + Chrome 권장 · 위치 권한 필요 · 실외에서 촬영 · HTTPS 배포 필수</div>
+      <button class="btn solid" id="btn-start">밤하늘 촬영하기</button>
+    </div>
+  </div>
+
+  <div class="screen" id="screen-camera">
+    <video id="video" autoplay playsinline muted></video>
+    <div class="cam-overlay">
+      <div class="cam-top"><span id="gps-status">GPS 확인 중…</span><span id="orient-status">방향 확인 중…</span></div>
+      <div class="cam-bottom"><button class="shutter" id="btn-shutter"></button></div>
+    </div>
+  </div>
+
+  <div class="screen" id="screen-calibrate">
+    <canvas id="calib-canvas"></canvas>
+    <div class="calib-hint">
+      <div class="eyebrow">보정 <span id="calib-step-label">1 / 2</span></div>
+      <p id="calib-instruction"><b id="calib-star-name">직녀성(베가)</b>이(가) 보이면, 사진에서 그 위치를 눌러주세요.</p>
+    </div>
+    <div class="calib-actions">
+      <button class="btn ghost" id="btn-skip-calib">안 보여요 · 건너뛰기</button>
+    </div>
+  </div>
+
+  <div class="screen" id="screen-result">
+    <canvas id="result-canvas"></canvas>
+    <div class="result-top">
+      <span class="badge" id="accuracy-badge">계산 중…</span>
+      <button class="btn ghost" style="width:auto; padding:8px 14px; font-size:13px;" id="btn-retake">다시 찍기</button>
+    </div>
+    <div class="legend">⭐ 별자리 · 🪐 행성 — 눌러서 이야기 보기</div>
+    <div id="story-sheet">
+      <div class="close"></div>
+      <div class="eyebrow" id="story-eyebrow">그리스 신화</div>
+      <h2 id="story-title">거문고자리</h2>
+      <div class="sub" id="story-sub">직녀성 · 베가</div>
+      <p id="story-body">이야기가 여기에 표시됩니다.</p>
+    </div>
+  </div>
+
+</div>
+
+<div id="debug-log"></div>
+<button id="debug-toggle">LOG ▲</button>
+
+<script>
+/* =========================================================
+   0. 별 카탈로그 (실제 J2000 적경/적위, degrees) — 대표 밝은 별 위주
+   ========================================================= */
+const STARS = {
+  polaris:   {name:"북극성",           ra:37.95,  dec:89.26},
+  dubhe:     {name:"두베",             ra:165.93, dec:61.75},
+  merak:     {name:"메라크",           ra:165.46, dec:56.38},
+  schedar:   {name:"쉐다(카시오페이아)", ra:10.13, dec:56.54},
+  alderamin: {name:"알데라민(세페우스)", ra:319.64, dec:62.59},
+  mirach:    {name:"미라크(안드로메다)", ra:17.43, dec:35.62},
+  mirfak:    {name:"미르파크(페르세우스)", ra:51.08, dec:49.86},
+  markab:    {name:"마르카브(페가수스)", ra:346.19, dec:15.21},
+  deneb_kaitos:{name:"데네브 카이토스(고래)", ra:6.57, dec:-17.99},
+  vega:      {name:"직녀성(베가)",      ra:279.23, dec:38.78},
+  altair:    {name:"견우성(알타이르)",  ra:297.70, dec:8.87},
+  deneb:     {name:"데네브(백조)",      ra:310.36, dec:45.28},
+  betelgeuse:{name:"베텔게우스(오리온)", ra:88.79, dec:7.41},
+  rigel:     {name:"리겔(오리온)",      ra:78.63, dec:-8.20},
+  antares:   {name:"안타레스(전갈)",    ra:247.35, dec:-26.43},
+  sirius:    {name:"시리우스(큰개)",    ra:101.29, dec:-16.72},
+  procyon:   {name:"프로키온(작은개)",  ra:114.83, dec:5.22},
+  aldebaran: {name:"알데바란(황소)",    ra:68.98, dec:16.51},
+  capella:   {name:"카펠라(마차부)",    ra:79.17, dec:45.998},
+  castor:    {name:"카스토르(쌍둥이)",  ra:113.65, dec:31.89},
+  pollux:    {name:"폴룩스(쌍둥이)",    ra:116.33, dec:28.03},
+  regulus:   {name:"레굴루스(사자)",    ra:152.09, dec:11.97},
+  spica:     {name:"스피카(처녀)",      ra:201.30, dec:-11.16},
+  arcturus:  {name:"아르크투루스(목동)", ra:213.92, dec:19.18},
+  zubenelgenubi:{name:"주벤엘게누비(천칭)", ra:222.72, dec:-16.04},
+  kaus_australis:{name:"카우스 아우스트랄리스(궁수)", ra:276.04, dec:-34.38},
+  deneb_algedi:{name:"데네브 알게디(염소)", ra:326.76, dec:-16.13},
+  sadalsuud: {name:"사달수드(물병)",    ra:322.89, dec:-5.57},
+  alrescha:  {name:"알레샤(물고기)",    ra:30.00, dec:2.76},
+  hamal:     {name:"하말(양)",          ra:31.79, dec:23.46},
+  acubens:   {name:"아쿠벤스(게)",      ra:134.62, dec:11.86},
+  ras_algethi:{name:"라스 알게티(헤라클레스)", ra:258.66, dec:14.39},
+  cor_caroli:{name:"코르 카롤리(사냥개)", ra:194.01, dec:38.32},
+  acrux:     {name:"아크룩스(남십자성)", ra:186.65, dec:-63.10},
+  rotanev:   {name:"로타네브(돌고래)",  ra:311.51, dec:14.59},
+  rigil_kent:{name:"리길 켄타우루스",   ra:219.90, dec:-60.83},
+  gienah:    {name:"기에나(까마귀)",    ra:183.95, dec:-17.54},
+  alphard:   {name:"알파르드(바다뱀)",  ra:141.90, dec:-8.66},
+  cursa:     {name:"쿠르사(에리다누스)", ra:76.96, dec:-5.09},
+  ras_alhague:{name:"라스 알하게(뱀주인)", ra:263.73, dec:12.56},
+  canopus:   {name:"카노푸스(용골/아르고)", ra:95.99, dec:-52.70},
+};
+
+/* =========================================================
+   1. 별자리 데이터 (구연동화 스토리 전체 포함)
+   ========================================================= */
+const CONSTELLATIONS = [
+  {id:"cassiopeia", name:"카시오페이아자리", category:"연중·북쪽하늘", stars:["schedar"], lines:[],
+    eyebrow:"그리스 신화", title:"카시오페이아자리", sub:"쉐다",
+    story:"옛날 에티오피아에 카시오페이아라는 왕비가 살았어요. 카시오페이아는 자기 딸 안드로메다가 바다의 님프들보다 훨씬 예쁘다고 자랑하고 다녔어요. 그 말을 들은 바다의 신 포세이돈은 화가 잔뜩 났어요. 포세이돈은 바다 괴물 케토스를 보내 나라를 망가뜨리기 시작했어요. 결국 안드로메다는 바닷가 바위에 사슬로 묶이는 신세가 되었죠. 카시오페이아는 자신의 자랑 때문에 벌어진 일이라 후회했지만 이미 늦었어요. 지금도 의자에 거꾸로 묶인 채 별자리로 돌고 있는데, 사람들은 이걸 자만심에 대한 벌이라고 이야기해요."},
+  {id:"cepheus", name:"세페우스자리", category:"가을철", stars:["alderamin"], lines:[],
+    eyebrow:"그리스 신화", title:"세페우스자리", sub:"알데라민",
+    story:"세페우스는 에티오피아의 왕이자 카시오페이아의 남편이었어요. 아내의 자랑 때문에 나라가 위험에 빠지자, 딸 안드로메다를 구하기 위해 백방으로 애썼어요. 신탁은 냉정했죠. 공주를 바치지 않으면 나라 전체가 멸망할 것이라 했어요. 왕으로서 나라를 지켜야 했고, 아버지로서 딸을 지켜야 했던 세페우스는 눈물을 흘리며 결정을 내려야 했어요. 다행히 이야기는 비극으로 끝나지 않았는데, 마침 그곳을 지나던 영웅 페르세우스가 딸을 구해주었거든요. 세페우스는 왕관을 쓴 채 지금도 하늘에서 가족을 지켜보고 있어요."},
+  {id:"andromeda", name:"안드로메다자리", category:"가을철", stars:["mirach"], lines:[],
+    eyebrow:"그리스 신화", title:"안드로메다자리", sub:"미라크",
+    story:"바닷가 바위에 사슬로 묶인 안드로메다 공주는 다가오는 바다 괴물 케토스를 보며 절망하고 있었어요. 바로 그때, 메두사를 물리치고 돌아오던 영웅 페르세우스가 그 모습을 보게 됐어요. 페르세우스는 메두사의 머리를 이용해 괴물 케토스를 돌로 만들어버렸어요. 공주를 구한 페르세우스는 안드로메다에게 반해 청혼했고, 둘은 결혼식을 올렸답니다. 훗날 두 사람 모두 하늘의 별자리가 되어, 안드로메다자리는 페르세우스자리 바로 옆에서 나란히 빛나고 있어요."},
+  {id:"perseus", name:"페르세우스자리", category:"가을철", stars:["mirfak"], lines:[],
+    eyebrow:"그리스 신화", title:"페르세우스자리", sub:"미르파크",
+    story:"제우스의 아들 페르세우스는 눈을 마주치면 누구든 돌로 만들어버리는 괴물 메두사를 처치하라는 임무를 받았어요. 페르세우스는 방패를 거울처럼 이용해 메두사를 직접 보지 않고도 목을 벨 수 있었어요. 돌아오던 길, 바위에 묶인 안드로메다 공주를 발견했고, 메두사의 머리로 바다 괴물을 물리쳐 공주를 구했어요. 용기와 지혜로 위기를 헤쳐나간 페르세우스는 지금도 손에 메두사의 머리를 든 모습으로 밤하늘에 남아있어요."},
+  {id:"pegasus", name:"페가수스자리", category:"가을철", stars:["markab"], lines:[],
+    eyebrow:"그리스 신화", title:"페가수스자리", sub:"마르카브",
+    story:"페르세우스가 메두사의 목을 베었을 때, 놀랍게도 그 피에서 날개 달린 하얀 말 페가수스가 태어났어요. 페가수스는 하늘을 자유롭게 날아다니며 여러 영웅을 도왔는데, 괴물 키마이라를 무찌른 영웅 벨레로폰과 함께한 모험이 유명해요. 벨레로폰이 올림포스까지 날아오르려는 오만한 욕심을 부리자, 제우스는 벌레를 보내 페가수스를 놀라게 했고 벨레로폰은 땅으로 떨어지고 말았어요. 주인을 잃은 페가수스는 그 후 하늘로 올라가 지금까지도 늠름하게 날개를 편 별자리로 남아있어요."},
+  {id:"cetus", name:"고래자리", category:"가을철", stars:["deneb_kaitos"], lines:[],
+    eyebrow:"그리스 신화", title:"고래자리", sub:"데네브 카이토스",
+    story:"고래자리는 포세이돈이 카시오페이아의 자랑을 벌하기 위해 보낸 바다 괴물 케토스예요. '고래'라는 이름과 달리 원래 이야기 속에서는 온 나라를 위협하는 무시무시한 바다 괴물로 그려져요. 안드로메다 공주를 삼키려는 순간까지 다가왔지만, 페르세우스가 메두사의 머리를 보여주자 그대로 돌처럼 굳어버리고 말았어요. 위험한 순간은 지나갔지만, 케토스의 모습은 밤하늘에 남아 지금도 안드로메다자리 근처를 지키듯 자리하고 있어요."},
+
+  {id:"lyra", name:"거문고자리", category:"여름철·견우직녀", stars:["vega"], lines:[],
+    eyebrow:"동아시아 설화", title:"거문고자리", sub:"직녀성 · 베가",
+    story:"옥황상제의 딸 직녀는 베 짜는 솜씨가 뛰어난 선녀였어요. 목동 견우와 사랑에 빠져 일을 게을리하자, 옥황상제는 둘을 은하수 양쪽으로 갈라놓았어요. 일 년에 딱 하루, 칠월칠석에만 까마귀와 까치가 놓은 오작교를 건너 만날 수 있게 했답니다."},
+  {id:"aquila", name:"독수리자리", category:"여름철·견우직녀", stars:["altair"], lines:[],
+    eyebrow:"동아시아 설화", title:"독수리자리", sub:"견우성 · 알타이르",
+    story:"은하수 건너편에서 직녀를 그리워하는 목동 견우의 별이에요. 사랑에 빠져 소를 돌보지 않고 게으름을 피우다 옥황상제의 노여움을 사서 은하수 저편으로 떨어져 나가게 되었죠. 칠석날 밤, 까치와 까마귀들이 머리를 맞대 다리를 만들어주면 견우와 직녀는 일 년에 단 한 번 서로를 만나러 갈 수 있었어요."},
+  {id:"cygnus", name:"백조자리", category:"여름철·여름 대삼각형", stars:["deneb"], lines:[],
+    eyebrow:"그리스 신화", title:"백조자리", sub:"데네브",
+    story:"견우직녀 이야기 속 다리를 놓아주는 까치·까마귀와 함께 여름 밤하늘 한가운데를 가로지르는 별이에요. 서양 신화에서는 이 백조가 사실 제우스가 변신한 모습이라는 이야기도 전해져요. 데네브라는 밝은 별을 중심으로 여름 밤하늘에서 가장 찾기 쉬운 별자리 중 하나예요."},
+
+  {id:"orion", name:"오리온자리", category:"겨울철 대표", stars:["betelgeuse","rigel"], lines:[["betelgeuse","rigel"]],
+    eyebrow:"그리스 신화", title:"오리온자리", sub:"베텔게우스 · 리겔",
+    story:"오리온은 세상에서 가장 뛰어난 사냥꾼이라고 자부하던 거인이었어요. \"나는 어떤 동물도 다 사냥할 수 있다\"고 큰소리를 쳤다가 대지의 여신 가이아를 화나게 했고, 여신이 보낸 작은 전갈에게 목숨을 잃고 말았어요. 그래서 오리온자리와 전갈자리는 하늘에서 절대 동시에 뜨지 않아요. 오리온이 겨울 밤하늘에 뜨면 전갈은 자취를 감추고, 여름에 전갈이 뜨면 오리온은 보이지 않아요."},
+  {id:"scorpius", name:"전갈자리", category:"여름철", stars:["antares"], lines:[],
+    eyebrow:"그리스 신화", title:"전갈자리", sub:"안타레스",
+    story:"몸집은 작지만 독침 하나로 거인 사냥꾼 오리온을 쓰러뜨린 진짜 영웅이 바로 전갈이에요. 가이아 여신의 부탁을 받고 몰래 오리온에게 다가가 발뒤꿈치를 콕 찔렀고, 그 한 번의 공격으로 세상에서 가장 힘센 사냥꾼을 물리쳤어요. 다만 오리온과는 앙숙이라 하늘에서 마주치지 않도록, 지금도 여름과 겨울로 나뉘어 각자의 계절에만 밤하늘을 차지하고 있답니다."},
+  {id:"canis_major", name:"큰개자리", category:"겨울철", stars:["sirius"], lines:[],
+    eyebrow:"그리스 신화", title:"큰개자리", sub:"시리우스",
+    story:"큰개자리는 사냥꾼 오리온이 데리고 다니던 충직한 사냥개예요. 이 별자리에서 가장 밝은 별 시리우스는 밤하늘 전체에서 가장 밝게 빛나는 별인데, 마치 지금도 주인 오리온의 곁을 지키려는 듯 오리온자리 바로 옆에서 환하게 빛나고 있어요."},
+  {id:"canis_minor", name:"작은개자리", category:"겨울철", stars:["procyon"], lines:[],
+    eyebrow:"그리스 신화", title:"작은개자리", sub:"프로키온",
+    story:"큰개자리와 짝을 이루는 작은개자리 역시 오리온의 사냥개로 전해져요. 몸집은 작지만 큰개자리 못지않게 충직하게 오리온 곁을 지켰다고 해요. 밝은 별 프로키온을 중심으로, 오리온자리·큰개자리와 함께 '겨울철 대삼각형'을 이루는 걸로도 유명해요."},
+  {id:"taurus", name:"황소자리", category:"겨울철", stars:["aldebaran"], lines:[],
+    eyebrow:"그리스 신화", title:"황소자리", sub:"알데바란",
+    story:"페니키아의 공주 에우로파는 바닷가에서 눈처럼 하얀 황소 한 마리를 만났어요. 사실 이 황소는 공주에게 반한 제우스가 변신한 모습이었죠. 황소 등에 에우로파가 올라타자, 황소는 갑자기 바다를 향해 달려가더니 헤엄쳐서 머나먼 크레타 섬까지 공주를 데려가 버렸어요. 제우스는 자신이 변신했던 황소의 모습을 하늘의 별자리로 남겨두었답니다."},
+  {id:"gemini", name:"쌍둥이자리", category:"겨울철", stars:["castor","pollux"], lines:[["castor","pollux"]],
+    eyebrow:"그리스 신화", title:"쌍둥이자리", sub:"카스토르 · 폴룩스",
+    story:"카스토르와 폴리데우케스는 사이좋은 형제였지만, 한 명은 인간의 아들이라 죽으면 그걸로 끝이었고 다른 한 명은 제우스의 아들이라 영원히 살 수 있었어요. 카스토르가 전투 중에 목숨을 잃자, 동생 폴리데우케스는 슬픔에 빠져 자신의 영생을 형에게 나눠달라고 제우스에게 간청했어요. 형제의 우애에 감동한 제우스는 둘을 함께 하늘의 별자리로 만들어, 영원히 나란히 빛나게 해주었답니다."},
+  {id:"auriga", name:"마차부자리", category:"겨울철", stars:["capella"], lines:[],
+    eyebrow:"그리스 신화", title:"마차부자리", sub:"카펠라",
+    story:"에릭토니오스는 다리가 불편해서 잘 걷지 못하는 소년이었어요. 궁리를 거듭한 끝에, 네 마리의 말이 끄는 전차를 발명해냈어요. 훗날 왕이 된 에릭토니오스는 이 발명품 덕분에 나라를 훌륭하게 다스릴 수 있었고, 신들은 그의 지혜와 노력을 높이 사서 전차를 모는 그의 모습을 하늘의 별자리로 남겨주었답니다."},
+
+  {id:"leo", name:"사자자리", category:"봄철 대표", stars:["regulus"], lines:[],
+    eyebrow:"그리스 신화", title:"사자자리", sub:"레굴루스",
+    story:"네메아 골짜기에 살던 사자는 가죽이 너무 단단해서 칼로도 화살로도 상처 하나 낼 수 없었어요. 헤라클레스의 첫 번째 과업이 이 괴물 사자를 처치하는 일이었죠. 맨손으로 사자의 목을 힘껏 졸라 마침내 물리쳤고, 그 가죽을 벗겨 갑옷처럼 걸치고 다녔는데 어떤 무기도 뚫지 못하는 최고의 방어구가 되었대요. 사자의 용맹함을 기려 하늘의 별자리로 남겨졌답니다."},
+  {id:"virgo", name:"처녀자리", category:"봄철", stars:["spica"], lines:[],
+    eyebrow:"그리스 신화", title:"처녀자리", sub:"스피카",
+    story:"처녀자리는 정의와 순수를 상징하는 여신 아스트라이아의 모습이라고 전해져요. 아스트라이아는 원래 인간들과 함께 땅에서 살며 정의를 지켰어요. 하지만 세상에 다툼과 거짓말이 점점 늘어나자, 인간에게 크게 실망한 아스트라이아는 결국 하늘로 올라가 버렸어요."},
+  {id:"bootes", name:"목동자리", category:"봄철", stars:["arcturus"], lines:[],
+    eyebrow:"그리스 신화", title:"목동자리", sub:"아르크투루스",
+    story:"목동자리는 큰곰자리를 몰고 다니는 목동의 모습으로 여겨져요. 아르카스(작은곰자리가 된 소년)가 어른이 된 뒤의 모습이라는 이야기도 있어요. 가장 밝은 별 아르크투루스를 앞세우고, 마치 소를 몰듯 큰곰자리를 하늘 이곳저곳으로 이끌고 다니는 모습으로 그려져요."},
+  {id:"libra", name:"천칭자리", category:"황도 12궁", stars:["zubenelgenubi"], lines:[],
+    eyebrow:"그리스 신화", title:"천칭자리", sub:"주벤엘게누비",
+    story:"천칭자리는 처녀자리의 아스트라이아 여신이 손에 들고 있던 저울이라고 전해져요. 이 저울로 사람들의 선과 악, 옳고 그름을 공정하게 재고 판결을 내렸어요. 여신이 하늘로 떠나면서 저울도 함께 하늘로 올라가, 지금도 균형과 공정함을 상징하는 별자리로 남아있답니다."},
+  {id:"sagittarius", name:"궁수자리", category:"황도 12궁", stars:["kaus_australis"], lines:[],
+    eyebrow:"그리스 신화", title:"궁수자리", sub:"카우스 아우스트랄리스",
+    story:"궁수자리는 반인반마 켄타우로스 무리 중에서도 가장 지혜롭고 온화했던 케이론으로 여겨지기도 해요. 다른 켄타우로스들이 거칠고 난폭했던 것과 달리, 케이론은 의술과 궁술, 지혜를 두루 갖춘 스승으로 헤라클레스 같은 여러 영웅들을 가르쳤어요."},
+  {id:"capricornus", name:"염소자리", category:"황도 12궁", stars:["deneb_algedi"], lines:[],
+    eyebrow:"그리스 신화", title:"염소자리", sub:"데네브 알게디",
+    story:"목신 판은 강가에서 신들과 잔치를 벌이던 중, 무시무시한 괴물 티폰이 나타나자 깜짝 놀라 물속으로 뛰어들었어요. 급한 나머지 주문이 꼬여서 몸의 절반은 물고기로, 절반은 원래 모습인 염소인 채로 남아버렸어요. 신들은 이 재미있는 모습을 하늘의 별자리로 남겨주었답니다."},
+  {id:"aquarius", name:"물병자리", category:"황도 12궁", stars:["sadalsuud"], lines:[],
+    eyebrow:"그리스 신화", title:"물병자리", sub:"사달수드",
+    story:"가니메데스는 세상에서 가장 아름다운 소년이었어요. 그 모습에 반한 제우스는 독수리로 변신해 가니메데스를 하늘로 데려가, 올림포스에서 신들에게 넥타르를 따르는 시종으로 삼았어요. 물병을 기울여 물줄기를 쏟아붓는 모습이 바로 물병자리로 남았답니다."},
+  {id:"pisces", name:"물고기자리", category:"가을철 대표", stars:["alrescha"], lines:[],
+    eyebrow:"그리스 신화", title:"물고기자리", sub:"알레샤",
+    story:"사랑과 미의 여신 아프로디테와 아들 에로스가 강가에 있을 때, 갑자기 무시무시한 괴물 티폰이 나타났어요. 다급해진 두 사람은 서로 놓치지 않도록 리본으로 몸을 묶고 물고기로 변신해 강물 속으로 도망쳤어요. 그 후 리본으로 이어진 두 마리의 물고기 모습이 별자리로 남게 되었답니다."},
+  {id:"aries", name:"양자리", category:"황도 12궁", stars:["hamal"], lines:[],
+    eyebrow:"그리스 신화", title:"양자리", sub:"하말",
+    story:"계모의 미움을 받던 남매가 위험에 처하자, 신들은 황금 털을 가진 양을 보내 두 사람을 하늘로 태워 도망치게 했어요. 오빠는 무사히 콜키스라는 나라에 도착했고, 자신을 구해준 양에게 감사하며 신에게 바쳤어요. 그 황금 양가죽은 훗날 이아손과 아르고호 원정대 이야기의 핵심 보물이 돼요."},
+  {id:"cancer", name:"게자리", category:"황도 12궁", stars:["acubens"], lines:[],
+    eyebrow:"그리스 신화", title:"게자리", sub:"아쿠벤스",
+    story:"헤라클레스가 머리 여러 개 달린 괴물 히드라와 싸울 때, 헤라 여신은 방해하려고 커다란 게 한 마리를 보냈어요. 게는 용감하게 헤라클레스의 발을 꽉 물었지만 밟혀버리고 말았어요. 최선을 다한 게의 용기를 기특하게 여긴 헤라 여신은 게를 하늘의 별자리로 만들어주었답니다."},
+
+  {id:"hercules", name:"헤라클레스자리", category:"여름철", stars:["ras_algethi"], lines:[],
+    eyebrow:"그리스 신화", title:"헤라클레스자리", sub:"라스 알게티",
+    story:"헤라클레스는 제우스의 아들로 태어났지만, 헤라 여신의 미움을 받아 온갖 시련을 겪어야 했어요. 사자 사냥, 히드라 퇴치 등 무려 12가지 과업을 하나씩 완수해나갔어요. 사람들은 그의 힘과 끈기, 포기하지 않는 용기에 감탄했고, 모든 과업을 마친 헤라클레스는 신의 반열에 올라 하늘의 별자리가 되었답니다."},
+  {id:"canes_venatici", name:"사냥개자리", category:"봄철", stars:["cor_caroli"], lines:[],
+    eyebrow:"그리스 신화", title:"사냥개자리", sub:"코르 카롤리",
+    story:"목동자리 바로 옆에서 목동을 돕는 사냥개 두 마리의 모습이에요. 목동이 큰곰자리(북두칠성)를 몰아 하늘을 빙빙 돌게 만드는 걸 곁에서 돕는 역할을 한다고 전해져요. 밤하늘에서 부지런히 곁을 지키는 별자리로 사랑받고 있어요."},
+  {id:"crux", name:"남십자성", category:"남반구", stars:["acrux"], lines:[],
+    eyebrow:"뱃사람들의 이야기", title:"남십자성", sub:"아크룩스",
+    story:"그리스 신화보다는 뱃사람들의 이야기로 유명한 별자리예요. 먼바다를 항해하던 선원들은 북극성이 보이지 않는 남반구에서 길을 잃기 쉬웠어요. 그때 의지했던 게 바로 작은 십자가 모양의 이 별자리였어요. 남십자성이 가리키는 방향을 따라가면 남쪽 하늘의 방향을 알 수 있었거든요."},
+  {id:"delphinus", name:"돌고래자리", category:"확장", stars:["rotanev"], lines:[],
+    eyebrow:"그리스 신화", title:"돌고래자리", sub:"로타네브",
+    story:"리라의 명수 아리온은 시합에서 큰 상을 타고 배를 타고 고향으로 돌아가던 중, 상금을 노린 뱃사람들에게 목숨을 위협받았어요. 아리온은 마지막 소원으로 노래 한 곡만 부르게 해달라고 부탁했고, 노래를 마친 뒤 바다로 뛰어들었어요. 그 노래를 듣고 몰려온 돌고래들이 아리온을 등에 태워 무사히 육지까지 데려다주었어요."},
+  {id:"centaurus", name:"켄타우루스자리", category:"확장", stars:["rigil_kent"], lines:[],
+    eyebrow:"그리스 신화", title:"켄타우루스자리", sub:"리길 켄타우루스",
+    story:"케이론은 반인반마 켄타우로스 중 유일하게 지혜롭고 온화한 현자였어요. 여러 영웅들의 스승이었던 케이론은 헤라클레스가 실수로 쏜 독화살에 맞고 말았어요. 불멸의 존재라 죽을 수도 없는데 고통은 계속되자, 케이론은 자신의 불멸을 프로메테우스에게 나눠주고 스스로 죽음을 택했어요. 제자들을 위해 헌신한 스승의 마음을 기려 별자리가 되었답니다."},
+  {id:"corvus", name:"까마귀자리", category:"확장", stars:["gienah"], lines:[],
+    eyebrow:"그리스 신화", title:"까마귀자리 & 컵자리", sub:"기에나",
+    story:"태양의 신 아폴론은 까마귀에게 깨끗한 물을 컵에 담아 오라는 심부름을 시켰어요. 까마귀는 가는 길에 무화과나무를 발견하고 열매가 다 익을 때까지 며칠이나 놀아버렸어요. 늦게 돌아온 까마귀는 겁이 나서 \"물뱀이 샘물을 막고 있었다\"고 거짓말을 했어요. 모든 걸 꿰뚫어 보는 아폴론은 거짓말을 알아챘고, 벌로 까마귀가 한동안 물을 마시지 못하게 만들었어요."},
+  {id:"hydra", name:"바다뱀자리", category:"확장", stars:["alphard"], lines:[],
+    eyebrow:"그리스 신화", title:"바다뱀자리 (히드라)", sub:"알파르드",
+    story:"레르네 늪에 살던 히드라는 머리가 여러 개 달린 물뱀이었는데, 머리 하나를 자르면 그 자리에서 머리 두 개가 다시 자라나는 골치 아픈 괴물이었어요. 헤라클레스의 두 번째 과업이 이 히드라 처치였죠. 조카의 도움을 받아, 머리를 자르는 즉시 불로 지져서 다시 자라나지 못하게 만들어 마침내 물리쳤답니다."},
+  {id:"eridanus", name:"에리다누스자리", category:"확장", stars:["cursa"], lines:[],
+    eyebrow:"그리스 신화", title:"에리다누스자리", sub:"쿠르사",
+    story:"파에톤은 태양신 헬리오스의 아들이었어요. 자신이 태양신의 아들이라는 걸 증명하고 싶어 아버지를 졸라 딱 하루만 태양마차를 몰게 해달라고 부탁했어요. 하지만 곧 마차를 제어하지 못하고 세상을 불태울 뻔했어요. 결국 제우스가 번개를 던져 마차를 멈춰 세웠고, 파에톤은 에리다누스 강으로 떨어지고 말았어요."},
+  {id:"ophiuchus", name:"뱀주인자리", category:"확장", stars:["ras_alhague"], lines:[],
+    eyebrow:"그리스 신화", title:"뱀주인자리", sub:"라스 알하게",
+    story:"아스클레피오스는 의술의 신 아폴론의 아들로, 세상에서 가장 뛰어난 의사였어요. 뱀이 약초로 죽은 다른 뱀을 되살리는 걸 보고 비법을 깨우쳐, 죽은 사람마저 살려낼 수 있는 경지에 이르렀어요. 하지만 하데스의 불평으로 제우스는 번개로 그를 벌하고 말았죠. 뛰어난 의술을 인정한 신들이 별자리로 남겨주었어요. (오늘날 의학의 상징 '뱀 감긴 지팡이'가 여기서 유래했어요!)"},
+  {id:"argo", name:"아르고자리", category:"확장", stars:["canopus"], lines:[],
+    eyebrow:"그리스 신화", title:"아르고자리 (용골·돛·고물·나침반)", sub:"카노푸스",
+    story:"영웅 이아손은 왕위를 되찾기 위해, 멀리 콜키스 나라에 있다는 전설의 황금양털을 가져와야 했어요. 헤라클레스를 비롯한 그리스 최고의 영웅들을 모아 아르고호를 타고 긴 항해를 떠났어요. 폭풍우와 괴물, 낯선 나라의 위험을 헤치며 마침내 황금양털을 손에 넣고 무사히 돌아왔죠. 워낙 큰 배라서 하늘의 별자리도 용골·돛·고물·나침반 네 개로 나뉘어 자리하고 있어요."},
+
+  {id:"ursa_major", name:"큰곰자리", category:"연중·북쪽하늘", stars:["dubhe","merak"], lines:[["dubhe","merak"]],
+    eyebrow:"그리스 신화", title:"큰곰자리", sub:"북두칠성",
+    story:"숲의 님프 칼리스토는 사냥의 여신 아르테미스를 따르며 살고 있었어요. 제우스가 칼리스토를 좋아하게 되자, 아내 헤라는 질투에 사로잡혀 칼리스토를 커다란 곰으로 변신시켜버렸어요. 세월이 흘러 아들 아르카스가 사냥을 하다가 곰이 된 엄마와 마주쳤어요. 몰라보고 활을 겨눈 순간, 제우스가 급히 둘 다 하늘로 올려보내 큰곰자리와 작은곰자리로 만들어주었어요."},
+  {id:"ursa_minor", name:"작은곰자리", category:"연중·북쪽하늘", stars:["polaris"], lines:[],
+    eyebrow:"그리스 신화", title:"작은곰자리", sub:"북극성",
+    story:"칼리스토의 아들 아르카스는 엄마가 곰으로 변한 줄도 모른 채 훌륭한 사냥꾼으로 자랐어요. 숲에서 만난 곰이 이상하게도 그리운 눈빛으로 자신을 바라보자 위협을 느껴 활을 쏘려던 순간, 제우스가 재빨리 나타나 둘을 함께 하늘로 올려주었어요. 아르카스는 작은곰자리가 되어, 꼬리 끝의 북극성과 함께 지금도 밤하늘 여행자들의 길잡이가 되어주고 있어요."},
+];
+
+/* =========================================================
+   2. 태양계 행성 (Astronomy Engine 실시간 계산, 로마신화 유래)
+   ========================================================= */
+const PLANETS = [
+  {id:"mercury", body:"Mercury", name:"수성", eyebrow:"로마 신화", sub:"메르쿠리우스(헤르메스)",
+    story:"신들의 전령 메르쿠리우스는 발이 아주 빨랐어요. 태양에 가장 가깝고 가장 빨리 도는 이 별에 그 이름이 붙었답니다."},
+  {id:"venus", body:"Venus", name:"금성", eyebrow:"로마 신화", sub:"베누스(아프로디테)",
+    story:"미와 사랑의 여신 베누스처럼, 밤하늘에서 가장 밝고 아름답게 빛난다고 해서 이 이름이 붙었어요."},
+  {id:"mars", body:"Mars", name:"화성", eyebrow:"로마 신화", sub:"마르스(아레스)",
+    story:"붉은빛이 마치 피를 연상시킨다고 해서, 전쟁의 신 마르스의 이름이 붙었답니다."},
+  {id:"jupiter", body:"Jupiter", name:"목성", eyebrow:"로마 신화", sub:"유피테르(제우스)",
+    story:"태양계에서 가장 큰 이 행성에는, 신들의 왕 유피테르의 이름이 붙었어요."},
+  {id:"saturn", body:"Saturn", name:"토성", eyebrow:"로마 신화", sub:"사투르누스(크로노스)",
+    story:"목성(유피테르)의 아버지뻘 되는 신 사투르누스의 이름을 땄어요. 목성보다 더 느리고 오래 도는 것과 어울리죠."},
+  {id:"uranus", body:"Uranus", name:"천왕성", eyebrow:"로마 신화", sub:"우라누스",
+    story:"사투르누스의 아버지이자, 하늘 자체를 상징하는 태초의 신 우라누스의 이름이 붙었어요."},
+  {id:"neptune", body:"Neptune", name:"해왕성", eyebrow:"로마 신화", sub:"넵투누스(포세이돈)",
+    story:"짙은 파란빛 때문에, 바다의 신 넵투누스의 이름이 붙여졌답니다."},
+];
+
+/* =========================================================
+   3+4. 천문 계산 + 카메라 기하학 (순수 계산 블록)
+   ==MATH-BEGIN== 이 블록은 Node 테스트에서 그대로 추출해 검증함
+   ========================================================= */
+function starAltAz(star, date, observer){
+  const raHours = star.ra / 15; // deg -> sidereal hours
+  const h = Astronomy.Horizon(date, observer, raHours, star.dec, 'normal');
+  return { alt: h.altitude, az: h.azimuth };
+}
+function planetAltAz(bodyName, date, observer){
+  const eq = Astronomy.Equator(Astronomy.Body[bodyName], date, observer, true, true);
+  const h = Astronomy.Horizon(date, observer, eq.ra, eq.dec, 'normal');
+  return { alt: h.altitude, az: h.azimuth };
+}
+
+const D2R = Math.PI/180, R2D = 180/Math.PI;
+function azAltToVec(azDeg, altDeg){
+  const az = azDeg*D2R, alt = altDeg*D2R;
+  return { x: Math.cos(alt)*Math.sin(az), y: Math.cos(alt)*Math.cos(az), z: Math.sin(alt) };
+}
+function vCross(a,b){return {x:a.y*b.z-a.z*b.y, y:a.z*b.x-a.x*b.z, z:a.x*b.y-a.y*b.x};}
+function vDot(a,b){return a.x*b.x+a.y*b.y+a.z*b.z;}
+function vNorm(a){const l=Math.sqrt(vDot(a,a))||1e-9; return {x:a.x/l,y:a.y/l,z:a.z/l};}
+function angBetweenDeg(a,b){ return Math.acos(Math.max(-1,Math.min(1,vDot(a,b))))*R2D; }
+
+function camBasis(camAz, camAlt){
+  const forward = azAltToVec(camAz, camAlt);
+  let worldUp = {x:0,y:0,z:1};
+  if (Math.abs(forward.z) > 0.995) worldUp = {x:0,y:1,z:0};
+  const right = vNorm(vCross(forward, worldUp));
+  const up = vNorm(vCross(right, forward));
+  return { forward, right, up };
+}
+function project(camAz, camAlt, fovDeg, az, alt, w, h){
+  const {forward, right, up} = camBasis(camAz, camAlt);
+  const starVec = azAltToVec(az, alt);
+  const xCam = vDot(starVec, right), yCam = vDot(starVec, up), zCam = vDot(starVec, forward);
+  if (zCam <= 0.02) return { visible:false };
+  const f = (w/2) / Math.tan(fovDeg*D2R/2);
+  const x = w/2 + (xCam/zCam)*f, y = h/2 - (yCam/zCam)*f;
+  return { x, y, visible: x>=-40 && x<=w+40 && y>=-40 && y<=h+40 };
+}
+// 사진 픽셀 → 하늘 방향 단위벡터 (project의 역방향)
+function tapRay(camAz, camAlt, fovDeg, x, y, w, h){
+  const {forward, right, up} = camBasis(camAz, camAlt);
+  const f = (w/2) / Math.tan(fovDeg*D2R/2);
+  const xn = (x - w/2)/f, yn = (h/2 - y)/f;
+  return vNorm({
+    x: forward.x + right.x*xn + up.x*yn,
+    y: forward.y + right.y*xn + up.y*yn,
+    z: forward.z + right.z*xn + up.z*yn,
+  });
+}
+// object-fit:cover로 표시된 캔버스에서 화면 좌표 → 캔버스 픽셀 좌표
+// (cover는 비율 유지하며 꽉 채우고 넘치는 부분을 자르므로 단순 비례 변환은 어긋남)
+function coverMap(rectW, rectH, cw, ch, px, py){
+  const s = Math.max(rectW/(cw||1), rectH/(ch||1));
+  const offX = (rectW - cw*s)/2, offY = (rectH - ch*s)/2;
+  return { x: (px - offX)/s, y: (py - offY)/s };
+}
+// 경사하강 + 백트래킹(비용이 늘면 보폭을 절반으로 줄여 재시도) — 발산 방지
+function optimize(costFn, initParams, iters=400, lr=0.05, eps=0.05){
+  let p = initParams.slice();
+  let cost = costFn(p);
+  for(let it=0; it<iters; it++){
+    const grad = p.map((v,i)=>{ const p2=p.slice(); p2[i]+=eps; return (costFn(p2)-cost)/eps; });
+    let step = lr;
+    let next = p.map((v,i)=> v - step*grad[i]);
+    let c2 = costFn(next);
+    let guard = 0;
+    while (c2 > cost && guard++ < 12){ step/=2; next = p.map((v,i)=> v - step*grad[i]); c2 = costFn(next); }
+    if (c2 >= cost) break;
+    p = next; cost = c2;
+  }
+  return p;
+}
+// 비용 = "탭한 픽셀이 가리키는 하늘 방향"과 "실제 별 방향" 사이 각도(도)의 제곱합.
+// 픽셀 거리 대신 각도를 쓰는 이유: 별이 화면 밖/카메라 뒤에 있어도 기울기가 살아있어
+// 센서가 크게 어긋난 초기값에서도 수렴한다. (픽셀 비용은 화면 밖에서 상수가 되어 멈춤)
+function calibCost(taps, camAz, camAlt, fovDeg, w, h){
+  let sum = 0;
+  for (const t of taps){
+    const ray = tapRay(camAz, camAlt, fovDeg, t.x, t.y, w, h);
+    const star = azAltToVec(t.az, t.alt);
+    const d = angBetweenDeg(ray, star);
+    sum += d*d;
+  }
+  return sum;
+}
+function calibrateWithTaps(taps, camAzInit, camAltInit, fovInit, w, h){
+  const clampAlt = v => Math.max(-89, Math.min(89, v));
+  const clampFov = v => Math.max(30, Math.min(100, v));
+  if (taps.length === 1){
+    const cost = (p)=> calibCost(taps, p[0], clampAlt(p[1]), fovInit, w, h);
+    const [az, alt] = optimize(cost, [camAzInit, camAltInit]);
+    return { camAz: ((az%360)+360)%360, camAlt: clampAlt(alt), fov: fovInit };
+  } else {
+    const cost = (p)=> calibCost(taps, p[0], clampAlt(p[1]), clampFov(p[2]), w, h);
+    const [az, alt, fov] = optimize(cost, [camAzInit, camAltInit, fovInit]);
+    return { camAz: ((az%360)+360)%360, camAlt: clampAlt(alt), fov: clampFov(fov) };
+  }
+}
+/* ==MATH-END== */
+
+/* =========================================================
+   5. 상태 & 센서
+   ========================================================= */
+let state = { gps:null, heading:null, pitch:null, captureHeading:null, capturePitch:null, captureTime:null, photoDataUrl:null, fov:62, calibTaps:[], calibIndex:0 };
+function showScreen(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+
+// 화면 디버그 로그 (폰에서 콘솔 없이 진단용). LOG 버튼으로 크게/작게 전환.
+function dlog(msg){
+  const el = document.getElementById('debug-log');
+  const t = new Date().toTimeString().slice(0,8);
+  el.textContent += `[${t}] ${msg}\n`;
+  const lines = el.textContent.split('\n');
+  if (lines.length > 80) el.textContent = lines.slice(-80).join('\n');
+  el.scrollTop = el.scrollHeight;
+  console.log('[별헌터]', msg);
+}
+window.addEventListener('error', (e)=>{
+  const where = e.filename ? ` (${e.filename.split('/').pop()}:${e.lineno})` : '';
+  dlog('⚠ 오류: ' + (e.message || e.type) + where);
+});
+window.addEventListener('unhandledrejection', (e)=>{
+  dlog('⚠ 오류(promise): ' + ((e.reason && e.reason.message) || e.reason));
+});
+document.getElementById('debug-toggle').addEventListener('click', ()=>{
+  document.getElementById('debug-log').classList.toggle('expanded');
+});
+
+// 화면 터치 좌표 → 캔버스 픽셀 좌표 (object-fit:cover 크롭 반영)
+function canvasPoint(e, canvas){
+  const rect = canvas.getBoundingClientRect();
+  return coverMap(rect.width, rect.height, canvas.width, canvas.height, e.clientX - rect.left, e.clientY - rect.top);
+}
+
+function requestGPS(){
+  if(!navigator.geolocation){ document.getElementById('gps-status').textContent = 'GPS 미지원'; dlog('GPS 미지원 기기'); return; }
+  navigator.geolocation.getCurrentPosition(pos=>{
+    state.gps = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+    document.getElementById('gps-status').textContent = 'GPS 확보 완료';
+    dlog(`GPS 확보: ${state.gps.lat.toFixed(4)}, ${state.gps.lon.toFixed(4)}`);
+  }, (err)=>{
+    document.getElementById('gps-status').textContent = 'GPS 권한 필요';
+    dlog(`GPS 실패(${err.message}) — 기본값 37.5, 127.0 사용`);
+  }, { enableHighAccuracy:true, timeout:8000 });
+}
+
+// ⚠ 근사치: 폰을 세워 든 상태 기준. alpha는 반시계 방향이라 (360-alpha)로 나침반 방위 변환.
+function bindOrientation(){
+  let logged = false;
+  const handler = (e)=>{
+    if (e.alpha == null) return;
+    state.heading = (360 - e.alpha) % 360;
+    state.pitch = e.beta != null ? (e.beta - 90) : 0;
+    if (!logged){ logged = true; dlog(`방향센서 수신 시작 (absolute 지원: ${'ondeviceorientationabsolute' in window})`); }
+    document.getElementById('orient-status').textContent = `방향 ${state.heading.toFixed(0)}° · 고도 ${state.pitch.toFixed(0)}°`;
+  };
+  if ('ondeviceorientationabsolute' in window){ window.addEventListener('deviceorientationabsolute', handler, true); }
+  else { window.addEventListener('deviceorientation', handler, true); }
+}
+
+let mediaStream = null;
+async function startCamera(){
+  try{
+    mediaStream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:{ideal:'environment'} }, audio:false });
+    document.getElementById('video').srcObject = mediaStream;
+  }catch(e){ alert('카메라 권한이 필요해요. (HTTPS 환경에서만 동작합니다)'); }
+}
+function stopCamera(){ if(mediaStream){ mediaStream.getTracks().forEach(t=>t.stop()); mediaStream=null; } }
+
+function capturePhoto(){
+  const video = document.getElementById('video');
+  if (!video.videoWidth || !video.videoHeight){
+    alert('카메라가 아직 준비되지 않았어요. 1~2초 후 다시 눌러주세요.');
+    return false;
+  }
+  const canvas = document.createElement('canvas');
+  canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+  canvas.getContext('2d').drawImage(video, 0,0);
+  state.photoDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+  state.captureTime = new Date();
+  // 촬영 "순간"의 센서값 스냅샷 — 이후 폰을 내려도 보정 초기값이 변하지 않게
+  state.captureHeading = state.heading;
+  state.capturePitch = state.pitch;
+  dlog(`촬영 ${canvas.width}x${canvas.height} · 방위 ${state.captureHeading==null?'없음':state.captureHeading.toFixed(0)+'°'} · 고도 ${state.capturePitch==null?'없음':state.capturePitch.toFixed(0)+'°'}`);
+  if (state.captureHeading == null) dlog('⚠ 방향센서 값 없음 — 북쪽 기준 추정으로 진행');
+  stopCamera();
+  return true;
+}
+
+function getObserver(){
+  const { lat, lon } = state.gps || { lat:37.5, lon:127.0 };
+  return new Astronomy.Observer(lat, lon, 0);
+}
+
+function computeVisibleStars(){
+  const observer = getObserver();
+  const list = [];
+  for (const id in STARS){
+    const s = STARS[id];
+    const {alt, az} = starAltAz(s, state.captureTime, observer);
+    list.push({ id, ...s, alt, az });
+  }
+  return list;
+}
+function computeVisiblePlanets(){
+  const observer = getObserver();
+  return PLANETS.map(p=>{
+    const {alt, az} = planetAltAz(p.body, state.captureTime, observer);
+    return { ...p, alt, az };
+  });
+}
+
+/* =========================================================
+   6. 보정 화면
+   ========================================================= */
+let calibCandidates = [];
+function enterCalibration(){
+  try{
+    const stars = computeVisibleStars().filter(s=>s.alt > 5);
+    const planets = computeVisiblePlanets().filter(p=>p.alt > 5);
+    const merged = [...planets.map(p=>({...p, isPlanet:true})), ...stars.map(s=>({...s, isPlanet:false}))];
+    if (state.captureHeading != null){
+      // 카메라가 향한 방향과 가까운 천체를 골라야 "사진에 실제로 찍힌" 별을 눌러달라고 할 수 있음.
+      // 행성은 대개 훨씬 밝아 찾기 쉬우므로 15° 보너스.
+      const camVec = azAltToVec(state.captureHeading, state.capturePitch ?? 20);
+      merged.forEach(m=>{ m.angDist = angBetweenDeg(camVec, azAltToVec(m.az, m.alt)); });
+      merged.sort((a,b)=> (a.angDist - (a.isPlanet?15:0)) - (b.angDist - (b.isPlanet?15:0)));
+    } else {
+      merged.sort((a,b)=> b.alt - a.alt);
+    }
+    calibCandidates = merged.slice(0,2);
+    state.calibIndex = 0; state.calibTaps = [];
+    dlog('보정 후보: ' + (calibCandidates.map(c=>`${c.name} 방위${c.az.toFixed(0)}° 고도${c.alt.toFixed(0)}°${c.angDist!=null?` (중심에서 ${c.angDist.toFixed(0)}°)`:''}`).join(' / ') || '없음'));
+    if (calibCandidates.length === 0){ finishCalibration(); return; }
+    drawCalibScreen();
+  }catch(err){
+    dlog('⚠ 보정 준비 오류: ' + err.message);
+    alert('별 위치 계산 중 오류가 발생했어요: ' + err.message);
+    showScreen('screen-camera'); startCamera();
+  }
+}
+function drawCalibScreen(){
+  const canvas = document.getElementById('calib-canvas');
+  if (!state.photoDataUrl){
+    alert('사진 데이터가 없어요. 다시 촬영해주세요.');
+    showScreen('screen-camera'); startCamera();
+    return;
+  }
+  const img = new Image();
+  img.onerror = ()=>{
+    alert('사진을 불러오지 못했어요. 다시 촬영해주세요.');
+    showScreen('screen-camera'); startCamera();
+  };
+  img.onload = ()=>{
+    canvas.width = img.width; canvas.height = img.height;
+    canvas.getContext('2d').drawImage(img,0,0);
+    const cand = calibCandidates[state.calibIndex];
+    document.getElementById('calib-star-name').textContent = cand.isPlanet ? `${cand.name} (행성, 가장 밝게 보일 가능성 높음)` : cand.name;
+    document.getElementById('calib-step-label').textContent = `${state.calibIndex+1} / ${calibCandidates.length}`;
+  };
+  img.src = state.photoDataUrl;
+}
+let calibBusy = false; // 마커 표시 지연(250ms) 중 연속 탭 방지
+document.getElementById('calib-canvas').addEventListener('pointerdown', (e)=>{
+  try{
+    if (calibBusy) return;
+    const cand = calibCandidates[state.calibIndex];
+    if (!cand){ dlog('탭 무시: 보정 후보 없음'); return; }
+    const canvas = e.currentTarget;
+    const {x, y} = canvasPoint(e, canvas);
+
+    // 탭 즉시 시각 피드백 (반응 확인용 십자 마커)
+    const ctx = canvas.getContext('2d');
+    ctx.strokeStyle = '#ff5a5a'; ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.moveTo(x-18,y); ctx.lineTo(x+18,y); ctx.moveTo(x,y-18); ctx.lineTo(x,y+18); ctx.stroke();
+    ctx.beginPath(); ctx.arc(x,y,22,0,Math.PI*2); ctx.stroke();
+
+    state.calibTaps.push({ id: cand.id, az: cand.az, alt: cand.alt, x, y });
+    dlog(`탭 ${state.calibIndex+1}/${calibCandidates.length}: ${cand.name} → 픽셀(${x.toFixed(0)}, ${y.toFixed(0)})`);
+    state.calibIndex++;
+    calibBusy = true;
+    setTimeout(()=>{
+      calibBusy = false;
+      if (state.calibIndex < calibCandidates.length){ drawCalibScreen(); } else { finishCalibration(); }
+    }, 250); // 마커가 잠깐 보이도록 살짝 지연
+  }catch(err){ dlog('⚠ 탭 처리 오류: ' + err.message); }
+});
+document.getElementById('btn-skip-calib').addEventListener('click', finishCalibration);
+
+function finishCalibration(){
+  const canvas = document.getElementById('calib-canvas');
+  const w = canvas.width || 1080, h = canvas.height || 1920;
+  const initAz = state.captureHeading ?? 0, initAlt = state.capturePitch ?? 20;
+  if (state.calibTaps.length > 0){
+    const res = calibrateWithTaps(state.calibTaps, initAz, initAlt, state.fov, w, h);
+    state.finalCamAz = res.camAz; state.finalCamAlt = res.camAlt; state.finalFov = res.fov;
+    document.getElementById('accuracy-badge').textContent = state.calibTaps.length >= 2 ? '2개 보정 · 고정밀' : '1개 보정 · 정밀';
+  } else {
+    state.finalCamAz = initAz; state.finalCamAlt = initAlt; state.finalFov = state.fov;
+    document.getElementById('accuracy-badge').textContent = '센서 기반 추정';
+  }
+  dlog(`보정 완료(탭 ${state.calibTaps.length}개): 방위 ${state.finalCamAz.toFixed(1)}° · 고도 ${state.finalCamAlt.toFixed(1)}° · 화각 ${state.finalFov.toFixed(1)}°`);
+  renderResult();
+}
+
+/* =========================================================
+   7. 결과 화면: 별자리 + 행성 오버레이
+   ========================================================= */
+let placedRegions = [];
+function renderResult(){
+  showScreen('screen-result');
+  const canvas = document.getElementById('result-canvas');
+  if (!state.photoDataUrl){
+    alert('사진 데이터가 없어요. 다시 촬영해주세요.');
+    showScreen('screen-camera'); startCamera();
+    return;
+  }
+  const img = new Image();
+  img.onerror = ()=>{
+    alert('사진을 불러오지 못했어요. 다시 촬영해주세요.');
+    showScreen('screen-camera'); startCamera();
+  };
+  img.onload = ()=>{
+    try{
+    canvas.width = img.width; canvas.height = img.height;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img,0,0);
+    placedRegions = [];
+    const w = canvas.width, h = canvas.height;
+    const camAz = state.finalCamAz, camAlt = state.finalCamAlt, fov = state.finalFov;
+    const observer = getObserver();
+    const labelSize = Math.max(18, Math.round(w*0.028));
+    const drawLabel = (text, x, y, color)=>{
+      ctx.font = `600 ${labelSize}px -apple-system,"Noto Sans KR",sans-serif`;
+      ctx.lineWidth = Math.max(3, labelSize/6); ctx.strokeStyle = 'rgba(0,0,0,.75)';
+      ctx.fillStyle = color;
+      ctx.strokeText(text, x, y); ctx.fillText(text, x, y);
+    };
+
+    CONSTELLATIONS.forEach(con=>{
+      const pts = {};
+      con.stars.forEach(sid=>{
+        const s = STARS[sid];
+        const {alt, az} = starAltAz(s, state.captureTime, observer);
+        const proj = project(camAz, camAlt, fov, az, alt, w, h);
+        if (proj.visible) pts[sid] = proj;
+      });
+      ctx.fillStyle = '#d9b45c';
+      Object.values(pts).forEach(p=>{
+        ctx.shadowColor = '#d9b45c'; ctx.shadowBlur = 12;
+        ctx.beginPath(); ctx.arc(p.x, p.y, 5, 0, Math.PI*2); ctx.fill();
+      });
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = 'rgba(217,180,92,0.7)'; ctx.lineWidth = 2;
+      con.lines.forEach(([a,b])=>{
+        if (pts[a] && pts[b]){ ctx.beginPath(); ctx.moveTo(pts[a].x, pts[a].y); ctx.lineTo(pts[b].x, pts[b].y); ctx.stroke(); }
+      });
+      const pArr = Object.values(pts);
+      if (pArr.length > 0){
+        drawLabel(con.name, pArr[0].x + 12, pArr[0].y - 12, '#d9b45c');
+        placedRegions.push({ item: con, isPlanet:false, points: pArr });
+      }
+    });
+
+    PLANETS.forEach(p=>{
+      const {alt, az} = planetAltAz(p.body, state.captureTime, observer);
+      const proj = project(camAz, camAlt, fov, az, alt, w, h);
+      if (proj.visible){
+        ctx.fillStyle = '#7fb3d5';
+        ctx.shadowColor = '#7fb3d5'; ctx.shadowBlur = 16;
+        ctx.beginPath(); ctx.arc(proj.x, proj.y, 7, 0, Math.PI*2); ctx.fill();
+        ctx.shadowBlur = 0;
+        drawLabel(p.name, proj.x + 14, proj.y - 14, '#7fb3d5');
+        placedRegions.push({ item: p, isPlanet:true, points:[proj] });
+      }
+    });
+    const nCon = placedRegions.filter(r=>!r.isPlanet).length, nPl = placedRegions.filter(r=>r.isPlanet).length;
+    dlog(`오버레이 표시: 별자리 ${nCon}개 · 행성 ${nPl}개`);
+    if (nCon + nPl === 0) dlog('⚠ 화면 범위에 잡힌 천체 없음 — 방향 보정이 크게 어긋났을 수 있어요. 다시 찍고 보정을 해보세요.');
+    }catch(err){ dlog('⚠ 결과 렌더링 오류: ' + err.message); }
+  };
+  img.src = state.photoDataUrl;
+}
+
+document.getElementById('result-canvas').addEventListener('pointerdown', (e)=>{
+  const canvas = e.currentTarget;
+  const {x, y} = canvasPoint(e, canvas);
+  // 탭 판정 반경은 사진 해상도에 비례 (고해상도 사진에서 60px은 손가락보다 훨씬 작음)
+  const hitR = Math.max(60, canvas.width * 0.06);
+  let hit = null, bestD = hitR * hitR;
+  placedRegions.forEach(r=>{
+    r.points.forEach(p=>{
+      const d = (p.x-x)**2 + (p.y-y)**2;
+      if (d < bestD){ bestD = d; hit = r; }
+    });
+  });
+  if (hit) openStory(hit.item);
+});
+
+function openStory(item){
+  document.getElementById('story-eyebrow').textContent = item.eyebrow;
+  document.getElementById('story-title').textContent = item.title || item.name;
+  document.getElementById('story-sub').textContent = item.sub;
+  document.getElementById('story-body').textContent = item.story;
+  document.getElementById('story-sheet').classList.add('open');
+}
+document.getElementById('story-sheet').addEventListener('click', (e)=>{
+  if (e.target.id === 'story-sheet' || e.target.classList.contains('close')){
+    document.getElementById('story-sheet').classList.remove('open');
+  }
+});
+
+/* =========================================================
+   8. 화면 전환
+   ========================================================= */
+document.getElementById('btn-start').addEventListener('click', async ()=>{
+  if (typeof Astronomy === 'undefined'){
+    dlog('⚠ Astronomy Engine 로드 실패 — 인터넷/CDN 접속 확인 필요');
+    alert('천문 계산 라이브러리를 불러오지 못했어요. 인터넷 연결을 확인한 뒤 새로고침해주세요.');
+    return;
+  }
+  // iOS는 사용자 제스처 안에서 방향센서 권한을 요청해야 함 (Android에선 무시됨)
+  if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function'){
+    try{ await DeviceOrientationEvent.requestPermission(); }catch(_e){}
+  }
+  showScreen('screen-camera'); requestGPS(); bindOrientation(); await startCamera();
+});
+document.getElementById('btn-shutter').addEventListener('click', ()=>{
+  const ok = capturePhoto();
+  if (!ok) return;
+  showScreen('screen-calibrate'); enterCalibration();
+});
+document.getElementById('btn-retake').addEventListener('click', ()=>{
+  document.getElementById('story-sheet').classList.remove('open');
+  showScreen('screen-camera'); startCamera();
+});
+
+dlog(typeof Astronomy !== 'undefined' ? '준비 완료 · Astronomy Engine 로드됨 (v3)' : '⚠ Astronomy Engine 로드 실패 — 인터넷 확인 후 새로고침해주세요');
+</script>
+</body>
+</html>

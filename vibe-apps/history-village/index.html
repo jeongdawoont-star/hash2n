@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>시간을 달리는 역사 마을 - 초등 한국사 메타버스</title>
+  
+  <!-- 글꼴 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+  
+  <!-- 스타일시트 -->
+  <link rel="stylesheet" href="css/style.css">
+  
+  <!-- Three.js CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+  <!-- 3D 캔버스 영역 -->
+  <div id="canvas-container"></div>
+  <div class="world-vignette"></div>
+
+  <!-- 상단 메인 HUD -->
+  <header class="topbar">
+    <!-- 브랜드 카드 -->
+    <div class="brand-card glass-card">
+      <div class="brand-emblem">🏛️</div>
+      <div class="brand-info">
+        <p class="eyebrow" id="brand-eyebrow">기원전 2333년 ~ 기원전 108년</p>
+        <h1 id="brand-title">고조선 시대</h1>
+      </div>
+    </div>
+
+    <!-- 6대 시대 선택 바 -->
+    <nav class="era-selector-bar glass-card" aria-label="한국사 시대 선택">
+      <button class="era-tab active" data-era="gojoseon" type="button">
+        <span class="era-icon">🐻</span>고조선
+      </button>
+      <button class="era-tab" data-era="three_kingdoms" type="button">
+        <span class="era-icon">⚔️</span>삼국시대
+      </button>
+      <button class="era-tab" data-era="north_south" type="button">
+        <span class="era-icon">🌊</span>남북국
+      </button>
+      <button class="era-tab" data-era="later_three_kingdoms" type="button">
+        <span class="era-icon">🦅</span>후삼국
+      </button>
+      <button class="era-tab" data-era="goryeo" type="button">
+        <span class="era-icon">🏺</span>고려
+      </button>
+      <button class="era-tab" data-era="joseon" type="button">
+        <span class="era-icon">☀️</span>조선
+      </button>
+    </nav>
+
+    <!-- 스코어 / 수업 현황 카드 -->
+    <div class="stats-card glass-card">
+      <div>
+        <div style="font-size: 10px; font-weight: 900; color: var(--leaf);">현재 거점</div>
+        <strong id="brand-center" style="font-size: 13px;">아사달</strong>
+      </div>
+      <div class="score-badge">
+        <strong id="score-val">0</strong>
+        <span>SCORE</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- 좌측 퀘스트 패널 -->
+  <aside class="quest-panel glass-card" aria-label="학습 퀘스트">
+    <div class="quest-header">
+      <div class="quest-badge">📜</div>
+      <h2>시대 탐구 과제</h2>
+      <span class="quest-era-tag" id="quest-era-tag">고조선 시대</span>
+    </div>
+    
+    <div class="quest-box">
+      <small>지금 해야 할 미션</small>
+      <p id="quest-goal-text">청동 원석과 석재를 모아 고조선 건국 기념 '8조법 비석'과 '탁자식 고인돌'을 건립하세요!</p>
+    </div>
+
+    <div style="font-size: 11px; font-weight: 900; margin-bottom: 6px; color: var(--leaf-deep);">수집한 역사 자원</div>
+    <div class="inventory-list" id="inventory-list">
+      <!-- 동적 생성 -->
+    </div>
+  </aside>
+
+  <!-- 우측 상단 액션 그룹 -->
+  <div class="top-action-group">
+    <!-- 타임슬립 나침반 버튼 -->
+    <button id="compass-btn" class="action-card-btn glass-card" type="button" title="과거 지도와 현대 대한민국 지도 비교하기">
+      <span style="font-size: 18px;">🧭</span>
+      <span>타임슬립 나침반</span>
+    </button>
+
+    <!-- 우리 반 역사 신문 / 탐구 포트폴리오 버튼 -->
+    <button id="newspaper-btn" class="action-card-btn glass-card" type="button" title="나만의 역사 탐구 신문 A4 인쇄하기">
+      <span style="font-size: 18px;">📰</span>
+      <span>탐구 신문 발행</span>
+    </button>
+  </div>
+
+  <!-- 중앙 하단 도크 (조작법 & 상호작용 안내) -->
+  <div class="bottom-dock">
+    <!-- 상호작용 프롬프트 -->
+    <div id="interact-prompt" class="interact-prompt">
+      <span class="key-cap" id="prompt-key">E</span>
+      <div class="text" id="prompt-text">
+        <small>역사 인물과 대화</small>
+        <strong>단군왕검 만나기</strong>
+      </div>
+    </div>
+
+    <!-- 키보드 조작 안내 바 -->
+    <div class="controls-hint glass-card">
+      <span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> 또는 <kbd>방향키</kbd> 걷기</span>
+      <span><kbd>E</kbd> 대화 / 채집 / 복원 기여</span>
+      <span><kbd>마우스</kbd> 둘러보기</span>
+    </div>
+  </div>
+
+  <!-- 대화 모달 (빌리지 앱 스타일 2단 대화창) -->
+  <div id="dialogue-modal" class="dialogue-modal">
+    <div class="dialogue-card">
+      <!-- 인물 포트레이트 -->
+      <div class="dialogue-portrait">
+        <span id="portrait-emoji">📜</span>
+      </div>
+
+      <!-- 대화 본문 & 퀴즈 영역 -->
+      <div class="dialogue-content">
+        <div class="speaker-header">
+          <div>
+            <span class="speaker-role" id="speaker-role">고조선의 건국자</span>
+            <h3 class="speaker-name" id="speaker-name">단군왕검</h3>
+          </div>
+        </div>
+
+        <p class="dialogue-text" id="dialogue-text">
+          널리 인간을 이롭게 하라는 홍익인간의 뜻으로 나라를 세웠느니라.
+        </p>
+
+        <!-- 역사 퀴즈 영역 -->
+        <div id="quiz-container"></div>
+
+        <div class="dialogue-actions">
+          <button id="close-dialogue-btn" class="btn-primary" type="button">대화 마치기</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 우리 반 역사 신문 / 탐구 포트폴리오 모달 -->
+  <div id="newspaper-modal" class="newspaper-modal">
+    <article class="newspaper-sheet">
+      <header class="newspaper-header">
+        <h2 class="masthead">우리 반 역사 탐구 일보</h2>
+        <div class="newspaper-meta">
+          <span>제 5학년 사회과 특별호</span>
+          <span id="paper-era-text">고조선 ~ 조선 연대기</span>
+          <span>학습 탐구 종합 점수: <strong id="paper-score-text">0점</strong></span>
+        </div>
+      </header>
+
+      <div class="newspaper-body">
+        <section class="news-article">
+          <h3>🏛️ 복원된 우리 반 문화유산</h3>
+          <ul id="paper-relics-list">
+            <!-- 동적 삽입 -->
+          </ul>
+        </section>
+
+        <section class="news-article">
+          <h3>💡 해결한 교과 역사 퀴즈</h3>
+          <ul id="paper-quizzes-list">
+            <!-- 동적 삽입 -->
+          </ul>
+        </section>
+      </div>
+
+      <footer class="newspaper-footer">
+        <p style="font-size: 11px; color: #476657;">
+          인천부평북초등학교 사회과 메타버스 역사 탐구 보고서 (형성평가 및 포트폴리오 연계)
+        </p>
+        <div class="no-print" style="display: flex; gap: 8px;">
+          <button id="print-newspaper-btn" class="btn-primary" type="button">🖨️ A4 용지 인쇄 / PDF 저장</button>
+          <button id="close-newspaper-btn" class="btn-secondary" type="button">닫기</button>
+        </div>
+      </footer>
+    </article>
+  </div>
+
+  <!-- 우측 하단 한반도 미니맵 HUD -->
+  <aside class="minimap-card glass-card" aria-label="한반도 미니맵">
+    <div class="minimap-header">
+      <span>🗺️ 한반도 역사 지도</span>
+      <span style="font-size: 9px; color: var(--leaf);">실시간 추적</span>
+    </div>
+    <canvas id="minimap-canvas" class="minimap-canvas" width="200" height="240"></canvas>
+    <div class="minimap-legend">
+      <span><i style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#ef4444;"></i>내 위치</span>
+      <span><i style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#f59e0b;"></i>도읍</span>
+      <span><i style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#2f8f71;"></i>독도·울릉도</span>
+    </div>
+  </aside>
+
+  <!-- 메인 스크립트 연결 -->
+  <script type="module">
+    import { HistoryMetaverseEngine } from './js/engine.js';
+    import { HistoryMetaverseUI } from './js/ui.js';
+    import { HistoryMinimap } from './js/minimap.js';
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const container = document.getElementById('canvas-container');
+      const minimapCanvas = document.getElementById('minimap-canvas');
+
+      const ui = new HistoryMetaverseUI();
+      const minimap = new HistoryMinimap(minimapCanvas);
+
+      const engine = new HistoryMetaverseEngine(container, {
+        onEraLoaded: (era) => ui.onEraLoaded(era),
+        onNearInteractableChange: (item) => ui.onNearInteractableChange(item),
+        onInteract: (item) => ui.onInteract(item)
+      });
+
+      engine.setMinimap(minimap);
+      ui.setEngine(engine);
+    });
+  </script>
+</body>
+</html>

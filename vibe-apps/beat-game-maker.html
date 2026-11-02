@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>박자게임 메이커</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#EEEDF8; --ink:#1C1B3C; --sub:#5B5A80; --line:#CFCDE8; --paper:#FFFFFF;
+    --blue:#2F5BFF; --violet:#7A3CFF; --pink:#D62F86; --orange:#E8500F; --err:#B3261E;
+    --display:"Black Han Sans","Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+    --ui:"IBM Plex Sans KR","Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.65 var(--ui)}
+  .app{max-width:1080px;margin:0 auto;padding:28px 16px 72px;display:grid;grid-template-columns:minmax(0,380px) minmax(0,1fr);gap:40px;align-items:start}
+  @media (max-width:820px){.app{grid-template-columns:1fr;gap:28px}}
+  .stage{position:sticky;top:16px}
+  @media (max-width:820px){.stage{position:static}}
+  .phone{border:3px solid var(--ink);border-radius:30px;overflow:hidden;background:var(--ink);aspect-ratio:9/16;box-shadow:7px 7px 0 var(--ink)}
+  canvas{display:block;width:100%;height:100%}
+  .transport{display:flex;gap:8px;margin-top:22px;flex-wrap:wrap}
+  h1{font:400 40px/1.15 var(--display);margin:0 0 6px;letter-spacing:-0.01em}
+  .lead{margin:0 0 28px;color:var(--sub);max-width:52ch}
+  h2{font:600 17px/1.3 var(--ui);margin:0 0 12px}
+  .block{padding:22px 0;border-top:2px solid var(--line)}
+  .block:first-of-type{border-top:0;padding-top:0}
+  label{display:block;font-weight:500;margin:0 0 4px}
+  .hint{font-size:13px;color:var(--sub);margin:4px 0 0;line-height:1.5}
+  input[type=text],input[type=password],select,textarea{
+    width:100%;font:inherit;color:inherit;background:var(--paper);border:2px solid var(--ink);border-radius:10px;padding:8px 11px}
+  textarea{resize:vertical;min-height:64px}
+  input[type=range]{width:100%;accent-color:var(--blue)}
+  :focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+  .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-top:14px}
+  .field{margin-top:14px}
+  .row .field{margin-top:0}
+  .radios{display:flex;gap:18px;margin:12px 0 4px;flex-wrap:wrap}
+  .radios label,.check{display:flex;align-items:center;gap:8px;font-weight:400;margin:0;cursor:pointer}
+  .check{margin-top:10px}
+  .btn{font:600 15px var(--ui);border:2px solid var(--ink);background:var(--paper);color:var(--ink);border-radius:999px;padding:9px 20px;cursor:pointer;text-decoration:none;display:inline-block;line-height:1.4}
+  .btn:hover:not(:disabled){background:#E4E2F7}
+  .btn.primary{background:var(--blue);color:#fff;box-shadow:4px 4px 0 var(--ink)}
+  .btn.primary:hover:not(:disabled){background:#2449D6}
+  .btn.rec{background:var(--pink);color:#fff}
+  .btn.rec:hover:not(:disabled){background:#B9256F}
+  .btn:disabled{opacity:.4;cursor:not-allowed;box-shadow:none}
+  .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+  .status{margin:14px 0 0;min-height:1.6em;font-weight:500}
+  .status.err{color:var(--err)}
+  progress{width:100%;height:10px;margin-top:8px;accent-color:var(--blue)}
+  .seq{margin-top:10px;line-height:2.2}
+  .w{display:inline-block;padding:1px 12px;border-radius:999px;background:var(--paper);border:2px solid var(--ink);margin:0 4px 0 0;font-weight:500}
+  .w.d{background:var(--ink);color:#fff}
+  .result{margin-top:22px}
+  .result video{width:100%;border:3px solid var(--ink);border-radius:18px;background:#000;margin-bottom:10px}
+  details{margin-top:14px}
+  summary{cursor:pointer;font-weight:500}
+  .out{font-variant-numeric:tabular-nums;color:var(--sub);font-weight:400}
+  a{color:var(--blue)}
+</style>
+</head>
+<body>
+<main class="app">
+
+  <section class="stage" aria-label="미리보기">
+    <div class="phone"><canvas id="cv" width="720" height="1280" aria-label="박자게임 화면"></canvas></div>
+    <div class="transport">
+      <button class="btn" id="btnPlay" disabled>재생</button>
+      <button class="btn rec" id="btnRec" disabled>영상으로 저장</button>
+      <button class="btn" id="btnStop" disabled>정지</button>
+    </div>
+    <p class="hint">영상으로 저장하는 동안에는 이 탭을 앞에 두세요. 다른 탭으로 넘어가면 화면이 멈춰요.</p>
+    <div class="result" id="result"></div>
+  </section>
+
+  <section class="panel">
+    <h1>박자게임 메이커</h1>
+    <p class="lead">낱말을 넣으면 목소리와 음악을 박자에 맞춰 넣은 세로 영상을 만들어요. 뒤로 갈수록 비슷한 발음의 낱말이 끼어들어 헷갈려요.</p>
+
+    <div class="block">
+      <h2>구글 API 키</h2>
+      <label for="apiKey">Gemini API 키</label>
+      <input type="password" id="apiKey" autocomplete="off" spellcheck="false" placeholder="AIza로 시작하는 키">
+      <div class="radios" role="radiogroup" aria-label="키 종류">
+        <label><input type="radio" name="tier" value="free" checked> 무료 키</label>
+        <label><input type="radio" name="tier" value="paid"> 유료 키</label>
+      </div>
+      <p class="hint" id="tierHint">무료 키는 분당 호출 한도에 걸리면 자동으로 기다렸다가 이어서 만들어요. 낱말을 8~12개 이내로 두면 빨라요.</p>
+      <label class="check"><input type="checkbox" id="keySave"> 이 브라우저에 키 저장</label>
+      <p class="hint">키는 구글 서버에 음성을 요청할 때만 쓰여요. 발급은 aistudio.google.com/apikey 에서 해요.</p>
+      <div class="row">
+        <div class="field">
+          <label for="ttsModel">음성 모델</label>
+          <input type="text" id="ttsModel" list="ttsModels" value="gemini-3.1-flash-tts-preview" spellcheck="false">
+          <datalist id="ttsModels">
+            <option value="gemini-3.1-flash-tts-preview"></option>
+            <option value="gemini-2.5-flash-preview-tts"></option>
+            <option value="gemini-2.5-pro-preview-tts"></option>
+          </datalist>
+        </div>
+        <div class="field">
+          <label for="voice">목소리</label>
+          <select id="voice">
+            <option value="Puck">Puck, 활기찬</option>
+            <option value="Kore">Kore, 단단한</option>
+            <option value="Zephyr">Zephyr, 밝은</option>
+            <option value="Fenrir">Fenrir, 들뜬</option>
+            <option value="Leda">Leda, 어린 느낌</option>
+            <option value="Aoede">Aoede, 가벼운</option>
+            <option value="Charon">Charon, 차분한</option>
+            <option value="Iapetus">Iapetus, 또렷한</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="tone">말투</label>
+          <select id="tone">
+            <option value="clear">또렷하고 짧게</option>
+            <option value="excited">신나게</option>
+            <option value="flat">무덤덤한 로봇처럼</option>
+            <option value="whisper">속삭이듯</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="block">
+      <h2>낱말</h2>
+      <label for="words">박자마다 반복할 낱말</label>
+      <textarea id="words" rows="2" spellcheck="false">말, 개</textarea>
+      <p class="hint">쉼표나 줄바꿈으로 나눠요. 앞부분에서는 이 낱말만 차례로 반복돼요.</p>
+      <div class="field">
+        <label for="decoys">헷갈리게 끼워 넣을 낱말</label>
+        <textarea id="decoys" rows="3" spellcheck="false">발, 팔, 새, 배</textarea>
+        <p class="hint">뒤로 갈수록 더 자주 끼어들고, 발음이 가까운 낱말부터 골라요.</p>
+      </div>
+      <div class="btns">
+        <button class="btn" id="btnAuto" type="button">발음 비슷한 소리 채우기</button>
+        <button class="btn" id="btnAI" type="button">AI로 진짜 낱말 추천</button>
+      </div>
+      <details>
+        <summary>AI 추천에 쓸 모델</summary>
+        <div class="field"><input type="text" id="textModel" value="gemini-flash-latest" spellcheck="false" aria-label="AI 추천 모델 이름"></div>
+        <p class="hint">모델 이름을 찾을 수 없다는 메시지가 나오면 사용 가능한 Gemini 텍스트 모델 이름으로 바꿔요.</p>
+      </details>
+    </div>
+
+    <div class="block">
+      <h2>영상</h2>
+      <div class="field">
+        <label for="title">영상 위쪽 제목</label>
+        <input type="text" id="title" value="박자에 맞춰 따라 말해요" maxlength="30">
+      </div>
+      <div class="row">
+        <div class="field">
+          <label for="bpm">빠르기 <span class="out" id="bpmOut">130</span></label>
+          <input type="range" id="bpm" min="100" max="170" step="2" value="130">
+        </div>
+        <div class="field">
+          <label for="bars">길이</label>
+          <select id="bars">
+            <option value="8">짧게, 8마디</option>
+            <option value="12">보통, 12마디</option>
+            <option value="16" selected>길게, 16마디</option>
+            <option value="24">아주 길게, 24마디</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="music">음악</label>
+          <select id="music">
+            <option value="pop">통통 팝</option>
+            <option value="funk">일렉 펑크</option>
+            <option value="chip">8비트 게임</option>
+          </select>
+        </div>
+      </div>
+      <div class="btns">
+        <button class="btn primary" id="btnMake" type="button">만들기</button>
+      </div>
+      <p class="hint">같은 목소리와 말투로 만든 낱말 음성은 이 브라우저에 저장돼서, 다시 만들 때 구글에 또 요청하지 않아요.</p>
+      <p class="status" id="status" role="status" aria-live="polite"></p>
+      <progress id="prog" max="1" value="0" hidden></progress>
+      <div id="seqWrap" hidden>
+        <p class="hint" id="stats"></p>
+        <div class="seq" id="seq"></div>
+        <p class="hint">검은 칩은 헷갈리게 끼워 넣은 낱말이에요.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+(()=>{
+'use strict';
+
+/* ---------- 기본 도구 ---------- */
+const $=id=>document.getElementById(id);
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const cv=$('cv'), g=cv.getContext('2d');
+const W=cv.width, H=cv.height;
+const INK='#1C1B3C';
+const PHASE_COL=['#2F5BFF','#7A3CFF','#D62F86','#E8500F'];
+const PHASE_NAME=['몸풀기','슬슬 헷갈림','점점 꼬임','혀 꼬임 주의'];
+const DISPLAY='"Black Han Sans","Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif';
+const UIF='"IBM Plex Sans KR","Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif';
+const FALLBACK_MODEL='gemini-2.5-flash-preview-tts';
+const TONES={
+  clear:'Say clearly, crisply and punchily',
+  excited:'Say with high energy, excited and upbeat',
+  flat:'Say in a flat, deadpan, robotic voice',
+  whisper:'Whisper softly'
+};
+
+const S={key:'',seq:[],bufs:new Map(),ready:false,run:false,busy:false,abort:false,
+  ctx:null,t0:0,beat:.46,raf:0,rec:null,title:'',url:null,endBeat:0};
+
+/* ---------- 저장(설정, 음성 캐시) ---------- */
+const LS={
+  get(k){try{return localStorage.getItem(k)}catch(e){return null}},
+  set(k,v){try{localStorage.setItem(k,v)}catch(e){}},
+  del(k){try{localStorage.removeItem(k)}catch(e){}}
+};
+const DB={db:null,
+  open(){return new Promise(res=>{try{
+    const r=indexedDB.open('beat-tts',1);
+    r.onupgradeneeded=()=>r.result.createObjectStore('w');
+    r.onsuccess=()=>{DB.db=r.result;res(true)};
+    r.onerror=()=>res(false);
+  }catch(e){res(false)}})},
+  get(k){return new Promise(res=>{if(!DB.db)return res(null);try{
+    const q=DB.db.transaction('w').objectStore('w').get(k);
+    q.onsuccess=()=>res(q.result||null);q.onerror=()=>res(null);
+  }catch(e){res(null)}})},
+  put(k,v){return new Promise(res=>{if(!DB.db)return res();try{
+    const t=DB.db.transaction('w','readwrite');t.objectStore('w').put(v,k);
+    t.oncomplete=()=>res();t.onerror=()=>res();
+  }catch(e){res()}})}
+};
+
+function saveSettings(){
+  const o={words:$('words').value,decoys:$('decoys').value,title:$('title').value,bpm:$('bpm').value,
+    bars:$('bars').value,music:$('music').value,voice:$('voice').value,tone:$('tone').value,
+    model:$('ttsModel').value,tier:tier(),textModel:$('textModel').value};
+  LS.set('beatmaker.settings',JSON.stringify(o));
+  if($('keySave').checked)LS.set('beatmaker.key',$('apiKey').value.trim());
+  else LS.del('beatmaker.key');
+}
+function loadSettings(){
+  try{
+    const o=JSON.parse(LS.get('beatmaker.settings')||'null');
+    if(o){
+      ['words','decoys','title','bpm','bars','music','voice','tone'].forEach(k=>{if(o[k]!=null)$(k).value=o[k]});
+      if(o.model)$('ttsModel').value=o.model;
+      if(o.textModel)$('textModel').value=o.textModel;
+      if(o.tier){const r=document.querySelector(`input[name=tier][value=${o.tier}]`);if(r)r.checked=true}
+    }
+  }catch(e){}
+  const k=LS.get('beatmaker.key');
+  if(k){$('apiKey').value=k;$('keySave').checked=true}
+  $('bpmOut').textContent=$('bpm').value;
+  updateTierHint();
+}
+const tier=()=>document.querySelector('input[name=tier]:checked').value;
+function updateTierHint(){
+  $('tierHint').textContent=tier()==='free'
+    ?'무료 키는 분당 호출 한도에 걸리면 자동으로 기다렸다가 이어서 만들어요. 낱말을 8~12개 이내로 두면 빨라요.'
+    :'유료 키는 낱말 음성을 3개씩 동시에 요청해서 더 빨리 만들어요.';
+}
+
+/* ---------- 한글 자모 도구 ---------- */
+const CHO=['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+const JUNG=['ㅏ','ㅐ','ㅑ','ㅒ','ㅓ','ㅔ','ㅕ','ㅖ','ㅗ','ㅘ','ㅙ','ㅚ','ㅛ','ㅜ','ㅝ','ㅞ','ㅟ','ㅠ','ㅡ','ㅢ','ㅣ'];
+const JONG=['','ㄱ','ㄲ','ㄳ','ㄴ','ㄵ','ㄶ','ㄷ','ㄹ','ㄺ','ㄻ','ㄼ','ㄽ','ㄾ','ㄿ','ㅀ','ㅁ','ㅂ','ㅄ','ㅅ','ㅆ','ㅇ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+const grp=(list,arr)=>list.map(x=>x.map(c=>arr.indexOf(c)));
+const CHO_G=grp([['ㄱ','ㅋ','ㄲ'],['ㄷ','ㅌ','ㄸ'],['ㅂ','ㅍ','ㅃ','ㅁ'],['ㅈ','ㅊ','ㅉ'],['ㅅ','ㅆ'],['ㄴ','ㄹ']],CHO);
+const JUNG_G=grp([['ㅏ','ㅑ','ㅓ'],['ㅐ','ㅔ','ㅒ','ㅖ'],['ㅗ','ㅜ','ㅛ','ㅠ'],['ㅡ','ㅣ'],['ㅘ','ㅝ'],['ㅙ','ㅞ','ㅚ','ㅟ']],JUNG);
+const JONG_G=grp([['','ㄴ','ㅇ','ㅁ','ㄹ'],['ㄱ','ㄷ','ㅂ']],JONG);
+const isHangul=ch=>{const c=ch.charCodeAt(0);return c>=0xAC00&&c<=0xD7A3};
+const decomp=ch=>{const c=ch.charCodeAt(0)-0xAC00;return{cho:Math.floor(c/588),jung:Math.floor((c%588)/28),jong:c%28}};
+const comp=(a,b,c)=>String.fromCharCode(0xAC00+a*588+b*28+c);
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const parseList=s=>[...new Set(String(s).split(/[\n,，、;]+/).map(x=>x.trim()).filter(Boolean))];
+
+function mutations(word){
+  const chars=[...word], out=new Set();
+  chars.forEach((ch,i)=>{
+    if(!isHangul(ch))return;
+    const d=decomp(ch);
+    const swap=(groups,val,fn)=>{
+      groups.forEach(gp=>{if(gp.includes(val))gp.forEach(v=>{if(v!==val){
+        const c2=chars.slice();c2[i]=fn(v);out.add(c2.join(''));}})});
+    };
+    swap(CHO_G,d.cho,v=>comp(v,d.jung,d.jong));
+    swap(JUNG_G,d.jung,v=>comp(d.cho,v,d.jong));
+    swap(JONG_G,d.jong,v=>comp(d.cho,d.jung,v));
+  });
+  out.delete(word);
+  return [...out];
+}
+function suggestLocal(bases,per=3){
+  const res=[];
+  bases.forEach(b=>{shuffle(mutations(b)).slice(0,per).forEach(x=>{if(!bases.includes(x)&&!res.includes(x))res.push(x)})});
+  return res;
+}
+function jamoKeys(w){const o=[];for(const ch of w){if(isHangul(ch)){const d=decomp(ch);o.push(d.cho,d.jung,d.jong)}else o.push(ch.charCodeAt(0),-1,-1)}return o}
+function sim(a,b){const A=jamoKeys(a),B=jamoKeys(b),n=Math.min(A.length,B.length);let m=0;for(let i=0;i<n;i++)if(A[i]===B[i])m++;return m/Math.max(A.length,B.length)}
+
+/* ---------- 낱말 순서 만들기 ---------- */
+function buildSequence(bases,decoys,slots){
+  const seq=[], P=[0,.3,.55,.75];
+  for(let i=0;i<slots;i++){
+    const phase=Math.min(3,Math.floor(i/slots*4));
+    const base=bases[i%bases.length];
+    let w=base,isDecoy=false;
+    if(decoys.length&&Math.random()<P[phase]){
+      const prev=seq.length?seq[seq.length-1].w:'';
+      const scored=decoys.filter(d=>d!==prev).map(d=>({d,s:sim(base,d)+Math.random()*.35})).sort((a,b)=>b.s-a.s);
+      if(scored.length){w=scored[0].d;isDecoy=true}
+    }
+    seq.push({w,decoy:isDecoy,phase,base});
+  }
+  return seq;
+}
+
+/* ---------- 구글 API ---------- */
+const fatal=(m,code)=>Object.assign(new Error(m),{fatal:true,code});
+function setStatus(m,err){const el=$('status');el.textContent=m;el.className='status'+(err?' err':'')}
+async function countdown(sec,label){
+  for(let s=Math.ceil(sec);s>0;s--){
+    if(S.abort)return;
+    setStatus(`${label}, ${s}초 뒤에 이어서 요청해요…`);
+    await sleep(1000);
+  }
+}
+async function callGoogle(model,body){
+  const url=`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
+  const MAX=6;
+  for(let attempt=1;;attempt++){
+    if(S.abort)throw fatal('중단했어요');
+    let resp;
+    try{
+      resp=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':S.key},body:JSON.stringify(body)});
+    }catch(e){
+      if(attempt>=MAX)throw fatal('구글 서버에 연결하지 못했어요. 인터넷 연결을 확인해 주세요.');
+      await sleep(1500*attempt);continue;
+    }
+    if(resp.ok)return resp.json();
+    let err={};try{err=(await resp.json()).error||{}}catch(e){}
+    const msg=err.message||resp.statusText||'';
+    if(resp.status===400&&/API key/i.test(msg))throw fatal('API 키가 올바르지 않아요. 키를 다시 확인해 주세요.',400);
+    if(resp.status===401||resp.status===403)throw fatal(`이 키로는 사용할 수 없어요(${resp.status}). Gemini API를 쓸 수 있는 키인지 확인해 주세요.`,resp.status);
+    if(resp.status===404)throw fatal(`모델을 찾을 수 없어요: ${model}`,404);
+    if(resp.status===429||resp.status>=500){
+      if(attempt>=MAX)throw fatal(resp.status===429?'호출 한도에 계속 걸려요. 잠시 뒤에 다시 만들면 저장된 낱말은 건너뛰고 이어서 만들어요.':'구글 서버가 응답하지 않아요. 잠시 뒤에 다시 시도해 주세요.',resp.status);
+      let wait=resp.status===429?20:4*attempt;
+      const ri=(err.details||[]).find(d=>d&&d['@type']&&String(d['@type']).includes('RetryInfo'));
+      if(ri&&ri.retryDelay){const s=parseFloat(ri.retryDelay);if(!isNaN(s))wait=s+1}
+      if(wait>150)throw fatal('사용 한도를 다 쓴 것 같아요. 무료 키는 내일 다시 하거나 유료 키를 쓰면 돼요. 저장된 낱말은 다음에 다시 쓰여요.',429);
+      await countdown(wait,resp.status===429?'호출 한도 대기':'서버 재시도');
+      continue;
+    }
+    throw fatal(msg||`오류가 났어요(${resp.status})`,resp.status);
+  }
+}
+
+function pcmToBuffer(b64){
+  const bin=atob(b64), n=bin.length>>1, f=new Float32Array(n);
+  for(let i=0;i<n;i++){let v=bin.charCodeAt(2*i)|(bin.charCodeAt(2*i+1)<<8);if(v&0x8000)v-=0x10000;f[i]=v/32768}
+  return trimBuffer(f,24000);
+}
+function trimBuffer(f,sr){
+  let peak=0;for(let i=0;i<f.length;i++){const a=Math.abs(f[i]);if(a>peak)peak=a}
+  if(peak<0.005)return null;
+  const th=Math.max(0.01,peak*0.03);
+  let a=0,b=f.length-1;
+  while(a<b&&Math.abs(f[a])<th)a++;
+  while(b>a&&Math.abs(f[b])<th)b--;
+  a=Math.max(0,a-Math.round(sr*0.015));
+  b=Math.min(f.length-1,b+Math.round(sr*0.05));
+  const out=new Float32Array(b-a+1), k=0.92/peak;
+  for(let i=0;i<out.length;i++)out[i]=f[a+i]*k;
+  const fade=Math.round(sr*0.004);
+  for(let i=0;i<fade&&i<out.length;i++){out[i]*=i/fade;out[out.length-1-i]*=i/fade}
+  const buf=new AudioBuffer({length:out.length,sampleRate:sr,numberOfChannels:1});
+  buf.copyToChannel(out,0);
+  return buf;
+}
+
+async function fetchWord(w,cfg){
+  const k=[cfg.model,cfg.voice,cfg.tone,w].join('|');
+  let b64=await DB.get(k);
+  if(!b64){
+    for(let t=1;t<=3&&!b64;t++){
+      const data=await callGoogle(cfg.model,{
+        contents:[{parts:[{text:`${TONES[cfg.tone]}: ${w}`}]}],
+        generationConfig:{responseModalities:['AUDIO'],
+          speechConfig:{voiceConfig:{prebuiltVoiceConfig:{voiceName:cfg.voice}}}}
+      });
+      const part=(data.candidates?.[0]?.content?.parts||[]).find(p=>p.inlineData);
+      b64=part?.inlineData?.data||null;
+      if(!b64&&t<3)await sleep(800);
+    }
+    if(!b64)throw fatal(`'${w}' 음성을 받지 못했어요. 다시 만들기를 눌러 보세요.`);
+    await DB.put(k,b64);
+  }
+  const buf=pcmToBuffer(b64);
+  if(!buf)throw fatal(`'${w}' 음성이 비어 있어요. 다시 만들기를 눌러 보세요.`);
+  S.bufs.set(w,buf);
+}
+
+async function runPool(items,limit,worker){
+  let i=0,firstErr=null;
+  await Promise.all(Array.from({length:limit},async()=>{
+    while(i<items.length&&!S.abort){
+      const it=items[i++];
+      try{await worker(it)}catch(e){if(!firstErr){firstErr=e;S.abort=true}}
+    }
+  }));
+  if(firstErr)throw firstErr;
+}
+
+/* ---------- 음악 합성 ---------- */
+const mtof=m=>440*Math.pow(2,(m-69)/12);
+function makeNoise(ctx){
+  const len=ctx.sampleRate,b=ctx.createBuffer(1,len,ctx.sampleRate),d=b.getChannelData(0);
+  for(let i=0;i<len;i++)d[i]=Math.random()*2-1;
+  return b;
+}
+function kick(ctx,dst,t,vol){
+  const o=ctx.createOscillator(),gn=ctx.createGain();
+  o.type='sine';
+  o.frequency.setValueAtTime(160,t);
+  o.frequency.exponentialRampToValueAtTime(42,t+.13);
+  gn.gain.setValueAtTime(.0001,t);
+  gn.gain.exponentialRampToValueAtTime(.9*vol,t+.005);
+  gn.gain.exponentialRampToValueAtTime(.0001,t+.28);
+  o.connect(gn);gn.connect(dst);o.start(t);o.stop(t+.3);
+}
+function noiseHit(ctx,dst,noise,t,o){
+  const s=ctx.createBufferSource();s.buffer=noise;
+  const f=ctx.createBiquadFilter();f.type=o.type||'highpass';f.frequency.value=o.freq;f.Q.value=o.q||.7;
+  const gn=ctx.createGain();
+  gn.gain.setValueAtTime(.0001,t);
+  gn.gain.exponentialRampToValueAtTime(o.peak,t+.003);
+  gn.gain.exponentialRampToValueAtTime(.0001,t+o.dur);
+  s.connect(f);f.connect(gn);gn.connect(dst);
+  s.start(t,Math.random()*.5);s.stop(t+o.dur+.02);
+}
+function tone(ctx,dst,t,midi,dur,o){
+  const osc=ctx.createOscillator();osc.type=o.type;osc.frequency.value=mtof(midi);
+  const f=ctx.createBiquadFilter();f.type='lowpass';f.frequency.value=o.cut;
+  const gn=ctx.createGain(),a=o.atk||.004;
+  gn.gain.setValueAtTime(.0001,t);
+  gn.gain.exponentialRampToValueAtTime(o.peak,t+a);
+  gn.gain.exponentialRampToValueAtTime(.0001,t+a+dur);
+  osc.connect(f);f.connect(gn);gn.connect(dst);osc.start(t);osc.stop(t+a+dur+.02);
+}
+const STYLES={
+  pop:{prog:[[48,'M'],[43,'M'],[45,'m'],[41,'M']],
+    kick:[0,4,8,12],clap:[4,12],hat:[2,6,10,14],
+    bass:{steps:[0,6,8,14],type:'sawtooth',cut:520},
+    lead:{steps:[0,2,4,6,8,10,12,14],idx:[0,1,2,1,2,1,0,1],type:'triangle',oct:24,peak:.14,cut:3200,dur:.14}},
+  funk:{prog:[[45,'m'],[41,'M'],[48,'M'],[43,'M']],
+    kick:[0,4,8,10,12],clap:[4,12],hat:[0,2,4,6,8,10,12,14],
+    bass:{steps:[0,3,6,10,12,15],type:'sawtooth',cut:700},
+    lead:{steps:[0,3,6,10],type:'square',oct:24,peak:.06,cut:2200,dur:.09,chord:true}},
+  chip:{prog:[[48,'M'],[45,'m'],[41,'M'],[43,'M']],
+    kick:[0,8],clap:[4,12],hat:[0,2,4,6,8,10,12,14],
+    bass:{steps:[0,2,4,6,8,10,12,14],type:'triangle',cut:1200,alt:true},
+    lead:{steps:[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],idx:[0,2,1,2,0,2,1,2,0,2,1,2,2,1,0,1],type:'square',oct:24,peak:.045,cut:5000,dur:.07}}
+};
+function scheduleMusic(ctx,dst,t0,beat,slotBars,styleKey){
+  const st=STYLES[styleKey],noise=makeNoise(ctx),step=beat/4,total=slotBars+2;
+  const lateFrom=1+Math.floor(slotBars*.75);
+  for(let b=0;b<total;b++){
+    const [root,q]=st.prog[(b>0?b-1:0)%4];
+    const iv=q==='M'?[0,4,7]:[0,3,7];
+    const bt=t0+b*4*beat;
+    if(b===total-1){
+      kick(ctx,dst,bt,1);
+      noiseHit(ctx,dst,noise,bt,{freq:5000,peak:.22,dur:1});
+      iv.forEach(x=>tone(ctx,dst,bt,root+12+x,beat*2.2,{type:'sawtooth',peak:.07,cut:2600,atk:.006}));
+      tone(ctx,dst,bt,root,beat*2.2,{type:'sine',peak:.3,cut:800});
+      continue;
+    }
+    for(let s=0;s<16;s++){
+      const t=bt+s*step;
+      if(st.kick.includes(s))kick(ctx,dst,t,b===0?.8:1);
+      const hatOn=st.hat.includes(s);
+      if(b===0){
+        if(hatOn)noiseHit(ctx,dst,noise,t,{freq:7500,peak:.08,dur:.04});
+        continue;
+      }
+      if(st.clap.includes(s))noiseHit(ctx,dst,noise,t,{type:'bandpass',freq:1800,q:.9,peak:.32,dur:.13});
+      if(hatOn)noiseHit(ctx,dst,noise,t,{freq:7500,peak:s%4===2?.14:.08,dur:s%4===2?.07:.035});
+      else if(b>=lateFrom&&s%2===1)noiseHit(ctx,dst,noise,t,{freq:9000,peak:.05,dur:.025});
+      if(st.bass.steps.includes(s)){
+        let m=root;if(st.bass.alt&&(s/2)%2===1)m+=12;
+        tone(ctx,dst,t,m,step*1.7,{type:st.bass.type,peak:.16,cut:st.bass.cut,atk:.005});
+      }
+      const li=st.lead.steps.indexOf(s);
+      if(li>=0){
+        if(st.lead.chord)iv.forEach(x=>tone(ctx,dst,t,root+st.lead.oct+x,st.lead.dur,{type:st.lead.type,peak:st.lead.peak,cut:st.lead.cut}));
+        else tone(ctx,dst,t,root+st.lead.oct+iv[st.lead.idx[li]],st.lead.dur,{type:st.lead.type,peak:st.lead.peak,cut:st.lead.cut});
+      }
+    }
+  }
+}
+
+/* ---------- 화면 그리기 ---------- */
+function fitPx(text,weight,family,maxPx,minPx,maxW){
+  g.font=`${weight} ${maxPx}px ${family}`;
+  const w=g.measureText(text).width;
+  return w>maxW?Math.max(minPx,Math.floor(maxPx*maxW/w)):maxPx;
+}
+function drawIdle(){
+  g.fillStyle=INK;g.fillRect(0,0,W,H);
+  g.textAlign='center';g.textBaseline='middle';g.fillStyle='#fff';
+  g.font=`400 84px ${DISPLAY}`;g.fillText('박자게임',W/2,H*.4);
+  g.font=`500 34px ${UIF}`;g.globalAlpha=.8;
+  g.fillText('낱말을 넣고 ‘만들기’를 눌러요',W/2,H*.4+90);
+  g.globalAlpha=1;
+  PHASE_COL.forEach((c,i)=>{g.fillStyle=c;g.fillRect(42+i*162,H-150,150,16)});
+}
+function draw(bp){
+  const seq=S.seq,slots=seq.length,idx=Math.floor(bp),frac=bp-idx,slot=idx-4;
+  const inCount=bp<4,ended=!inCount&&slot>=slots;
+  const phase=(!inCount&&!ended)?seq[slot].phase:-1;
+  g.fillStyle=phase>=0?PHASE_COL[phase]:INK;g.fillRect(0,0,W,H);
+  const pulse=bp<0?0:Math.pow(1-Math.min(1,frac),3);
+  const cy=H*.44;
+
+  if(bp>=0&&!ended){
+    g.strokeStyle=`rgba(255,255,255,${.28*(1-frac)})`;g.lineWidth=8;
+    g.beginPath();g.arc(W/2,cy,170+frac*300,0,Math.PI*2);g.stroke();
+  }
+  g.textAlign='center';g.textBaseline='middle';g.fillStyle='#fff';
+
+  // 제목
+  const tpx=fitPx(S.title,'600',UIF,34,20,620);
+  g.font=`600 ${tpx}px ${UIF}`;g.fillText(S.title,W/2,100);
+
+  // 난이도 표시
+  for(let i=0;i<4;i++){
+    const on=ended||phase>=i;
+    g.fillStyle=on?'#fff':'rgba(255,255,255,.25)';
+    g.fillRect(42+i*162,160,150,14);
+  }
+  g.fillStyle='#fff';g.font=`600 30px ${UIF}`;
+  g.fillText(bp<4?'준비':ended?'끝':PHASE_NAME[phase],W/2,212);
+
+  // 가운데 글자
+  let text,px;
+  if(bp<0){text='준비';px=200}
+  else if(inCount){text=['3','2','1','시작'][idx];px=idx===3?230:340}
+  else if(ended){text='끝!';px=300}
+  else{text=seq[slot].w;px=fitPx(text,'400',DISPLAY,320,90,600)}
+  const sc=bp<0?1:1+.16*pulse;
+  g.save();g.translate(W/2,cy);g.scale(sc,sc);
+  g.font=`400 ${px}px ${DISPLAY}`;g.fillStyle='#fff';g.fillText(text,0,0);
+  g.restore();
+
+  // 다음 낱말
+  if(!ended){
+    const ups=seq.slice(Math.max(0,slot+1),Math.max(0,slot+1)+3);
+    if(ups.length){
+      g.font=`500 26px ${UIF}`;g.fillStyle='rgba(255,255,255,.75)';
+      g.fillText('다음',W/2,H*.74-72);
+      g.font=`600 46px ${UIF}`;
+      const pad=28,gap=14;
+      const ws=ups.map(u=>g.measureText(u.w).width+pad*2);
+      const total=ws.reduce((a,b)=>a+b,0)+gap*(ups.length-1);
+      const k=total>640?640/total:1;
+      let x=(W-total*k)/2;
+      ups.forEach((u,i)=>{
+        const w=ws[i]*k,h=84*k,y=H*.74-h/2+8;
+        g.globalAlpha=[1,.7,.45][i];
+        g.fillStyle='rgba(255,255,255,.18)';
+        g.beginPath();g.roundRect(x,y,w,h,h/2);g.fill();
+        g.fillStyle='#fff';g.font=`600 ${Math.round(46*k)}px ${UIF}`;
+        g.fillText(u.w,x+w/2,y+h/2+2);
+        x+=w+gap*k;
+      });
+      g.globalAlpha=1;
+    }
+  }
+
+  // 마디 안 박 표시
+  if(bp>=0&&!ended){
+    const bi=inCount?idx:((slot%4)+4)%4;
+    for(let i=0;i<4;i++){
+      const x=W/2+(i-1.5)*76,y=H-100;
+      g.beginPath();g.arc(x,y,i===bi?17:12,0,Math.PI*2);
+      if(i===bi){g.fillStyle='#fff';g.fill()}
+      else{g.strokeStyle='rgba(255,255,255,.55)';g.lineWidth=3;g.stroke()}
+    }
+  }
+}
+
+/* ---------- 재생과 녹화 ---------- */
+function pickMime(){
+  if(!window.MediaRecorder)return null;
+  return ['video/mp4;codecs=avc1.42E01E,mp4a.40.2','video/mp4','video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm']
+    .find(t=>MediaRecorder.isTypeSupported(t))||null;
+}
+async function ensureFonts(extra){
+  try{
+    const t=(extra||'')+'가나다라마바사아자차카타파하0123456789준비시작끝다음';
+    await Promise.all([
+      document.fonts.load('400 100px "Black Han Sans"',t),
+      document.fonts.load('600 34px "IBM Plex Sans KR"',t),
+      document.fonts.load('500 26px "IBM Plex Sans KR"',t)
+    ]);
+  }catch(e){}
+}
+function setButtons(){
+  const can=S.ready&&!S.run&&!S.busy;
+  $('btnPlay').disabled=!can;
+  $('btnRec').disabled=!can||!window.MediaRecorder;
+  $('btnStop').disabled=!S.run;
+  $('btnMake').disabled=S.busy||S.run;
+}
+async function start(record){
+  if(!S.ready||S.run)return;
+  S.title=$('title').value.trim()||'박자에 맞춰 따라 말해요';
+  await ensureFonts(S.title+S.seq.map(s=>s.w).join(''));
+  const AC=window.AudioContext||window.webkitAudioContext;
+  const ctx=new AC();await ctx.resume();
+  S.ctx=ctx;S.beat=60/Number($('bpm').value);
+  const beat=S.beat,slots=S.seq.length,slotBars=slots/4;
+
+  const music=ctx.createGain();music.gain.value=.55;
+  const voice=ctx.createGain();voice.gain.value=1.25;
+  const comp=ctx.createDynamicsCompressor();
+  const master=ctx.createGain();master.gain.value=.9;
+  music.connect(comp);voice.connect(comp);comp.connect(master);master.connect(ctx.destination);
+
+  let rec=null,chunks=[];
+  if(record){
+    const dest=ctx.createMediaStreamDestination();master.connect(dest);
+    const vs=cv.captureStream(30);
+    dest.stream.getAudioTracks().forEach(t=>vs.addTrack(t));
+    const mime=pickMime();
+    try{
+      rec=new MediaRecorder(vs,mime?{mimeType:mime,videoBitsPerSecond:6e6,audioBitsPerSecond:192e3}:undefined);
+    }catch(e){
+      setStatus('이 브라우저에서는 영상 저장을 지원하지 않아요. 크롬이나 사파리로 열어 주세요.',true);
+      ctx.close();return;
+    }
+    rec.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data)};
+    rec.onstop=()=>{
+      if(rec._save)saveRecording(chunks,rec.mimeType);
+      try{ctx.close()}catch(e){}
+    };
+    rec.start(250);
+  }
+  S.rec=rec;
+
+  const t0=ctx.currentTime+.5;S.t0=t0;
+  S.endBeat=4+slots;
+  scheduleMusic(ctx,music,t0,beat,slotBars,$('music').value);
+  S.seq.forEach((s,i)=>{
+    const t=t0+(4+i)*beat,buf=S.bufs.get(s.w);
+    if(!buf)return;
+    const src=ctx.createBufferSource();src.buffer=buf;
+    src.playbackRate.value=Math.min(1.6,Math.max(1,buf.duration/beat));
+    src.connect(voice);src.start(t);
+    music.gain.setTargetAtTime(.6,t-.01,.015);
+    music.gain.setTargetAtTime(1,t+beat*.6,.06);
+  });
+
+  S.run=true;setButtons();
+  setStatus(record?'영상을 녹화하고 있어요. 끝날 때까지 이 탭을 앞에 두세요.':'재생 중이에요.');
+  const loop=()=>{
+    if(!S.run)return;
+    const bp=(ctx.currentTime-t0)/beat;
+    draw(bp);
+    if(bp>=S.endBeat+3){endRun(true);return}
+    S.raf=requestAnimationFrame(loop);
+  };
+  loop();
+}
+function endRun(save){
+  if(!S.run)return;
+  S.run=false;cancelAnimationFrame(S.raf);
+  const rec=S.rec;S.rec=null;
+  if(rec&&rec.state!=='inactive'){rec._save=save;rec.stop()}
+  else if(S.ctx){try{S.ctx.close()}catch(e){}}
+  drawIdle();
+  setButtons();
+  setStatus(save&&rec?'영상이 만들어졌어요. 왼쪽 아래에서 확인하고 받을 수 있어요.':'끝났어요.');
+}
+function saveRecording(chunks,mime){
+  const type=(mime||'video/webm').split(';')[0];
+  const blob=new Blob(chunks,{type});
+  if(S.url)URL.revokeObjectURL(S.url);
+  S.url=URL.createObjectURL(blob);
+  const ext=type.includes('mp4')?'mp4':'webm';
+  const d=new Date(),p=n=>String(n).padStart(2,'0');
+  const name=`박자게임-${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}.${ext}`;
+  $('result').innerHTML=`<video controls playsinline src="${S.url}"></video><a class="btn primary" download="${name}" href="${S.url}">영상 파일 받기 (${ext})</a>`;
+}
+
+/* ---------- 만들기 ---------- */
+async function make(){
+  if(S.busy||S.run)return;
+  const key=$('apiKey').value.trim();
+  const bases=parseList($('words').value),decoys=parseList($('decoys').value).filter(d=>!bases.includes(d));
+  if(!key){setStatus('API 키를 넣어 주세요.',true);$('apiKey').focus();return}
+  if(!bases.length){setStatus('반복할 낱말을 하나 이상 넣어 주세요.',true);$('words').focus();return}
+  S.key=key;saveSettings();
+  S.busy=true;S.abort=false;S.ready=false;S.bufs=new Map();setButtons();
+  $('seqWrap').hidden=true;
+  const cfg={model:$('ttsModel').value.trim()||FALLBACK_MODEL,voice:$('voice').value,tone:$('tone').value};
+  const bars=Number($('bars').value),slots=bars*4;
+  S.seq=buildSequence(bases,decoys,slots);
+  const unique=[...new Set(S.seq.map(s=>s.w))];
+  const bpm=Number($('bpm').value);
+  const sec=Math.round((slots+4)*60/bpm+3);
+  $('stats').textContent=`영상 길이는 약 ${sec}초이고, 음성으로 만들 낱말은 ${unique.length}개예요.`+(decoys.length?'':' 헷갈리게 할 낱말이 없어서 같은 낱말만 반복돼요.');
+  $('seq').innerHTML=S.seq.map(s=>`<span class="w${s.decoy?' d':''}">${esc(s.w)}</span>`).join('');
+  $('seqWrap').hidden=false;
+  const prog=$('prog');prog.hidden=false;prog.max=unique.length;prog.value=0;
+  const conc=tier()==='paid'?3:1;
+  let done=0;
+  const worker=async w=>{
+    setStatus(`‘${w}’ 음성을 만들고 있어요 (${done+1}/${unique.length})`);
+    await fetchWord(w,cfg);
+    done++;prog.value=done;
+  };
+  try{
+    try{
+      await runPool(unique,conc,worker);
+    }catch(e){
+      if(e.code===404&&cfg.model!==FALLBACK_MODEL){
+        cfg.model=FALLBACK_MODEL;$('ttsModel').value=FALLBACK_MODEL;
+        S.abort=false;done=S.bufs.size;prog.value=done;
+        setStatus(`모델을 찾을 수 없어서 ${FALLBACK_MODEL} 모델로 바꿔 다시 시도해요.`);
+        await runPool(unique.filter(w=>!S.bufs.has(w)),conc,worker);
+      }else throw e;
+    }
+    await ensureFonts(S.seq.map(s=>s.w).join('')+$('title').value);
+    S.ready=true;
+    setStatus('준비됐어요. 재생해서 들어 보고, 마음에 들면 영상으로 저장하세요.');
+    S.title=$('title').value.trim()||'박자에 맞춰 따라 말해요';
+    draw(4.0);
+  }catch(e){
+    setStatus(e.message||'만드는 중에 문제가 생겼어요.',true);
+  }finally{
+    S.busy=false;prog.hidden=true;setButtons();
+  }
+}
+
+/* ---------- AI 낱말 추천 ---------- */
+async function aiDecoys(){
+  const bases=parseList($('words').value);
+  const key=$('apiKey').value.trim();
+  if(!key){setStatus('API 키를 먼저 넣어 주세요.',true);$('apiKey').focus();return}
+  if(!bases.length){setStatus('반복할 낱말을 먼저 넣어 주세요.',true);return}
+  S.key=key;S.abort=false;
+  const btn=$('btnAI');btn.disabled=true;setStatus('AI가 비슷한 발음의 낱말을 찾고 있어요…');
+  try{
+    const model=$('textModel').value.trim()||'gemini-flash-latest';
+    const prompt=`다음 한국어 낱말과 발음이 비슷해서, 박자에 맞춰 빠르게 번갈아 읽으면 헷갈리는 실제 한국어 낱말을 낱말마다 4개씩 골라 주세요. 낱말: ${bases.join(', ')}. 글자 수가 같고 뜻이 쉬운 낱말을 우선해 주세요. 답은 낱말만 담은 JSON 문자열 배열 하나로만 출력하세요.`;
+    const data=await callGoogle(model,{contents:[{parts:[{text:prompt}]}],generationConfig:{responseMimeType:'application/json'}});
+    let txt=(data.candidates?.[0]?.content?.parts||[]).map(p=>p.text||'').join('').replace(/```json|```/g,'').trim();
+    let arr=JSON.parse(txt);
+    if(!Array.isArray(arr))arr=Object.values(arr).flat();
+    const add=arr.map(x=>String(x).trim()).filter(x=>x&&!bases.includes(x));
+    const merged=[...new Set([...parseList($('decoys').value),...add])];
+    $('decoys').value=merged.join(', ');
+    setStatus(`${add.length}개를 추천받아 채웠어요. 마음에 안 드는 낱말은 지우면 돼요.`);
+    saveSettings();
+  }catch(e){
+    setStatus(e.code===404?`AI 추천 모델을 찾을 수 없어요: ${$('textModel').value}. ‘AI 추천에 쓸 모델’에서 이름을 바꿔 보세요.`:(e.message||'AI 추천을 받지 못했어요.'),true);
+  }finally{btn.disabled=false}
+}
+
+/* ---------- 연결 ---------- */
+$('btnMake').addEventListener('click',make);
+$('btnPlay').addEventListener('click',()=>start(false));
+$('btnRec').addEventListener('click',()=>start(true));
+$('btnStop').addEventListener('click',()=>endRun(false));
+$('btnAuto').addEventListener('click',()=>{
+  const bases=parseList($('words').value);
+  if(!bases.length){setStatus('반복할 낱말을 먼저 넣어 주세요.',true);return}
+  const add=suggestLocal(bases,3).filter(x=>!bases.includes(x));
+  $('decoys').value=[...new Set([...parseList($('decoys').value),...add])].join(', ');
+  setStatus('글자의 자음이나 모음을 살짝 바꿔 채웠어요. 뜻이 없는 소리도 섞여 있으니 골라서 지워도 돼요.');
+  saveSettings();
+});
+$('btnAI').addEventListener('click',aiDecoys);
+$('bpm').addEventListener('input',()=>{$('bpmOut').textContent=$('bpm').value});
+document.querySelectorAll('input[name=tier]').forEach(r=>r.addEventListener('change',updateTierHint));
+['words','decoys','title','bpm','bars','music','voice','tone','ttsModel','textModel','keySave'].forEach(id=>
+  $(id).addEventListener('change',()=>{
+    saveSettings();
+    if(['words','decoys','bars','voice','tone','ttsModel'].includes(id)&&!S.run&&S.ready){
+      S.ready=false;setButtons();
+      setStatus('설정이 바뀌었어요. ‘만들기’를 다시 눌러 주세요.');
+    }
+  }));
+
+loadSettings();
+DB.open();
+setButtons();
+drawIdle();
+ensureFonts('박자게임낱말을넣고만들기를눌러요').then(()=>{if(!S.run&&!S.ready)drawIdle()});
+})();
+</script>
+</body>
+</html>
