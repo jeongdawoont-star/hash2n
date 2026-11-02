@@ -41,24 +41,6 @@ export const RECORDS = [
   },
 
   {
-    title: "스포츠 베팅 시뮬레이터",
-    desc: "가상의 돈으로 스포츠 베팅의 함정을 체험하는 도박 예방 교육 자료다.\n\"분석하면 이길 수 있다\"는 생각이 왜 틀렸는지 결과로 확인한다.",
-    tags: "gambling, prevention, sports, simulation, education, class-tools",
-    category: "class-tools",
-    link: "./betedu/betedu.html",
-    image: "img-re/betedu.avif",
-  },
-
-  {
-    title: "시간을 달리는 역사 마을",
-    desc: "고조선부터 조선까지 6개 시대를 걸어 다니며 인물과 대화하고 퀴즈를 푸는 초등 한국사 3D 체험이다.\n자원을 모아 유물을 복원하고, 탐구 신문을 A4로 인쇄한다.",
-    tags: "history, korean-history, 3d, threejs, elementary, games",
-    category: "games",
-    link: "./vibe-apps/history-village/",
-    image: "img-re/history-village.avif",
-  },
-
-  {
     title: "별헌터",
     desc: "밤하늘을 찍으면 위치·시각·방향 센서로 별자리와 행성 위치를 계산해 겹쳐 보여준다.\n안드로이드 크롬에서 야외 촬영을 권장한다.",
     tags: "science, astronomy, constellation, camera, class-tools",
@@ -74,15 +56,6 @@ export const RECORDS = [
     category: "class-tools",
     link: "./vibe-apps/beat-game-maker.html",
     image: "img-re/beat-game-maker.avif",
-  },
-
-  {
-    title: "수학 모험 퀴즈",
-    desc: "두 자리 수와 한 자리 수의 덧셈·뺄셈을 이야기 문제로 푸는 레벨업 퀴즈다.\n문제를 풀수록 알에서 동물이 깨어나 진화한다.",
-    tags: "math, kids, quiz, addition, subtraction, games",
-    category: "games",
-    link: "./vibe-apps/math-quiz.html",
-    image: "img-re/math-quiz.avif",
   },
 
   {
