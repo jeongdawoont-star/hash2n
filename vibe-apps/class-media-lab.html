@@ -416,7 +416,89 @@ function initFirebase(cfg) {
   }
 }
 
-initFirebase(embeddedConfig);
+// =====================================================================
+// 체험판(?demo=1): Firebase에 연결하지 않고 이 브라우저 안에서만 동작
+// =====================================================================
+const isDemo = new URLSearchParams(location.search).get('demo') === '1';
+function initDemoDb(){
+  const KEY = 'mediaLabDemo.v1';
+  const now = Date.now(), min = 60000;
+  const seed = () => ({
+    'classes/DEMO': { roster:['김하늘','이도윤','박서연','정우진'], teacherPin:'1234', letterOpenPolicy:'self', createdAt:now },
+    'classes/DEMO/mails/l1': { from:'정우진', to:'김하늘', subject:'고마워!', body:'어제 도와줘서 고마웠어. 다음에는 내가 도와줄게.', ts:now-40*min, revealed:false, selfOpened:false, attachments:[], round:null },
+    'classes/DEMO/posts/p1': { author:'이도윤', content:'오늘 급식 디저트 정말 맛있었어요!', ts:now-30*min, likes:['김하늘'] },
+    'classes/DEMO/posts/p2': { author:'박서연', content:'다음 주 학급 행사 아이디어를 댓글로 적어 주세요.', ts:now-10*min, likes:[] },
+    'classes/DEMO/comments/c1': { postId:'p2', author:'정우진', content:'보드게임 대회 어때요?', ts:now-5*min, parentId:null, likes:[] },
+    'classes/DEMO/messages/m1': { from:'이도윤', to:'김하늘', text:'내일 준비물 알아?', ts:now-20*min, round:null },
+    'classes/DEMO/messages/m2': { from:'김하늘', to:'이도윤', text:'색연필이랑 자 챙기면 돼!', ts:now-18*min, round:null }
+  });
+  let store;
+  try { store = JSON.parse(localStorage.getItem(KEY)) || seed(); } catch(e){ store = seed(); }
+  const listeners = new Set();
+  const notify = () => setTimeout(() => listeners.forEach(fn => fn()), 0);
+  const save = () => { localStorage.setItem(KEY, JSON.stringify(store)); notify(); };
+  window.addEventListener('storage', e => { if(e.key===KEY){ try{ store = JSON.parse(e.newValue) || seed(); }catch(_){ store = seed(); } notify(); } });
+  const applyValue = (old, v) => {
+    if(v && v.__union) return [...new Set([...(old||[]), ...v.__union])];
+    if(v && v.__remove) return (old||[]).filter(x => !v.__remove.includes(x));
+    return v;
+  };
+  const merge = (path, data) => {
+    const cur = { ...(store[path]||{}) };
+    for(const [k,v] of Object.entries(data)){
+      const keys = k.split('.'); let o = cur;
+      keys.slice(0,-1).forEach(p => { o[p] = { ...(o[p]||{}) }; o = o[p]; });
+      const last = keys[keys.length-1]; o[last] = applyValue(o[last], v);
+    }
+    store[path] = cur;
+  };
+  const docSnap = path => ({ id:path.split('/').pop(), exists:path in store, data:()=>store[path] });
+  const colSnap = (path, filter) => {
+    const depth = path.split('/').length + 1;
+    const docs = Object.keys(store).filter(k => k.startsWith(path+'/') && k.split('/').length===depth)
+      .map(docSnap).filter(d => !filter || d.data()[filter[0]] === filter[1]);
+    return { docs, size:docs.length, empty:!docs.length, forEach:fn=>docs.forEach(fn) };
+  };
+  const watch = (emit) => { const fn = () => emit(); listeners.add(fn); setTimeout(fn,0); return () => listeners.delete(fn); };
+  const docRef = path => ({
+    id: path.split('/').pop(), __path: path,
+    collection: n => colRef(path+'/'+n),
+    get: async () => docSnap(path),
+    set: async d => { store[path] = d; save(); },
+    update: async d => { merge(path,d); save(); },
+    delete: async () => { delete store[path]; save(); },
+    onSnapshot: cb => watch(() => cb(docSnap(path)))
+  });
+  const colRef = (path, filter) => ({
+    doc: id => docRef(path+'/'+(id || 'd'+Date.now()+Math.random().toString(36).slice(2,7))),
+    where: (f,_op,v) => colRef(path,[f,v]),
+    get: async () => colSnap(path,filter),
+    add: async d => { const r = colRef(path).doc(); await r.set(d); return r; },
+    onSnapshot: cb => watch(() => cb(colSnap(path,filter)))
+  });
+  firebase.firestore.FieldValue = { arrayUnion:(...v)=>({__union:v}), arrayRemove:(...v)=>({__remove:v}) };
+  db = {
+    collection: n => colRef(n),
+    batch: () => {
+      const ops = [];
+      return {
+        set:(r,d)=>ops.push(()=>{store[r.__path]=d;}),
+        update:(r,d)=>ops.push(()=>merge(r.__path,d)),
+        delete:r=>ops.push(()=>{delete store[r.__path];}),
+        commit:async()=>{ ops.forEach(f=>f()); save(); }
+      };
+    }
+  };
+  firebaseInitialized = true;
+  embeddedClassCode = 'DEMO';
+  document.addEventListener('DOMContentLoaded', () => {
+    const bar = document.createElement('div');
+    bar.style.cssText = 'position:sticky;top:0;z-index:9999;background:#FFF3C4;color:#5B4300;padding:8px 12px;font-size:14px;text-align:center;line-height:1.5';
+    bar.textContent = '🧪 체험판: 학급 코드 DEMO · 선생님 비밀번호 1234 · 입력한 내용은 이 브라우저에만 저장됩니다';
+    document.body.prepend(bar);
+  });
+}
+if(isDemo) initDemoDb(); else initFirebase(embeddedConfig);
 
 // =====================================================================
 // 2) 전역 상태 및 Draft(입력 보존)
@@ -599,7 +681,7 @@ function subscribeClass(code){
   if(!db) return;
   clearSubscriptions();
   classCode = code;
-  localStorage.setItem('mediaLabLastClassCode', code);
+  if(!isDemo) localStorage.setItem('mediaLabLastClassCode', code);
   classDocRef = db.collection('classes').doc(code);
 
   unsub.class = classDocRef.onSnapshot(doc=>{

@@ -2941,7 +2941,9 @@ async function lgTeacher(ask){
   return true;
 }
 try{lg.cfg=JSON.parse(localStorage.getItem(LG_KEY)||'{}');}catch(e){lg.cfg={};}
-if(!lg.cfg.fb) lg.cfg.fb = DEFAULT_FB;
+/* 체험판(?demo=1): 내 Firebase에 연결하지 않음 */
+const LG_DEMO=new URLSearchParams(location.search).get('demo')==='1';
+if(LG_DEMO)lg.cfg={};else if(!lg.cfg.fb) lg.cfg.fb = DEFAULT_FB;
 if(!lg.cfg.code) lg.cfg.code = 'firstclass-lounge';
 const lgOnOf=c=>c.on!==false; // 자동 보내기는 기본 켜짐 (체크를 깜빡해서 점수가 안 가는 일 방지)
 /* 연동은 저장할 때 고른 학급으로 고정 (다른 학급을 보고 있어도 엉뚱한 명단이 가지 않게) */
