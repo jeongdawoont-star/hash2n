@@ -32,12 +32,12 @@ export const RECORDS = [
   // ▼ 여기에 새 기록을 붙여넣으세요 (최신 항목을 맨 위에) ▼
 
   {
-    title: "콩이의 영어 레벨 체크",
-    desc: "STAR Reading 형식을 따른 가정용 영어 읽기 레벨 체크다(유치원~12학년). 연습 3문제 뒤 본 문제 34개를 풀고, 맞히면 어려워지고 틀리면 쉬워진다.\n콩이가 한 문제마다 한 걸음씩 책의 성으로 걸어가며, 끝나면 미국 학년 수준과 영역별 정답을 보여준다. 비공식 연습용이다.",
+    title: "미미의 영어 레벨 체크",
+    desc: "STAR Reading 형식을 따른 가정용 영어 읽기 레벨 체크다(유치원~12학년). 연습 3문제 뒤 본 문제 34개를 풀고, 맞히면 어려워지고 틀리면 쉬워진다.\n고양이 미미가 문제마다 한 걸음씩 걸으며 Lv.8 레전드미미까지 변신하고, 자동 저장·성취도 그래프·학교 결과 보정을 지원한다. 비공식 연습용이다.",
     tags: "english, reading, star-reading, level-test, kids, class-tools",
     category: "class-tools",
-    link: "./vibe-apps/kong-english/",
-    image: "img-re/kong-english.avif",
+    link: "./vibe-apps/mimi-english/",
+    image: "img/mimi-english.png",
   },
 
   {
