@@ -37,7 +37,7 @@ export const RECORDS = [
     tags: "english, reading, star-reading, level-test, kids, class-tools",
     category: "class-tools",
     link: "./vibe-apps/mimi-english/",
-    image: "img/mimi-english.png",
+    image: "img-re/mimi-english.avif",
   },
 
   {
