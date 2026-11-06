@@ -32,6 +32,15 @@ export const RECORDS = [
   // ▼ 여기에 새 기록을 붙여넣으세요 (최신 항목을 맨 위에) ▼
 
   {
+    title: "콩이의 영어 레벨 체크",
+    desc: "STAR Reading 형식을 따른 가정용 영어 읽기 레벨 체크다. 연습 3문제 뒤 본 문제 34개를 풀고, 맞히면 어려워지고 틀리면 쉬워진다.\n콩이가 한 문제마다 한 걸음씩 책의 성으로 걸어가며, 끝나면 미국 학년 수준과 영역별 정답을 보여준다. 비공식 연습용이다.",
+    tags: "english, reading, star-reading, level-test, kids, class-tools",
+    category: "class-tools",
+    link: "./vibe-apps/kong-english/",
+    image: "img/kong-english.png",
+  },
+
+  {
     title: "도박의 덫 - LAST BET",
     desc: "친구의 메시지 한 통에서 시작되는 불법도박 예방 교육 시뮬레이션이다.\n가입부터 파멸까지 직접 겪고, 승률 조작 공개와 자가진단으로 마무리한다. 실제 돈은 쓰지 않는다.",
     tags: "gambling, prevention, simulation, education, class-tools",
