@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="STAR Reading 형식(연습 3문제, 본 문제 34개, 어휘 10문항 먼저, 문항별 시간 제한, 적응형 난이도)을 따른 가정용 영어 읽기 레벨 체크. 캐릭터 콩이가 문제마다 책의 성으로 걸어가요.">
+<meta name="description" content="STAR Reading 형식(연습 3문제, 본 문제 34개, 어휘 10문항 먼저, 문항별 시간 제한, 적응형 난이도)을 따른 가정용 영어 읽기 레벨 체크. 유치원~12학년 수준. 캐릭터 콩이가 문제마다 책의 성으로 걸어가요.">
 <style>:root{color-scheme:light;padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 <title>콩이의 영어 레벨 체크</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -147,7 +147,7 @@ textarea.txt{font-size:19px;min-height:130px;resize:vertical}
 .top h1{font-size:27px}
 .seg{display:flex;align-items:center;gap:2px;background:var(--bg);border-radius:999px;padding:4px}
 .seg span{font:15px var(--f-disp);color:var(--mu);padding:0 6px 0 10px;flex:none}
-.seg .chip{flex:1;min-width:0;padding:7px 0;border:0;background:none;font:18px var(--f-disp);color:var(--mu);border-radius:999px}
+.seg .chip{flex:1;min-width:0;padding:7px 0;border:0;background:none;font:16px var(--f-disp);color:var(--mu);border-radius:999px}
 .seg .chip[aria-pressed="true"]{background:var(--card);color:var(--ink);box-shadow:0 2px 0 var(--line)}
 .bonus{margin-top:0}
 .bc{flex-direction:row;justify-content:center;gap:6px;padding:10px 4px;border-radius:16px}
@@ -384,9 +384,52 @@ const FP=[["Write about your favorite animal. What does it look like? What can i
 /* 보너스 — 말하기(소리 내어 읽기): [레벨, 문장] */
 const SPK=[[1,"I see a big red bus."],[1,"My cat likes to nap."],[2,"We play in the park after school."],[2,"The frog can jump very high."],[3,"My friend and I built a sandcastle at the beach."],[3,"Please put your books on the shelf."],[4,"The thunder was so loud that the windows shook."],[4,"Every spring, the birds return to our garden."],[5,"Although it was late, the scientists kept working on the experiment."],[5,"The mountain trail was narrow and full of rocks."],[6,"The ancient city was hidden beneath layers of sand for centuries."],[6,"Recycling helps reduce the amount of waste in landfills."],[7,"Despite the heavy rain, the volunteers kept searching for the missing dog."],[7,"The orchestra’s performance received a standing ovation."],[8,"The committee’s decision was controversial, yet it ultimately proved beneficial."],[8,"Photosynthesis enables plants to convert sunlight into chemical energy."]];
 
-const RB=Q.map((q,i)=>({k:"mc",l:q[0],p:q[1],q:q[2],o:q[3],d:DM[i]})).concat(Q2,Q3,Q4).map(x=>Array.isArray(x)?{k:"mc",l:x[0],p:x[1],q:x[2],o:x[3],d:x[4]}:x);
+/* 상위 레벨 9~12 (9=8학년, 10=9학년, 11=10학년, 12=11~12학년): 실제 STAR Reading은 K~12학년, GE 12.9+까지 */
+const V7=[
+[9,"The scientist’s findings were ___ by three independent studies.","corroborated","fabricated","dismissed","postponed"],[9,"His ___ remarks offended several guests at the dinner.","tactless","diplomatic","gracious","subtle"],[9,"The ancient ruins offer a ___ of how people lived centuries ago.","glimpse","barrier","verdict","surplus"],[9,"After months of drought, the reservoir was nearly ___.","depleted","replenished","overflowing","sealed"],[9,"The committee will ___ the proposal carefully before making a decision.","scrutinize","neglect","celebrate","abandon"],[9,"Her ___ effort finally earned her a place on the team.","persistent","sporadic","halfhearted","accidental"],[9,"The town’s economy was ___ on tourism, so the storm hit it hard.","dependent","independent","indifferent","hostile"],[9,"The lawyer presented a ___ argument that convinced the judge.","cogent","feeble","rambling","irrelevant"],
+[10,"The new policy had the ___ effect of increasing traffic instead of reducing it.","unintended","deliberate","predicted","negligible"],[10,"The author’s ___ style makes even complex ideas easy to grasp.","lucid","convoluted","pompous","erratic"],[10,"The general refused to ___ even when his army was surrounded.","capitulate","advance","prosper","celebrate"],[10,"The witness’s ___ testimony changed several times during the trial.","inconsistent","unwavering","concise","credible"],[10,"Scientists remain ___ about the cause of the sudden decline in bee populations.","uncertain","unanimous","indifferent","jubilant"],[10,"The film’s ___ soundtrack created a sense of dread.","ominous","whimsical","upbeat","soothing"],[10,"Years of careful saving allowed the family to remain ___ during the recession.","solvent","bankrupt","reckless","destitute"],[10,"The candidate tried to ___ her opponent’s claim with clear evidence.","refute","endorse","repeat","embellish"],
+[11,"The professor’s ___ knowledge of medieval history impressed even her colleagues.","encyclopedic","rudimentary","superficial","fragmentary"],[11,"The diplomat’s ___ response avoided offending either country.","judicious","inflammatory","rash","belligerent"],[11,"The once-thriving mill town fell into ___ after the factory closed.","decline","prosperity","renewal","expansion"],[11,"Critics praised the novel’s ___ portrayal of grief, which felt painfully real.","poignant","flippant","detached","farcical"],[11,"The company’s ___ growth strained its ability to hire enough workers.","exponential","stagnant","modest","declining"],[11,"The senator was known for her ___ honesty, even when the truth was unpopular.","unflinching","selective","reluctant","calculated"],[11,"The evidence was ___, pointing toward a conclusion without proving it.","circumstantial","conclusive","irrefutable","fabricated"],[11,"The negotiators reached a ___ that left both sides partly satisfied.","compromise","stalemate","grievance","catastrophe"],
+[12,"The philosopher’s argument was so ___ that few readers could follow its many layers.","labyrinthine","transparent","simplistic","pedestrian"],[12,"The report’s ___ language hid how serious the safety failures really were.","euphemistic","blunt","candid","explicit"],[12,"Despite his ___ manner in public, he was known among friends as warm and generous.","austere","effusive","jovial","gregarious"],[12,"The scientist was careful not to ___ from a single experiment to all species.","extrapolate","abstain","deviate","recoil"],[12,"The regime used ___ to spread its message and silence dissent.","propaganda","philanthropy","diplomacy","satire"],[12,"Her ___ critique exposed every weakness in the study’s design.","incisive","perfunctory","sycophantic","nebulous"],[12,"The treaty’s vague wording left it open to ___ interpretations.","divergent","identical","unanimous","literal"],[12,"The novelist’s ___ prose, full of rare words and long sentences, divided critics.","ornate","spare","plain","colloquial"]];
+const Q5=[
+[9,"Coral bleaching occurs when warming waters cause corals to expel the algae that give them color and most of their food. If temperatures fall quickly, corals can recover; if not, they often starve.","According to the passage, what determines whether bleached corals survive?",["how quickly water temperatures fall","how colorful the algae are","how deep the corals live"],"C"],
+[9,"The Silk Road was not a single road but a network of routes. Along with silk and spices, travelers carried languages, religions, and inventions between East and West.","What is the main idea?",["The Silk Road spread both goods and ideas.","The Silk Road was one long highway.","Only silk was traded on the Silk Road."],"C"],
+[9,"Every evening, Mr. Adler set two cups on the table, filled one with tea, and left the other empty across from his chair.","What does the empty cup most likely suggest?",["He misses someone who is gone.","He expects a delivery.","He dislikes tea."],"L"],
+[9,"At first, Nadia resented being sent to her grandmother’s farm. By August she was waking before dawn to feed the goats without being asked.","How does Nadia change over the summer?",["She comes to embrace life on the farm.","She grows more resentful.","She decides to leave early."],"L"],
+[9,"The city exhaled as the last train pulled away.","What does this personification suggest?",["The city became calm and quiet.","The city was polluted.","The train was late."],"A"],
+[9,"As the storm hits the climbers, the author switches from long, flowing sentences to short fragments: “Wind. Ice. No rope.”","What is the effect of this change?",["It increases tension and urgency.","It slows the story down.","It adds humor."],"A"],
+[9,"An article claims a new study app improves grades, citing a study paid for by the company that makes the app.","Why should readers be cautious?",["The source may have a conflict of interest.","The study is too recent.","Apps cannot be studied."],"G"],
+[9,"Supporters say the new stadium will create jobs. Opponents point out that most of the jobs would be temporary and low-paying.","How do the opponents respond to the supporters’ claim?",["They question the quality of the jobs.","They agree completely.","They say the stadium is too small."],"G"],
+[10,"Although bats are often feared, they eat enormous numbers of insects, saving farmers billions of dollars a year in pest control.","What is the author’s main point about bats?",["They are valuable to agriculture.","They are dangerous to farmers.","They eat mostly fruit."],"C"],
+[10,"Refrigeration changed where people could live. Cities in hot climates grew rapidly once food could be stored safely and buildings could be cooled.","Which relationship does the passage mainly describe?",["cause and effect","a comparison of two inventors","a sequence of recipes"],"C"],
+[10,"The narrator calls her brother “reckless,” but she describes every daring thing he does with obvious admiration.","What does this suggest about the narrator?",["She secretly admires her brother’s courage.","She is afraid of her brother.","She does not know her brother well."],"L"],
+[10,"The lighthouse keeper keeps the lamp burning every night, long after ships have stopped using the route.","What does the keeper’s action most likely represent?",["loyalty to duty even when it seems pointless","a desire to save money","fear of the dark"],"L"],
+[10,"“We will not wait. We will not be silent. We will not give up. We will not forget.”","What technique does the speaker use?",["repetition at the start of each sentence for emphasis","understatement","flashback"],"A"],
+[10,"The essay describes the factory as “a hungry machine that swallowed the town’s young people.”","What attitude toward the factory does this create?",["critical","admiring","neutral"],"A"],
+[10,"A writer argues that because crime rose after the new mayor took office, the mayor must have caused the increase.","What flaw is in this reasoning?",["It assumes one event caused another just because it came first.","It relies on too much data.","It ignores the mayor’s name."],"G"],
+[10,"The author supports her claim about ocean plastic with data from three government agencies and two university studies.","How does this evidence affect the argument?",["It makes the argument more credible.","It makes the argument weaker.","It has no effect on the argument."],"G"],
+[11,"Historians once believed the city was abandoned because of war. New evidence of a long drought has led many to conclude that climate, not conflict, drove people away.","What has changed, according to the passage?",["historians’ explanation for why the city was abandoned","the location of the city","the date the city was founded"],"C"],
+[11,"Vaccines train the immune system by exposing it to a harmless piece or version of a germ, so the body can respond quickly to the real infection later.","How do vaccines protect the body?",["by preparing the immune system in advance","by killing all germs immediately","by replacing the immune system"],"C"],
+[11,"Throughout the novel, the hallway clock is stopped at 4:15, the minute the family received news of the accident.","What does the stopped clock symbolize?",["the family’s inability to move past the loss","the family’s punctuality","a broken household budget"],"L"],
+[11,"When praised for her bravery, the soldier only said, “I did what anyone would do,” and changed the subject.","What does her response reveal about her character?",["She is modest.","She is boastful.","She is confused."],"L"],
+[11,"The narrator, a young child, describes the adults’ arguments without understanding them, while readers grasp what is really happening.","What device does this create?",["dramatic irony","onomatopoeia","alliteration"],"A"],
+[11,"The essay opens with a single striking statistic before explaining what it means.","What is the purpose of this opening?",["to capture the reader’s attention","to summarize the conclusion","to list all sources"],"A"],
+[11,"An editorial argues that because some students misuse laptops, laptops should be banned from all classrooms.","Which best describes the weakness of the argument?",["It proposes an extreme solution based on limited misuse.","It cites too many experts.","It ignores the cost of desks."],"G"],
+[11,"One historian relies on letters written by soldiers; another relies on official government reports.","Why might their accounts of the same battle differ?",["They use sources with different perspectives.","One of them must be lying.","Letters are always more accurate."],"G"],
+[12,"Economists distinguish correlation from causation: two trends may move together without one causing the other, often because a third factor influences both.","According to the passage, why might two trends move together without one causing the other?",["A third factor may affect both.","Economists measured them wrongly.","Trends never move together."],"C"],
+[12,"The essay contends that technological progress is neither good nor bad in itself; its value depends on how societies choose to use it.","Which statement best expresses the central claim?",["Technology’s impact depends on human choices.","Technology always improves society.","Technology always harms society."],"C"],
+[12,"The narrator insists that she has “moved on” from the city, yet each chapter opens with a detailed memory of its streets.","What does this pattern suggest?",["She remains emotionally tied to the city.","She has forgotten the city.","She never lived in the city."],"L"],
+[12,"In the play, the king’s fool speaks in riddles that the court laughs at, but his jokes predict every disaster that follows.","What role does the fool serve?",["He reveals truths that others ignore.","He provides only comic relief.","He causes the disasters."],"L"],
+[12,"A poem describes a summer afternoon in the present tense, then shifts to the past tense in its final stanza.","What is the most likely effect of this shift?",["It signals that the moment is now only a memory.","It shows the poet made an error.","It speeds up the action."],"A"],
+[12,"The author describes a politician’s speech as “a masterpiece of saying nothing at great length.”","What tone does this create?",["satirical","reverent","neutral"],"A"],
+[12,"A survey of people who visited a museum’s website concluded that most of the public supports more funding for the museum.","What is the main problem with the conclusion?",["The sample does not represent the public.","The survey was too long.","Museums cannot be surveyed."],"G"],
+[12,"The author anticipates the objection that the plan is too expensive and answers it with a cost-benefit analysis.","What is the purpose of addressing this objection?",["to strengthen the argument by answering critics","to change the topic","to admit the plan will fail"],"G"]];
+const V6=[[9,"The root bio means life. What does biography mean?","","a written account of a person’s life","a study of rocks","a list of words","a machine for lifting"],[9,"In this sentence, what does stem mean?","Officials hope to stem the spread of the disease.","stop or hold back","grow from","the stalk of a plant","come from"],
+[10,"The prefix bene- means good and the root dict means say. What does benediction mean?","","a blessing","a curse","a dictionary","an argument"],[10,"In this sentence, what does novel mean?","The team found a novel solution that no one had tried before.","new and original","a long story","old-fashioned","expensive"],
+[11,"The root mal means bad and the root vol means wish. What does malevolent mean?","","wishing harm to others","very generous","easily tired","full of hope"],[11,"In this sentence, what does temper mean?","She tried to temper her criticism with words of praise.","soften or balance","lose control","harden metal","delay"],
+[12,"Which word is closest in meaning to laconic?","","using few words","very talkative","extremely lazy","full of joy"],[12,"In this sentence, what does qualify mean?","The author was careful to qualify her claim with the phrase “in most cases.”","limit or modify","pass a test","make eligible","praise"]];
+const RB=Q.map((q,i)=>({k:"mc",l:q[0],p:q[1],q:q[2],o:q[3],d:DM[i]})).concat(Q2,Q3,Q4,Q5).map(x=>Array.isArray(x)?{k:"mc",l:x[0],p:x[1],q:x[2],o:x[3],d:x[4]}:x);
 /* 1~10번: 문맥 속 어휘(vocabulary-in-context, 빈칸 문장) 전용 */
-const VB=V.concat(V3,V4).map(v=>({k:"mc",v:1,l:v[0],p:v[1],o:v.slice(2),d:"W"}));
+const VB=V.concat(V3,V4,V7).map(v=>({k:"mc",v:1,l:v[0],p:v[1],o:v.slice(2),d:"W"}));
 /* 11~34번의 '어휘 지식(Word Knowledge and Skills)' 영역: 접두사·어근·동의어·다의어 */
 const V5=[[1,"Which word rhymes with hen?","","ten","hat","cup"],[1,"Which word starts with the same sound as sun?","","sock","moon","cat"],
 [2,"Which word means the same as fast?","","quick","slow","soft"],[2,"Which word is the opposite of up?","","down","in","on"],
@@ -396,18 +439,18 @@ const V5=[[1,"Which word rhymes with hen?","","ten","hat","cup"],[1,"Which word 
 [6,"The root port means carry. What does transport mean?","","carry from one place to another","write a letter","look at closely","break apart"],[6,"Which word is closest in meaning to reluctant?","","hesitant","eager","angry","famous"],
 [7,"The root chron means time. What does chronological mean?","","arranged in time order","very loud","about the stars","easily broken"],[7,"In this sentence, what does yield mean?","The apple trees yield a large crop every fall.","produce","give way","stop","surrender"],
 [8,"Which word is closest in meaning to ambivalent?","","having mixed feelings","completely certain","very angry","extremely happy"],[8,"The prefix mal- means bad. What does malfunction mean?","","fail to work properly","work very well","build again","measure carefully"]];
-const WK=V2.concat(V5).map(v=>({k:"mc",l:v[0],q:v[1],p:v[2],o:v.slice(3),d:"W"}));
+const WK=V2.concat(V5,V6).map(v=>({k:"mc",l:v[0],q:v[1],p:v[2],o:v.slice(3),d:"W"}));
 RB.push(...WK);
 
 /* 난이도 보정: 실제 응시 데이터가 없으므로 지문 가독성(Flesch-Kincaid 학년)으로 문항마다 난이도 b를 조정해요.
-   b = 0.6×목표 레벨 + 0.4×(그 레벨 지문 평균 가독성+1) + 문항별 편차(±0.4) */
+   b = 목표 레벨 + 0.4×(그 레벨 지문 평균 가독성+1 − 목표 레벨)(−0.6~+0.3로 제한해 레벨 순서 유지) + 문항별 편차(±0.4) */
 (function calibrate(){const syl=w=>{w=w.toLowerCase().replace(/[^a-z]/g,"");if(!w)return 0;if(w.length<=3)return 1;w=w.replace(/(?:[^laeiouy]es|ed|[^laeiouy]e)$/,"").replace(/^y/,"");const m=w.match(/[aeiouy]{1,2}/g);return m?m.length:1};
 const st=t=>{const s=Math.max(1,(t.match(/[.!?]+/g)||[]).length),ws=t.split(/\s+/).filter(y=>/[a-z]/i.test(y));return{s,w:Math.max(1,ws.length),sy:ws.reduce((a,y)=>a+syl(y),0)}};
 const fk=r=>.39*r.w/r.s+11.8*r.sy/r.w-15.59;
 const all=RB.concat(VB),agg={};
 all.forEach(x=>{x._r=st(((x.p||"")+" "+(x.q||"")).replace("___","blank"));const a=agg[x.l]=agg[x.l]||{s:0,w:0,sy:0};a.s+=x._r.s;a.w+=x._r.w;a.sy+=x._r.sy});
 const mean={};for(const l in agg)mean[l]=fk(agg[l]);
-all.forEach(x=>{x.b=+(0.6*x.l+0.4*(mean[x.l]+1)+Math.max(-.4,Math.min(.4,(fk(x._r)-mean[x.l])*.15))).toFixed(2);delete x._r})})();
+all.forEach(x=>{x.b=+(x.l+Math.max(-.6,Math.min(.3,.4*(mean[x.l]+1-x.l)))+Math.max(-.4,Math.min(.4,(fk(x._r)-mean[x.l])*.15))).toFixed(2);delete x._r})})();
 const LB=LS.map(x=>({k:"ls",l:x[0],a:x[1],q:x[2],o:x[3],d:"H"}));
 const WS=SPW.map(x=>({k:"sp",l:x[0],w:x[1],s:x[2]})), WU=UNW.map(x=>({k:"un",l:x[0],s:x[1]}));
 
@@ -416,12 +459,12 @@ const SS=[0,400,550,650,750,850,950,1000,1100];
 const DN={W:"어휘",C:"독해·이해",L:"문학 분석",A:"표현 기법",G:"논증·평가"};
 const ST=[{n:"출발",m:"콩이가 길을 떠나요!"},{n:"꽃밭",m:"콩이 머리에 꽃이 활짝 피었어요."},{n:"바닷가",m:"밀짚모자랑 줄무늬 튜브를 챙겼어요."},{n:"구름산",m:"구름 위에서 콩이에게 날개가 생겼어요."},{n:"별빛 다리",m:"우주 헬멧을 쓰고 별 사이를 걸어요."},{n:"책의 성",m:"콩이가 책의 성의 왕이 되었어요!"}];
 /* STAR Reading 기술 매뉴얼 Table 34 「Scaled Score to Grade Equivalent Conversions」: GE 0.0~9.0 각 단계의 최저 척도 점수(Enterprise 척도) */
-const T34=[0,46,51,56,59,61,64,66,69,72,80,83,87,90,97,106,122,142,160,177,195,213,230,248,267,284,303,323,334,344,355,365,373,384,396,408,422,435,443,450,456,462,467,474,482,491,498,506,515,523,532,543,554,561,570,580,589,601,613,625,638,651,665,679,694,711,727,749,764,773,781,789,797,806,815,825,834,843,853,865,878,889,898,905,911,920,931,944,951,960,967];
-const geOf=m=>clip(m-1,0,9);
-const ssOf=m=>{const g=geOf(m)*10,i=Math.min(89,Math.floor(g));return Math.round(T34[i]+(g-i)*(T34[i+1]-T34[i]))};
+const T34=[0,46,51,56,59,61,64,66,69,72,80,83,87,90,97,106,122,142,160,177,195,213,230,248,267,284,303,323,334,344,355,365,373,384,396,408,422,435,443,450,456,462,467,474,482,491,498,506,515,523,532,543,554,561,570,580,589,601,613,625,638,651,665,679,694,711,727,749,764,773,781,789,797,806,815,825,834,843,853,865,878,889,898,905,911,920,931,944,951,960,967,973,979,988,1002,1017,1033,1045,1051,1056,1061,1067,1072,1081,1090,1096,1100,1104,1107,1111,1116,1121,1125,1130,1134,1138,1143,1147,1152,1156,1161,1164,1167,1171,1174,1177,1180,1183,1186,1190,1193];
+const geOf=m=>clip(m-1,0,12.9);
+const ssOf=m=>{const g=geOf(m)*10,i=Math.min(T34.length-2,Math.floor(g));return Math.round(T34[i]+(g-i)*(T34[i+1]-T34[i]))};
 /* Unified 척도 근사: 2024 규준의 학년·시기별 50백분위 점수(가을 .1 · 겨울 .5 · 봄 .8)에 GE를 맞춰 보간 */
 const UNI=[[0.1,686],[0.5,735],[1.1,755],[1.5,803],[1.8,851],[2.1,871],[2.5,902],[2.8,932],[3.1,940],[3.5,959],[3.8,978],[4.1,989],[4.5,1002],[4.8,1015],[5.1,1019],[5.5,1029],[5.8,1039],[6.1,1046],[6.5,1054],[6.8,1062],[7.1,1065],[7.5,1071],[7.8,1077],[8.1,1082],[8.5,1087],[8.8,1093]];
-const uniOf=m=>{const g=geOf(m);if(g<=UNI[0][0])return Math.round(Math.max(600,686-(0.1-g)*120));for(let i=1;i<UNI.length;i++)if(g<=UNI[i][0]){const[a,p]=UNI[i-1],[b,q]=UNI[i];return Math.round(p+(g-a)/(b-a)*(q-p))}return 1093};
+const uniOf=m=>{const g=geOf(m);if(g<=UNI[0][0])return Math.round(Math.max(600,686-(0.1-g)*120));for(let i=1;i<UNI.length;i++)if(g<=UNI[i][0]){const[a,p]=UNI[i-1],[b,q]=UNI[i];return Math.round(p+(g-a)/(b-a)*(q-p))}return null};
 const fmtGE=ge=>{ge=Math.max(0,ge);let w=Math.floor(ge),d=Math.round((ge-w)*10);if(d==10){w++;d=0}return (w==0?"K":w)+"."+d};
 
 /* ───────── 도구 ───────── */
@@ -462,14 +505,14 @@ const CASTLE='<svg class="cs" viewBox="0 0 40 40" aria-hidden="true"><rect x="5"
    맞힐 확률 = 찍기확률 + (1-찍기확률)/(1+e^(-1.7(능력-난이도))).
    매 문제 뒤 지금까지의 모든 응답으로 능력을 다시 추정해서, 한 문제로 학년이 훌쩍 뛰지 않아요. */
 const PC=(t,b,g)=>g+(1-g)/(1+Math.exp(-1.7*(t-b)));
-function est(resp,mu0){const pts=[];for(let t=0;t<=9.5001;t+=.05){let lw=-((t-mu0)**2)/(2*1.5*1.5);for(const r of resp){const p=PC(t,r.b,r.g);lw+=Math.log(r.x?p:1-p)}pts.push([t,lw])}
+function est(resp,mu0){const pts=[];for(let t=0;t<=13.5001;t+=.05){let lw=-((t-mu0)**2)/(2*1.5*1.5);for(const r of resp){const p=PC(t,r.b,r.g);lw+=Math.log(r.x?p:1-p)}pts.push([t,lw])}
 const mx=Math.max(...pts.map(p=>p[1]));let sw=0,sm=0,s2=0;for(const [t,lw] of pts){const w=Math.exp(lw-mx);sw+=w;sm+=w*t;s2+=w*t*t}const m=sm/sw;return{m,sd:Math.sqrt(Math.max(0,s2/sw-m*m))}}
 function pickItem(pool,target,filt){const free=pool.filter(x=>!S.used.has(x));let c=filt?free.filter(filt):free;if(!c.length)c=free;if(!c.length)return null;
 c=c.map(x=>[Math.abs((x.b??x.l)-target)+Math.random()*.5,x]).sort((p,q)=>p[0]-q[0]);const it=c[0][1];S.used.add(it);return it}
 
 /* ───────── 화면 ───────── */
-let S=null,T=null,G=clip(+store.get("kong_g",2)||0,0,6);
-const GN=g=>g?g+"학년":"유치원";
+let S=null,T=null,G=clip(+store.get("kong_g",2)||0,0,9);
+const GN=g=>g>=9?"9학년 이상":g?g+"학년":"유치원";
 const stg=c=>c<=0?0:Math.min(5,Math.floor(c/S.N*5+1e-9));
 const MODE={r:"읽기",l:"듣기",w:"쓰기",s:"말하기"};
 
@@ -478,7 +521,7 @@ const h=store.get("kong_hist",[]);
 app.innerHTML=`
 <div class="top">${kong(0,64)}<h1>콩이의 영어 레벨 체크</h1></div>
 <section class="c">
-<div class="seg" role="group" aria-label="학년"><span>학년</span>${[0,1,2,3,4,5,6].map(g=>`<button class="chip" data-g="${g}" aria-pressed="${g==G}" aria-label="${GN(g)}">${g||"K"}</button>`).join("")}</div>
+<div class="seg" role="group" aria-label="학년"><span>학년</span>${[0,1,2,3,4,5,6,7,8,9].map(g=>`<button class="chip" data-g="${g}" aria-pressed="${g==G}" aria-label="${GN(g)}">${g==9?"9+":g||"K"}</button>`).join("")}</div>
 <button class="btn" id="goR">읽기 테스트 시작</button>
 <div class="bonus">
 <button class="bc" id="goL">${I("ear")}<b>듣기</b></button>
@@ -487,7 +530,7 @@ app.innerHTML=`
 </section>
 ${h.length?`<section class="c"><h3>지난 기록</h3>${h.slice(-6).reverse().map(r=>`<div class="hrow"><span>${esc(r.d)} · ${MODE[r.m]||""}</span><span>${r.ss?r.ss+"점 · ":""}${esc(r.s)}</span></div>`).join("")}</section>`:""}
 <details class="parent"><summary>부모님용 안내</summary>
-<p><b>읽기 테스트</b>는 STAR Reading 형식을 따랐어요.</p>
+<p><b>읽기 테스트</b>는 STAR Reading 형식을 따랐어요. 실제 시험처럼 유치원부터 12학년 수준까지 잴 수 있어요(학년 선택의 9+는 9~12학년).</p>
 <ul class="rules"><li>연습 3문제(점수 제외) 뒤 본 문제 34개, 20~25분쯤 걸려요.</li><li>1~10번은 어휘, 11~34번은 독해·문학 분석·표현 기법·논증 평가를 번갈아 내요.</li><li>정답은 중간에 알려주지 않고, 맞히면 조금 어려워지고 틀리면 조금 쉬워져요.</li><li>시간 제한은 표준 기준이에요(${G<=2?"K~2학년: 어휘 60초, 독해 120초":"3학년 이상: 어휘 45초, 독해 90초"}). 시간이 지나면 오답이에요.</li><li>콩이는 맞든 틀리든 문제 하나마다 한 걸음씩 가요. 실제 시험처럼 정답 여부를 아이에게 보여주지 않기 위해서예요.</li></ul>
 <p><b>듣기·쓰기·말하기</b>는 실제 STAR Reading에 없는 영역이에요. 시험과 상관없는 가정 연습이고 읽기 점수에 들어가지 않아요. 쓰기 마지막의 글쓰기 첨삭은 Claude를 쓰며, 처음 누를 때 허락을 물어요.</p>
 <p>문항 ${RB.length+VB.length}개는 모두 새로 쓴 것이에요. 실제 응시 데이터가 없어서 문항 난이도는 학년 기준과 지문 가독성으로 보정했고, 점수 환산은 STAR Reading 기술 매뉴얼의 환산표(Enterprise)와 2024 규준 중앙값(Unified 근사)을 썼어요. 학년 수준과 점수는 공식 점수가 아닌 참고값이니 한 달에 한 번쯤 추이를 보는 데 쓰세요.</p>
@@ -496,7 +539,7 @@ app.querySelectorAll(".chip").forEach(b=>b.onclick=()=>{G=+b.dataset.g;store.set
 $("goR").onclick=()=>start("r");$("goL").onclick=()=>start("l");$("goW").onclick=()=>start("w");$("goS").onclick=()=>start("s");
 window.scrollTo(0,0)}
 
-function start(mode){clearInterval(T);const mu0=clip(G+1,1,8);
+function start(mode){clearInterval(T);const mu0=clip(G+1,1,mode=="r"?12:8);
 S={mode,g:G,mu0,lo:G<=2,i:0,pr:0,used:new Set(),resp:[],rec:[],est:{m:mu0,sd:1.5},pp:0};
 if(mode=="r"){S.N=34;S.pr=3;S.vn=10}
 if(mode=="l")S.N=12;
@@ -577,7 +620,7 @@ ov.hidden=false;const b=$("ovb");b.focus();b.onclick=()=>{ov.hidden=true;ov.inne
 
 function addHist(o){const h=store.get("kong_hist",[]);h.push(Object.assign({d:new Date().toLocaleDateString("ko-KR")},o));store.set("kong_hist",h.slice(-40))}
 function resTop(title,sub){return `<div class="res-top">${kong(5,120)}<h2>${title}</h2><p class="mu">${sub}</p></div>`}
-function geLine(m){return m>8.4?"7.4 이상":fmtGE(geOf(m))}
+function geLine(m){return m>12.5?"11.5 이상":fmtGE(geOf(m))}
 
 function finish(){clearInterval(T);hush();S.pp=1;
 const {m,sd}=S.est,ok=S.rec.filter(r=>r.x).length;let html="";
@@ -587,9 +630,9 @@ if(S.mode=="r"){const ss=ssOf(m),ge=Math.max(0,m-1);
  addHist({m:"r",ss,ge:geLine(m),s:ok+"/"+S.N});
  html=resTop("책의 성 도착!",GN(S.g)+" · 읽기 레벨 테스트 결과")+`
  <div style="text-align:center"><p class="mu">학년 수준</p><div class="big">${geLine(m)}</div></div>
- <dl class="kv"><dt>점수(Enterprise)</dt><dd>${ss}</dd><dt>점수(Unified)</dt><dd>약 ${uniOf(m)}</dd><dt>정답</dt><dd>${ok} / ${S.N}</dd></dl>
+ <dl class="kv"><dt>점수(Enterprise)</dt><dd>${ss}</dd><dt>점수(Unified)</dt><dd>${uniOf(m)?"약 "+uniOf(m):"—"}</dd><dt>정답</dt><dd>${ok} / ${S.N}</dd></dl>
  ${ds}
- <details class="parent"><summary>부모님용 해석</summary><p><b>학년 수준(GE)</b> 3.4는 “미국 3학년 4개월째 학생의 평균만큼 읽는다”는 뜻이에요. 오차를 생각하면 ${fmtGE(geOf(m-sd))}–${fmtGE(geOf(m+sd))} 사이예요.</p><p><b>Enterprise 점수</b>는 STAR Reading 기술 매뉴얼의 척도 점수–학년 환산표(Table 34)로 바꾼 값이에요(오차 범위 ${ssOf(m-sd)}–${ssOf(m+sd)}).</p><p><b>Unified 점수</b>는 요즘 학교 성적표에 많이 나오는 척도예요. 2024 규준의 학년별 중앙값에 맞춘 근사값이라 실제와 수십 점 차이가 날 수 있어요.</p><p>학교 성적표에 600 이상 점수가 있으면 Unified, 그보다 낮은 점수면 Enterprise와 비교하세요.</p></details>`}
+ <details class="parent"><summary>부모님용 해석</summary><p><b>학년 수준(GE)</b> 3.4는 “미국 3학년 4개월째 학생의 평균만큼 읽는다”는 뜻이에요. 오차를 생각하면 ${fmtGE(geOf(m-sd))}–${fmtGE(geOf(m+sd))} 사이예요.</p><p><b>Enterprise 점수</b>는 STAR Reading 기술 매뉴얼의 척도 점수–학년 환산표(Table 34)로 바꾼 값이에요(오차 범위 ${ssOf(m-sd)}–${ssOf(m+sd)}).</p><p><b>Unified 점수</b>는 요즘 학교 성적표에 많이 나오는 척도예요. 2024 규준의 학년별 중앙값에 맞춘 근사값이라 실제와 수십 점 차이가 날 수 있어요. 확인한 규준이 8학년까지라 학년 수준이 8.8을 넘으면 “—”로 표시해요.</p><p>학교 성적표에 600 이상 점수가 있으면 Unified, 그보다 낮은 점수면 Enterprise와 비교하세요.</p></details>`}
 else if(S.mode=="l"){addHist({m:"l",ge:geLine(m),s:ok+"/"+S.N});
  html=resTop("듣기 여행 완주!",GN(S.g)+" · 듣기 연습 결과")+`<dl class="kv"><dt>듣기 수준</dt><dd>미국 학년 ${geLine(m)} 부근</dd><dt>정답</dt><dd>${ok} / ${S.N}</dd></dl>`}
 else if(S.mode=="w"){addHist({m:"w",ge:geLine(m),s:ok+"/"+S.N});
