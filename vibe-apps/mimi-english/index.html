@@ -447,6 +447,195 @@ const V5=[[1,"Which word rhymes with hen?","","ten","hat","cup"],[1,"Which word 
 const WK=V2.concat(V5,V6).map(v=>({k:"mc",l:v[0],q:v[1],p:v[2],o:v.slice(3),d:"W"}));
 RB.push(...WK);
 
+/* 보기 개편(2026-11-06): 실제 STAR 응시 결과 3.x인 학생이 6.6으로 나와 원인을 보니
+   정답이 보기 중 가장 긴 경우가 64%였고 오답이 엉뚱했다. 레벨 3 이상은 4지선다로 바꾸고,
+   오답은 지문 낱말을 섞어 그럴듯하게, 길이는 정답과 비슷하게 다시 썼다. [번호, 질문 앞부분(확인용), 보기(정답 먼저)] */
+const OPTS=[
+[6,"Why was Ben",["He could not play outside.","His friend had to go back home.","He had lost his favorite ball.","He was too tired to go out."]],
+[7,"Which word means almost",["glad","angry","proud","tired"]],
+[8,"What time of day",["night","morning","noon","afternoon"]],
+[9,"What does the seed",["water and sunlight","a lot of soil and strong wind","more seeds and some leaves","cool shade at night"]],
+[10,"Which word has the same",["huge","tiny","heavy","quiet"]],
+[11,"What can you tell about Sara",["She worked hard and did well.","She was nervous about her score.","She found the test too easy to study for.","She smiled because her friend did well."]],
+[12,"What is the main idea",["Bees help plants make seeds by spreading pollen.","Bees collect nectar to make sweet honey for winter.","Pollen is a sticky powder found inside flowers.","Bees travel long distances to find the best flowers."]],
+[13,"What does reluctant",["unwilling","excited","careful","prepared"]],
+[14,"What does this show about Leo",["He is patient and determined.","He is upset and gives up easily.","He is careless with his toys.","He is quiet because he is shy."]],
+[15,"Why did the guide",["So the group could follow her.","So visitors would know she worked there.","So the crowd would move out of the way.","So the group would stay quiet."]],
+[16,"What is a hypothesis",["a testable prediction","a proven fact","the final result of a study","a list of materials"]],
+[17,"What kind of figurative",["metaphor","simile","personification","hyperbole"]],
+[18,"What is the author’s point",["Destroying rainforests can worsen climate change.","Farmland is more useful than rainforests.","Rainforests release more carbon than they absorb.","Planting crops helps remove carbon from the air."]],
+[19,"What does candid",["honest","rude","kind","quiet"]],
+[20,"What can be inferred",["She may have private doubts.","She was proud of her plan.","She did not understand the plan.","She wanted others to like it."]],
+[21,"What is implied about his",["It is motivated by image.","It comes from true kindness.","It grows stronger over time.","It is limited by his wealth."]],
+[22,"What does ubiquitous",["found everywhere","very popular","hard to notice","quite modern"]],
+[23,"What is the critics",["Good intentions, harmful results.","Harmful intentions, good results.","Good intentions, mixed results.","Poor planning, no real results."]],
+[32,"What problem does Pip",["He is lost.","He is hungry.","He is hurt.","He is sleepy."]],
+[33,"What does the word whispered",["a soft, quiet sound","a cold, strong wind","a loud crash","a bright light"]],
+[34,"What is the passage mostly",["how a frog grows","where frogs lay eggs","what tadpoles eat","why frogs live in water"]],
+[35,"Why does the author say",["It protects your head.","It helps you ride faster.","It keeps the sun out of your eyes.","It is a rule at every school."]],
+[36,"What is the theme",["Practice leads to improvement.","Spring is the best time to learn.","Some songs are too hard to play.","Music lessons should be short."]],
+[37,"What mood does",["scary","funny","calm","cheerful"]],
+[38,"Which detail shows",["They store water in their stems.","They grow only where it rains a lot.","They have very large green leaves.","They need water every single day."]],
+[39,"What is the author trying",["to persuade readers to add a garden","to explain how vegetables grow","to describe the garden the school already has","to tell a story about a student"]],
+[40,"What does this show about Jonas",["He is a good sport.","He is proud of winning.","He is upset and rude.","He is a fast runner."]],
+[41,"What does a piece of cake",["very easy","very tasty","a reward","very long"]],
+[42,"What is magma",["melted rock","hot ash","a crack in the ground","a kind of gas"]],
+[43,"What is the author’s view",["It helps students remember.","It should be banned.","It takes too much time.","It is only for older students."]],
+[44,"What does the author suggest",["His actions did not match his feelings.","He was calm because he was prepared.","He was cold and needed a jacket.","He was excited to begin."]],
+[45,"Which technique",["personification","onomatopoeia","alliteration","simile"]],
+[46,"What can you conclude",["Dances help bees share information.","Bees dance only when they are happy.","Flowers move when bees dance near them.","Bees learn to dance from other insects."]],
+[47,"What is wrong with this",["It relies on opinion instead of evidence.","It gives too many facts about parks.","It does not say where the park is.","It uses words that are too hard."]],
+[48,"What does golden",["It is fond and idealized.","It is accurate and detailed.","It is bitter and angry.","It is faded and uncertain."]],
+[49,"What does this reveal about Elena",["She is a perfectionist.","She is forgetful.","She is lazy about practice.","She dislikes speaking."]],
+[50,"What does the author use",["research findings","personal stories","expert opinions","historical events"]],
+[51,"What is the effect of the meltwater",["rising sea levels","colder ocean water","larger glaciers","stronger storms"]],
+[52,"What is implied",["Funding is uncertain.","Funding was approved.","The proposal was rejected.","The committee was confused."]],
+[53,"What is the most likely",["He cares more than he admits.","He expects to lose the award.","He is helping a friend who entered.","He checks to be polite to others."]],
+[54,"What weakness",["It generalizes from a single example.","It relies too heavily on statistics.","It quotes too many national experts.","It ignores the policy’s original goals."]],
+[55,"Which best states",["Photosynthesis underpins life on Earth.","Plants store light energy in their roots.","Chemical energy comes mainly from animals.","Only some plants can use sunlight."]],
+[62,"What are lion",["prides","herds","packs","flocks"]],
+[63,"How does Max",["angry","proud","scared","sleepy"]],
+[64,"What is the author trying",["to get you to buy soap","to explain how soap is made","to tell a story about soap","to compare two kinds of soap"]],
+[65,"What does Ravi",["He values kindness.","He wanted to come in last.","He is not good at racing.","He was afraid of falling."]],
+[66,"What does the author compare",["diamonds","lamps","coins","candles"]],
+[67,"How do bats",["by listening to echoes","by seeing well in the dark","by following other bats","by smelling the insects"]],
+[68,"What is the author’s purpose",["to persuade","to entertain","to describe","to compare"]],
+[69,"What does grinned",["great joy","surprise","nervousness","pain"]],
+[70,"What is the main idea",["Sailors used stars to navigate.","Stars are brighter at sea.","Sailors liked to study at night.","The night sky changes each season."]],
+[71,"What can you infer about Wren",["She is afraid of the news.","She forgot to read it.","She is saving it for later.","She already knows what it says."]],
+[72,"Why is the conclusion",["It rests on a single study.","It uses too many experts.","It does not mention farms.","It is about plants, not people."]],
+[73,"What effect does",["a cozy feeling","a tense feeling","a lonely feeling","a mysterious feeling"]],
+[74,"How do the villagers",["They begin to trust him.","They ask him to leave.","They stay suspicious of him.","They forget about him."]],
+[75,"What is the main weakness",["Happiness was not clearly measured.","Parks cost cities too much money.","The report studied too many cities.","Residents were not asked about parks."]],
+[76,"What does the metaphor",["The ocean seems wild and dangerous.","The ocean seems lonely and sad.","The ocean is full of animals.","The ocean is calm at night."]],
+[77,"What does the residents",["They doubt anything will happen.","They trust the mayor completely.","They are too tired to listen.","They are surprised by the promise."]],
+[78,"What is her main",["publishing misleading results","losing credit to others","running out of funding","finishing her work too slowly"]],
+[79,"What does the passage present",["two competing viewpoints","a single expert opinion","a solution both sides accept","the history of the tax"]],
+[96,"How do penguins",["to swim","to fly","to dig","to stay warm"]],
+[97,"What did people use",["feathers and ink","pens and pencils","crayons","chalk"]],
+[98,"Why did Jack",["He felt guilty.","He was tired.","He dropped something.","He was looking for his toy."]],
+[99,"How did Rosa",["She became brave in the water.","She learned to like the summer.","She stayed afraid of the pool.","She taught her friend to swim."]],
+[100,"What does this comparison",["It was very loud.","It was very far away.","It moved very fast.","It lasted a long time."]],
+[101,"Who is telling",["Max","Max’s friend","the teacher","Max’s mom"]],
+[102,"Which sentence is an opinion",["The best season is fall.","The leaves turn red and yellow in fall.","Both sentences are facts.","Both sentences are opinions."]],
+[103,"What reason does",["It teaches responsibility.","Fish are fun to watch.","Tanks make rooms pretty.","Fish are easy to feed."]],
+[104,"Why do people farm",["The soil is rich.","It is the longest river.","It rains there every day.","The river is easy to cross."]],
+[105,"How did hummingbirds",["from the sound their wings make","from the humming songs they sing to each other","from how fast they fly","from the flowers they visit"]],
+[106,"Which word best describes Omar",["responsible","stubborn","bossy","lonely"]],
+[107,"What lesson",["Careful work pays off.","Fancy paints are best.","Friends should share.","Judges can be unfair."]],
+[108,"What does groaned",["He is unhappy.","He is tired.","He is hungry.","He is surprised."]],
+[109,"What does this sentence mean",["The kitchen was busy and noisy.","The family had many pets.","The kitchen was messy and dirty.","Breakfast was very large."]],
+[110,"What evidence",["studies about focus","a story about a friend","a teacher’s opinion","a list of games"]],
+[111,"Which part is an opinion",["the second sentence","the first sentence","both sentences","neither sentence"]],
+[112,"What does the passage suggest",["They are very important to ocean life.","They cover a large part of the ocean floor.","Few kinds of animals can live near them.","They are found only in cold water."]],
+[113,"What happened to most",["They did not find much gold.","They became rich quickly.","They moved back east right away.","They found gold in the rivers."]],
+[114,"What can you infer about Kai",["He was more scared than he said.","He was proud of being brave.","He was not scared at all.","He thought the house was boring."]],
+[115,"What best describes the change",["Ava goes from unfriendly to friendly.","Ava goes from friendly to shy.","Ava becomes lonely at school.","Ava learns to build things."]],
+[116,"Why does the author repeat",["to show Theo’s determination","to show Theo is getting hurt","to show Theo is tired","to show Theo wants help"]],
+[117,"What kind of language",["hyperbole","simile","metaphor","a fact"]],
+[118,"Why should readers be careful",["The ad leaves out important information.","The ad uses too many numbers.","The ad is about an unhealthy food.","The ad is written for adults."]],
+[119,"How does the author support",["by giving several reasons","by telling a story","by quoting an expert","by comparing two cities"]],
+[120,"What is a shark",["cartilage","bone","shell","muscle"]],
+[121,"What was one effect",["Ideas spread more quickly.","Books became more expensive.","Fewer people learned to read.","Writers stopped using paper."]],
+[122,"What does Nina",["Grandma may not be well.","Grandma is busy traveling.","Grandma is angry with her.","Grandma writes too quickly."]],
+[123,"What can be inferred about the sailor",["He misses life at sea.","He is afraid of the sea.","He is hard of hearing.","He is waiting for a ship."]],
+[124,"What point of view",["third-person omniscient","first person","third-person limited","second person"]],
+[125,"What mood does",["lonely","joyful","silly","angry"]],
+[126,"What is the weakness in this",["It generalizes from one example.","It uses too many statistics.","It relies on expert studies.","It only talks about adults."]],
+[127,"What should a careful",["compare the evidence in both","believe the first one read","ignore both articles","trust the one with more experts"]],
+[128,"What does the passage suggest",["A popular belief is mistaken.","The wall is easy to see.","Astronauts helped build the wall.","The wall is longer than believed."]],
+[129,"What is the cause",["overuse of medicines","too few bacteria","weak immune systems","new kinds of medicine"]],
+[130,"What does Leah",["She is hiding her disappointment.","She is thrilled for herself.","She forgot something at school.","She is angry with her friend."]],
+[131,"What does the title",["a real door and Sam’s change","only the door of Sam’s new house","a mystery that is never solved","Sam’s fear of new neighbors"]],
+[132,"What effect do the short",["They build tension.","They make the scene calm.","They explain a process.","They slow the action down."]],
+[133,"What device is used",["verbal irony","personification","hyperbole","simile"]],
+[134,"Why might the report",["It may be biased.","It is too long.","It includes outside tests.","It was written too quickly."]],
+[135,"What flaw does",["It assumes an extreme chain of events.","It relies on careful data about lunch periods.","It considers both sides fairly.","It is based on an expert’s study."]],
+[136,"What is the central idea",["Many people developed the light bulb over time.","One brilliant inventor created the light bulb alone.","Light bulbs were invented quite recently.","Inventors rarely work with other researchers."]],
+[137,"According to the passage, what can",["consumers switching to substitutes","more people buying the same product","stores raising prices even further","companies making less of the product"]],
+[138,"What does this contradiction",["She still resents him.","She has truly forgotten.","She admires her brother.","She blames herself instead."]],
+[139,"What does the image",["the king’s loss of power","a new celebration","the king’s growing wealth","the weather in the kingdom"]],
+[140,"Why might the author",["to engage readers emotionally first","to confuse readers on purpose","to avoid giving evidence later","to summarize the statistics"]],
+[141,"What is the garden",["a symbol of the family’s relationships","a setting detail with no meaning","comic relief between arguments","a sign of the changing seasons"]],
+[142,"What does conceding",["It makes the argument seem fair.","It destroys the main claim.","It changes the topic of the essay.","It proves the plan is too costly."]],
+[143,"What is the main flaw",["It treats a correlation as a cause.","The sample of towns is too large.","It ignores how libraries are funded.","It uses data from too many years."]],
+[144,"According to the passage, what determines",["how quickly water temperatures fall","how much algae the corals had","how deep the corals live","how colorful the corals were"]],
+[145,"What is the main idea",["The Silk Road spread goods and ideas.","The Silk Road was one long highway.","Silk was the most valuable trade item.","Travelers used it to escape wars."]],
+[146,"What does the empty",["He misses someone who is gone.","He is expecting a guest soon.","He likes to have extra tea.","He forgot to fill the other cup."]],
+[147,"How does Nadia",["She comes to embrace farm life.","She grows more resentful.","She decides to leave early.","She learns to ignore the goats."]],
+[148,"What does this personification",["The city became calm and quiet.","The city grew crowded and loud.","The train was running late.","The air in the city was dirty."]],
+[149,"What is the effect of this",["It increases tension and urgency.","It slows the story down.","It adds humor to the scene.","It describes the setting in detail."]],
+[150,"Why should readers be cautious",["The source may have a conflict of interest.","The study is too recent to trust.","Apps cannot be studied scientifically.","The article never explains what the app actually does."]],
+[151,"How do the opponents",["They question the quality of the jobs.","They agree that jobs will be created.","They say the stadium is too small.","They argue the stadium costs too much."]],
+[152,"What is the author’s main point",["They are valuable to agriculture.","They are dangerous to farmers.","They are often misunderstood pets.","They eat mostly fruit and seeds."]],
+[153,"Which relationship",["cause and effect","comparison and contrast","problem and solution","order of events"]],
+[154,"What does this suggest about the narrator",["She secretly admires his courage.","She is afraid of her brother.","She thinks he should be punished.","She does not know him well."]],
+[155,"What does the keeper",["loyalty to duty","a desire to save money","fear of the dark","anger at the ship owners"]],
+[156,"What technique does the speaker",["repetition for emphasis","understatement","flashback","foreshadowing"]],
+[157,"What attitude",["critical","admiring","neutral","nostalgic"]],
+[158,"What flaw is in this",["It assumes timing proves cause.","It relies on too much data.","It ignores the mayor’s age.","It compares two different cities."]],
+[159,"How does this evidence",["It makes the argument more credible.","It makes the argument weaker.","It has no effect on the argument.","It makes the argument emotional."]],
+[160,"What has changed",["why people are thought to have left","the location of the city","the date the city was founded","the number of people who lived there"]],
+[161,"How do vaccines",["by preparing the immune system","by killing all germs right away","by replacing weak immune cells","by making germs grow more slowly"]],
+[162,"What does the stopped",["the family’s inability to move on","the family’s love of punctuality","a broken and neglected house","the time the accident happened"]],
+[163,"What does her response",["She is modest.","She is boastful.","She is confused.","She is ungrateful."]],
+[164,"What device does this",["dramatic irony","foreshadowing","flashback","alliteration"]],
+[165,"What is the purpose of this opening",["to capture the reader’s attention","to summarize the conclusion","to list all of the sources","to show the topic is simple"]],
+[166,"Which best describes the weakness",["It proposes an extreme solution.","It cites too many experts.","It ignores the cost of laptops.","It considers only teachers’ views."]],
+[167,"Why might their accounts",["Their sources have different perspectives.","One of them must be lying.","Letters are always more accurate.","Official reports never include details about soldiers."]],
+[168,"According to the passage, why",["A third factor may affect both.","Economists measured them wrongly.","One trend always causes the other.","Trends rarely move together."]],
+[169,"Which statement best",["Technology’s impact depends on human choices.","Technology always improves society.","Technology always harms society.","Technology changes far too quickly for anyone to judge it."]],
+[170,"What does this pattern",["She remains emotionally tied to the city.","She has completely forgotten the city.","She never really lived in the city.","She prefers her new home to the city."]],
+[171,"What role does the fool",["He reveals truths others ignore.","He provides only comic relief.","He secretly causes the disasters.","He is the king’s closest advisor."]],
+[172,"What is the most likely effect",["It signals the moment is now a memory.","It shows the poet made an error.","It speeds up the action.","It shows summer is about to begin."]],
+[173,"What tone",["satirical","reverent","neutral","nostalgic"]],
+[174,"What is the main problem",["The sample does not represent the public.","The survey asked too many questions.","Museums are hard to survey.","The website had too few visitors."]],
+[175,"What is the purpose of addressing",["to strengthen the argument","to change the topic","to admit the plan will fail","to show the plan is cheap"]],
+[181,"In this sentence, what does bat",["a flying animal","a wooden stick","a baseball player","a kind of bird"]],
+[184,"What does the word unbreakable",["cannot be broken","easy to break","broken again","not broken yet"]],
+[187,"The prefix mis-",["read incorrectly","read again","read aloud","read quickly"]],
+[189,"In this sentence, what does bank",["the side of a river","a place for money","a pile of snow","a row of seats"]],
+[191,"The root bene",["kind","greedy","old","angry"]],
+[197,"In this sentence, what does ring",["jewelry for a finger","the sound a bell makes","a circle drawn on paper","an area for boxing"]],
+[202,"The root port",["carry from place to place","send a letter by mail","look at very closely","break into pieces"]],
+[204,"The root chron",["in time order","very loud","about stars","easily broken"]],
+[208,"The root bio",["a story of a person’s life","a study of rocks","a list of words","a book about plants"]]];
+OPTS.forEach(([i,q,o])=>{if(!RB[i]||!RB[i].q.startsWith(q))throw new Error("보기 개편 번호가 어긋났어요: "+i+" "+q);RB[i].o=o});
+
+/* 긴 지문(2026-11-06): 학생들이 “실제보다 지문이 짧다”고 해서 레벨 3~12에 60~150단어 지문을 추가. long:1 문항은 11~34번 독해 칸의 절반쯤에 우선 출제 */
+const LONG=[
+[3,"Sea otters live in the cold ocean. Unlike seals, they do not have a thick layer of fat. Instead, they have very thick fur that traps tiny bubbles of air. The air keeps their skin dry and warm. Sea otters spend hours each day cleaning and fluffing their fur. If their fur gets dirty, it cannot hold air, and the otter can get cold very quickly.","Why do sea otters spend so much time cleaning their fur?",["Clean fur holds air that keeps them warm.","Clean fur helps them swim faster than seals.","Dirty fur makes them easier for sharks to see.","They need to remove the fat from their skin."],"C"],
+[3,"Mina wanted to bake cookies for her grandmother. She mixed the flour, sugar, and butter, but she forgot the eggs. The cookies came out flat and hard. Mina felt like crying. Then her grandmother took a bite, smiled, and said, “These are the best crunchy cookies I have ever had.” Mina laughed and decided to call them Grandma’s Crunchies.","Why did Mina laugh at the end?",["Her grandmother made her mistake feel okay.","She remembered to add the eggs after all.","Her grandmother told her a funny story.","The cookies tasted just the way she planned."],"L"],
+[3,"Our town should build a skate park. Right now, kids skate in the library parking lot, where cars come and go all day. A skate park would be much safer. It would also give kids a place to meet friends and get exercise. Some people worry about noise, but the park could be built next to the sports field, far away from houses.","How does the author answer people who worry about noise?",["by suggesting a place far from houses","by saying that skaters are very quiet","by saying the library is already noisy","by asking kids to skate only on weekends"],"G"],
+[4,"Long before people had calendars, they watched the sky to keep track of time. Farmers noticed that certain stars appeared at the same time each year. In ancient Egypt, the first sight of the bright star Sirius before sunrise warned people that the Nile River would soon flood. Because the flood made the soil good for crops, this star helped farmers know when to get ready for planting.","Why was the star Sirius important to Egyptian farmers?",["It warned them that the flood was coming.","It was the brightest light for working at night.","It showed them where to dig new fields.","It told them when the crops were ready to eat."],"C"],
+[4,"Jayden was the shortest player on the basketball team, and he rarely got to play. During practice, he spent extra time passing the ball instead of shooting. In the last game of the season, the coach finally called his name. Jayden did not score a single point, but he made five passes that led to baskets. After the game, his teammates lifted him onto their shoulders.","What lesson does this story suggest?",["You can help a team in more than one way.","Short players should not play basketball.","Practicing shooting is the key to winning.","Coaches should let everyone play equally."],"L"],
+[4,"The morning of the field trip, the sky was a heavy gray blanket. Rain tapped on the bus windows like impatient fingers. Inside, twenty-four children pressed their noses against the glass, sighing every time the driver checked his watch. Then, slowly, a thin stripe of sunlight slid across the parking lot, and the whole bus cheered.","How does the mood change in this passage?",["from disappointed to excited","from excited and hopeful to frightened","from calm to angry","from cheerful to sleepy"],"A"],
+[5,"Monarch butterflies make one of the longest journeys of any insect. Each fall, millions of monarchs fly from Canada and the United States to the mountains of central Mexico, a trip of up to 3,000 miles. No single butterfly makes the round trip. The monarchs that return north in spring lay eggs along the way, and it takes several generations to reach Canada again. Scientists are still studying how new butterflies find a place they have never seen.","Which detail best explains why scientists find the journey puzzling?",["The butterflies reach a place they have never been.","The trip can be as long as 3,000 miles.","Monarchs lay their eggs along the way north.","Millions of monarchs gather in the very same mountains each year."],"C"],
+[5,"Ever since the new girl, Priya, joined the class, Leo had kept his distance. She was the fastest reader and always raised her hand first. One afternoon, Leo noticed Priya sitting alone, staring at a math worksheet covered in eraser marks. He hesitated, then pulled up a chair. “Fractions used to make me crazy too,” he said. Priya’s shoulders relaxed for the first time all week.","Why had Leo kept his distance from Priya at first?",["He felt she was better at school than he was.","She had said something unkind to him in front of the class.","He did not like reading out loud.","She sat too far away from his desk."],"L"],
+[5,"Some families argue that children should get paid for doing chores. They believe money teaches kids how to save and spend wisely. Others disagree. They say chores are simply part of being in a family, and paying for them may teach children to help only when there is a reward. A third group suggests a middle path: no pay for daily chores, but money for extra jobs like washing the car.","What does the passage mainly do?",["present different opinions about paying for chores","argue that every chore should be paid","explain how to wash a car properly","show that most children dislike doing chores around the house"],"G"],
+[6,"When the Titanic sank in 1912, more than 1,500 people died, partly because the ship carried lifeboats for only about half of the passengers. At the time, the law did not require more. After the disaster, countries met and agreed on new rules. Ships had to carry enough lifeboats for everyone on board, hold regular lifeboat drills, and keep their radios on day and night. Many of these rules still protect passengers today.","What is the main idea of the passage?",["The disaster led to safety rules still used today.","The Titanic carried more lifeboats than the law required.","Most passengers survived because of the radio.","Lifeboat drills were common long before 1912."],"C"],
+[6,"Every summer, Grandpa Joe repaired the old wooden boat in the barn, even though no one had sailed it in years. My cousins teased him about it. This year, Grandpa’s hands shook too much to hold the sandpaper, so I offered to help. He showed me how to follow the grain of the wood, slowly and patiently, the way his father had taught him. By August, I understood that the boat had never really been the point.","What does the narrator realize by August?",["Fixing the boat was a way to pass on memories.","The boat was finally ready to sail on the lake.","The cousins had been right to tease Grandpa.","Sanding wood is much harder than it looks."],"L"],
+[6,"An article about city noise begins: “Close your eyes on a busy corner. Count the horns, the sirens, the rumbling trucks. Now imagine hearing them every minute of your life.” The author then shares studies linking constant noise to poor sleep and stress.","Why does the author begin with these instructions to the reader?",["to let readers feel the problem before the facts","to give directions for crossing a busy street corner safely","to show that she personally dislikes trucks","to prove that the studies were done carefully"],"A"],
+[7,"For centuries, the octopus was seen as a simple sea creature. Recent research has changed that view. Octopuses can open jars, escape from tanks, and recognize individual human faces. Unlike humans, however, most of their neurons are located not in the brain but in their eight arms, which can taste, touch, and even react on their own. Some scientists now describe the octopus as having a kind of distributed intelligence, spread throughout its body.","What does “distributed intelligence” most likely mean in this passage?",["thinking ability spread across the whole body","intelligence shared among many octopuses","knowledge that octopus parents pass down to their young","the ability to escape from many places"],"C"],
+[7,"Ms. Alvarez had run the corner bakery for thirty years. When a chain coffee shop opened across the street, her sales fell, and the neighborhood expected her to close. Instead, she began staying open late, letting students study at her tables for free and offering day-old bread to anyone who asked. By winter, the line outside her door stretched past the coffee shop’s entrance.","Which statement best expresses a theme of the passage?",["Kindness and community can outlast competition.","Big businesses always defeat small shops.","Students prefer fresh bread to coffee.","Working late every night is the true secret to business success."],"L"],
+[7,"A city council member argues that the downtown library should be closed because “everything is online now.” However, a recent survey found that 40 percent of library visitors come to use free computers and internet access they do not have at home. Many others attend job workshops and children’s reading programs that are not available online.","How does the survey information affect the council member’s argument?",["It weakens it by showing needs the internet does not meet.","It supports it by proving that most visitors would rather use computers.","It has no real connection to the argument.","It shows that the library is far too crowded."],"G"],
+[8,"In the early 1900s, much of the American Midwest was plowed for wheat, removing the deep-rooted prairie grasses that had held the soil in place. When severe drought struck in the 1930s, the exposed topsoil dried out and blew away in enormous dust storms, burying farms and forcing thousands of families to move west. The disaster, known as the Dust Bowl, led the government to promote methods such as planting trees as windbreaks and rotating crops.","According to the passage, what was a major cause of the Dust Bowl?",["removing the grasses that had held the soil","planting too many trees as windbreaks","families moving west much too early","rotating crops too often during the long drought years"],"C"],
+[8,"On the night before the competition, Sofia found her violin case open and one string snapped. Her rival, Clara, had been the last one in the practice room. Sofia said nothing. The next morning, she borrowed a string from the music teacher, played the hardest piece she knew, and then, as Clara walked onstage, quietly handed her a spare bow. Clara’s face turned red, and she could not meet Sofia’s eyes.","Why does Clara react this way when Sofia hands her the bow?",["She feels guilty about what she likely did.","She is nervous because the bow is too long.","She is angry that Sofia played so well.","She is embarrassed that she forgot to bring her own bow."],"L"],
+[8,"In her memoir, the author describes her childhood kitchen as “a country with its own weather—steam in the morning, thunder at dinner, and a long, quiet drought after Dad left.”","What does the extended weather metaphor suggest about the family?",["Its moods shifted, and it fell silent after a loss.","The kitchen was often too hot or too cold.","The family later moved to a different country with a colder climate.","Her father worked as a weather forecaster."],"A"],
+[9,"Before railroads, towns kept time by the sun, so noon in one village could differ from noon in the next by several minutes. This caused few problems until trains arrived. Trains traveling between towns needed a shared schedule, and conflicting local times led to confusion and even collisions. In 1883, North American railroads adopted standard time zones, and governments later made them official.","Why did railroads push for standard time zones?",["Trains needed a schedule all towns shared.","Clocks had not yet been invented.","Governments demanded that every train leave exactly at noon.","Towns wanted to keep using the sun."],"C"],
+[9,"For months after the fire, Elias refused to go near the river where his family’s mill had stood. His sister rebuilt her life in the city, but Elias took odd jobs and avoided old friends. One spring morning, he found himself at the riverbank, watching new green shoots push up through the blackened soil. He stayed until sunset, and the next day he returned with a shovel.","What do the new shoots in the blackened soil represent for Elias?",["the possibility of starting over","the danger of another fire","the grief of losing the family mill","the beauty of life in the city"],"L"],
+[9,"A sports drink company advertises that “athletes who drink HydraMax perform 20 percent better.” The fine print explains that the study compared athletes who drank HydraMax with athletes who drank nothing at all during a two-hour practice.","What is the main problem with the advertisement’s claim?",["It never compares the drink with water.","It uses too small a percentage to matter.","Two hours is too long for a practice.","Athletes should not drink during practice."],"G"],
+[10,"Invasive species are plants or animals introduced to an environment where they did not evolve. Without natural predators, some spread rapidly. Zebra mussels, carried to the Great Lakes in the ballast water of ships, now coat pipes and boat hulls and filter so much plankton from the water that native fish struggle to find food. Controlling them has cost billions of dollars, and complete removal is considered nearly impossible.","Based on the passage, why do zebra mussels harm native fish?",["They remove much of the plankton fish eat.","They attack fish that swim near boat hulls.","They spread diseases from ships’ ballast water.","They block fish from reaching the lakes."],"C"],
+[10,"The narrator’s mother kept every letter her son wrote from college in a shoebox, but she never wrote back, saying she was “no good with words.” After her death, he opened the box and found, tucked behind his letters, dozens of envelopes addressed to him—each one sealed, stamped, and never mailed.","What do the unmailed letters reveal about the mother?",["She had much to say but struggled to share it.","She did not really care about her son’s life at college.","She kept forgetting to buy enough stamps.","She preferred talking to him on the phone."],"L"],
+[10,"In the opening chapter, the author describes the mansion only through the eyes of its new maid, who notices locked doors, whispering servants, and a portrait turned to face the wall—but never learns why.","What is the main effect of telling the opening through the maid’s limited view?",["It builds suspense by holding back explanations.","It shows that the maid cannot be trusted to tell the truth.","It makes the mansion seem warm and welcoming.","It explains the family’s history in detail."],"A"],
+[11,"Economists use the term “opportunity cost” to describe what is given up when a choice is made. If a city spends its budget on a new stadium, the opportunity cost is not only the money but also the schools, parks, or roads that money could have funded instead. Critics of large public projects argue that officials often ignore these hidden costs, focusing only on visible benefits such as jobs and tourism.","Which situation best illustrates opportunity cost as described in the passage?",["A student who goes to a concert loses that evening for studying.","A store raises its prices when many more people want to buy a product.","A city earns money from tourists who visit a new stadium.","A worker receives a bonus for finishing a project early."],"C"],
+[11,"In the novel’s final chapter, the once-powerful merchant walks through the market he used to control. No one bows; a few vendors don’t recognize him. He stops at a fruit stall, counts out his last coins with great care, and buys a single orange, which he holds as if it were a jewel.","How does the final scene develop the merchant’s character?",["It shows he has lost power and now values small things.","It shows he is quietly planning to win back control of the market.","It shows he was never truly wealthy in the first place.","It shows the vendors are still afraid of him."],"L"],
+[11,"A columnist argues that a four-day school week improves learning, citing one rural district where test scores rose after the change. She does not mention that the district also hired more teachers and reduced class sizes the same year.","Why is the columnist’s evidence weak?",["Other changes could explain the higher scores.","Rural districts rarely manage to improve their test scores.","One year is too long to measure results.","Test scores cannot measure learning at all."],"G"],
+[12,"Some philosophers of science argue that theories are never proven true; they are only tested and not yet disproven. Under this view, a strong theory is one that makes risky predictions that could clearly be shown false. Einstein’s prediction that starlight would bend around the sun, confirmed during a 1919 eclipse, is often cited as an example: had the light not bent, the theory would have been in serious trouble.","According to this view, why is Einstein’s prediction a good example?",["It could clearly have failed, but it did not.","The eclipse proved it true for all time.","It was far too hard for other scientists of the time to test.","It was based on measuring the sun’s heat."],"C"],
+[12,"Throughout the play, the two brothers argue over who will inherit the family farm. In the last scene, the land has been sold to a developer, and the brothers stand together at the gate, silent, watching the first bulldozer arrive. For the first time, the stage directions describe them as “side by side.”","What is the most likely meaning of the final image?",["Their shared loss finally unites them.","They are planning to buy back the farm.","They are relieved the arguing has ended.","The developer has become their partner."],"L"],
+[12,"An essay on modern work opens with a list of notifications—“3 new messages, 12 unread, meeting in 5 minutes, reminder: breathe”—before the author writes a single sentence of her own.","What is the author’s most likely purpose in opening this way?",["to mock how constant alerts crowd modern life","to provide a schedule for the reader’s day","to show readers that she is an extremely well organized person","to explain how to turn off notifications"],"A"]];
+LONG.forEach(x=>RB.push({k:"mc",l:x[0],p:x[1],q:x[2],o:x[3],d:x[4],long:1}));
+
 /* 난이도 보정: 실제 응시 데이터가 없으므로 지문 가독성(Flesch-Kincaid 학년)으로 문항마다 난이도 b를 조정해요.
    b = 목표 레벨 + 0.4×(그 레벨 지문 평균 가독성+1 − 목표 레벨)(−0.6~+0.3로 제한해 레벨 순서 유지) + 문항별 편차(±0.4) */
 (function calibrate(){const syl=w=>{w=w.toLowerCase().replace(/[^a-z]/g,"");if(!w)return 0;if(w.length<=3)return 1;w=w.replace(/(?:[^laeiouy]es|ed|[^laeiouy]e)$/,"").replace(/^y/,"");const m=w.match(/[aeiouy]{1,2}/g);return m?m.length:1};
@@ -482,6 +671,11 @@ function pickVoice(){try{const vs=speechSynthesis.getVoices();voice=vs.find(v=>/
 try{pickVoice();speechSynthesis.onvoiceschanged=pickVoice}catch(e){}
 function say(t,slow){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang="en-US";if(voice)u.voice=voice;u.rate=slow?.8:.92;speechSynthesis.speak(u)}catch(e){}}
 function hush(){try{speechSynthesis.cancel()}catch(e){}}
+/* 효과음: 파일 없이 Web Audio로 만든 짧은 소리 (설정에서 끄기 가능) */
+let AC=null,snd=store.get("mimi_snd",1)!==0;
+function tone(seq){if(!snd)return;try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();if(AC.state=="suspended")AC.resume();let t=AC.currentTime+.01;
+ seq.forEach(([f,d,type,v])=>{const o=AC.createOscillator(),g=AC.createGain();o.type=type||"sine";o.frequency.value=f;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v||.16,t+.012);g.gain.exponentialRampToValueAtTime(.0008,t+d);o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+d+.03);t+=d*.72})}catch(e){}}
+const SFX={tap:()=>tone([[880,.07,"triangle",.1]]),next:()=>tone([[660,.07],[990,.11]]),good:()=>tone([[784,.1],[988,.1],[1319,.2]]),oops:()=>tone([[392,.14,"triangle"],[330,.22,"triangle"]]),lvup:()=>tone([[523,.1],[659,.1],[784,.1],[1047,.28]]),done:()=>tone([[523,.12],[659,.12],[784,.12],[1047,.16],[784,.1],[1047,.4]])};
 let toastT=null;function toast(t){const e=$("toast");e.textContent=t;e.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>e.hidden=true,2600)}
 
 const ICON={
@@ -537,10 +731,12 @@ function closeModal(){ov.hidden=true;ov.innerHTML=""}
 function pause(on){if(S&&S.live)S.paused=on}
 function settings(){pause(true);
 modal(`<h2>설정</h2><div class="lab">글씨 크기</div><div class="seg">${FZN.map((t,i)=>`<button class="chip" data-z="${i}" aria-pressed="${i==fz}">${t}</button>`).join("")}</div>
+<div class="lab">효과음</div><div class="seg"><button class="chip" data-s="1" aria-pressed="${snd}">켜기</button><button class="chip" data-s="0" aria-pressed="${!snd}">끄기</button></div>
 ${canFs?`<button class="btn sub" id="mfs">${I("full")} 전체화면 켜기·끄기</button>`:""}
 ${S?"":`<button class="btn sub" id="mclr">기록 모두 지우기</button>`}
 <button class="btn" id="mok">닫기</button>`,()=>{
 ov.querySelectorAll("[data-z]").forEach(b=>b.onclick=()=>{fz=+b.dataset.z;store.set("mimi_fz",fz);applyFz();ov.querySelectorAll("[data-z]").forEach(x=>x.setAttribute("aria-pressed",x==b))});
+ov.querySelectorAll("[data-s]").forEach(b=>b.onclick=()=>{snd=b.dataset.s=="1";store.set("mimi_snd",snd?1:0);ov.querySelectorAll("[data-s]").forEach(x=>x.setAttribute("aria-pressed",x==b));SFX.tap()});
 if(canFs)$("mfs").onclick=toggleFs;
 const c=$("mclr");if(c)c.onclick=()=>{if(c.dataset.a){["mimi_hist","mimi_real","mimi_save"].forEach(k=>store.del(k));c.textContent="모두 지웠어요";c.disabled=true;return}c.dataset.a=1;c.textContent="한 번 더 누르면 모든 기록이 지워져요"};
 $("mok").focus();$("mok").onclick=()=>{closeModal();pause(false);if(!S)home()}})}
@@ -554,7 +750,7 @@ modal(`${mimi("cry",110)}<h2>테스트를 그만할까요?</h2><p class="mu">${S
 $("qc").focus();$("qc").onclick=()=>{closeModal();pause(false)};$("qq").onclick=()=>{closeModal();S.live=false;guardOff();home()}})}
 
 /* 자동 중간 저장 */
-const VER=4;
+const VER=5;
 function saveS(){if(!S||!S.live||S.mode=="s"||S.i<S.pr)return;store.set("mimi_save",{v:VER,mode:S.mode,g:S.g,mu0:S.mu0,i:S.i,pr:S.pr,N:S.N,vn:S.vn,used:[...S.used].map(x=>x.u),resp:S.resp,rec:S.rec.map(r=>({u:r.it.u,x:r.x,det:r.det})),est:S.est,cur:S.it?S.it.u:null,d:Date.now()})}
 function loadS(){const z=store.get("mimi_save",null);return z&&z.v==VER&&REG[z.cur]?z:null}
 function resume(z){S={mode:z.mode,g:z.g,mu0:z.mu0,lo:z.g<=2,i:z.i,pr:z.pr,N:z.N,vn:z.vn,used:new Set(z.used.map(u=>REG[u])),resp:z.resp,rec:z.rec.map(r=>({it:REG[r.u],x:r.x,det:r.det})),est:z.est,pp:(z.i-z.pr)/z.N,live:true};
@@ -594,7 +790,10 @@ guardOn();next()}
 
 function next(){clearInterval(T);const n=S.i-S.pr;if(n>=S.N)return finish();let it;
 if(n<0)it=Object.assign({pr:1},PRX[S.i].it);
-else if(S.mode=="r"){if(n<S.vn)it=pickItem(VB,S.est.m);else{const dm="CLAGW"[(n-S.vn)%5];it=pickItem(RB,S.est.m,x=>x.d==dm)}}
+else if(S.mode=="r"){if(n<S.vn)it=pickItem(VB,S.est.m);else{const k=n-S.vn,dm="CLAGW"[k%5];
+ /* 11~34번 중 짝수 칸은 긴 지문을 우선(현재 실력 ±1 레벨 안에 있을 때) */
+ if(k%2==0&&dm!="W"){const lg=RB.filter(x=>x.long&&!S.used.has(x)&&Math.abs((x.b??x.l)-S.est.m)<=1);if(lg.length)it=pickItem(lg,S.est.m)}
+ if(!it)it=pickItem(RB,S.est.m,x=>x.d==dm)}}
 else if(S.mode=="l")it=pickItem(LB,S.est.m);
 else if(S.mode=="w")it=pickItem(n%2?WU:WS,S.est.m);
 else it=S.list[n];
@@ -622,7 +821,7 @@ if(it.k=="sk")body=`<div class="pcard nospk"><p class="sent">${esc(it.s)}</p></d
 app.innerHTML=top+head+`<section class="c${pr?" prac":""}">${body}<button class="btn" id="nx" disabled>${n+1>=S.N?"마치기":"다음 문제"} ${I("tri")}</button></section>`;
 if(!pr)requestAnimationFrame(()=>requestAnimationFrame(()=>{const k=$("kg"),f=$("fill");if(k){if(p!=S.pp)k.classList.add("hop");k.style.left=`calc((100% - 54px) * ${p})`;f.style.width=p*100+"%";S.pp=p}}));
 const nx=$("nx");
-app.querySelectorAll(".opts .op").forEach(b=>b.onclick=()=>{S.sel=+b.dataset.i;app.querySelectorAll(".opts .op").forEach(x=>x.classList.toggle("sel",x==b));nx.disabled=false});
+app.querySelectorAll(".opts .op").forEach(b=>b.onclick=()=>{SFX.tap();S.sel=+b.dataset.i;app.querySelectorAll(".opts .op").forEach(x=>x.classList.toggle("sel",x==b));nx.disabled=false});
 const sb=$("sayb");if(sb)sb.onclick=()=>say(it.k=="sk"?it.s:it.p.replace("___","blank"),S.lo);
 const sl=$("slow");if(sl)sl.onclick=()=>say(it.s,true);
 const pl=$("play");
@@ -636,7 +835,7 @@ nx.onclick=()=>{let x=0,det="";
  if(it.k=="sp"){det=$("spi").value.trim();x=det.toLowerCase()==it.w.toLowerCase()?1:0}
  if(it.k=="un"){det=S.built.map(i=>S.toks[i]).join(" ");x=det==it.s?1:0}
  if(it.k=="sk"){x=S.sel>=3?1:0;det=S.sel}
- answer(x,det)};
+ if(S.i>=S.pr)SFX.next();answer(x,det)};
 $("tq").onclick=askQuit;$("tset").onclick=settings;if(canFs)$("tfs").onclick=toggleFs;
 if(lim)T=setInterval(()=>{if(S.paused)return;S.t--;const e=$("tm");if(e){e.textContent=Math.max(0,S.t);$("tp").classList.toggle("warn",S.t<=15)}if(S.t<=0)answer(0,"시간 초과")},1000);
 window.scrollTo(0,0)}
@@ -649,7 +848,7 @@ a.querySelectorAll(".wd").forEach(b=>b.onclick=()=>{S.built.splice(+b.dataset.k,
 p.querySelectorAll(".wd").forEach(b=>b.onclick=()=>{S.built.push(+b.dataset.i);drawUn()});
 $("nx").disabled=S.built.length!=S.toks.length}
 
-function pracPop(x,it,k){const last=k==PRX.length-1,nx=PRX[k+1];
+function pracPop(x,it,k){const last=k==PRX.length-1,nx=PRX[k+1];(x?SFX.good:SFX.oops)();
 modal(`<div class="burst"></div>${mimi(x?"happy":"oops",150,"zoom")}<h2>${x?"잘했어!":"괜찮아, 연습이니까!"}</h2>${x?"":`<p>정답은 <b style="font-family:var(--f-en)">${esc(it.o[0])}</b>야.</p>`}${last?`<p><b>연습 끝! 이제 진짜 시작해 볼까?</b></p><p class="mu">이제부터는 정답을 안 알려 줘.</p>`:`<p>다음엔 이거 해 봐: <b>${nx.t}</b></p>`}<button class="btn" id="ovb">${last?"진짜 시작!":"다음 연습"}</button>`,()=>{const b=$("ovb");b.focus();b.onclick=()=>{closeModal();next()}})}
 
 function answer(x,det){clearInterval(T);hush();const it=S.it,n=S.i-S.pr;
@@ -658,7 +857,7 @@ if(S.mode!="s"){S.resp.push({b:it.b??it.l,g:it.o?1/it.o.length:.02,x});S.est=est
 const b4=stg(n),af=n+1>=S.N?b4:stg(n+1);S.i++;
 if(af>b4)arrive(af,next);else next()}
 
-function arrive(s,cb){modal(`<div class="burst"></div>${mimi("lv"+(s+1),150,"zoom")}<span class="lvp">Lv.${s+1}</span><h2>${LV[s].n}로 변신!</h2><p>${LV[s].m}</p><button class="btn" id="ovb">계속 가기</button>`,()=>{const b=$("ovb");b.focus();b.onclick=()=>{closeModal();cb()}})}
+function arrive(s,cb){setTimeout(SFX.lvup,180);modal(`<div class="burst"></div>${mimi("lv"+(s+1),150,"zoom")}<span class="lvp">Lv.${s+1}</span><h2>${LV[s].n}로 변신!</h2><p>${LV[s].m}</p><button class="btn" id="ovb">계속 가기</button>`,()=>{const b=$("ovb");b.focus();b.onclick=()=>{closeModal();cb()}})}
 
 /* ───────── 기록·학교 결과 보정 ───────── */
 function addHist(o){const h=store.get("mimi_hist",[]);h.push(Object.assign({t:Date.now()},o));store.set("mimi_hist",h.slice(-60))}
@@ -672,7 +871,7 @@ const ymd=t=>{const d=new Date(t);return d.getFullYear()+"."+(d.getMonth()+1)+".
 function tipFor(ge){return ge<1?"알파벳 소리와 짧은 낱말을 익히고 있어요.":ge<2?"짧고 쉬운 문장을 혼자 읽을 수 있어요.":ge<3?"짧은 이야기를 읽고 내용을 이해할 수 있어요.":ge<4?"이제 조금 더 긴 글도 이해할 수 있어요!":ge<6?"긴 글에서 중심 생각과 숨은 뜻을 찾을 수 있어요.":ge<8?"인물의 마음과 글쓴이의 의도까지 읽어 낼 수 있어요.":"어려운 글의 주장과 근거를 따져 볼 수 있어요."}
 
 /* ───────── 결과 ───────── */
-function finish(){clearInterval(T);hush();S.live=false;guardOff();store.del("mimi_save");
+function finish(){clearInterval(T);hush();S.live=false;guardOff();store.del("mimi_save");setTimeout(SFX.done,200);
 const {m,sd}=S.est,ok=S.rec.filter(r=>r.x).length;let html="";
 if(S.mode=="r"){const ge=geOf(m),ss=ssOf(m),uni=uniOf(m),cal=calib();
  const per=Object.keys(DN).map(k=>{const a=S.rec.filter(r=>r.it.d==k);return{k,n:a.length,c:a.filter(r=>r.x).length}}).filter(d=>d.n);
