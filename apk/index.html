@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>APK 저장소 | 해시브라운 코딩 기록소</title>
+  <meta name="description" content="해시브라운 코딩 기록소에서 만든 안드로이드 앱(APK)을 내려받는 곳입니다."/>
+  <link rel="canonical" href="https://hash2n.vercel.app/apk/"/>
+  <link rel="icon" href="../hashbrown.png"/>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&family=Be+Vietnam+Pro:wght@400;600&display=swap" rel="stylesheet"/>
+  <script>
+    try { if (localStorage.getItem('darkMode') === '1') document.documentElement.classList.add('dark'); } catch (e) {}
+  </script>
+  <style>
+    :root {
+      --bg: #fbf9f5; --card: #ffffff; --line: #ece7de; --text: #31332f; --muted: #6e6664;
+      --primary: #7c5556; --primary-soft: #fecbcb; --chip: #f5f3ef; --ok: #2f7a4f;
+    }
+    html.dark {
+      --bg: #141718; --card: #1b1f21; --line: #2f3436; --text: #ecebe7; --muted: #a8a29e;
+      --primary: #e0a9aa; --primary-soft: #4a3233; --chip: #242a2d; --ok: #7fd1a0;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: var(--bg); color: var(--text);
+      font-family: 'Be Vietnam Pro', 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+      line-height: 1.6;
+    }
+    header {
+      position: sticky; top: 0; z-index: 10;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding: 12px 16px; background: color-mix(in srgb, var(--bg) 90%, transparent);
+      backdrop-filter: blur(8px); border-bottom: 1px solid var(--line);
+    }
+    header a { color: var(--primary); text-decoration: none; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+    header img { width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--line); }
+    main { max-width: 760px; margin: 0 auto; padding: 28px 16px 64px; }
+    h1 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: clamp(28px, 6vw, 40px); color: var(--primary); margin: 0 0 6px; letter-spacing: -0.02em; }
+    .lead { color: var(--muted); margin: 0 0 24px; }
+    .notice {
+      background: var(--chip); border: 1px solid var(--line); border-radius: 16px;
+      padding: 14px 16px; font-size: 14px; color: var(--muted); margin-bottom: 24px;
+    }
+    .notice b { color: var(--text); }
+    .app {
+      background: var(--card); border: 1px solid var(--line); border-radius: 22px;
+      padding: 20px; margin-bottom: 18px; box-shadow: 0 1px 2px rgba(0,0,0,.04);
+    }
+    .app-top { display: flex; gap: 14px; align-items: center; }
+    .app-icon {
+      flex: none; width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center;
+      background: var(--primary); color: #fbf9f5; font-size: 28px;
+    }
+    .app-name { margin: 0; font-size: 20px; font-weight: 700; }
+    .meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+    .chip { font-size: 12px; padding: 2px 9px; border-radius: 999px; background: var(--chip); color: var(--muted); }
+    .desc { margin: 14px 0 10px; }
+    ul.features { margin: 0 0 16px; padding-left: 20px; font-size: 14px; }
+    ul.features li { margin: 2px 0; }
+    .dl {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      background: var(--primary); color: #fff; text-decoration: none; font-weight: 700;
+      padding: 12px 22px; border-radius: 999px; font-size: 16px; min-height: 48px;
+    }
+    html.dark .dl { color: #141718; }
+    .dl:active { transform: scale(.97); }
+    details { margin-top: 14px; border-top: 1px dashed var(--line); padding-top: 12px; font-size: 14px; }
+    summary { cursor: pointer; font-weight: 600; color: var(--primary); }
+    ol { padding-left: 20px; margin: 8px 0 0; }
+    ol li { margin: 4px 0; }
+    .empty { text-align: center; color: var(--muted); font-size: 13px; margin-top: 28px; }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="../"><img src="../hashbrown.png" alt=""/>해시브라운 코딩 기록소</a>
+    <span style="font-size:13px;color:var(--muted)">APK 저장소</span>
+  </header>
+
+  <main>
+    <h1>APK 저장소</h1>
+    <p class="lead">직접 만든 안드로이드 앱을 내려받아 설치할 수 있어요.</p>
+
+    <div class="notice">
+      <b>설치 전에 알아 두세요.</b> 플레이 스토어 밖에서 받은 앱이라 설치할 때 "출처를 알 수 없는 앱" 허용을 묻습니다.
+      Play 프로텍트 경고가 뜨면 <b>세부정보 → 무시하고 설치</b>를 누르세요.
+    </div>
+
+    <div id="list"></div>
+    <p class="empty">앱은 계속 추가할 예정이에요.</p>
+  </main>
+
+  <script>
+    // 새 앱은 이 배열에 추가한다(파일은 apk/ 폴더에)
+    const APPS = [
+      {
+        icon: '🎮',
+        name: '패드맵',
+        version: '1.1',
+        date: '2026-11-07',
+        size: '34KB',
+        file: 'padmap-1.1.apk',
+        android: '안드로이드 8 이상',
+        desc: '블루투스 게임 리모컨의 버튼마다 할 일을 정해 주는 앱입니다. 누워서 웹툰·웹서핑을 리모컨 하나로 할 수 있어요.',
+        features: [
+          '조이스틱 4방향·누름, 트리거 2개, @, 전원, A·B·C·D까지 13개 버튼을 하나씩 등록',
+          '버튼마다 동작을 골라요: 위/아래 스크롤, 자동 스크롤, 다음 화/이전 화, 뒤로가기, 앱 전환, 홈, 마우스 모드, 터치, 쪽 넘기기',
+          '스크롤은 한 번 누르면 한 칸, 누르고 있으면 계속 부드럽게 움직여요',
+          '자동 스크롤 중에는 위/아래 버튼으로 속도를 바꿔요',
+          '마우스 모드에서는 조이스틱이 커서가 되고, 트리거로 터치(길게 누르면 길게 터치)'
+        ],
+        steps: [
+          '아래 버튼으로 APK를 받아 설치합니다.',
+          '앱을 열고 "접근성 설정 열어서 켜기" → 설치된 앱 → 패드맵을 켭니다.',
+          '켜지지 않으면 설정 → 애플리케이션 → 패드맵 → 오른쪽 위 ⋮ → "제한된 설정 허용"을 누른 뒤 다시 켭니다.',
+          '"13개 버튼 순서대로 등록하기"를 누르고 화면이 알려 주는 버튼을 차례로 누릅니다. 없는 버튼은 건너뛰기를 누르세요.',
+          '버튼별 동작을 눌러 원하는 동작을 고릅니다.'
+        ]
+      }
+    ];
+
+    const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    document.getElementById('list').innerHTML = APPS.map(a => `
+      <article class="app">
+        <div class="app-top">
+          <div class="app-icon" aria-hidden="true">${a.icon}</div>
+          <div>
+            <h2 class="app-name">${esc(a.name)}</h2>
+            <div class="meta">
+              <span class="chip">v${esc(a.version)}</span>
+              <span class="chip">${esc(a.date)}</span>
+              <span class="chip">${esc(a.size)}</span>
+              <span class="chip">${esc(a.android)}</span>
+            </div>
+          </div>
+        </div>
+        <p class="desc">${esc(a.desc)}</p>
+        <ul class="features">${a.features.map(f => `<li>${esc(f)}</li>`).join('')}</ul>
+        <a class="dl" href="./${encodeURI(a.file)}" download="${esc(a.file)}">⬇ APK 내려받기</a>
+        <details>
+          <summary>설치하고 쓰는 방법</summary>
+          <ol>${a.steps.map(s => `<li>${esc(s)}</li>`).join('')}</ol>
+        </details>
+      </article>`).join('');
+  </script>
+</body>
+</html>
