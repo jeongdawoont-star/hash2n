@@ -37,7 +37,7 @@ export const RECORDS = [
     tags: "history, korean-history, independence, quiz, roguelike, pixel, games",
     category: "games",
     link: "./vibe-apps/saeya-saeya.html",
-    image: "img/saeya-saeya.png",
+    image: "img-re/saeya-saeya.avif",
   },
 
   {
