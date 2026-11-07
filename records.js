@@ -33,7 +33,7 @@ export const RECORDS = [
 
   {
     title: "새야 새야 · 1894~1945",
-    desc: "동학농민운동부터 광복까지 16턴 동안 나라와 백성을 지키는 도트 역사 디펜스 게임이다.\n국력과 민심의 균형을 잡고 이권 침탈을 막으며, 턴마다 실제 역사·[만약에] 분기·역사 퀴즈를 만난다.",
+    desc: "동학농민운동부터 광복까지 16턴 동안 나라와 백성을 지키는 도트 역사 디펜스 게임이다.\n왼쪽 위 5×5 땅에서 시작해 1×5씩 넓히며, 공격 방식이 다른 부대·포탑 11종으로 오른쪽 아래에서 오는 적을 막는다.\n시대마다 카드뉴스, 턴마다 실제 역사·[만약에] 분기·역사 퀴즈를 만난다.",
     tags: "history, korean-history, independence, quiz, roguelike, pixel, games",
     category: "games",
     link: "./vibe-apps/saeya-saeya.html",
