@@ -32,6 +32,15 @@ export const RECORDS = [
   // ▼ 여기에 새 기록을 붙여넣으세요 (최신 항목을 맨 위에) ▼
 
   {
+    title: "새야 새야 · 1894~1945",
+    desc: "동학농민운동부터 광복까지 16턴 동안 나라와 백성을 지키는 도트 역사 디펜스 게임이다.\n국력과 민심의 균형을 잡고 이권 침탈을 막으며, 턴마다 실제 역사·[만약에] 분기·역사 퀴즈를 만난다.",
+    tags: "history, korean-history, independence, quiz, roguelike, pixel, games",
+    category: "games",
+    link: "./vibe-apps/saeya-saeya.html",
+    image: "img/saeya-saeya.png",
+  },
+
+  {
     title: "미미의 영어 레벨 체크",
     desc: "STAR Reading 형식을 따른 가정용 영어 읽기 레벨 체크다(유치원~12학년). 연습 3문제 뒤 본 문제 34개를 풀고, 맞히면 어려워지고 틀리면 쉬워진다.\n고양이 미미가 문제마다 한 걸음씩 걸으며 Lv.8 레전드미미까지 변신하고, 자동 저장·성취도 그래프·학교 결과 보정을 지원한다. 비공식 연습용이다.",
     tags: "english, reading, star-reading, level-test, kids, class-tools",
