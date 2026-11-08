@@ -32,6 +32,15 @@ export const RECORDS = [
   // ▼ 여기에 새 기록을 붙여넣으세요 (최신 항목을 맨 위에) ▼
 
   {
+    title: "AI 어드벤트 캘린더",
+    desc: "요정 방울이에게 산타 할아버지께 보낼 편지를 쓰면, 받고 싶은 선물을 분석해 12월 1~24일 하루 한 상자씩 관련 아이템과 좋은 말·운세·작은 미션을 준다. 25일엔 소원 상자와 산타 답장이 열린다.\n3DS 감성 도트 3D 마을에서 상자를 살짝 돌려 볼 수 있고, 사전에 없는 소원은 이모지를 도톰한 블록 3D로 바꿔 채운다. 실제 날짜를 따르며 지난 상자는 몰아 열 수 있고, 기록은 기기에 저장된다(글은 밖으로 보내지 않는다).",
+    tags: "christmas, advent-calendar, threejs, 3d, kids, fortune, games",
+    category: "games",
+    link: "./vibe-apps/ai-advent/",
+    image: "img-re/ai-advent.avif",
+  },
+
+  {
     title: "새야 새야 · 1894~1945",
     desc: "동학농민운동부터 광복까지 16턴 동안 나라와 백성을 지키는 도트 역사 디펜스 게임이다.\n왼쪽 위 5×5 땅에서 시작해 1×5씩 넓히며, 공격 방식이 다른 부대·포탑 11종으로 오른쪽 아래에서 오는 적을 막는다.\n시대마다 카드뉴스, 턴마다 실제 역사·[만약에] 분기·역사 퀴즈를 만난다.",
     tags: "history, korean-history, independence, quiz, roguelike, pixel, games",

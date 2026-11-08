@@ -10,6 +10,7 @@ const GRAD = (() => {
   t.minFilter = t.magFilter = THREE.NearestFilter; t.needsUpdate = true; return t;
 })();
 
+export const GRADMAP = GRAD;
 const matCache = new Map();
 export function tmat(color, o = {}) {
   const key = [color, o.e, o.ei, o.op, o.map && o.map.uuid, o.flat].join('|');
@@ -36,7 +37,7 @@ export const OUTLINE = new THREE.ShaderMaterial({
   side: THREE.BackSide,
 });
 
-function ensureONormal(g) {
+export function ensureONormal(g) {
   if (g.attributes.oNormal) return;
   if (!g.attributes.normal) g.computeVertexNormals();
   const p = g.attributes.position, n = g.attributes.normal, map = new Map(), keys = new Array(p.count);
@@ -148,3 +149,21 @@ export function fit(obj, size = 1) {
   const wrap = new THREE.Group(); obj.position.sub(new THREE.Vector3(c.x, box.min.y, c.z));
   wrap.add(obj); wrap.scale.setScalar(k); wrap.userData.h = s.y * k; return wrap;
 }
+
+// 폭신한 모양: 실루엣(점 목록)을 부드러운 곡선으로 잇고 두툼하게 부풀린다
+function smoothAll(g) {
+  const p = g.attributes.position, n = g.attributes.normal, map = new Map(), keys = new Array(p.count);
+  for (let i = 0; i < p.count; i++) {
+    const k = Math.round(p.getX(i) * 1e4) + ',' + Math.round(p.getY(i) * 1e4) + ',' + Math.round(p.getZ(i) * 1e4);
+    keys[i] = k; let a = map.get(k); if (!a) map.set(k, a = [0, 0, 0]); a[0] += n.getX(i); a[1] += n.getY(i); a[2] += n.getZ(i);
+  }
+  for (let i = 0; i < p.count; i++) { const a = map.get(keys[i]), l = Math.hypot(a[0], a[1], a[2]) || 1; n.setXYZ(i, a[0] / l, a[1] / l, a[2] / l); }
+  n.needsUpdate = true; return g;
+}
+export const PUFF = (key, pts, depth = 0.1, bevel = 0.08, smooth = true) => cache('pf' + key, () => {
+  const s = new THREE.Shape(), v = pts.map(([x, y]) => new THREE.Vector2(x, y));
+  s.moveTo(v[0].x, v[0].y);
+  if (smooth) s.splineThru([...v.slice(1), v[0]]); else { v.slice(1).forEach(q => s.lineTo(q.x, q.y)); s.lineTo(v[0].x, v[0].y); }
+  const g = new THREE.ExtrudeGeometry(s, { depth, bevelEnabled: true, bevelThickness: bevel, bevelSize: bevel * 0.85, bevelSegments: 6, curveSegments: smooth ? 64 : 4, steps: 1 });
+  g.translate(0, 0, -depth / 2); g.computeVertexNormals(); return smoothAll(g);
+});

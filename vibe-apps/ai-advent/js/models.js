@@ -1,5 +1,8 @@
 // 아이템 모델 모음: build(kind, colors) → THREE.Group
 // 모두 기본 도형 조합. 색은 colors[0], [1], [2] 순서로 바꿀 수 있다.
+import { extra } from './models_plus.js';
+import { emojiModel } from './emoji3d.js';
+import { more } from './models_more.js';
 import { THREE, M, put, SPH, HEMI, CYL, CONE, TOR, CAP, OCT, ICO, RB, LATHE, STAR, HEART, POLY, TUBE, patternTex, tmat } from './kit.js';
 
 const PI = Math.PI, H = PI / 2;
@@ -482,11 +485,15 @@ const B = {
     put(g, M(CYL(0.02, 0.02, 0.4), '#52b788'), 0, 0.5, 0); for (let i = 0; i < 5; i++) { const r = i / 5 * PI * 2; put(g, M(SPH(0.09), c[0] || '#ff8fab'), Math.cos(r) * 0.12, 0.72 + Math.sin(r) * 0.12, 0, 0, 0, 0, [1, 1, 0.5]); } put(g, M(SPH(0.07), '#ffd166'), 0, 0.72, 0.03); return g; },
 };
 
+Object.assign(B, extra());
+Object.assign(B, more());
+
 // 예전 이름·별칭
 const ALIAS = { pet: 'dog', present: 'gift' };
 export const KINDS = Object.keys(B);
 
 export function build(kind, colors = []) {
+  if (kind && kind.startsWith('e:')) { const m = emojiModel(kind.slice(2)); if (m) return m; }
   const f = B[kind] || B[ALIAS[kind]] || B.gift;
   return f(colors || []);
 }

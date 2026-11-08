@@ -5,6 +5,7 @@ import { THEMES } from '../data/themes.js';
 import { SANTA } from '../data/words.js';
 import { load, save, blank, archive, wipe, toCode, fromCode } from './store.js';
 import { sfx, setSound } from './sound.js';
+import * as MU from './music.js';
 
 const $ = s => document.querySelector(s);
 const view = $('#view'), hud = $('#hud');
@@ -111,7 +112,7 @@ function goLetter() {
     await G.sendLetter();
     view.innerHTML = `<div class="talk"><span class="who">${FAIRY}</span>산타 할아버지가 편지를 읽고 계셔… 반짝반짝…</div>`;
     G.celebrate('village'); sfx.sparkle(); await sleep(1300);
-    const lines = r.found.map(f => f.theme ? `${f.wish}! ${THEMES[f.theme].say}.` : `${f.wish}! 처음 들어 보는 멋진 선물이야. 겨울 마법 상자로 준비할게.`);
+    const lines = r.found.map(f => f.theme && f.theme[0] === '@' ? `${f.wish}! ${f.theme.slice(1)} 친구들로 상자를 채워 볼게.` : f.theme ? `${f.wish}! ${THEMES[f.theme].say}.` : `${f.wish}! 처음 들어 보는 멋진 선물이야. 겨울 마법 상자로 준비할게.`);
     const d = now(), first = daysUntil(1, st.season, d);
     talk([...lines, T('산타 할아버지가 {이름:을} 위해 스물다섯 개 상자를 준비하셨대.'),
       first > 0 ? `12월 1일부터 하루에 하나씩 열 수 있어. ${first}일만 기다려!` : '못 연 상자가 있으면 몰아서 열어도 괜찮아. 오늘 상자부터 열어 볼까?'], goCalendar);
@@ -213,7 +214,10 @@ function goLetterView() {
 }
 function goSettings() {
   const s = st.settings;
-  view.innerHTML = `<div class="set"><h3>소리</h3><div class="toggle" id="snd"><button data-v="1" class="${s.sound ? 'on' : ''}">켜기</button><button data-v="0" class="${s.sound ? '' : 'on'}">끄기</button></div></div>
+  const mOn = s.music !== false;
+  view.innerHTML = `<div class="set"><h3>효과음</h3><div class="toggle" id="snd"><button data-v="1" class="${s.sound ? 'on' : ''}">켜기</button><button data-v="0" class="${s.sound ? '' : 'on'}">끄기</button></div></div>
+    <div class="set"><h3>배경 캐롤</h3><div class="toggle" id="mus"><button data-v="1" class="${mOn ? 'on' : ''}">켜기</button><button data-v="0" class="${mOn ? '' : 'on'}">끄기</button></div>
+      ${mOn ? `<div class="row" style="align-items:center"><span style="flex:1;font-size:15px;color:var(--ink-soft)">${MU.title() ? '지금: ' + esc(MU.title()) : `캐롤 ${MU.SONG_COUNT}곡이 돌아가며 나와요`}</span><button class="btn small" id="nextSong">다음 곡</button></div>` : ''}</div>
     <div class="set"><h3>화면</h3><div class="toggle" id="crp"><button data-v="0" class="${s.crisp ? '' : 'on'}">게임기 느낌</button><button data-v="1" class="${s.crisp ? 'on' : ''}">선명하게</button></div></div>
     <div class="set"><h3>이어하기 코드</h3><p>열어 본 기록은 이 기기에 저장돼요. 다른 기기로 옮기거나 기록이 지워졌을 때 이 코드를 붙여 넣으면 이어서 할 수 있어요.</p>
       <div class="code" id="code">${toCode(st)}</div>
@@ -222,6 +226,8 @@ function goSettings() {
     <div class="set"><h3>홈 화면에 추가</h3><p>브라우저 메뉴에서 ‘홈 화면에 추가’를 누르면 앱처럼 열리고, 기록도 더 안전하게 남아요.</p></div>
     <div class="set"><h3>처음부터 다시</h3><p>이름, 편지, 열어 본 상자가 모두 지워져요.</p><div class="row"><button class="btn small red" id="reset">처음부터 다시</button></div></div>
     <div class="row"><button class="btn icon" id="bk" aria-label="달력으로">${IC.back}</button></div>`;
+  view.querySelectorAll('#mus button').forEach(b => b.onclick = () => { s.music = b.dataset.v === '1'; MU.setMusic(s.music); if (s.music) MU.startMusic(); persist(); sfx.tap(); setTimeout(goSettings, 50); });
+  if ($('#nextSong')) $('#nextSong').onclick = () => { MU.skip(); setTimeout(goSettings, 700); };
   view.querySelectorAll('#snd button').forEach(b => b.onclick = () => { s.sound = b.dataset.v === '1'; setSound(s.sound); persist(); sfx.tap(); goSettings(); });
   view.querySelectorAll('#crp button').forEach(b => b.onclick = () => { s.crisp = b.dataset.v === '1'; applyCrisp(); persist(); sfx.tap(); goSettings(); });
   $('#copy').onclick = async () => { try { await navigator.clipboard.writeText(toCode(st)); toast('코드를 복사했어요'); } catch (e) { const r = document.createRange(); r.selectNodeContents($('#code')); getSelection().removeAllRanges(); getSelection().addRange(r); toast('코드를 길게 눌러 복사해 주세요'); } };
@@ -245,6 +251,11 @@ function start() {
   if (!st) st = blank(season);
   if (st.plan && !st.wishOf) { const r = makePlan(st.wishes, {}); st.wishOf = r.wishOf; }
   setSound(st.settings.sound !== false);
+  MU.setMusic(st.settings.music !== false);
+  // 브라우저는 사용자가 한 번 눌러야 소리를 낼 수 있다
+  let touched = false;
+  document.addEventListener('pointerdown', () => { if (!touched) { touched = true; MU.startMusic(); } }, true);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) MU.stop(); else if (touched) MU.startMusic(); });
   G.init($('#cv'), {
     sfx: k => sfx[k] && sfx[k](),
     onBoxTap: () => window.__boxTap && window.__boxTap(),

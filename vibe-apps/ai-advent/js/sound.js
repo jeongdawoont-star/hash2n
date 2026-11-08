@@ -1,7 +1,11 @@
 // 효과음: Web Audio로 직접 합성 (파일 없음)
 let ctx = null, on = true;
 export function setSound(v) { on = v; }
+// 사용자가 한 번 누르기 전에는 소리를 내지 않는다 (브라우저 정책)
+let unlocked = false;
+addEventListener('pointerdown', () => { unlocked = true; }, { capture: true, once: true });
 function ac() {
+  if (!unlocked) return null;
   if (!ctx) { const C = window.AudioContext || window.webkitAudioContext; if (!C) return null; ctx = new C(); }
   if (ctx.state === 'suspended') ctx.resume();
   return ctx;

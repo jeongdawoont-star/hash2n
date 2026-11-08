@@ -1,6 +1,7 @@
 // 편지 분석 · 25일 배치 · 날짜 규칙 · 문장 채우기 (모두 기기 안에서, 밖으로 보내지 않음)
-import { THEMES, THEME_ORDER, GENERIC } from '../data/themes.js';
+import { THEMES, THEME_ORDER, GENERIC, finalKindOf } from '../data/themes.js';
 import { GOOD, FORTUNE, MISSION, COLORS, THINGS } from '../data/words.js';
+import { EMOJI } from '../data/emoji_ko.js';
 
 export const DAYS = 25;
 export const SPECIAL_DAYS = [6, 12, 18, 24];
@@ -49,6 +50,36 @@ export function analyzeWish(text) {
   return scores; // [[주제, 점수], ...]
 }
 
+// ---------- 이모지 색인에서 찾기 ----------
+const EIDX = new Map(EMOJI.map((e, i) => [e[0], i]));
+export function searchEmoji(text, min = 0) {
+  const raw = (text || '').toLowerCase();
+  const flat = raw.replace(/[\s.,!?~'"“”‘’()\-_/]+/g, '');
+  const toks = raw.split(/[\s.,!?~'"“”‘’()\-_/]+/).filter(Boolean).map(t => t.replace(STRIP, '')).filter(t => t && !GENERIC.has(t));
+  let best = -1, bs = 0;
+  EMOJI.forEach(([, label, tags], i) => {
+    const L = label.replace(/\s+/g, ''), tg = tags ? tags.split(' ') : [];
+    let s = 0;
+    for (const t of toks) {
+      if (t === L) s = Math.max(s, 10);
+      else if (L.length >= 2 && t.includes(L)) s = Math.max(s, 6 + L.length * 0.1);
+      else if (t.length >= 2 && L.includes(t)) s = Math.max(s, 5 - (L.length - t.length) * 0.1);
+      else if (t.length >= 2 && tg.includes(t)) s = Math.max(s, 3);
+    }
+    if (!s && L.length >= 2 && flat.includes(L)) s = 4 + L.length * 0.1;
+    if (s > bs) { bs = s; best = i; }
+  });
+  return best >= 0 && bs >= min ? EMOJI[best][0] : null;
+}
+// 같은 묶음 이모지부터, 모자라면 목록에서 가까운 것으로 채움
+export function relatedEmoji(e, n = 20) {
+  const i = EIDX.get(e); if (i == null) return [];
+  const sg = EMOJI[i][3];
+  const idx = EMOJI.map((_, k) => k).sort((a, b) => (EMOJI[b][3] === sg) - (EMOJI[a][3] === sg) || Math.abs(a - i) - Math.abs(b - i));
+  return idx.slice(0, n).map(k => EMOJI[k][0]);
+}
+export function emojiName(e) { const i = EIDX.get(e); return i == null ? '선물' : EMOJI[i][1]; }
+
 // 소원 여러 개 → 주제 목록(최대 3개, 순서 유지)
 export function analyzeLetter(wishes) {
   const found = []; // {wish, theme}
@@ -62,7 +93,11 @@ export function analyzeLetter(wishes) {
       if (!themes.includes(best[0])) themes.push(best[0]);
       const second = sc[1];
       if (second && second[1] >= best[1] * 0.6 && !themes.includes(second[0])) themes.push(second[0]);
-    } else found.push({ wish: w.trim(), theme: null });
+    } else {
+      const e = searchEmoji(w);
+      if (e) { found.push({ wish: w.trim(), theme: '@' + e }); if (!themes.includes('@' + e)) themes.push('@' + e); }
+      else found.push({ wish: w.trim(), theme: null });
+    }
   });
   return { found, themes: themes.slice(0, 3) };
 }
@@ -79,12 +114,14 @@ export function makePlan(wishes, keep = {}) {
   const used = list.map(() => 0);
   const plan = new Array(DAYS + 1).fill(null);
   normalDays.forEach((d, i) => {
-    const t = owner[i], id = list[t], n = THEMES[id].items.length;
+    const t = owner[i], id = list[t];
+    if (id[0] === '@') { const rel = relatedEmoji(id.slice(1), counts[t]); plan[d] = `e:${rel[used[t]++ % rel.length]}`; return; }
+    const n = THEMES[id].items.length;
     const idx = Math.min(n - 1, Math.floor(used[t]++ * n / counts[t]));
     plan[d] = `${id}:${idx}`;
   });
   SPECIAL_DAYS.forEach(d => { plan[d] = `winter:s${d}`; });
-  plan[25] = `${list[0]}:final`;
+  plan[25] = list[0][0] === '@' ? `e:${list[0].slice(1)}:final` : `${list[0]}:final`;
   // 이미 연 상자는 그대로 둔다
   Object.keys(keep).forEach(d => { if (keep[d]) plan[+d] = keep[d]; });
   const wishOf = {};
@@ -94,11 +131,20 @@ export function makePlan(wishes, keep = {}) {
 
 // 아이템 정보 꺼내기
 export function itemOf(ref, ctx) {
-  const [id, key] = ref.split(':'); const th = THEMES[id] || THEMES.winter;
+  const [id, key] = ref.split(':');
+  if (id === 'e') {
+    const e = key, name = emojiName(e), wish = ctx.wishes?.[0] || '';
+    if (ref.endsWith(':final')) return { ref, theme: 'e', name: wish || name, kind: 'e:' + e, colors: [], story: fill('산타 할아버지께 {소원} 이야기가 잘 전해졌어! 크리스마스 아침을 기대해 봐.', { ...ctx, wish }), final: true };
+    const tpl = E_STORY[hash(e) % E_STORY.length];
+    return { ref, theme: 'e', name, kind: 'e:' + e, colors: [], story: fill(tpl.replace('{n:이}', josa(name, '이')).replace('{n:은}', josa(name, '은')).replace('{n:을}', josa(name, '을')).replace('{n}', name), { ...ctx, wish }) };
+  }
+  const th = THEMES[id] || THEMES.winter;
   const wish = (ctx.wishOf && ctx.wishOf[id]) || ctx.wishes?.[0] || '';
   const c = { ...ctx, wish };
   if (key === 'final') {
-    const [kind, colors] = th.final;
+    const se = finalKindOf(wish) ? null : searchEmoji(wish, 5);
+    const special = finalKindOf(wish) || (se ? 'e:' + se : null);
+    const [kind, colors] = special ? [special, []] : th.final;
     return { ref, theme: id, name: wish || '소원 선물', kind, colors, story: fill('산타 할아버지께 {소원} 이야기가 잘 전해졌어! 크리스마스 아침을 기대해 봐.', c), final: true };
   }
   if (key[0] === 's') {
@@ -108,6 +154,12 @@ export function itemOf(ref, ctx) {
   const [name, kind, colors, story] = th.items[+key] || th.items[0];
   return { ref, theme: id, name, kind, colors, story: fill(story, c) };
 }
+
+const E_STORY = [
+  '오늘 상자에서 {n:이} 톡 튀어나왔어!', '{n}, {이름}에게 딱 어울리는 선물이야.', '짜잔! 반짝반짝 {n:이} 숨어 있었네.',
+  '{n:을} 보니까 기분이 몽글몽글해져.', '요정 방울이가 고른 오늘의 {n}!', '{이름:아}, {n:은} 소중히 간직해 줘.',
+  '{n:이} {이름:을} 기다리고 있었대.', '오늘은 {n}의 날! 하루 종일 즐거울 거야.',
+];
 
 // ---------- 좋은 말·운세 (이름 + 시즌으로 섞어서 25일 동안 겹치지 않게) ----------
 function hash(s) { let h = 2166136261; for (const ch of s) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
