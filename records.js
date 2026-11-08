@@ -42,7 +42,7 @@ export const RECORDS = [
 
   {
     title: "새야 새야 · 1894~1945",
-    desc: "동학농민운동부터 광복까지 16턴 동안 나라와 백성을 지키는 도트 역사 디펜스 게임이다.\n왼쪽 위 5×5 땅에서 시작해 1×5씩 넓히며, 공격 방식이 다른 부대·포탑 11종으로 오른쪽 아래에서 오는 적을 막는다.\n시대마다 카드뉴스, 턴마다 실제 역사·[만약에] 분기·역사 퀴즈를 만난다.",
+    desc: "동학농민운동부터 광복까지 16턴 동안 나라와 백성을 지키는 도트 역사 디펜스 게임이다.",
     tags: "history, korean-history, independence, quiz, roguelike, pixel, games",
     category: "games",
     link: "./vibe-apps/saeya-saeya.html",
@@ -51,7 +51,7 @@ export const RECORDS = [
 
   {
     title: "미미의 영어 레벨 체크",
-    desc: "STAR Reading 형식을 따른 가정용 영어 읽기 레벨 체크다(유치원~12학년). 연습 3문제 뒤 본 문제 34개를 풀고, 맞히면 어려워지고 틀리면 쉬워진다.\n고양이 미미가 문제마다 한 걸음씩 걸으며 Lv.8 레전드미미까지 변신하고, 자동 저장·성취도 그래프·학교 결과 보정을 지원한다. 비공식 연습용이다.",
+    desc: "STAR Reading 형식을 따른 가정용 영어 읽기 레벨 체크다(유치원~12학년). 맞히면 어려워지고 틀리면 쉬워진다.",
     tags: "english, reading, star-reading, level-test, kids, class-tools",
     category: "class-tools",
     link: "./vibe-apps/mimi-english/",
@@ -60,7 +60,7 @@ export const RECORDS = [
 
   {
     title: "도박의 덫 - LAST BET",
-    desc: "친구의 메시지 한 통에서 시작되는 불법도박 예방 교육 시뮬레이션이다.\n가입부터 파멸까지 직접 겪고, 승률 조작 공개와 자가진단으로 마무리한다. 실제 돈은 쓰지 않는다.",
+    desc: "친구의 메시지 한 통에서 시작되는 불법도박 예방 교육 시뮬레이션이다. 실제 돈은 쓰지 않는다.",
     tags: "gambling, prevention, simulation, education, class-tools",
     category: "class-tools",
     link: "./lastbet/",
@@ -69,7 +69,7 @@ export const RECORDS = [
 
   {
     title: "별헌터",
-    desc: "밤하늘을 찍으면 위치·시각·방향 센서로 별자리와 행성 위치를 계산해 겹쳐 보여준다.\n안드로이드 크롬에서 야외 촬영을 권장한다.",
+    desc: "밤하늘을 찍으면 센서로 별자리와 행성 위치를 계산해 겹쳐 보여주는 별 관찰 앱이다.",
     tags: "science, astronomy, constellation, camera, class-tools",
     category: "class-tools",
     link: "./vibe-apps/star-hunter.html",
@@ -78,7 +78,7 @@ export const RECORDS = [
 
   {
     title: "박자게임 메이커",
-    desc: "낱말을 넣으면 목소리와 음악을 박자에 맞춘 세로 영상을 만든다.\n뒤로 갈수록 비슷한 발음의 낱말이 끼어든다. Gemini API 키가 필요하다.",
+    desc: "낱말을 넣으면 목소리와 음악을 박자에 맞춘 세로 영상을 만드는 도구다. Gemini API 키가 필요하다.",
     tags: "rhythm, word, video, gemini, class-tools",
     category: "class-tools",
     link: "./vibe-apps/beat-game-maker.html",
@@ -87,7 +87,7 @@ export const RECORDS = [
 
   {
     title: "포켓몬수학",
-    desc: "수콩마을을 포켓몬 버전으로 키워 1학년 수학까지 이어지는 게임이다.\n문제를 풀거나 집중 타이머를 끝까지 하면 몬스터볼을 열어 1~9세대 도감을 채운다.",
+    desc: "문제를 풀어 몬스터볼을 열고 도감을 채우는 1학년 수학 게임이다.",
     tags: "math, kids, pokemon, pomodoro, timer, pixel, games",
     category: "games",
     link: "./vibe-apps/pokemon-math/",
@@ -96,7 +96,7 @@ export const RECORDS = [
 
   {
     title: "톡톡 수콩마을",
-    desc: "콩이와 함께 마을을 돌며 수 감각을 키우는 태블릿 터치 게임이다.\n한눈에 세기, 10 만들기, 100판, 묶어 세기까지 6곳을 놀이로 익힌다.",
+    desc: "콩이와 함께 마을을 돌며 수 감각을 키우는 태블릿 터치 게임이다.",
     tags: "math, number-sense, kids, tablet, pixel, games",
     category: "games",
     link: "./vibe-apps/sukong-village.html",
@@ -105,7 +105,7 @@ export const RECORDS = [
 
   {
     title: "지구 방위 · 에너지 문명",
-    desc: "카드로 발전소와 방어 시설을 놓아 외계 침공을 막는 도트 디펜스 게임이다.\n빨리 번영할수록 지구가 더워진다. 에너지·환경·자원순환을 한 판에 배운다.",
+    desc: "카드로 발전소와 방어 시설을 놓아 외계 침공을 막는 에너지·환경 도트 디펜스 게임이다.",
     tags: "energy, climate, recycling, environment, roguelike, pixel, games",
     category: "games",
     link: "./vibe-apps/earth-defense.html",
@@ -114,7 +114,7 @@ export const RECORDS = [
 
   {
     title: "포켓몬 밥 타이머",
-    desc: "정해진 시간 안에 밥을 다 먹으면 몬스터볼에서 포켓몬이 나오는 어린이 식사 습관 타이머다.\n모은 포켓몬은 동네에서 뛰놀고, 두 마리를 합쳐 진화시킬 수도 있다.",
+    desc: "정해진 시간 안에 밥을 다 먹으면 포켓몬이 나오는 어린이 식사 습관 타이머다.",
     tags: "meal, timer, pokemon, kids, habit, games",
     category: "games",
     link: "./vibe-apps/pokemon-bab-timer/",
@@ -123,7 +123,7 @@ export const RECORDS = [
 
   {
     title: "퍼스트클래스",
-    desc: "우리 반을 비행기 일등석처럼 꾸민 자리배치·칭찬 점수판이다.\n칭찬 점수를 한 번에 주고, 자리도 자동으로 바꿔 준다.",
+    desc: "우리 반을 비행기 일등석처럼 꾸민 자리배치·칭찬 점수판이다.",
     tags: "classroom, seating, score, praise, class-tools, first-class",
     category: "class-tools",
     link: "./vibe-apps/first-class.html",
@@ -132,7 +132,7 @@ export const RECORDS = [
 
   {
     title: "붕당 - 전하, 결단하소서!",
-    desc: "웹캠 앞에서 왕이 되어 손을 들어 붕당의 상소를 판결하는 역사 게임이다.\n연산군부터 정조까지, 내가 만든 역사와 진짜 역사를 비교한다.",
+    desc: "웹캠 앞에서 왕이 되어 손을 들어 붕당의 상소를 판결하는 역사 게임이다.",
     tags: "history, joseon, bungdang, game, mediapipe, webcam, motion, roguelike, korean-history",
     category: "games",
     link: "./vibe-apps/bungdang/bungdang.html",
@@ -141,7 +141,7 @@ export const RECORDS = [
 
   {
     title: "학급 매체 수업",
-    desc: "5학년 매체 단원 수업을 위해 제작했다.\n메일, 메시지, 게시판을 학급에서 실제로 체험한다.",
+    desc: "메일, 메시지, 게시판을 학급에서 실제로 체험하는 5학년 매체 단원 수업 도구다.",
     tags: "media, education, elementary, email, message, board, classroom, class-tools",
     category: "class-tools",
     link: "./vibe-apps/class-media-lab.html",
@@ -150,7 +150,7 @@ export const RECORDS = [
 
   {
     title: "필사의 노력",
-    desc: "바른 글씨와 필사를 위한 손글씨 정밀 진단 및 맞춤 인증서 발급 도구다.\n글씨를 분석하여 6대 핵심 지표 점수와 실제 쓴 손글씨가 담긴 인증서를 발급한다.\n\n도움: 정세훈 선생님",
+    desc: "손글씨를 정밀 진단해 6대 지표 점수와 맞춤 인증서를 발급하는 필사 도구다.\n도움: 정세훈 선생님",
     tags: "handwriting, calligraphy, education, ai, ocr, certificate, class-tools",
     category: "class-tools",
     link: "./vibe-apps/필사의노력.html",
@@ -159,7 +159,7 @@ export const RECORDS = [
 
   {
     title: "적토마가 되었다",
-    desc: "삼국지 전장을 질주하는 모션 러닝 액션 게임이다.\n제자리에서라도 좀 재밌게 몸풀기 하라고 만들었다.\n키보드 모드, 4인플레이도 지원된다.",
+    desc: "삼국지 전장을 제자리에서 질주하는 모션 러닝 액션 게임이다. 키보드 모드와 4인 플레이도 된다.",
     tags: "game, threejs, mediapipe, motion, webcam, running, action, samgukji, redhare, multiplayer",
     category: "games",
     link: "./vibe-apps/jeoktoma.html",
@@ -168,7 +168,7 @@ export const RECORDS = [
 
   {
     title: "현대로 간 정약용을 키워라",
-    desc: "조선 시대 대표 실학자 다산 정약용 선생이 현대 사회로 타임슬립하여 펼쳐지는 육성 시뮬레이션 게임입니다.\n학업, 건강, 자금 관리, 현대 기술 습득 등 다양한 활동으로 정약용 선생을 현대의 훌륭한 인재로 키워보세요.",
+    desc: "현대로 타임슬립한 정약용을 훌륭한 인재로 키우는 육성 시뮬레이션 게임이다.",
     tags: "history, simulation, pixel, game, dasan, jeongyagyong",
     category: "games",
     link: "./vibe-apps/dasan-game.html",
@@ -177,7 +177,7 @@ export const RECORDS = [
 
   {
     title: "철학자 월드컵",
-    desc: "동서양 36명의 철학자들이 삶과 사회의 근본적 난제에 대해 벌이는 인공지능 배틀 시뮬레이션이다.\nAI(Gemini / Claude)가 각 철학자의 사상과 고유한 어조를 재현하여 난제에 대한 대립 토론을 진행하며 36강 토너먼트로 최종 승자를 가린다.",
+    desc: "동서양 철학자 36명이 삶과 사회의 난제를 두고 AI 토론을 벌이는 토너먼트 시뮬레이션이다.",
     tags: "philosophy, tournament, AI, gemini, claude, debate, education",
     category: "games",
     link: "./vibe-apps/philosopher-worldcup.html",
@@ -186,7 +186,7 @@ export const RECORDS = [
 
   {
     title: "영조를 설득하라",
-    desc: "조선 역사 속 임오화변(1762)을 소재로 한 설득 시뮬레이션이다. 어린 세손이 되어 뒤주에 갇힌 아버지 사도세자를 살려달라고 영조를 설득해야 한다. AI가 실시간으로 영조 역할과 채점·코칭·음성을 만들어준다. 무료 API 키만 있으면 바로 플레이 가능.",
+    desc: "세손이 되어 뒤주에 갇힌 사도세자를 살려 달라고 영조를 설득하는 AI 역사 시뮬레이션이다. 무료 API 키가 필요하다.",
     tags: "history, joseon, persuasion, AI, gemini, simulation, korean-history",
     category: "games",
     link: "./vibe-apps/yeongjo-1762.html",
@@ -195,7 +195,7 @@ export const RECORDS = [
 
   {
     title: "영상 연습 오버레이 · 동작 연습 도구",
-    desc: "기준 영상과 내 웹캠을 오버레이 또는 좌우/상하 분할로 비교하는 동작 연습 도구다.\n유튜브·인스타 주소는 재생+확대만, 파일로 불러오면 구간반복·배속·루틴저장까지 지원해 골프·댄스 등에 두루 쓴다.",
+    desc: "기준 영상과 내 웹캠을 겹치거나 나란히 놓고 비교하는 동작 연습 도구다.",
     tags: "video, overlay, split-screen, golf, dance, practice, analysis",
     category: "class-tools",
     link: "./vibe-apps/golf-swing-trainer.html",
@@ -204,7 +204,7 @@ export const RECORDS = [
 
   {
     title: "수박깨기",
-    desc: "여름에 수박깨는 미니게임앱이다.\n눈감고 하면 진동으로 위치를 찾을 수 있고, 사운드플레이도 가능하다.",
+    desc: "눈을 감고 진동과 소리로 위치를 찾아 수박을 깨는 여름 미니게임이다.",
     tags: "game, summer, sound, vibration",
     category: "games",
     link: "./vibe-apps/watermelon_smash.html",
@@ -213,7 +213,7 @@ export const RECORDS = [
 
   {
     title: "모기사냥",
-    desc: "한국인은 모기를 잡아야 잠을 잘 수 있다.\n스마트폰으로 쉽게 모기를 잡는 게임 앱이다.\n앱인토스에 출시됐다. [바로가기](https://minion.toss.im/5W2f6ywp)",
+    desc: "스마트폰으로 모기를 잡는 게임 앱이다. 앱인토스에 출시됐다. [바로가기](https://minion.toss.im/5W2f6ywp)",
     tags: "game, mosquito, catch, clicker",
     category: "games",
     link: "./vibe-apps/mosquito-sniper.html",
@@ -222,7 +222,7 @@ export const RECORDS = [
 
   {
     title: "멀티 룰렛",
-    desc: "행사를 위해 만들었다.\n저녁 메뉴 고를 때도 요긴하다.",
+    desc: "행사나 저녁 메뉴를 정할 때 쓰는 여러 칸 룰렛이다.",
     tags: "class-tools, roulette, random, fun",
     category: "class-tools",
     link: "./vibe-apps/Multi-roulette.html",
@@ -231,7 +231,7 @@ export const RECORDS = [
 
   {
     title: "이미지 영상 제작기",
-    desc: "사진의 비율과 영상의 비율을 고려하여 콜라주 배치 및 다양한 전환 효과를 가미한 동영상을 제작하는 도구다.\n여러 장의 이미지를 업로드해 순서를 배치하고, 숏폼(9:16)부터 가로형(16:9)까지 다양한 화면비에 맞추어 레이아웃과 켄번즈 줌 효과, 그리고 배경 블러 처리를 적용해 MP4 비디오로 추출한다.",
+    desc: "여러 장의 사진을 화면비에 맞춰 배치하고 전환 효과를 넣어 MP4 영상으로 만드는 도구다.",
     tags: "video, image, transition, slideshow, ffmpeg",
     category: "automation",
     link: "./vibe-apps/image-video-maker.html",
@@ -240,7 +240,7 @@ export const RECORDS = [
 
   {
     title: "한글자",
-    desc: "종이 한 장에 한 글자씩 크게 출력하여 행사용 배너나 교실 환경 미화용으로 쓰기 좋게 만든 웹앱이다.\n원하는 문구를 입력하면 자동으로 한 글자씩 분할되어 인쇄용 레이아웃을 구성해준다.",
+    desc: "문구를 넣으면 종이 한 장에 한 글자씩 크게 출력해 주는 배너용 웹앱이다.",
     tags: "print, classroom, banner, tool",
     category: "class-tools",
     link: "./vibe-apps/한글자.html",
@@ -249,7 +249,7 @@ export const RECORDS = [
 
   {
     title: "나의 악보집",
-    desc: "기타 코드와 가사를 함께 볼 수 있는 웹 악보집이다.\n자동 스크롤, 코드 운지법 다이어그램 표시, 유튜브 연동을 지원한다.\n나만의 악보를 직접 추가하여 연주에 활용할 수 있다.",
+    desc: "기타 코드와 가사를 함께 보며 자동 스크롤로 연주하는 웹 악보집이다.",
     tags: "guitar, chord, band, songbook",
     category: "games",
     link: "./밴드공연 악보/songbook.html",
@@ -258,7 +258,7 @@ export const RECORDS = [
 
   {
     title: "돈병풍 메이커",
-    desc: "생신 용돈 드리기 위해 알아보다가\n구매 대신 셀프로 만들어 드렸다.\n4종 도안 및 문구 수정 가능.\n금액 조절 가능. PDF 출력 후 조립하면 된다.",
+    desc: "도안·문구·금액을 골라 PDF로 출력해 조립하는 용돈 돈병풍 도구다.",
     tags: "diy, craft, unplugged",
     category: "etc",
     link: "./vibe-apps/donbyeongpung_v3.html",
@@ -267,7 +267,7 @@ export const RECORDS = [
 
   {
     title: "보드게임 메이커",
-    desc: "언플러그드 상황에서도 AI와 함께\n실물 보드게임을 만들 수 있도록 제작하였다.\n도블, 빙고, 사다리와 뱀 등 수업용 게임판과 카드를\n바로 출력해 사용할 수 있게 하는 도구다.\n\n현재 기능 보수중.",
+    desc: "도블, 빙고, 사다리와 뱀 같은 수업용 보드게임판과 카드를 AI와 만들어 출력하는 도구다. 현재 기능 보수 중이다.",
     tags: "codex, boardgame, unplugged",
     category: "games",
     link: "./boardgame_maker/boardgame-maker.html",
@@ -276,7 +276,7 @@ export const RECORDS = [
 
   {
     title: "속담 그림 퀴즈",
-    desc: "저학년 속담을 익혀야 하는 아이를 위해 만들었다.\n그림으로 직접 그리면서 속담의 상황을 느끼고\n의미를 더 잘 이해하는 것 같다.\n\n[샘플 그림 데이터 다운로드](./vibe-apps/속담그림퀴즈_백업데이터.json)",
+    desc: "그림을 직접 그리며 저학년 속담의 상황과 뜻을 익히는 퀴즈다.\n[샘플 그림 데이터 다운로드](./vibe-apps/속담그림퀴즈_백업데이터.json)",
     tags: "gemini",
     category: "class-tools",
     link: "./vibe-apps/속담그림퀴즈.html",
@@ -285,7 +285,7 @@ export const RECORDS = [
 
   {
     title: "학급 라디오",
-    desc: "아이들이 QR로 각자 사연을 넣으면\n파이어베이스를 통해 서버에 모이고\n교실컴에서 재생을 한 번만 누르면\n자동으로 사연을 읽어주고 재생까지 해준다.\n설정된 시간 안에 사연을 균등하게 방송하고\n마지막엔 명언이나 속담 등으로 마무리한다.",
+    desc: "아이들이 QR로 보낸 사연을 교실 컴퓨터가 자동으로 읽어 주고 방송하는 학급 라디오다.",
     tags: "claude, firebase",
     category: "class-tools",
     link: "./vibe-apps/radio.html",
@@ -294,7 +294,7 @@ export const RECORDS = [
 
   {
     title: "랜덤 짝뽑기",
-    desc: "아이들이 친구들과 친해질 수 있는 방법으로\n랜덤짝을 뽑아 점심시간 활동하기를 추천해서\n만들어주었다.\nPNG로 저장 후 띄워놓기 가능.\n친해지기 활동 100개 정도 넣어놨다.",
+    desc: "랜덤 짝을 뽑고 친해지기 활동을 골라 주는 점심시간 짝 활동 도구다.",
     tags: "codex",
     category: "class-tools",
     link: "./vibe-apps/pair-draw.html",
@@ -303,7 +303,7 @@ export const RECORDS = [
 
   {
     title: "바탕화면 선긋기 매니저",
-    desc: "지저분한 바탕화면 아이콘을 깔끔하게 묶어 준다.\nOpenCV를 활용해 아이콘 배치 영역을 자동으로 감지하여\n바탕화면에 예쁜 테두리와 라벨을 그려주는 무설치 유틸리티다.",
+    desc: "바탕화면 아이콘 영역을 자동으로 찾아 테두리와 라벨을 그려 주는 무설치 정리 유틸리티다.",
     tags: "gemini, opencv",
     category: "automation",
     link: "https://jeongdawoont-star.github.io/wallpaper_line",
@@ -312,7 +312,7 @@ export const RECORDS = [
 
   {
     title: "아이 아침 플래너",
-    desc: "등교 준비가 힘든 아이를 위해 만들었다.\n아침에 해야할 일들을 입력하면\n체크박스로 하나씩 체크하면서 준비할 수 있다.\n하루 미션 완료 시 고양이가 자동으로 집에 들어온다.",
+    desc: "아침에 할 일을 하나씩 체크하며 등교 준비를 돕는 아이용 플래너다.",
     tags: "copilot",
     category: "class-tools",
     link: "./vibe-apps/Child%20Morning.html",
@@ -321,7 +321,7 @@ export const RECORDS = [
 
   {
     title: "두근두근 보물찾기",
-    desc: "보물찾기를 좋아하는 아이를 위해 만들었다.\n고전 지뢰찾기를 응용함.\n2인 플레이 하다보면 시간이 금방 간다.",
+    desc: "고전 지뢰찾기를 응용한 2인용 보물찾기 게임이다.",
     tags: "gemini",
     category: "games",
     link: "./vibe-apps/find-tresure.html",
@@ -330,7 +330,7 @@ export const RECORDS = [
 
   {
     title: "도블 메이커",
-    desc: "아이랑 게임하려고 만들었다.\n실제 도블과는 다르지만 직접 그림과 사진을 넣는 것이 포인트.\n끌어 놓아야 매칭이 된다.",
+    desc: "직접 넣은 그림과 사진으로 하는 도블 스타일 짝 맞추기 게임이다.",
     tags: "gemini",
     category: "games",
     link: "./vibe-apps/doble-maker.html",
@@ -339,7 +339,7 @@ export const RECORDS = [
 
   {
     title: "충역 - 왜란의 그림자",
-    desc: "임진왜란판 레지스탕스 아발론.\n진화된 마피아 게임이라고 생각하면 된다.\n보드게임을 진행자 없이, 실물 카드 없이 할 수 있게 개조했다.\n토요한글학교에서 아이들과 하려고 제작.\n태블릿1대로 10명까지 플레이 가능.\n모바일 크롬에서 잘 됨",
+    desc: "진행자와 실물 카드 없이 태블릿 1대로 10명까지 하는 임진왜란판 마피아 게임이다.",
     tags: "claude, gemini",
     category: "games",
     link: "./vibe-apps/Choong-Yeok-the-Loyalty-and-Traitor-web.html",
@@ -348,7 +348,7 @@ export const RECORDS = [
 
   {
     title: "바이브코딩하는 만화",
-    desc: "내가 생각하는 바이브 코딩\n아직 제작 수준 미달이라\n혼자먹긴 맛있는데\n남한테 팔순없는 수준\n해썹인증같은거 못받음",
+    desc: "바이브 코딩에 대한 생각을 그린 만화다.",
     tags: "",
     category: "etc",
     link: "https://www.instagram.com/p/DWy1CxMGgf9/?igsh=MTE0dXZncTRiM3Vtag==",
@@ -357,7 +357,7 @@ export const RECORDS = [
 
   {
     title: "학생 과제 트랙커 (데모)",
-    desc: "나는 이게 너무 쓸모있다.\n15년간 종이 명렬표에 과제 체크하던걸 셀프 터치로 바꿨다.\n애들이 탭에 체크하면 내 엑셀에 기록된다.",
+    desc: "학생이 태블릿에서 과제를 체크하면 교사 엑셀에 기록되는 과제 확인 도구다.",
     tags: "copilot",
     category: "class-tools",
     link: "./vibe-apps/student-tracker-demo.html",
@@ -366,7 +366,7 @@ export const RECORDS = [
 
   {
     title: "엑셀 한글 사전",
-    desc: "호치민 학생들의 어휘능력 향상을 돕기위해 개발.\n(은)사실 내가 수업할때 편하려고 제작.\n외부 api 2개정도 구해다 놓으면 굉장히 편리한 사전이 된다.\n어휘학습카드도 제작되고.\n아직 인가전이라 [고급]눌러서 동의해야함.\n사전설정 필수. 해적판 아님.",
+    desc: "호치민 학생들의 어휘 학습을 돕는 엑셀 한글 사전·어휘 카드 도구다. 사용 전 사전 설정이 필요하다.",
     tags: "copilot",
     category: "automation",
     link: "https://docs.google.com/spreadsheets/u/0/d/17jj3yravBhx2R8nkGo84Di9i7XOPsG7bkypkwUYT8OI/copy?authuser=0",
@@ -375,7 +375,7 @@ export const RECORDS = [
 
   {
     title: "학급 사건 조사서 (데모)",
-    desc: "막대한 학급 송사를 처리하려고 만들었다\n\n학생 입력-서버 기록-AI 분석\n학생에겐 지도내용을\n학부모에겐 안내문자를 써줌\n누가 기록도 되고\n자동으로 폰에 메시지로 넘어옴",
+    desc: "학생 입력을 AI가 분석해 지도 내용과 학부모 안내 문자를 써 주는 학급 사건 기록 도구다.",
     tags: "gemini, firebase",
     category: "class-tools",
     link: "./vibe-apps/songsabot.html",
@@ -384,7 +384,7 @@ export const RECORDS = [
 
   {
     title: "받아쓰기 음성 생성기",
-    desc: "받아쓰기 급수표는 있는데 음성은 없다니\n교사의 목을 아껴주기 위해 만들었다\n텍스트만 넣으면 음성 생성 가능",
+    desc: "받아쓰기 급수표 글자만 넣으면 음성을 만들어 주는 도구다.",
     tags: "",
     category: "automation",
     link: "./vibe-apps/%EB%B0%9B%EC%95%84%EC%93%B0%EA%B8%B0%20Studio.html",
@@ -393,7 +393,7 @@ export const RECORDS = [
 
   {
     title: "주간학습/알림장 자동화 (데모)",
-    desc: "학년부장 업무 중\n매일 알림장\n매주 주간학습 엑셀로 만들어 공유하기\n매번 새시트 만들고 내용쓰기 번거로워\n몽땅 때려넣고 클릭만 하면\n자동 생성되게 만들었다\n\n제작툴: gemini",
+    desc: "내용을 한꺼번에 넣으면 알림장과 주간학습 엑셀을 자동으로 만들어 주는 도구다.",
     tags: "",
     category: "automation",
     link: "./vibe-apps/weekly-notice-automation.html",
@@ -402,7 +402,7 @@ export const RECORDS = [
 
   {
     title: "미술 조형요소 자동수업",
-    desc: "조형요소와 조형원리를 설명해주고\n어떻게 표현하는지 알려주는 수업세트\n음성도 출력된다",
+    desc: "조형요소와 조형원리를 음성과 함께 설명하는 미술 수업 세트다.",
     tags: "claude",
     category: "automation",
     link: "./vibe-apps/%EC%A1%B0%ED%98%95%EC%9A%94%EC%86%8C%20%EC%8A%AC%EB%9D%BC%EC%9D%B4%EB%93%9C.html",
@@ -411,7 +411,7 @@ export const RECORDS = [
 
   {
     title: "사회 공개수업 활동자료 (5학년 날씨와 기후)",
-    desc: "교육과정 개정되면서 자료가 하나도 없어서\nhtml로 학습지랑 퀴즈 자료 만들었다",
+    desc: "5학년 날씨와 기후 단원의 학습지와 퀴즈를 html로 만든 공개수업 자료다.",
     tags: "gemini",
     category: "automation",
     link: "./vibe-apps/%EC%82%AC%ED%9A%8C%EA%B3%B5%EA%B0%9C%EC%88%98%EC%97%85%EB%8C%80%EB%B3%B8.html",
@@ -420,7 +420,7 @@ export const RECORDS = [
 
   {
     title: "덧뺄셈 진화게임",
-    desc: "외식하러 갔다가 지루해 하는 딸을 위해\n즉석으로 만들어준 셈게임\n알에서부터 온갖 동물로 진화한다\n\n제작툴: 클로드",
+    desc: "덧셈 뺄셈을 풀수록 알에서 여러 동물로 진화하는 셈 게임이다.",
     tags: "",
     category: "games",
     link: "https://claude.ai/public/artifacts/5853c966-42fa-4d66-9664-aad266340014",
@@ -429,7 +429,7 @@ export const RECORDS = [
 
   {
     title: "영어게임 워드 워",
-    desc: "바이브코딩 첫 시험작\n영단어로 하는 브롤스타즈\n컴퓨터실 감성으로 1키보드 2P 지원\n제작툴: Canva",
+    desc: "한 키보드로 둘이 겨루는 영단어 대전 게임이다.",
     tags: "",
     category: "games",
     link: "https://hash2n.my.canva.site/wordwar",
@@ -438,7 +438,7 @@ export const RECORDS = [
 
   {
     title: "코딩 기록 시작",
-    desc: "만든 작품들을 올려보려 합니다",
+    desc: "만든 작품을 올리기 시작한 첫 기록이다.",
     tags: "",
     category: "etc",
     link: "https://www.instagram.com/p/DWjF75eGruc/?img_index=18&igsh=MXBlaXh1dWp3a3g2Zw==",
