@@ -32,6 +32,15 @@ export const RECORDS = [
   // ▼ 여기에 새 기록을 붙여넣으세요 (최신 항목을 맨 위에) ▼
 
   {
+    title: "이세계골프",
+    desc: "마법사·늑대 수인·드워프 등 7종족이 저마다의 능력으로 치는 도트 골프 게임이다. 손가락으로 직접 스윙하고, 혼자 쳐도 다른 사람의 실제 기록이 옆 타석에서 함께 라운딩한다.",
+    tags: "golf, pixel, threejs, 3d, multiplayer, swing, games",
+    category: "games",
+    link: "./vibe-apps/isekai-golf/",
+    image: "img-re/isekai-golf.avif",
+  },
+
+  {
     title: "AI 어드벤트 캘린더",
     desc: "산타 할아버지께 보낼 편지를 쓰면 크리스마스까지 관련 이미지와 덕담, 운세를 열어볼 수 있는 디지털 어드밴트 캘린더이다.",
     tags: "christmas, advent-calendar, threejs, 3d, kids, fortune, games",
