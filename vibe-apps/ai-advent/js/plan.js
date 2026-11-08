@@ -107,25 +107,50 @@ export function analyzeLetter(wishes) {
 export function makePlan(wishes, keep = {}) {
   const { found, themes } = analyzeLetter(wishes);
   const list = themes.length ? themes : ['winter'];
+  const wishOf = {};
+  found.forEach(f => { if (f.theme && !wishOf[f.theme]) wishOf[f.theme] = f.wish; });
   const normalDays = [];
   for (let d = 1; d <= 24; d++) if (!SPECIAL_DAYS.includes(d)) normalDays.push(d);
   const counts = list.map(() => 0);
   const owner = normalDays.map((_, i) => { const t = i % list.length; counts[t]++; return t; });
-  const used = list.map(() => 0);
   const plan = new Array(DAYS + 1).fill(null);
-  normalDays.forEach((d, i) => {
-    const t = owner[i], id = list[t];
-    if (id[0] === '@') { const rel = relatedEmoji(id.slice(1), counts[t]); plan[d] = `e:${rel[used[t]++ % rel.length]}`; return; }
-    const n = THEMES[id].items.length;
-    const idx = Math.min(n - 1, Math.floor(used[t]++ * n / counts[t]));
-    plan[d] = `${id}:${idx}`;
-  });
   SPECIAL_DAYS.forEach(d => { plan[d] = `winter:s${d}`; });
   plan[25] = list[0][0] === '@' ? `e:${list[0].slice(1)}:final` : `${list[0]}:final`;
   // 이미 연 상자는 그대로 둔다
   Object.keys(keep).forEach(d => { if (keep[d]) plan[+d] = keep[d]; });
-  const wishOf = {};
-  found.forEach(f => { if (f.theme && !wishOf[f.theme]) wishOf[f.theme] = f.wish; });
+
+  // 같은 물건(모델)·같은 이름은 25칸 안에서 한 번만
+  const cx = { wishes, wishOf, name: '' }, usedK = new Set(), usedN = new Set();
+  const look = ref => itemOf(ref, cx);
+  const free = ref => { const it = look(ref); return !usedK.has(it.kind) && !usedN.has(it.name); };
+  const take = ref => { const it = look(ref); usedK.add(it.kind); usedN.add(it.name); return ref; };
+  // 25일 소원 상자와 이미 연 상자를 먼저 잡고, 특별 상자가 그것과 겹치면 나중에 다른 걸로 바꾼다
+  take(plan[25]); Object.keys(keep).forEach(d => { if (keep[d] && +d !== 25) take(plan[+d]); });
+  SPECIAL_DAYS.forEach(d => { if (keep[d]) return; if (free(plan[d])) take(plan[d]); else plan[d] = null; });
+
+  // 주제별 후보: 고르게 흩어 뽑던 순서를 먼저, 나머지를 뒤에
+  const cands = list.map((id, t) => {
+    if (id[0] === '@') return relatedEmoji(id.slice(1), 40).map(e => `e:${e}`);
+    const n = THEMES[id].items.length, order = [];
+    for (let j = 0; j < counts[t]; j++) order.push(Math.min(n - 1, Math.floor(j * n / counts[t])));
+    for (let k = 0; k < n; k++) order.push(k);
+    return [...new Set(order)].map(k => `${id}:${k}`);
+  });
+  // 모자랄 때: 소원과 비슷한 이모지 → 겨울 아이템 → 크리스마스·겨울 이모지
+  const spare = [];
+  wishes.forEach(w => { const e = searchEmoji(w, 5); if (e) relatedEmoji(e, 30).forEach(x => spare.push(`e:${x}`)); });
+  THEMES.winter.items.forEach((_, k) => spare.push(`winter:${k}`));
+  ['🎄', '⛄', '❄️', '🧣'].forEach(e => relatedEmoji(e, 16).forEach(x => spare.push(`e:${x}`)));
+  const ptr = list.map(() => 0);
+  normalDays.forEach((d, i) => {
+    if (plan[d]) return;
+    const t = owner[i], c = cands[t];
+    while (ptr[t] < c.length && !free(c[ptr[t]])) ptr[t]++;
+    if (ptr[t] < c.length) { plan[d] = take(c[ptr[t]++]); return; }
+    const s = spare.find(free);
+    plan[d] = take(s || c[i % c.length]);
+  });
+  SPECIAL_DAYS.forEach(d => { if (!plan[d]) plan[d] = take(spare.find(free) || 'winter:0'); });
   return { plan: plan.slice(1), themes: list, found, wishOf };
 }
 
