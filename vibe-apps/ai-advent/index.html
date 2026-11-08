@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>AI 어드벤트 캘린더</title>
+<meta name="description" content="요정에게 산타 할아버지께 보낼 편지를 쓰면, 크리스마스까지 하루에 하나씩 선물 상자를 열 수 있어요.">
+<meta name="theme-color" content="#2f3e66">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="어드벤트">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="dev">
+  <div id="top" class="screen">
+    <canvas id="cv"></canvas>
+    <div id="hud"></div>
+    <div id="fade"></div>
+  </div>
+  <div id="hinge"><i></i><i></i></div>
+  <div id="bottom" class="screen">
+    <div id="view"></div>
+    <div id="toast"></div>
+  </div>
+</div>
+<noscript>자바스크립트를 켜야 쓸 수 있어요.</noscript>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
