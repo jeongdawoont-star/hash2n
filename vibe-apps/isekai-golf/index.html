@@ -4,9 +4,17 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
     <meta name="theme-color" content="#1b1640" />
+    <!-- 폰 다크 모드가 색을 멋대로 바꾸지 않게: 이미 어두운 화면이라고 알린다(새야새야와 같은 방식) -->
+    <meta name="color-scheme" content="dark" />
+    <meta name="darkreader-lock" />
+    <!-- 홈 화면에 추가하면 주소창 없이 가로 전체화면으로 열린다 -->
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <title>이세계골프</title>
-    <script type="module" crossorigin src="./assets/index-CSoN4xcn.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-OW7BrM-w.css">
+    <script type="module" crossorigin src="./assets/index-FmerjHcp.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-B7dY3MXv.css">
   </head>
   <body>
     <div id="stage">
@@ -15,6 +23,7 @@
     </div>
     <div id="swingzone"></div>
     <div id="ui"></div>
-    <div id="rotate">가로로 돌려 주세요</div>
+    <button id="fs" class="btn ghost" aria-label="전체화면"><i></i></button>
+    <div id="rotate">가로로 돌려 주세요<br /><span>여기를 누르면 전체화면 · 가로로 바꿔요</span></div>
   </body>
 </html>
