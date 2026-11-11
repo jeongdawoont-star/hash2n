@@ -129,6 +129,30 @@ body.menu #tbtn{flex-wrap:nowrap;width:min(980px,96vw);bottom:12px;gap:6px}#tbtn
 .lbtn{position:absolute;left:4%;right:4%;top:auto;bottom:3%;width:auto;display:flex;gap:6px}.lbtn .b{margin:0;font-size:12px;padding:8px 2px}
 .lt{font-size:17px;top:4%}.cg{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
 }
+/* 줄바꿈 다듬기: 낱말 중간에서 꺾지 않고(keep-all), 줄 길이를 고르게(balance), 마지막 줄에 한두 글자만 남지 않게(pretty) */
+body{word-break:keep-all;overflow-wrap:break-word}
+.nb{display:inline-block}#fcn,#hqn{white-space:nowrap}
+#tbtn .b,.lbtn .b{white-space:nowrap}
+/* 손패의 긴 카드 이름(7글자 넘음)은 작게, 그래도 넘치면 두 줄로 고르게 */
+.cd .tt.l{letter-spacing:-.5px}
+@media (max-width:420px),(orientation:landscape) and (max-height:520px){.cd .tt.l{white-space:normal;text-wrap:balance;font-size:9px;line-height:1.05;padding:1px 0}.cd:has(.tt.l) .art{height:24px}.cd:has(.tt.l) .art img{height:22px}}
+/* 세로: 버튼 4개가 좁아 한 줄 고정이면 겹친다 → '다시 뽑기 / (무료)' 처럼 의미 단위로 두 줄 */
+@media (orientation:portrait){.lbtn .b{flex:1 1 0;min-width:0;font-size:12px!important;padding:6px 2px!important;white-space:normal;text-wrap:balance;line-height:1.2}}
+.gb,.ds,.edu{overflow-wrap:break-word}
+.box p,.cn p,.real,.ifb,.lesson,#msg,#toast,.lt,.nwg div,.gb>div,.gb small{text-wrap:pretty}
+.ds,.edu,.lrow .tt,.cn h3,.yr,.qq,#toast,.lt,.gb,.gb small{text-wrap:balance}
+/* 좁은 카드에서는 넓은 화면용으로 넣어 둔 줄바꿈(\n)을 풀고 폭에 맞춰 고르게 다시 나눈다 */
+.lrow .ds,.lrow .edu,.cd .ds,.gc .gb small{white-space:normal}
+.lrow .edu{line-height:1.45}
+/* 창이 화면보다 길어 아래(버튼)가 잘리던 것: 낮은 가로 화면에서 여백을 줄이고 목록 높이를 남는 만큼만 */
+@media (orientation:landscape) and (max-height:560px){
+.box{padding:8px 10px;max-height:96dvh}
+.box .b{padding:7px 8px;margin:3px 0}
+.cg{max-height:calc(96dvh - 122px)}
+.cn{padding:6px 10px!important}
+.dots{margin:3px 0 0!important}
+.nwg{gap:4px;font-size:11px}.nwg div{padding:3px 4px}.nwg img.cnp{height:26px;width:26px}
+}
 </style></head><body class="menu">
 <canvas id="cv"></canvas>
 <div id="st" class="ui"></div>
@@ -476,7 +500,7 @@ $('#tl').innerHTML=h;pxify($('#st'));pxify($('#tl'));
 document.body.classList.toggle('xpm',G.phase==='expand');$('#go').style.display=G.phase==='plan'&&!G.busy&&G.hand.length<=lim()?'block':'none';
 $('#bp').classList.toggle('on',G.paused);$('#bs').textContent=SND?'🔊':'🔇';pxify($('#bs'));$('#bf').textContent=['1x','2x','3x'][G.spd-1];$('#ba').classList.toggle('on',G.auto>0);$('#ba').textContent=AUL()?['auto','반자동','풀자동'][G.auto]:'🔒auto';
 $('#fcn').textContent=FAC[Math.min(LAST,G.t)].n;$('#bars').style.display=G.phase==='battle'?'flex':'none'}
-const cardEl=(id,i,cls,big)=>{const d=inf(id),c=C[id],dup=c.k==='b'&&bl().some(b=>b.id===id&&b.lv<3);return `<div class="cd ${c.x||c.ev?'x':''} ${dup?'dup':''} ${cls||''}" data-i="${i}" data-id="${id}" style="border-color:${ROLE[role(id)].c}">${rband(id)}<div class=tt>${d.n}</div><div class=art><img src="${su(d.e)}"></div><div class=ds>${face(id)}${big&&c.iw>0?`<small style="display:block;color:#ffb0a0">⛓ 이권 침탈↑</small>`:''}${big?`<span class=edu>📜 ${c.edu}</span>`:''}</div>${dup?'<u>⬆LV</u>':''}</div>`};
+const cardEl=(id,i,cls,big)=>{const d=inf(id),c=C[id],dup=c.k==='b'&&bl().some(b=>b.id===id&&b.lv<3);return `<div class="cd ${c.x||c.ev?'x':''} ${dup?'dup':''} ${cls||''}" data-i="${i}" data-id="${id}" style="border-color:${ROLE[role(id)].c}">${rband(id)}<div class="tt${d.n.length>6?' l':''}">${d.n}</div><div class=art><img src="${su(d.e)}"></div><div class=ds>${face(id)}${big&&c.iw>0?`<small style="display:block;color:#ffb0a0">⛓ 이권 침탈↑</small>`:''}${big?`<span class=edu>📜 ${c.edu}</span>`:''}</div>${dup?'<u>⬆LV</u>':''}</div>`};
 function info(){const el=$('#info');if(G.sel<0||!G.hand[G.sel]){info.key='';document.body.classList.remove('inf');el.style.display='none';return}const key=G.sel+':'+G.hand[G.sel];if(key!==info.key){info.key=key;info.off=0;clearTimeout(info.tm);info.tm=setTimeout(()=>{if(info.key===key)infoOff()},4000)}if(info.off){el.style.display='none';return}document.body.classList.add('inf');const id=G.hand[G.sel],c=C[id];
 el.innerHTML=`<span class=rtag style="background:${ROLE[role(id)].c}">${ROLE[role(id)].e} ${ROLE[role(id)].n}</span><b>${inf(id).n}</b> ${chips(id)}<br>${c.k==='b'?'초록 칸=설치 · 금색 칸=⬆레벨업\n🤝 버튼=두레로 내놓기':c.t?'전투 중 적을 터치':'맵을 터치해 사용\n🤝 버튼=두레로 내놓기'}<br><span class=edu>📜 ${c.edu}</span>`;el.style.display='block'}
 function infoOff(){info.off=1;$('#info').style.display='none';document.body.classList.remove('inf')}
@@ -777,8 +801,8 @@ const EAN=[[
 (x,t)=>{const u=ea.ss((t%6)/3);ea.sky(x,'#2a3a6a','#f0a070');x.fillStyle='#ffe0a0';x.beginPath();x.arc(EAW/2,140-u*60,26,0,7);x.fill();ea.hills(x,'#3a2a48',132,3,16);ea.ground(x,'#4a6a3a',136);x.fillStyle='#e0e0e0';x.fillRect(EAW/2+60,40,3,100);ea.spr(x,'@b14',EAW/2+82,130-u*80,.7);ea.spr(x,'@a07',EAW/2-40,156,1);ea.spr(x,'@a15',EAW/2-90,156,1);ea.spr(x,'@a12',EAW/2-130,156,1,1);if(u>.9)ea.txt(x,'1945. 8. 15 광복',EAW/2,24,'#fff3b0',16)}]];
 function cnModal(done){const E=era(),S=CN[E-1].concat([{nw:1,h:'이 시대의 새 힘'}]);let i=0;
 const nw=()=>{const ks=UN.filter(k=>C[k].u===E).concat(NX.filter(k=>C[k].u===E&&!C[k].pat&&!Array.isArray(C[k].e)));
-return `<div class=nwg>${ks.map(k=>`<div style="border-color:${ROLE[role(k)].c}">${ico(C[k].e,'cnp')}<b>${C[k].n}</b><small>${C[k].pat?PAT[C[k].pat].e+PAT[C[k].pat].n+' · '+PAT[C[k].pat].d:face(k)}</small></div>`).join('')}</div><p class=lesson>⚔ 맞설 세력: ${[...new Set([1,2,3,4].map(k=>FAC[(E-1)*4+k].n))].join(' · ')}${E>1?`\n⛓ 지금 이권 침탈 ${iwp()}% · 🌾 민심 ${Math.round(G.nat)}`:''}</p>`};
-const show=()=>{const s=S[i];modal(`<div class=cn><div class=ey>📰 카드뉴스 · ${TN[E-1]} (${TY[E-1]}) · ${i+1}/${S.length}</div><h3>${s.h}</h3>${s.nw?nw():`<canvas class=eaC width=480 height=160></canvas><p>${s.b}</p>`}</div><div class=dots>${S.map((_,k)=>`<span class="${k===i?'on':''}"></span>`).join('')}</div><div class=nav>${i?'<button class=b id=kp>◀ 이전</button>':''}${i<S.length-1?'<button class=b id=kn>다음 ▶</button>':'<button class=b id=k>시작!</button>'}</div>`);
+return `<div class=nwg>${ks.map(k=>`<div style="border-color:${ROLE[role(k)].c}">${ico(C[k].e,'cnp')}<b>${C[k].n}</b><small>${C[k].pat?PAT[C[k].pat].e+PAT[C[k].pat].n+' · '+PAT[C[k].pat].d:face(k)}</small></div>`).join('')}</div><p class=lesson>⚔ 맞설 세력: ${[...new Set([1,2,3,4].map(k=>FAC[(E-1)*4+k].n))].map(n=>`<span class=nb>${n}</span>`).join(' · ')}${E>1?`\n⛓ 지금 이권 침탈 ${iwp()}% · 🌾 민심 ${Math.round(G.nat)}`:''}</p>`};
+const show=()=>{const s=S[i];modal(`<div class=cn><div class=ey><span class=nb>📰 카드뉴스</span> · <span class=nb>${TN[E-1]} (${TY[E-1]})</span> · <span class=nb>${i+1}/${S.length}</span></div><h3>${s.h}</h3>${s.nw?nw():`<canvas class=eaC width=480 height=160></canvas><p>${s.b}</p>`}</div><div class=dots>${S.map((_,k)=>`<span class="${k===i?'on':''}"></span>`).join('')}</div><div class=nav>${i?'<button class=b id=kp>◀ 이전</button>':''}${i<S.length-1?'<button class=b id=kn>다음 ▶</button>':'<button class=b id=k>시작!</button>'}</div>`);
 {const c=$('#box .eaC');if(c)eaStart(c,E-1,i)}if($('#kp'))$('#kp').onclick=()=>{i--;show()};if($('#kn'))$('#kn').onclick=()=>{i++;show()};if($('#k'))$('#k').onclick=()=>{close();done()}};show()}
 // 땅 넓히기: 지도 위에서 1×5 띠를 직접 고른다 (◀▶=자리, ↻=가로·세로, 땅을 눌러 고르고 한 번 더 누르면 개간)
 // 땅 넓히기: 붙일 수 있는 줄이 맵에 모두 빛난다. 줄을 눌러 고르고, 한 번 더 누르거나 [개간]을 누르면 넓혀진다
@@ -786,7 +810,7 @@ const xsc=c=>c.t.reduce((s,[x,y])=>s+Math.hypot(x-2,y-2),0);
 function expandModal(done){const L=cands();if(!L.length){done();return}
 G.xp={L,c:null,done};G.phase='expand';G.busy=true;G.sel=-1;hud();xpShow();
 if(G.auto>1)setTimeout(()=>{if(G.phase==='expand'){G.xp.c=L.slice().sort((a,b)=>xsc(a)-xsc(b))[0];xpDo(1)}},1400)}
-function xpShow(){const c=G.xp.c,el=$('#xp');el.innerHTML=`<p>🗺 ${Y(G.t)}년 황무지 개간 · ${c?'고른 줄을 한 번 더 누르면 개간해요':'맵에서 빛나는 줄 중 넓힐 곳을 눌러 주세요'}</p><button class=b id=xk style="background:#2a5a3a;border-color:#7dffa0" ${c?'':'disabled'}>🏗 개간 🌾-3</button><button class=b id=xs>쉬기 🌾+4</button>`;el.style.display='flex';pxify(el);
+function xpShow(){const c=G.xp.c,el=$('#xp');el.innerHTML=`<p><span class=nb>🗺 ${Y(G.t)}년 황무지 개간</span> · <span class=nb>${c?'고른 줄을 한 번 더 누르면 개간해요':'맵에서 빛나는 줄 중 넓힐 곳을 눌러 주세요'}</span></p><button class=b id=xk style="background:#2a5a3a;border-color:#7dffa0" ${c?'':'disabled'}>🏗 개간 🌾-3</button><button class=b id=xs>쉬기 🌾+4</button>`;el.style.display='flex';pxify(el);
 $('#xk').onclick=()=>xpDo(1);$('#xs').onclick=()=>xpDo(0)}
 function xpTap(x,y){const c=G.xp.L.find(c=>c.t.some(([a,b])=>a===x&&b===y));if(!c)return;if(c===G.xp.c){xpDo(1);return}G.xp.c=c;sfx('place');xpShow()}
 function xpDo(yes){const X=G.xp,c=X.c;$('#xp').style.display='none';G.phase='post';G.xp=null;
@@ -799,7 +823,7 @@ else G.zf.push({z,k,t:3});
 modal(`<div class=yr style="color:${good?'#7dffa0':'#ff8a8a'};font-size:18px">${good?'🍀 좋은 일!':'⚠ 나쁜 일!'}</div><p>${E.e} <b>${E.n}</b>\n${zt?ZN[z]+' 구역 · ':''}${E.d}${extra?'\n'+extra:''}${!E.inst?'\n(3턴 동안)':''}</p><p style="color:#9be7a8">📜 ${E.edu}</p><button class=b id=k>확인</button>`);$('#k').onclick=()=>{close();hud();done()}}
 function lootModal(done){const E=era(),pool=NX.filter(k=>C[k].u<=E),bias=UN.filter(k=>C[k].u<=E&&C[k].u>=E-1),dr=()=>{const ids=[...new Set(sh(pool.concat(bias,bias,['wall'])))].slice(0,3);const X=xs();if(R()<.3&&X.length)ids[R()*3|0]=X[R()*X.length|0];return ids};let ids=dr(),sel=-1,fin=0,up=0;
 const L=$('#loot'),fn=()=>{if(fin)return;fin=1;L.style.display='none';done()};
-const show=()=>{const rrc=G.rr?2:0;L.innerHTML=`<div class=lt>🎁 ${Y(G.t)}년 · 카드 1장을 고르세요<small style="display:block;font-size:12px;color:#ffc27a;margin-top:3px">보유 🤝${G.rc} · 두레의 힘으로 카드를 더 받을 수 있어요</small></div><div class=lrow>${ids.map((id,i)=>cardEl(id,i,sel===i?'pick':'',1)).join('')}</div><div class=lbtn><button class=b id=lk ${sel<0?'disabled':''}>✔ 받기</button><button class=b id=lu ${sel<0||up||G.rc<5||ids.length<2?'disabled':''}>🤝5 한 장 더</button><button class=b id=lr ${G.rc<rrc?'disabled':''}>🔄 다시 뽑기 ${rrc?'(🤝2)':'(무료)'}</button><button class=b id=lv>건너뛰기 (🌾+2)</button></div>`;L.style.display='block';hud();pxify(L);
+const show=()=>{const rrc=G.rr?2:0;L.innerHTML=`<div class=lt>🎁 ${Y(G.t)}년 · 카드 1장을 고르세요<small style="display:block;font-size:12px;color:#ffc27a;margin-top:3px">보유 🤝${G.rc} · 두레의 힘으로 카드를 더 받을 수 있어요</small></div><div class=lrow>${ids.map((id,i)=>cardEl(id,i,sel===i?'pick':'',1)).join('')}</div><div class=lbtn><button class=b id=lk ${sel<0?'disabled':''}>✔ 받기</button><button class=b id=lu ${sel<0||up||G.rc<5||ids.length<2?'disabled':''}>🤝5 <span class=nb>한 장 더</span></button><button class=b id=lr ${G.rc<rrc?'disabled':''}>🔄 <span class=nb>다시 뽑기</span> <span class=nb>${rrc?'(🤝2)':'(무료)'}</span></button><button class=b id=lv><span class=nb>건너뛰기</span> <span class=nb>(🌾+2)</span></button></div>`;L.style.display='block';hud();pxify(L);
 L.querySelectorAll('.cd').forEach(el=>el.onclick=()=>{sel=+el.dataset.i;show()});
 $('#lv').onclick=()=>{G.nat=cn(G.nat+2);fn()};$('#lk').onclick=()=>{G.hand.push(ids[sel]);fn()};
 $('#lu').onclick=()=>{G.rc-=5;up=1;G.hand.push(ids[sel]);ids.splice(sel,1);sel=-1;toast('🤝 두레의 힘으로 카드를 한 장 더 받았어요!\n함께 모은 힘은 다시 쓸모가 돼요');show()};
