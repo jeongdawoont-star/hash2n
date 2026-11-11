@@ -131,6 +131,8 @@ body.menu #tbtn{flex-wrap:nowrap;width:min(980px,96vw);bottom:12px;gap:6px}#tbtn
 }
 /* 줄바꿈 다듬기: 낱말 중간에서 꺾지 않고(keep-all), 줄 길이를 고르게(balance), 마지막 줄에 한두 글자만 남지 않게(pretty) */
 body{word-break:keep-all;overflow-wrap:break-word}
+/* 타이틀 오른쪽 위 구석의 작은 정책 링크(게임 중에는 숨김) */
+#legal{position:fixed;right:8px;top:6px;z-index:7;font-size:10px;opacity:.38;display:none}#legal a{color:#e8e2ff;text-decoration:none}body.menu #legal{display:block}
 .nb{display:inline-block}#fcn,#hqn{white-space:nowrap}
 #tbtn .b,.lbtn .b{white-space:nowrap}
 /* 손패의 긴 카드 이름(7글자 넘음)은 작게, 그래도 넘치면 두 줄로 고르게 */
@@ -162,6 +164,7 @@ body{word-break:keep-all;overflow-wrap:break-word}
 <div id="ctl" class="ui"><button class="cb" id="bp">⏸</button><button class="cb" id="bf">1x</button><button class="cb" id="bi">i</button><button class="cb" id="ba">auto</button><button class="cb" id="bz">전체</button><button class="cb" id="bs">🔊</button></div>
 <div id="toast"></div>
 <div id="well" class="ui">🤝<small>두레</small></div><div id="tbtn"><button class="b df" data-d="0">🌱 쉬움</button><button class="b df" data-d="1">🌾 보통</button><button class="b df" data-d="2">🔥 어려움</button><button class="b" id="tstart">▶ 게임 시작</button><button class="b" id="tguide">📖 방법·도감·랭킹</button><button class="b" id="top">🎬 오프닝</button><button class="b" id="tfs">전체화면</button></div>
+<div id="legal"><a href="https://jeongdawoont-star.github.io/hash2n/policies/saeya/privacy-policy.ko.html" target="_blank" rel="noopener">개인정보처리방침</a> · <a href="https://jeongdawoont-star.github.io/hash2n/policies/saeya/terms.ko.html" target="_blank" rel="noopener">이용약관</a></div>
 <button id="go" class="ui">⚔ 전투</button>
 <div id="bars" class="ui"><div class="bw">🏯 본부 <span id="hqn"></span><div class="bar"><i id="b1" style="background:#5a8ae8"></i></div></div><div class="bw">⚔ <span id="fcn"></span><div class="bar"><i id="b2" style="background:#d04648"></i></div></div></div>
 <div id="hand" class="ui"></div>
@@ -352,7 +355,7 @@ const dmgMul=()=>1+Math.min(1,G.pro/TARGET)*.6+Math.max(0,Math.min(1,G.pro/TARGE
 // 구역: 본부(2,2)를 기준으로 북서·북동·남서·남동. 땅이 넓어지면 구역도 함께 넓어진다
 const ZN=['북서','북동','남서','남동'],zone=(x,y)=>(x>2?1:0)+(y>2?2:0);
 const zc=z=>{const t=G.own.map(i=>[i%GW,i/GW|0]).filter(([x,y])=>zone(x,y)===z);return t.length?[t.reduce((s,q)=>s+q[0],0)/t.length,t.reduce((s,q)=>s+q[1],0)/t.length]:[[1,1],[3,1],[1,3],[3,3]][z]};
-const ZE={sun:{good:1,e:'🪙',n:'장날 호황',d:'국력 생산 ×1.5',edu:'장날이면 사람과 물건이 모여\n마을 살림이 활기를 띠었어요.'},shield:{good:1,e:'🛡️',n:'마을 합심',d:'시설 체력 ×1.5',edu:'마을 사람들이 힘을 합치면\n더 튼튼하게 지킬 수 있어요.'},farm:{good:1,e:'🌾',n:'풍년',d:'🌾+3/턴',edu:'농사가 잘되면\n백성의 마음도 넉넉해져요.'},heat:{good:1,e:'⚔️',n:'의기 충천',d:'부대 공격 ×1.5',edu:'뜻을 함께하면\n더 큰 용기가 생겨요.'},gift:{good:1,inst:1,e:'🍚',n:'구휼미 도착',d:'시설 카드 2장 획득',edu:'어려울 때 곡식을 나누는\n구휼은 오랜 전통이에요.'},
+const ZE={move:{e:'🔀',n:'강제 이주',inst:1,d:'시설 두 곳의 자리가 서로 바뀌어요',edu:'일제는 철도와 군사 시설을 짓는다며\n마을 땅을 빼앗고\n사람들을 다른 곳으로 옮기게 했어요.'},sun:{good:1,e:'🪙',n:'장날 호황',d:'국력 생산 ×1.5',edu:'장날이면 사람과 물건이 모여\n마을 살림이 활기를 띠었어요.'},shield:{good:1,e:'🛡️',n:'마을 합심',d:'시설 체력 ×1.5',edu:'마을 사람들이 힘을 합치면\n더 튼튼하게 지킬 수 있어요.'},farm:{good:1,e:'🌾',n:'풍년',d:'🌾+3/턴',edu:'농사가 잘되면\n백성의 마음도 넉넉해져요.'},heat:{good:1,e:'⚔️',n:'의기 충천',d:'부대 공격 ×1.5',edu:'뜻을 함께하면\n더 큰 용기가 생겨요.'},gift:{good:1,inst:1,e:'🍚',n:'구휼미 도착',d:'시설 카드 2장 획득',edu:'어려울 때 곡식을 나누는\n구휼은 오랜 전통이에요.'},
 smog:{e:'🦠',n:'흉년과 역병',d:'국력 생산 ×0.5 · 🌾-3/턴',edu:'흉년과 전염병이 돌면\n백성의 삶이 무너져요.'},quake:{inst:1,e:'🔥',n:'화재',d:'시설 1개 파괴',edu:'초가집이 많던 마을에서\n불은 큰 재난이었어요.'},wild:{inst:1,e:'🏚️',n:'약탈',d:'시설 1개 파괴 · 🌾-3',edu:'전쟁 중에는 마을이\n약탈당하는 일이 많았어요.'},scout:{inst:1,e:'👁️',n:'적 정찰대',d:'다음 침공 +30%',edu:'미리 대비하면\n위기도 이겨낼 수 있어요.'},crisis:{inst:1,e:'💸',n:'재정 위기',d:'💰 -8',edu:'나라 살림이 어려우면\n외국에 기대게 되기 쉬워요.'}};
 const zf=(b,k)=>G.zf.filter(f=>f.k===k&&f.z===zone(b.x,b.y)).length;
 const mhp=b=>Math.max(1,Math.round(val(b,'hp')*hpMul()*(zf(b,'shield')?1.5:1)*(G.grid&&adjB(b).hp?1.3:1)));
@@ -815,9 +818,10 @@ $('#xk').onclick=()=>xpDo(1);$('#xs').onclick=()=>xpDo(0)}
 function xpTap(x,y){const c=G.xp.L.find(c=>c.t.some(([a,b])=>a===x&&b===y));if(!c)return;if(c===G.xp.c){xpDo(1);return}G.xp.c=c;sfx('place');xpShow()}
 function xpDo(yes){const X=G.xp,c=X.c;$('#xp').style.display='none';G.phase='post';G.xp=null;
 if(yes&&c){c.t.forEach(([a,b])=>G.own.push(b*GW+a));G.nat=cn(G.nat-3);fx('🏗 개간!',c.t[c.t.length>>1][0],c.t[c.t.length>>1][1],'#7dffa0')}else G.nat=cn(G.nat+4);hud();X.done()}
-function zoneEvent(done,fg){const good=fg||R()<.55,keys=Object.keys(ZE).filter(k=>!!ZE[k].good===good),k=keys[R()*keys.length|0],E=ZE[k];
+function zoneEvent(done,fg){const good=fg||R()<.55,keys=Object.keys(ZE).filter(k=>!!ZE[k].good===good&&(k!=='move'||era()>=2&&bl().length>=2)),k=keys[R()*keys.length|0],E=ZE[k];
 const zs=[0,1,2,3].filter(q=>bl().some(b=>zone(b.x,b.y)===q)),z=(zs.length?zs:[0,1,2,3])[R()*(zs.length||4)|0];let extra='',zt=!E.inst;
 if(k==='quake'||k==='wild'){zt=1;const t=bl().filter(b=>zone(b.x,b.y)===z);if(t.length){const b=t[R()*t.length|0];G.grid[b.y][b.x]=null;extra=inf(b.id).n+' 파괴'}if(k==='wild')G.nat=cn(G.nat-3)}
+else if(k==='move'){const L=sh(bl()),a=L[0],b=L.find(x=>x.id!==a.id)||L[1];[a.x,b.x]=[b.x,a.x];[a.y,b.y]=[b.y,a.y];G.grid[a.y][a.x]=a;G.grid[b.y][b.x]=b;for(const q of[a,b]){q.ux=q.uy=null;fx('🔀',q.x,q.y)}extra=inf(a.id).n+' ↔ '+inf(b.id).n}
 else if(k==='scout')G.extra=.3;else if(k==='crisis')G.pro=Math.max(0,G.pro-8);else if(k==='gift')G.hand.push(...sh(NX.filter(c=>C[c].u<=era()&&C[c].k==='b'&&!C[c].hq)).slice(0,2));
 else G.zf.push({z,k,t:3});
 modal(`<div class=yr style="color:${good?'#7dffa0':'#ff8a8a'};font-size:18px">${good?'🍀 좋은 일!':'⚠ 나쁜 일!'}</div><p>${E.e} <b>${E.n}</b>\n${zt?ZN[z]+' 구역 · ':''}${E.d}${extra?'\n'+extra:''}${!E.inst?'\n(3턴 동안)':''}</p><p style="color:#9be7a8">📜 ${E.edu}</p><button class=b id=k>확인</button>`);$('#k').onclick=()=>{close();hud();done()}}
