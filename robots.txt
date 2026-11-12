@@ -2,3 +2,6 @@ User-agent: *
 Allow: /
 
 Sitemap: https://hash2n.vercel.app/sitemap.xml
+
+#DaumWebMasterTool:7e0e895992e5ce99ce6898a9905f5b7cb19bfc7921addeeb727311c874096563:VC4npJliHmrJLtJDnWYFDA==
+#DaumWebMasterTool:7e0e895992e5ce99ce6898a9905f5b7cb19bfc7921addeeb727311c874096563:VC4npJIiHmrJLtJDnWYFDA==
