@@ -32,6 +32,15 @@ export const RECORDS = [
   // ▼ 여기에 새 기록을 붙여넣으세요 (최신 항목을 맨 위에) ▼
 
   {
+    title: "3분 시험실",
+    desc: "스마트 안경과 링을 쓴 응시생이 되어 감독관 몰래 3분을 버티는 1인칭 체험이다. 끝나면 감독관 시점 리플레이로 내 행동 단서를 확인하고, 감독관 지침과 사례 판단 연습으로 이어진다.",
+    tags: "threejs, 3d, blender, proctor, exam, training, simulation, games",
+    category: "games",
+    link: "./vibe-apps/exam-room-3min/",
+    image: "img-re/exam-room-3min.avif",
+  },
+
+  {
     title: "이세계골프",
     desc: "마법사·늑대 수인·드워프 등 7종족이 저마다의 능력으로 치는 도트 골프 게임이다. 손가락으로 직접 스윙하고, 혼자 쳐도 다른 사람의 실제 기록이 옆 타석에서 함께 라운딩한다.",
     tags: "golf, pixel, threejs, 3d, multiplayer, swing, games",
