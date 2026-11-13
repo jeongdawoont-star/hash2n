@@ -1038,30 +1038,9 @@ async function fetchSheetSnapshotFromScript(scriptUrl) {
   return {
     scores: data.scores && typeof data.scores === 'object' ? data.scores : {},
     inspection: data.inspection && typeof data.inspection === 'object' ? data.inspection : {},
-    // 신버전 Apps Script만 제공: 학생이름/미션이름 기준 데이터 + 실시간 미션 목록
-    inspectionByName: data.inspectionByName && typeof data.inspectionByName === 'object' ? data.inspectionByName : null,
+    // 신버전 Apps Script만 제공: 실시간 미션 목록(CSV 지연 감지용)
     liveMissionNames: Array.isArray(data.missionNames) ? data.missionNames.map(n => (n || '').toString().trim()).filter(Boolean) : null
   };
-}
-
-// 이름 기준({학생이름:{미션이름:true}}) 검사 표시를 현재 id 체계로 합친다.
-// 기존 Firestore 값은 지우지 않고 true만 더한다(시트가 늦어도 데이터 손실 없음).
-function mergeInspectionByName(base, byName, studentList, missionList) {
-  const out = {};
-  Object.entries(base || {}).forEach(([sid, row]) => { out[sid] = Object.assign({}, row || {}); });
-  if (!byName) return out;
-  const missionIdByName = new Map((missionList || []).map(m => [(m.name || '').toString().trim(), m.id]));
-  (studentList || []).forEach((s) => {
-    const row = byName[(s.name || '').toString().trim()];
-    if (!row || typeof row !== 'object') return;
-    Object.entries(row).forEach(([mName, v]) => {
-      const mid = missionIdByName.get((mName || '').toString().trim());
-      if (!mid || !v) return;
-      if (!out[s.id]) out[s.id] = {};
-      out[s.id][mid] = true;
-    });
-  });
-  return out;
 }
 
 // id 기준 데이터를 이름 기준으로 바꾼다. 시트 행 순서와 무관하게 안전하게 기록하기 위함.
@@ -1378,14 +1357,10 @@ window.syncFromSheets = async function(silent = false) {
     }
 
     const nextScores = migrateScoresByMissionName(oldMissions, normalizedMissionList, oldScores);
-    let nextInspection = migrateInspectionByMissionName(oldMissions, normalizedMissionList, oldInspection);
-
-    // 점수는 Firestore가 기준이다. 시트 스냅샷의 id(m1, m2…)는 시트 행 순서라서
-    // 미션이 추가·이동되면 어긋나므로 절대 그대로 쓰지 않는다(11/13 한 칸 밀림 사고 원인).
-    // 검사 표시만, 이름 기준 데이터가 있을 때 true를 더하는 방식으로 합친다.
-    if (sheetSnapshot && sheetSnapshot.inspectionByName) {
-      nextInspection = mergeInspectionByName(nextInspection, sheetSnapshot.inspectionByName, studentList, normalizedMissionList);
-    }
+    const nextInspection = migrateInspectionByMissionName(oldMissions, normalizedMissionList, oldInspection);
+    // 점수·검사 표시는 Firestore만 기준으로 한다. 시트 값은 가져오지 않는다.
+    // - 시트 스냅샷의 id(m1, m2…)는 시트 행 순서라 미션 추가 시 어긋남(11/13 한 칸 밀림 사고 원인)
+    // - 시트 기록은 몇 초 늦게 끝나서, 방금 해제한 검사 표시가 되살아날 수 있음
 
     await Promise.all([
       setDoc(doc(db, 'config', 'missions'), { list: normalizedMissionList, updatedAt: new Date().toISOString() }),

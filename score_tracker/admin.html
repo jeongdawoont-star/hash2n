@@ -740,13 +740,8 @@ window.syncSheets = async function() {
     }
 
     const nextScores = migrateScoresByMissionName(oldMissions, normalizedMList, oldScores);
-    let nextInspection = migrateInspectionByMissionName(oldMissions, normalizedMList, oldInspection);
-
-    // 점수는 Firestore가 기준. 시트 스냅샷의 id(m1, m2…)는 시트 행 순서라 미션 추가 시 어긋나므로 쓰지 않는다.
-    // 검사 표시만 이름 기준 데이터가 있을 때 true를 더한다.
-    if (sheetSnapshot && sheetSnapshot.inspectionByName) {
-      nextInspection = mergeInspectionByName(nextInspection, sheetSnapshot.inspectionByName, sList, normalizedMList);
-    }
+    const nextInspection = migrateInspectionByMissionName(oldMissions, normalizedMList, oldInspection);
+    // 점수·검사 표시는 Firestore만 기준. 시트 값은 행 순서 id 어긋남·기록 지연 때문에 가져오지 않는다.
 
     const now = new Date().toISOString();
     await Promise.all([
@@ -829,29 +824,9 @@ async function fetchSheetSnapshotFromScript(scriptUrl) {
   const data = await res.json();
   if (!data || !data.ok) throw new Error(data && data.error ? data.error : 'Apps Script 응답 오류');
   return {
-    // 신버전 Apps Script만 제공: 학생이름/미션이름 기준 데이터 + 실시간 미션 목록
-    inspectionByName: data.inspectionByName && typeof data.inspectionByName === 'object' ? data.inspectionByName : null,
+    // 신버전 Apps Script만 제공: 실시간 미션 목록(CSV 지연 감지용)
     liveMissionNames: Array.isArray(data.missionNames) ? data.missionNames.map(n => (n || '').toString().trim()).filter(Boolean) : null
   };
-}
-
-// 이름 기준({학생이름:{미션이름:true}}) 검사 표시를 현재 id 체계로 합친다(true만 더함).
-function mergeInspectionByName(base, byName, studentList, missionList) {
-  const out = {};
-  Object.entries(base || {}).forEach(([sid, row]) => { out[sid] = Object.assign({}, row || {}); });
-  if (!byName) return out;
-  const missionIdByName = new Map((missionList || []).map(m => [(m.name || '').toString().trim(), m.id]));
-  (studentList || []).forEach((s) => {
-    const row = byName[(s.name || '').toString().trim()];
-    if (!row || typeof row !== 'object') return;
-    Object.entries(row).forEach(([mName, v]) => {
-      const mid = missionIdByName.get((mName || '').toString().trim());
-      if (!mid || !v) return;
-      if (!out[s.id]) out[s.id] = {};
-      out[s.id][mid] = true;
-    });
-  });
-  return out;
 }
 
 // ── 전체 점수 초기화 ─────────────────────────────────────────
