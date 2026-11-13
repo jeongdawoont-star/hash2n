@@ -191,6 +191,11 @@ kbd{display:inline-block;padding:1px 8px;border:1px solid #555;border-radius:6px
 .rec{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:#ff8a80;margin-bottom:6px;letter-spacing:.1em}
 .rec:before{content:"";width:8px;height:8px;border-radius:50%;background:#ff3b30;animation:blink 1s infinite}
 @keyframes blink{50%{opacity:.2}}
+#rpSusp{position:absolute;left:50%;bottom:112px;transform:translateX(-50%);width:min(760px,calc(100% - 32px));background:rgba(6,8,10,.74);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:9px 12px 8px}
+#rpSusp .lab{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:#cfd2d6;font-weight:700}
+#rpSusp .lab small{font-size:11px;font-weight:500;color:#9aa0a8;margin-left:6px}
+#rpSusp b{font-size:26px;font-weight:900;color:#fff;font-variant-numeric:tabular-nums;line-height:1}
+#rpSusp canvas{display:block;width:100%;height:80px;margin-top:4px}
 #timeline{position:absolute;left:50%;bottom:72px;transform:translateX(-50%);width:min(760px,calc(100% - 32px));height:34px}
 #timeline .track{position:absolute;left:0;right:0;top:15px;height:4px;background:rgba(255,255,255,.18);border-radius:4px}
 #timeline .prog{position:absolute;left:0;top:15px;height:4px;background:#fff;border-radius:4px}
@@ -356,6 +361,7 @@ kbd{display:inline-block;padding:1px 8px;border:1px solid #555;border-radius:6px
   <div class="tag" id="tagFast">어려운 문항 즉시 정답</div>
   <div class="ring" id="ringHead"></div>
   <div class="ring" id="ringHand"></div>
+  <div id="rpSusp"><div class="lab"><span>감독관 의심 <small>55↑ 접근 · 100 적발</small></span><b id="rpSuspV">0</b></div><canvas id="rpSuspC"></canvas></div>
   <div id="timeline"><div class="track"></div><div class="prog" id="tlProg"></div><div id="tlMarks"></div></div>
   <div id="replayCtl"><button id="rpSpeed">속도 5x</button><button id="rpSkip">결과 보기</button></div>
 </div>
@@ -365,10 +371,6 @@ kbd{display:inline-block;padding:1px 8px;border:1px solid #555;border-radius:6px
   <div class="eyebrow">체험 결과</div>
   <div class="verdict" id="rVerdict"></div>
   <p id="rDesc" style="margin-top:10px"></p>
-  <h3>의심 지수 흐름</h3>
-  <div class="card" style="padding:14px 12px 12px"><svg id="suspChart" viewBox="0 0 800 270" style="width:100%;height:auto;display:block"></svg>
-    <p style="font-size:13px;color:var(--muted);margin-top:8px;line-height:1.7">게임 중엔 보이지 않던 감독관의 의심이에요. <b style="color:#ffb547">55</b>를 넘으면 감독관이 다가오고, 다가온 뒤 <b style="color:#ff3b30">100</b>에 닿으면 적발이에요.<br>
-    <span style="color:#8ff7dc">■</span> 기기 켠 시간 · <span style="color:#ff5b1f">●</span> 링 탭 · <span style="color:#c9a7ff">●</span> 흘끔 · <span style="color:#ff8a80">▲</span> 감독관 접근 · <span style="color:#ff3b30">✕</span> 적발</p></div>
   <h3>당신의 행동 단서</h3>
   <ul class="clues" id="rClues"></ul>
   <h3>공유 카드</h3>
@@ -1034,6 +1036,22 @@ function startReplay(){show('ending',false);show('gameUI',false);fadeTo(1);setTi
 const tags={hud:$('tagHud'),tap:$('tagTap'),down:$('tagDown'),glance:$('tagGlance'),fast:$('tagFast')};
 function placeTag(el,v3,on,dy=0){if(!on){el.classList.remove('on');return;}const p=v3.clone().project(camera);if(p.z>1){el.classList.remove('on');return;}
   el.style.left=`${(p.x*0.5+0.5)*innerWidth}px`;el.style.top=`${(-p.y*0.5+0.5)*innerHeight-dy}px`;el.classList.add('on');}
+function suspCol(v){return v>=55?'#ff3b30':v>=35?'#ff8a3d':'#ffb547';}
+function drawRpSusp(i){const cv=$('rpSuspC'),F=S.frames;if(!cv||!F.length)return;
+  const dpr=Math.min(2,devicePixelRatio||1),w=cv.clientWidth,h=cv.clientHeight;if(!w)return;
+  if(cv.width!==Math.round(w*dpr)){cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);}
+  const x=cv.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,w,h);
+  const n=F.length,X=k=>k/(n-1||1)*w,Y=v=>h-2-(h-6)*clamp(v,0,100)/100;
+  x.strokeStyle='rgba(255,255,255,.08)';x.lineWidth=1;x.strokeRect(.5,.5,w-1,h-1);
+  x.setLineDash([5,4]);x.strokeStyle='rgba(255,181,71,.8)';x.beginPath();x.moveTo(0,Y(55));x.lineTo(w,Y(55));x.stroke();
+  x.strokeStyle='rgba(255,59,48,.7)';x.beginPath();x.moveTo(0,Y(100));x.lineTo(w,Y(100));x.stroke();x.setLineDash([]);
+  // 기기 켠 구간
+  x.fillStyle='rgba(143,247,220,.16)';let st=-1;for(let k=0;k<=i;k++){const on=F[k].hud;if(on&&st<0)st=k;if((!on||k===i)&&st>=0){x.fillRect(X(st),0,Math.max(1,X(k)-X(st)),h);st=-1;}}
+  // 지금까지의 의심
+  x.beginPath();x.moveTo(0,Y(0));for(let k=0;k<=i;k++)x.lineTo(X(k),Y(F[k].su||0));x.lineTo(X(i),Y(0));x.closePath();x.fillStyle='rgba(255,91,31,.22)';x.fill();
+  x.beginPath();for(let k=0;k<=i;k++){k?x.lineTo(X(k),Y(F[k].su||0)):x.moveTo(0,Y(F[0].su||0));}x.strokeStyle='#ff5b1f';x.lineWidth=2.2;x.stroke();
+  const v=F[i].su||0;x.fillStyle=suspCol(v);x.beginPath();x.arc(X(i),Y(v),4.5,0,7);x.fill();
+  const b=$('rpSuspV');b.textContent=Math.round(v);b.style.color=suspCol(v);}
 function replayUpdate(dt){R.t+=dt*R.speed;const n=S.frames.length;if(!n){toResult();return;}const i=Math.min(n-1,Math.floor(R.t/0.1));const f=S.frames[i];
   avatar.head.rotation.y=f.yaw*0.9;avatar.head.rotation.x=clamp(f.pitch*0.8,-0.8,0.3);
   avatar.glint.material.opacity=f.hud?0.55+0.35*Math.sin(R.t*9):0;
@@ -1057,6 +1075,7 @@ function replayUpdate(dt){R.t+=dt*R.speed;const n=S.frames.length;if(!n){toResul
   if(f.hud){const p=head.clone().project(camera);rh.style.left=`${(p.x*0.5+0.5)*innerWidth}px`;rh.style.top=`${(-p.y*0.5+0.5)*innerHeight}px`;rh.classList.add('on');}else rh.classList.remove('on');
   if(recentTap||f.down){const p=(f.down?new THREE.Vector3(PX-0.22,0.62,PZ+0.33):hp).clone().project(camera);rk.style.left=`${(p.x*0.5+0.5)*innerWidth}px`;rk.style.top=`${(-p.y*0.5+0.5)*innerHeight}px`;rk.classList.add('on');}else rk.classList.remove('on');
   $('tlProg').style.width=`${clamp(R.t/R.dur,0,1)*100}%`;
+  drawRpSusp(i);
   if(R.t>=R.dur+1)toResult();}
 $('rpSpeed').onclick=()=>{R.speed=R.speed===5?1:R.speed===1?10:5;$('rpSpeed').textContent=`속도 ${R.speed}x`;};
 $('rpSkip').onclick=()=>toResult();
@@ -1078,7 +1097,7 @@ function toResult(){if(S.mode==='result')return;if(!S.ending)S.ending=S.usedDevi
     [`${st.under.toFixed(0)}초`,'손이 책상 아래에','숨기려는 동작이 오히려 단서가 돼요',st.under>0.5],
     [`${st.tooFast}개`,'어려운 문항 즉시 정답','풀이 흔적 없이 5초 안에 맞힌 어려운 문항',st.tooFast>0]];
   $('rClues').innerHTML=C.map(c=>`<li class="${c[3]?'':'zero'}"><div class="n">${c[0]}</div><div class="t"><b>${c[1]}</b><span>${c[2]}</span></div></li>`).join('');
-  makeCard();show('result',true);drawSuspChart();$('result').scrollTop=0;}
+  makeCard();show('result',true);$('result').scrollTop=0;}
 function drawSuspChart(){const F=S.frames,el=$('suspChart');if(!F.length){el.innerHTML='';return;}
   const W=el.clientWidth&&el.clientWidth<520?420:800,H=270,L=40,Rr=14,T=26,B=40,dur=Math.max(S.t,F[F.length-1].t,1);
   const x=t=>L+(W-L-Rr)*clamp(t/dur,0,1),y=v=>T+(H-T-B)*(1-clamp(v,0,100)/100);
@@ -1099,19 +1118,29 @@ function drawSuspChart(){const F=S.frames,el=$('suspChart');if(!F.length){el.inn
     ${hud}${marks}${ticks}
     <text x="${L-8}" y="${y(0)+4}" fill="#7c878d" font-size="12" text-anchor="end">0</text><text x="${L-8}" y="${y(50)+4}" fill="#7c878d" font-size="12" text-anchor="end">50</text><text x="${L-8}" y="${y(100)+4}" fill="#7c878d" font-size="12" text-anchor="end">100</text>`;}
 let cardBlob=null;
-addEventListener('resize',()=>{if(S.mode==='result')drawSuspChart();});
+
 function makeCard(){const W=1080,H=1350,c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');
   // background: current render frame
   composer.render();const g=x.createLinearGradient(0,0,0,H);g.addColorStop(0,'#16181c');g.addColorStop(1,'#050506');x.fillStyle=g;x.fillRect(0,0,W,H);
   try{const r=renderer.domElement;const s=Math.max(W/r.width,(H*0.55)/r.height);x.globalAlpha=0.55;x.drawImage(r,(W-r.width*s)/2,0,r.width*s,r.height*s);x.globalAlpha=1;}catch(e){}
-  const g2=x.createLinearGradient(0,H*0.25,0,H*0.62);g2.addColorStop(0,'rgba(5,5,6,0)');g2.addColorStop(1,'rgba(5,5,6,1)');x.fillStyle=g2;x.fillRect(0,0,W,H);
+  const g2=x.createLinearGradient(0,H*0.12,0,H*0.42);g2.addColorStop(0,'rgba(5,5,6,0)');g2.addColorStop(1,'rgba(5,5,6,1)');x.fillStyle=g2;x.fillRect(0,0,W,H);
   const col={caught:'#ff4d3d',post:'#ffb547',honest:'#57d18a',success:'#8ff7dc',miss:'#cfd2d6'}[S.ending];
   x.fillStyle='#9aa0a8';x.font='500 34px "Noto Sans KR"';x.fillText('3분 시험실',72,100);
   x.fillStyle=col;x.fillRect(72,130,90,8);
   const L={caught:['나는',`${S.timeStr} 만에`,'걸렸다'],success:['감독관을 피해',`${score()}/${Q.length} 정답`,'미션 성공'],miss:['들키진 않았지만',`${score()}/${Q.length} 정답`,'미션 실패'],post:['끝까지 버텼는데','3일 뒤','사후 적발'],honest:['유혹을 끊고','끝까지','정직하게 풀었다']}[S.ending];
-  x.fillStyle='#fff';x.font='900 92px "Noto Sans KR"';x.fillText(L[0],72,800);x.fillStyle=col;x.font='900 120px "Noto Sans KR"';x.fillText(L[1],72,940);x.fillStyle='#fff';x.font='900 92px "Noto Sans KR"';x.fillText(L[2],72,1050);
-  const st=S.stats;x.fillStyle='#cfd2d6';x.font='500 32px "Noto Sans KR"';x.fillText(`시선 고정 ${st.hudTime.toFixed(0)}초 · 엄지 동작 ${st.taps}회 · 흘끔 ${st.glances}회 · 즉시 정답 ${st.tooFast}개`,72,1140);
-  x.fillStyle='#9aa0a8';x.font='30px "Noto Sans KR"';x.fillText('당신은 3분을 버틸 수 있을까?',72,1250);
+  x.fillStyle='#fff';x.font='900 88px "Noto Sans KR"';x.fillText(L[0],72,610);x.fillStyle=col;x.font='900 116px "Noto Sans KR"';x.fillText(L[1],72,745);x.fillStyle='#fff';x.font='900 88px "Noto Sans KR"';x.fillText(L[2],72,850);
+  // 의심 그래프
+  {const F=S.frames,gx=72,gy=930,gw=W-144,gh=190;
+   x.fillStyle='rgba(255,255,255,.05)';x.fillRect(gx,gy,gw,gh);
+   if(F.length>1){const n=F.length,X=k=>gx+k/(n-1)*gw,Y=v=>gy+gh-gh*clamp(v,0,100)/100;let mx=0;
+     x.fillStyle='rgba(143,247,220,.14)';let st=-1;F.forEach((f,k)=>{if(f.hud&&st<0)st=k;if((!f.hud||k===n-1)&&st>=0){x.fillRect(X(st),gy,Math.max(2,X(k)-X(st)),gh);st=-1;}});
+     x.setLineDash([12,9]);x.lineWidth=2;x.strokeStyle='rgba(255,181,71,.9)';x.beginPath();x.moveTo(gx,Y(55));x.lineTo(gx+gw,Y(55));x.stroke();x.setLineDash([]);
+     x.beginPath();x.moveTo(gx,Y(0));F.forEach((f,k)=>{x.lineTo(X(k),Y(f.su||0));mx=Math.max(mx,f.su||0);});x.lineTo(gx+gw,Y(0));x.closePath();x.fillStyle='rgba(255,91,31,.28)';x.fill();
+     x.beginPath();F.forEach((f,k)=>k?x.lineTo(X(k),Y(f.su||0)):x.moveTo(gx,Y(f.su||0)));x.strokeStyle='#ff5b1f';x.lineWidth=5;x.lineJoin='round';x.stroke();
+     x.fillStyle='#ffb547';x.font='600 24px "Noto Sans KR"';x.textAlign='right';x.fillText('55 감독관 접근',gx+gw-12,Y(55)-10);x.textAlign='left';
+     x.fillStyle='#fff';x.font='800 30px "Noto Sans KR"';x.fillText('감독관 의심',gx,gy-16);x.fillStyle=suspCol(mx);x.font='900 30px "Noto Sans KR"';x.textAlign='right';x.fillText('최고 '+Math.round(mx),gx+gw,gy-16);x.textAlign='left';}}
+  const st=S.stats;x.fillStyle='#cfd2d6';x.font='500 32px "Noto Sans KR"';x.fillText(`시선 고정 ${st.hudTime.toFixed(0)}초 · 엄지 동작 ${st.taps}회 · 흘끔 ${st.glances}회 · 즉시 정답 ${st.tooFast}개`,72,1190);
+  x.fillStyle='#9aa0a8';x.font='30px "Noto Sans KR"';x.fillText('당신은 3분을 버틸 수 있을까?',72,1270);
   const url=c.toDataURL('image/png');$('shareImg').src=url;c.toBlob(b=>cardBlob=b);}
 $('saveBtn').onclick=()=>{const a=document.createElement('a');a.href=$('shareImg').src;a.download='3분시험실_결과.png';a.click();};
 $('shareBtn').onclick=async()=>{const text={caught:`나는 ${S.timeStr} 만에 걸렸다.`,success:`감독관을 피해 ${score()}/${Q.length} 정답, 미션 성공.`,miss:`들키진 않았지만 ${score()}/${Q.length} 정답으로 미션 실패.`,post:'끝까지 버텼는데 3일 뒤 사후 적발.',honest:'유혹을 끊고 끝까지 정직하게 풀었다.'}[S.ending]+' 당신은 3분을 버틸 수 있을까? — 3분 시험실';
