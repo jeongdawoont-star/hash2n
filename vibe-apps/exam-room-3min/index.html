@@ -63,16 +63,31 @@ button{font:inherit;cursor:pointer;border:0}
 #intro{background:#000;font-family:'Noto Serif KR',serif}
 #intro .line{font-size:clamp(20px,3vw,30px);opacity:0;transition:opacity 1s;margin:10px 0;color:#e8e6e0}
 #intro .line.on{opacity:1}
-#intro{overflow-y:auto;touch-action:pan-y}
+#intro{overflow-y:auto;touch-action:pan-y;justify-content:safe center}
+@media (max-height:780px){
+  .mission{padding:18px 20px}
+  .mission h3{font-size:24px;margin:10px 0 12px}
+  .mission .mlist{gap:6px}
+  .mission .mlist li{padding:7px 12px}
+  .mission .mlist i{font-size:22px}
+  .mission .mlist b{font-size:15.5px}
+  .mission .btn{margin-top:12px;padding:12px}
+}
+@media (max-height:780px) and (min-width:700px){
+  .mission{max-width:760px}
+  .mission .mlist{grid-template-columns:1fr 1fr}
+}
 .mission{display:none;max-width:560px;width:100%;text-align:left;font-family:'Noto Sans KR',sans-serif;background:#111317;border:1px solid rgba(255,77,61,.4);border-radius:22px;padding:26px 24px;box-shadow:0 30px 80px rgba(0,0,0,.6)}
 .mission.on{display:block;animation:mIn .6s ease}
 @keyframes mIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
 .mission .mtag{display:inline-block;font-size:12px;font-weight:900;letter-spacing:.25em;color:#fff;background:var(--accent);padding:4px 10px;border-radius:6px}
 .mission h3{font-size:clamp(22px,4.6vw,30px);font-weight:900;line-height:1.35;margin:14px 0 16px;color:#fff}
-.mission ul{list-style:none;display:grid;gap:10px}
-.mission li{font-size:14.5px;line-height:1.65;color:#cfd2d6;padding-left:14px;border-left:3px solid rgba(255,255,255,.15)}
-.mission li b{color:#fff}
-.mission .mgoal{margin-top:16px;font-size:14px;font-weight:800;color:#8ff7dc}
+.mission .mlist{list-style:none;display:grid;gap:8px}
+.mission .mlist li{display:flex;align-items:center;gap:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:11px 14px}
+.mission .mlist i{font-style:normal;font-size:26px;line-height:1;width:34px;text-align:center;flex:none}
+.mission .mlist div{display:flex;flex-direction:column;gap:2px}
+.mission .mlist span{font-size:13px;color:var(--muted)}
+.mission .mlist b{font-size:17px;font-weight:900;color:#fff}
 .mission .btn{width:100%;margin-top:18px}
 .mission .mhint{margin-top:10px;text-align:center;font-size:12.5px;color:var(--muted)}
 kbd{display:inline-block;padding:1px 8px;border:1px solid #555;border-radius:6px;font-family:inherit;font-size:13px;color:#ddd;margin:0 2px}
@@ -110,6 +125,12 @@ kbd{display:inline-block;padding:1px 8px;border:1px solid #555;border-radius:6px
 .side button i{font-style:normal;font-size:20px;line-height:1}
 .side button small{font-size:10px;color:rgba(255,255,255,.5);font-weight:500}
 .side button:disabled{opacity:.35}
+.gaze{position:absolute;right:calc(100% + 10px);bottom:0;display:none;flex-direction:column;gap:6px;background:rgba(0,0,0,.62);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.2);border-radius:16px;padding:8px}
+.gaze.on{display:flex}
+.side .gaze button{width:auto;height:auto;border-radius:10px;flex-direction:row;justify-content:flex-start;gap:8px;padding:11px 14px;background:rgba(255,255,255,.08);border:0;font-size:14.5px;white-space:nowrap}
+.side .gaze button small{margin-left:10px}
+#watch.unknown{color:#9aa0a8;border-style:dashed}
+#watch.safe{color:#8ff7dc;border-color:rgba(143,247,220,.45)}
 .side button.on{background:rgba(143,247,220,.22);border-color:var(--hud);color:var(--hud)}
 @media (pointer:coarse){ .side button small{display:none} }
 @media (max-width:600px){
@@ -260,13 +281,14 @@ kbd{display:inline-block;padding:1px 8px;border:1px solid #555;border-radius:6px
   <div class="mission" id="mission">
     <div class="mtag">MISSION</div>
     <h3>감독관에게 걸리지 않고<br>AI 안경으로 8문제를 풀어라</h3>
-    <ul>
-      <li><b>감독관 시선</b> — 위에 "보고 있어요"가 빨갛게 뜨면 기기를 꺼요. 그때 켜 두면 의심이 빠르게 쌓여요.</li>
-      <li><b>의심 게이지</b> — 가득 차면 적발이에요. 감독관이 다가오면 기기를 끄고 기다리면 내려가요.</li>
-      <li><b>링 누르기</b> — 엄지 동작이 눈에 띄어요. 손을 숨기면 가려지지만, 오래 숨기면 그것도 의심받아요.</li>
-      <li><b>답 쓰는 속도</b> — 답이 떠도 5초는 푸는 척하세요. 너무 빨리 맞히면 시험 뒤 답안 분석에 걸려요.</li>
+    <ul class="mlist">
+      <li><i>⏱️</i><div><span>3분 안에</span><b>6문제 이상 맞혀라</b></div></li>
+      <li><i>👁️</i><div><span>"시선 느껴짐"이 뜨면</span><b>안경을 꺼라</b></div></li>
+      <li><i>🕵️</i><div><span>감독관이 뒤에 있으면</span><b>흘끔 봐서 확인해라</b></div></li>
+      <li><i>🚨</i><div><span>의심 게이지가 차기 전에</span><b>기기를 끄고 기다려라</b></div></li>
+      <li><i>💍</i><div><span>링을 누를 때는</span><b>손을 잠깐만 숨겨라</b></div></li>
+      <li><i>✍️</i><div><span>답이 떠도 5초 동안</span><b>푸는 척해라</b></div></li>
     </ul>
-    <div class="mgoal">성공 조건 · 적발 없이 3분 버티기 + 6문항 이상 정답</div>
     <button class="btn red" id="missionGo">미션 시작</button>
     <div class="mhint">화면을 끌어서 둘러보고, 좌우 버튼으로 조작해요</div>
   </div>
@@ -282,10 +304,10 @@ kbd{display:inline-block;padding:1px 8px;border:1px solid #555;border-radius:6px
   <div id="topbar">
     <div class="chip" id="timer">03:00</div>
     <div class="chip" id="heart"><div class="row"><span class="dot"></span><span id="bpm">78</span><small>BPM</small></div><div class="susp"><span>의심</span><div class="bar"><i id="suspFill"></i></div></div></div>
-    <div class="chip" id="watch">감독관 시선 없음</div>
+    <div class="chip unknown" id="watch">감독관 알 수 없음</div>
   </div>
   <div id="toast"></div>
-  <div id="hint">시험지 보기를 누르면 답을 고를 수 있어요</div>
+  <div id="hint">시선 → 시험지를 누르면 답을 고를 수 있어요</div>
   <div id="answerBar" class="off">
     <div class="q" id="qText"></div>
     <div class="opts" id="qOpts"></div>
@@ -297,7 +319,12 @@ kbd{display:inline-block;padding:1px 8px;border:1px solid #555;border-radius:6px
   </div>
   <div class="side r">
     <button id="mH"><i>✋</i><span class="lb">손 숨기기</span><small>H</small></button>
-    <button id="mP"><i>▤</i><span class="lb">칠판 보기</span><small>S</small></button>
+    <button id="mP"><i>👀</i><span class="lb">시선</span><small>S·B·V</small></button>
+    <div class="gaze" id="gazeMenu">
+      <button data-g="paper">📄 시험지<small>S</small></button>
+      <button data-g="board">🟩 칠판<small>B</small></button>
+      <button data-g="proctor">🕵️ 감독관<small>V</small></button>
+    </div>
   </div>
 </div>
 
@@ -744,10 +771,10 @@ function drawPaper(){const x=paperCanvas.getContext('2d'),w=840,h=1188;x.fillSty
 const S={mode:'title',t:0,dur:180,yaw:0,pitch:-0.75,tYaw:0,tPitch:-0.75,hud:false,hudAvail:true,handDown:false,susp:0,bpm:78,
   answers:Array(Q.length).fill(-1),qIdx:0,qStart:0,hudQ:-1,scanT:0,tempted:false,temptT:0,usedDevice:false,scripted:false,cool:0,
   stats:{hudTime:0,glint:0,taps:0,tapsSeen:0,glances:0,tooFast:0,under:0},events:[],frames:[],recAcc:0,tapFlag:false,
-  ending:null,endT:0,lookingAtP:false,lastGlance:-9,hbAcc:0,secAcc:0,tapAnim:0,writeAnim:0};
+  ending:null,endT:0,lookingAtP:false,lastGlance:-9,revealT:0,glanceT:0,glancePrev:null,hbAcc:0,secAcc:0,tapAnim:0,writeAnim:0};
 function resetState(){Object.assign(S,{t:0,yaw:0,pitch:-0.75,tYaw:0,tPitch:-0.75,hud:false,hudAvail:true,handDown:false,susp:0,bpm:78,
   answers:Array(Q.length).fill(-1),qIdx:0,qStart:0,hudQ:-1,scanT:0,tempted:false,temptT:0,usedDevice:false,scripted:false,cool:0,
-  stats:{hudTime:0,glint:0,taps:0,tapsSeen:0,glances:0,tooFast:0,under:0},events:[],frames:[],recAcc:0,tapFlag:false,ending:null,endT:0,lookingAtP:false,lastGlance:-9,hbAcc:0,secAcc:0,tapAnim:0,writeAnim:0});
+  stats:{hudTime:0,glint:0,taps:0,tapsSeen:0,glances:0,tooFast:0,under:0},events:[],frames:[],recAcc:0,tapFlag:false,ending:null,endT:0,lookingAtP:false,lastGlance:-9,revealT:0,glanceT:0,glancePrev:null,hbAcc:0,secAcc:0,tapAnim:0,writeAnim:0});
   Object.assign(proctor,{state:'pause',timer:2,wp:0,route:[],after:0,stepAcc:0});proctor.pos.set(0,0,-3.6);proctor.yaw=0;}
 const ev=(type)=>S.events.push({t:S.t,type});
 
@@ -783,9 +810,19 @@ const endDrag=e=>{if(drag&&drag.id===e.pointerId)drag=null;};
 canvas.addEventListener('pointerup',endDrag);canvas.addEventListener('pointercancel',endDrag);
 function togglePaper(){if(S.tPitch<-0.5){S.tPitch=-0.12;}else{S.tPitch=-0.85;S.tYaw=0;}}
 addEventListener('keydown',e=>{if(S.mode!=='play')return;
-  if(e.code==='KeyG')toggleHud(); else if(e.code==='Space'){e.preventDefault();ringTap();} else if(e.code==='KeyH')toggleHand(); else if(e.code==='KeyS')togglePaper();
+  if(e.code==='KeyG')toggleHud(); else if(e.code==='Space'){e.preventDefault();ringTap();} else if(e.code==='KeyH')toggleHand(); else if(e.code==='KeyS')lookPaper(); else if(e.code==='KeyB')lookBoard(); else if(e.code==='KeyV')glanceProctor();
   else if(/^Digit[1-4]$/.test(e.code))answer(+e.code.slice(5)-1); else if(e.code==='Enter'&&S.answers.every(a=>a>=0))endGame('time');});
-$('mG').onclick=()=>toggleHud();$('mR').onclick=()=>ringTap();$('mH').onclick=()=>toggleHand();$('mP').onclick=()=>togglePaper();
+$('mG').onclick=()=>toggleHud();$('mR').onclick=()=>ringTap();$('mH').onclick=()=>toggleHand();$('mP').onclick=()=>{const g=$('gazeMenu');g.classList.toggle('on');$('mP').classList.toggle('on',g.classList.contains('on'));};
+function closeGaze(){$('gazeMenu').classList.remove('on');$('mP').classList.remove('on');}
+function lookPaper(){S.glanceT=0;S.glancePrev=null;S.tPitch=-0.85;S.tYaw=0;closeGaze();}
+function lookBoard(){S.glanceT=0;S.glancePrev=null;S.tPitch=-0.05;S.tYaw=0;closeGaze();}
+function glanceProctor(){closeGaze();if(S.mode!=='play'||S.glanceT>0)return;
+  const dx=proctor.pos.x-HEADPOS.x,dz=proctor.pos.z-HEADPOS.z;
+  const y=clamp(Math.atan2(-dx,-dz),-2.5,2.5),pt=clamp(Math.atan2(1.55-HEADPOS.y,Math.hypot(dx,dz)),-0.3,0.4);
+  S.glancePrev={yaw:S.tYaw,pitch:S.tPitch};S.tYaw=y;S.tPitch=pt;S.glanceT=1.3;
+  S.stats.glances++;S.lastGlance=S.t;ev('glance');const sv=proctorSees();if(sv)S.susp+=3.5*sv;S.revealT=3.2;}
+$('gazeMenu').querySelectorAll('button').forEach(b=>b.onclick=e=>{e.stopPropagation();({paper:lookPaper,board:lookBoard,proctor:glanceProctor})[b.dataset.g]();});
+canvas.addEventListener('pointerdown',()=>closeGaze());
 $('submitBtn').onclick=()=>endGame('time');
 
 function toast(msg){const t=$('toast');t.textContent=msg;t.style.opacity=1;clearTimeout(toast._t);toast._t=setTimeout(()=>t.style.opacity=0,2200);}
@@ -846,7 +883,7 @@ function startIntro(){initAudio();AC.resume();S.mode='intro';show('title',false)
   setTimeout(()=>{ls.forEach(l=>l.style.display='none');$('mission').classList.add('on');},400+3*1300+1000);}
 $('missionGo').onclick=()=>{fadeTo(1);setTimeout(startPlay,900);};
 function startPlay(){resetState();if(avatar)setReplayArms(false);titleUpdate.armsSet=false;drawPaper();updateAnswerBar();S.mode='play';show('intro',false);show('gameUI',true);avatar.g.visible=false;
-  hands.L.visible=hands.R.visible=true;setBtn('mG','기기 켜기');setBtn('mH','손 숨기기');setBtn('mP','칠판 보기');$('mG').disabled=false;$('mR').disabled=false;$('lens').classList.remove('on');
+  hands.L.visible=hands.R.visible=true;setBtn('mG','기기 켜기');setBtn('mH','손 숨기기');closeGaze();$('mG').disabled=false;$('mR').disabled=false;$('lens').classList.remove('on');
   ['mG','mR','mH','mP'].forEach(i=>$(i).classList.remove('on'));$('glassFrame').style.opacity=1;bokeh.enabled=true;setTimeout(()=>fadeTo(0),200);}
 
 function playUpdate(dt){S.t+=dt;const T=S.t;
@@ -867,7 +904,7 @@ function playUpdate(dt){S.t+=dt;const T=S.t;
   const looksPaper=S.pitch<-0.5;let fTarget=looksPaper?0.56:(S.pitch<-0.25?1.6:4.5);let mb=0.006,ap=0.0035;
   if(S.hud){fTarget=1.5;mb=0.005;ap=0.0035;}
   bokeh.uniforms.focus.value=lerp(bokeh.uniforms.focus.value,fTarget,Math.min(1,dt*4));bokeh.uniforms.maxblur.value=lerp(bokeh.uniforms.maxblur.value,mb,dt*4);bokeh.uniforms.aperture.value=lerp(bokeh.uniforms.aperture.value,ap,dt*4);
-  $('answerBar').classList.toggle('off',!looksPaper);$('mP').classList.toggle('on',looksPaper);setBtn('mP',looksPaper?'칠판 보기':'시험지 보기');$('hint').style.opacity=looksPaper?0:1;
+  $('answerBar').classList.toggle('off',!looksPaper);$('hint').style.opacity=looksPaper?0:1;
   // hands
   hands.L.position.lerp(S.handDown?HL_DOWN:HL_UP,Math.min(1,dt*6));S.tapAnim=Math.max(0,S.tapAnim-dt);
   {const u=hands.L.userData;u.th.rotation.y=u.thBase+(S.tapAnim>0?Math.sin(S.tapAnim*25)*u.thAmp:0);}
@@ -891,13 +928,18 @@ function playUpdate(dt){S.t+=dt;const T=S.t;
   if(S.handDown){S.stats.under+=dt;if(sees){S.susp+=2.2*sees*dt;sus=true;}}
   // glance at proctor
   const fwd=new THREE.Vector3();camera.getWorldDirection(fwd);const toP=new THREE.Vector3(proctor.pos.x,1.6,proctor.pos.z).sub(camera.position);const dP=toP.length();toP.normalize();
+  if(S.glanceT>0){S.glanceT-=dt;if(S.glanceT<=0&&S.glancePrev){S.tYaw=S.glancePrev.yaw;S.tPitch=S.glancePrev.pitch;S.glancePrev=null;}}
   const look=fwd.dot(toP)>Math.cos(0.2)&&dP<9;
-  if(look&&!S.lookingAtP&&T-S.lastGlance>1.5){S.stats.glances++;S.lastGlance=T;ev('glance');if(sees){S.susp+=3.5*sees;}}
+  if(look)S.revealT=Math.max(S.revealT,3);
+  if(look&&!S.lookingAtP&&S.glanceT<=0&&T-S.lastGlance>1.5){S.stats.glances++;S.lastGlance=T;ev('glance');if(sees){S.susp+=3.5*sees;}}
   S.lookingAtP=look;
   if(!sus)S.susp=Math.max(0,S.susp-3.5*dt);
   S.susp=Math.min(S.susp,100);
   {const fp=$('suspFill');fp.style.width=S.susp+'%';fp.style.background=S.susp>75?'#ff3b30':S.susp>45?'#ff8a3d':'#ffb547';
-   const w=$('watch'),on=sees>0;if(w.classList.contains('alert')!==on){w.classList.toggle('alert',on);w.textContent=on?'감독관이 보고 있어요':'감독관 시선 없음';}}
+   S.revealT=Math.max(0,S.revealT-dt);
+   const front=proctor.pos.z<HEADPOS.z-0.05,known=front||S.revealT>0;
+   const st=!known?'unknown':sees>0?'alert':'safe';
+   const w=$('watch');if(w.dataset.st!==st){w.dataset.st=st;w.className='chip '+st;w.textContent={unknown:'감독관 알 수 없음',alert:'감독관 시선 느껴짐',safe:'감독관 시선 안 느껴짐'}[st];}}
   S.cool=Math.max(0,S.cool-dt);
   if(S.susp>=55&&S.cool<=0&&(proctor.state==='patrol'||proctor.state==='pause'))startApproach();
   if(!S.scripted&&T>100&&S.usedDevice&&(proctor.state==='patrol'||proctor.state==='pause')){S.scripted=true;startApproach();}
@@ -1001,10 +1043,10 @@ function toResult(){if(S.mode==='result')return;if(!S.ending)S.ending=S.usedDevi
   v.textContent=V[0];$('rDesc').textContent=V[1];
   const C=[[`${st.hudTime.toFixed(0)}초`,'시선 고정','안경 화면을 보는 동안 눈은 허공 한 점에 머물러요',st.hudTime>0.5],
     [`${st.glint.toFixed(0)}초`,'렌즈 반사광 노출','감독관 시야 안에서 렌즈 안쪽 빛이 보인 시간',st.glint>0.5],
-    [`${st.tapsSeen}/${st.taps}회`,'엄지 반복 동작','감독관에게 보인 링 조작 / 전체 조작',st.taps>0],
+    [`${st.tapsSeen}회`,'엄지 반복 동작',`링을 ${st.taps}번 눌렀고, 그중 감독관 눈에 보인 횟수예요`,st.taps>0],
     [`${st.glances}회`,'감독관 쪽 흘끔','감독관 위치를 확인한 횟수 — 긴장한 응시생도 자주 해요',st.glances>0],
     [`${st.under.toFixed(0)}초`,'손이 책상 아래에','숨기려는 동작이 오히려 단서가 돼요',st.under>0.5],
-    [`${st.tooFast}개`,'어려운 문항 즉시 정답','풀이 흔적 없이 6초 안에 맞힌 어려운 문항',st.tooFast>0]];
+    [`${st.tooFast}개`,'어려운 문항 즉시 정답','풀이 흔적 없이 5초 안에 맞힌 어려운 문항',st.tooFast>0]];
   $('rClues').innerHTML=C.map(c=>`<li class="${c[3]?'':'zero'}"><div class="n">${c[0]}</div><div class="t"><b>${c[1]}</b><span>${c[2]}</span></div></li>`).join('');
   makeCard();show('result',true);$('result').scrollTop=0;}
 let cardBlob=null;
