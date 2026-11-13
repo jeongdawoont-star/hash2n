@@ -700,6 +700,19 @@ window.syncSheets = async function() {
 
     const sList = sRows.map(pickNameCell).filter(Boolean).map((name,i)=>({id:`s${i+1}`,name,order:i+1}));
 
+    // CSV(gviz)는 캐시 때문에 늦게 갱신될 수 있다. 실시간 시트 목록과 다르면 중단.
+    let sheetSnapshot = null;
+    if (cfg.scriptUrl) {
+      try { sheetSnapshot = await fetchSheetSnapshotFromScript(cfg.scriptUrl); }
+      catch (snapshotErr) { console.warn('sheet snapshot fallback:', snapshotErr); }
+    }
+    const liveNames = sheetSnapshot && sheetSnapshot.liveMissionNames;
+    if (liveNames && liveNames.length &&
+        JSON.stringify([...new Set(liveNames)]) !== JSON.stringify(normalizedMList.map(m => m.name)) &&
+        !confirm('시트의 최신 미션 목록이 아직 반영되지 않았을 수 있어요.\n1~2분 뒤에 다시 하는 걸 권해요. 그래도 지금 불러올까요?')) {
+      return;
+    }
+
     const [oldMissionSnap, scoreSnap, inspectionSnap] = await Promise.all([
       getDoc(doc(db,'config','missions')),
       getDoc(doc(db,'scores','current')),
@@ -726,22 +739,13 @@ window.syncSheets = async function() {
       });
     }
 
-    let nextScores = migrateScoresByMissionName(oldMissions, normalizedMList, oldScores);
+    const nextScores = migrateScoresByMissionName(oldMissions, normalizedMList, oldScores);
     let nextInspection = migrateInspectionByMissionName(oldMissions, normalizedMList, oldInspection);
 
-    // 미션 구조가 바뀌지 않은 경우: Firestore scores를 권위(authority)로 사용하고
-    // 시트에서는 inspection(교사 확인 표시)만 가져온다.
-    // scores까지 시트로 덮어쓰면 writeToSheets가 실패했을 때 Firestore 데이터가 날아가는 버그 발생.
-    if (cfg.scriptUrl && !missionChanged) {
-      try {
-        const snapshot = await fetchSheetSnapshotFromScript(cfg.scriptUrl);
-        if (snapshot) {
-          // scores는 Firestore(nextScores) 유지 — 시트로 덮어쓰지 않음
-          nextInspection = normalizeInspectionSnapshotByLists(snapshot.inspection, sList, normalizedMList);
-        }
-      } catch (snapshotErr) {
-        console.warn('sheet snapshot fallback:', snapshotErr);
-      }
+    // 점수는 Firestore가 기준. 시트 스냅샷의 id(m1, m2…)는 시트 행 순서라 미션 추가 시 어긋나므로 쓰지 않는다.
+    // 검사 표시만 이름 기준 데이터가 있을 때 true를 더한다.
+    if (sheetSnapshot && sheetSnapshot.inspectionByName) {
+      nextInspection = mergeInspectionByName(nextInspection, sheetSnapshot.inspectionByName, sList, normalizedMList);
     }
 
     const now = new Date().toISOString();
@@ -825,37 +829,27 @@ async function fetchSheetSnapshotFromScript(scriptUrl) {
   const data = await res.json();
   if (!data || !data.ok) throw new Error(data && data.error ? data.error : 'Apps Script 응답 오류');
   return {
-    scores: data.scores && typeof data.scores === 'object' ? data.scores : {},
-    inspection: data.inspection && typeof data.inspection === 'object' ? data.inspection : {}
+    // 신버전 Apps Script만 제공: 학생이름/미션이름 기준 데이터 + 실시간 미션 목록
+    inspectionByName: data.inspectionByName && typeof data.inspectionByName === 'object' ? data.inspectionByName : null,
+    liveMissionNames: Array.isArray(data.missionNames) ? data.missionNames.map(n => (n || '').toString().trim()).filter(Boolean) : null
   };
 }
 
-function normalizeSnapshotByLists(snapshot, studentList, missionList) {
-  const src = snapshot && typeof snapshot === 'object' ? snapshot : {};
+// 이름 기준({학생이름:{미션이름:true}}) 검사 표시를 현재 id 체계로 합친다(true만 더함).
+function mergeInspectionByName(base, byName, studentList, missionList) {
   const out = {};
-  (studentList || []).forEach((student) => {
-    const sid = student.id;
-    const row = src[sid] && typeof src[sid] === 'object' ? src[sid] : {};
-    const dst = {};
-    (missionList || []).forEach((mission) => {
-      dst[mission.id] = Number(row[mission.id]) || 0;
+  Object.entries(base || {}).forEach(([sid, row]) => { out[sid] = Object.assign({}, row || {}); });
+  if (!byName) return out;
+  const missionIdByName = new Map((missionList || []).map(m => [(m.name || '').toString().trim(), m.id]));
+  (studentList || []).forEach((s) => {
+    const row = byName[(s.name || '').toString().trim()];
+    if (!row || typeof row !== 'object') return;
+    Object.entries(row).forEach(([mName, v]) => {
+      const mid = missionIdByName.get((mName || '').toString().trim());
+      if (!mid || !v) return;
+      if (!out[s.id]) out[s.id] = {};
+      out[s.id][mid] = true;
     });
-    out[sid] = dst;
-  });
-  return out;
-}
-
-function normalizeInspectionSnapshotByLists(snapshot, studentList, missionList) {
-  const src = snapshot && typeof snapshot === 'object' ? snapshot : {};
-  const out = {};
-  (studentList || []).forEach((student) => {
-    const sid = student.id;
-    const row = src[sid] && typeof src[sid] === 'object' ? src[sid] : {};
-    const dst = {};
-    (missionList || []).forEach((mission) => {
-      dst[mission.id] = !!row[mission.id];
-    });
-    out[sid] = dst;
   });
   return out;
 }

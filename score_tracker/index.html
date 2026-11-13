@@ -710,6 +710,8 @@ let isInspectorMode = false;
 const pendingTiles = new Set();
 let scoreUnsub = null;
 let inspectionUnsub = null;
+let configUnsub = null;
+let liveMismatchSince = 0;
 let autoSyncTimer = null;
 let autoSyncFocusHandler = null;
 let lastSyncSignature = '';
@@ -1035,36 +1037,46 @@ async function fetchSheetSnapshotFromScript(scriptUrl) {
   if (!data || !data.ok) throw new Error(data && data.error ? data.error : 'Apps Script 응답 오류');
   return {
     scores: data.scores && typeof data.scores === 'object' ? data.scores : {},
-    inspection: data.inspection && typeof data.inspection === 'object' ? data.inspection : {}
+    inspection: data.inspection && typeof data.inspection === 'object' ? data.inspection : {},
+    // 신버전 Apps Script만 제공: 학생이름/미션이름 기준 데이터 + 실시간 미션 목록
+    inspectionByName: data.inspectionByName && typeof data.inspectionByName === 'object' ? data.inspectionByName : null,
+    liveMissionNames: Array.isArray(data.missionNames) ? data.missionNames.map(n => (n || '').toString().trim()).filter(Boolean) : null
   };
 }
 
-function normalizeSnapshotByLists(snapshot, studentList, missionList) {
-  const src = snapshot && typeof snapshot === 'object' ? snapshot : {};
+// 이름 기준({학생이름:{미션이름:true}}) 검사 표시를 현재 id 체계로 합친다.
+// 기존 Firestore 값은 지우지 않고 true만 더한다(시트가 늦어도 데이터 손실 없음).
+function mergeInspectionByName(base, byName, studentList, missionList) {
   const out = {};
-  (studentList || []).forEach((student) => {
-    const sid = student.id;
-    const row = src[sid] && typeof src[sid] === 'object' ? src[sid] : {};
-    const dst = {};
-    (missionList || []).forEach((mission) => {
-      dst[mission.id] = Number(row[mission.id]) || 0;
+  Object.entries(base || {}).forEach(([sid, row]) => { out[sid] = Object.assign({}, row || {}); });
+  if (!byName) return out;
+  const missionIdByName = new Map((missionList || []).map(m => [(m.name || '').toString().trim(), m.id]));
+  (studentList || []).forEach((s) => {
+    const row = byName[(s.name || '').toString().trim()];
+    if (!row || typeof row !== 'object') return;
+    Object.entries(row).forEach(([mName, v]) => {
+      const mid = missionIdByName.get((mName || '').toString().trim());
+      if (!mid || !v) return;
+      if (!out[s.id]) out[s.id] = {};
+      out[s.id][mid] = true;
     });
-    out[sid] = dst;
   });
   return out;
 }
 
-function normalizeInspectionSnapshotByLists(snapshot, studentList, missionList) {
-  const src = snapshot && typeof snapshot === 'object' ? snapshot : {};
+// id 기준 데이터를 이름 기준으로 바꾼다. 시트 행 순서와 무관하게 안전하게 기록하기 위함.
+function toNameKeyed(byId, studentList, missionList, asBool) {
   const out = {};
-  (studentList || []).forEach((student) => {
-    const sid = student.id;
-    const row = src[sid] && typeof src[sid] === 'object' ? src[sid] : {};
+  const missionNameById = new Map((missionList || []).map(m => [m.id, (m.name || '').toString().trim()]));
+  (studentList || []).forEach((s) => {
+    const row = (byId || {})[s.id] || {};
     const dst = {};
-    (missionList || []).forEach((mission) => {
-      dst[mission.id] = !!row[mission.id];
+    Object.entries(row).forEach(([mid, v]) => {
+      const name = missionNameById.get(mid);
+      if (!name || !v) return;
+      dst[name] = asBool ? true : (Number(v) || 0);
     });
-    out[sid] = dst;
+    out[(s.name || '').toString().trim()] = dst;
   });
   return out;
 }
@@ -1310,6 +1322,35 @@ window.syncFromSheets = async function(silent = false) {
       return;
     }
 
+    // CSV(gviz)는 캐시 때문에 몇 초~몇 분 늦게 갱신될 수 있다.
+    // 실시간 시트의 미션 목록과 다르면 이번 동기화는 건너뛴다(엉뚱한 목록으로 이관 방지).
+    let sheetSnapshot = null;
+    if (cfg.scriptUrl) {
+      try {
+        sheetSnapshot = await fetchSheetSnapshotFromScript(cfg.scriptUrl);
+      } catch (snapshotErr) {
+        console.warn('sheet snapshot fallback:', snapshotErr);
+      }
+    }
+    const liveNames = sheetSnapshot && sheetSnapshot.liveMissionNames;
+    if (liveNames && liveNames.length) {
+      const liveKey = JSON.stringify([...new Set(liveNames)]);
+      const csvKey = JSON.stringify(normalizedMissionList.map(m => m.name));
+      if (liveKey !== csvKey) {
+        if (!liveMismatchSince) liveMismatchSince = Date.now();
+      } else {
+        liveMismatchSince = 0;
+      }
+      // CSV 지연은 보통 몇 분 안에 풀린다. 5분 넘게 계속 다르면 표기 차이로 보고 그대로 진행
+      // (점수는 이미 이름 기준으로만 이관하므로 칸이 밀리는 일은 없다).
+      if (liveMismatchSince && Date.now() - liveMismatchSince < 5 * 60 * 1000) {
+        updateSheetStatus('loading', '시트 변경이 아직 반영되지 않아 잠시 후 다시 동기화해요');
+        if (!silent) showToast('시트 변경을 반영하는 중이에요. 잠시 후 다시 눌러 주세요');
+        if (!missions.length) await loadStudents(); // 첫 실행이면 기존 Firestore 데이터로 화면 표시
+        return;
+      }
+    }
+
     const [oldMissionSnap, scoreSnap, inspectionSnap] = await Promise.all([
       getDoc(doc(db, 'config', 'missions')),
       getDoc(doc(db, 'scores', 'current')),
@@ -1336,21 +1377,14 @@ window.syncFromSheets = async function(silent = false) {
       });
     }
 
-    let nextScores = migrateScoresByMissionName(oldMissions, normalizedMissionList, oldScores);
+    const nextScores = migrateScoresByMissionName(oldMissions, normalizedMissionList, oldScores);
     let nextInspection = migrateInspectionByMissionName(oldMissions, normalizedMissionList, oldInspection);
 
-    // 미션 구조가 바뀐 직후에는 scores 시트가 재정렬 중일 수 있으므로
-    // 기존 Firestore 상태를 이름 기준으로 이관한 값을 우선 사용한다.
-    if (cfg.scriptUrl && !missionChanged) {
-      try {
-        const snapshot = await fetchSheetSnapshotFromScript(cfg.scriptUrl);
-        if (snapshot) {
-          nextScores = normalizeSnapshotByLists(snapshot.scores, studentList, normalizedMissionList);
-          nextInspection = normalizeInspectionSnapshotByLists(snapshot.inspection, studentList, normalizedMissionList);
-        }
-      } catch (snapshotErr) {
-        console.warn('sheet snapshot fallback:', snapshotErr);
-      }
+    // 점수는 Firestore가 기준이다. 시트 스냅샷의 id(m1, m2…)는 시트 행 순서라서
+    // 미션이 추가·이동되면 어긋나므로 절대 그대로 쓰지 않는다(11/13 한 칸 밀림 사고 원인).
+    // 검사 표시만, 이름 기준 데이터가 있을 때 true를 더하는 방식으로 합친다.
+    if (sheetSnapshot && sheetSnapshot.inspectionByName) {
+      nextInspection = mergeInspectionByName(nextInspection, sheetSnapshot.inspectionByName, studentList, normalizedMissionList);
     }
 
     await Promise.all([
@@ -1394,6 +1428,22 @@ async function loadStudents() {
   missions = mSnap.exists() ? (mSnap.data().list || []) : [];
   students = sSnap.exists() ? (sSnap.data().list || []) : [];
   document.getElementById('studentCount').textContent = `${students.length}명`;
+
+  // 미션·학생 목록도 실시간 구독: 다른 기기에서 동기화해 id가 바뀌면 즉시 따라간다.
+  // (예전 목록을 들고 있는 탭이 새 id 체계의 점수를 잘못 표시·저장하는 것 방지)
+  if (configUnsub) configUnsub();
+  const unsubM = onSnapshot(doc(db, 'config', 'missions'), snap => {
+    if (!snap.exists()) return;
+    missions = snap.data().list || [];
+    renderStudents(currentScores);
+  });
+  const unsubS = onSnapshot(doc(db, 'config', 'students'), snap => {
+    if (!snap.exists()) return;
+    students = snap.data().list || [];
+    document.getElementById('studentCount').textContent = `${students.length}명`;
+    renderStudents(currentScores);
+  });
+  configUnsub = () => { unsubM(); unsubS(); };
 
   // 실시간 점수 구독
   if (scoreUnsub) scoreUnsub();
@@ -1440,10 +1490,26 @@ function formatMissionName(name, layoutClass) {
 async function writeToSheets(allScores, inspection) {
   const cfg = window._cfg || loadConfig();
   if (!cfg.scriptUrl) return;
+  // 이름 기준 데이터를 함께 보낸다. 신버전 Apps Script는 이것만 사용해서
+  // 시트 행 순서가 바뀌어도 엉뚱한 칸에 기록되지 않는다.
+  const [mSnap, sSnap] = await Promise.all([
+    getDoc(doc(db, 'config', 'missions')),
+    getDoc(doc(db, 'config', 'students'))
+  ]);
+  const mList = mSnap.exists() ? (mSnap.data().list || []) : missions;
+  const sList = sSnap.exists() ? (sSnap.data().list || []) : students;
   await fetch(cfg.scriptUrl, {
     method: 'POST', mode: 'no-cors',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ type: 'scores', data: allScores, inspection: inspection || {} })
+    body: JSON.stringify({
+      type: 'scores',
+      data: allScores,
+      inspection: inspection || {},
+      byName: {
+        scores: toNameKeyed(allScores, sList, mList, false),
+        inspection: toNameKeyed(inspection || {}, sList, mList, true)
+      }
+    })
   });
 }
 

@@ -12,7 +12,17 @@ function doGet(e) {
     if (mode === 'sheetSnapshot') {
       const scores = buildScoresPayloadFromCurrentSheet_();
       const inspection = readInspectionMapFromScoresSheet_();
-      return jsonResponse({ ok: true, scores: scores, inspection: inspection });
+      const byName = readScoresSheetByName_();
+      // scores/inspection(id 기준)은 구버전 호환용. id는 시트 행 순서라 미션 추가 시 어긋나므로
+      // 웹앱은 이름 기준(inspectionByName)과 실시간 미션 목록(missionNames)만 사용한다.
+      return jsonResponse({
+        ok: true,
+        scores: scores,
+        inspection: inspection,
+        scoresByName: byName.scores,
+        inspectionByName: byName.inspection,
+        missionNames: readLiveMissionNames_()
+      });
     }
   } catch (err) {
     return jsonResponse({ ok: false, error: String(err && err.message ? err.message : err) });
@@ -32,7 +42,8 @@ function doPost(e) {
     const inspection = payload && payload.inspection && typeof payload.inspection === 'object'
       ? payload.inspection
       : null;
-    writeScoresToSheet(payload.data, inspection);
+    const byName = payload.byName && typeof payload.byName === 'object' ? payload.byName : null;
+    writeScoresToSheet(payload.data, inspection, byName);
     return jsonResponse({ ok: true });
   } catch (err) {
     return jsonResponse({ ok: false, error: String(err && err.message ? err.message : err) });
@@ -167,6 +178,63 @@ function readInspectionMapFromScoresSheet_() {
   }
 
   return map;
+}
+
+// scores 시트를 학생이름/미션이름 기준으로 읽는다(행·열 순서와 무관).
+function readScoresSheetByName_() {
+  const out = { scores: {}, inspection: {} };
+  const scoresSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('scores');
+  if (!scoresSheet) return out;
+  const lastRow = scoresSheet.getLastRow();
+  const lastCol = scoresSheet.getLastColumn();
+  if (lastRow < 2 || lastCol < 2) return out;
+  const table = scoresSheet.getRange(1, 1, lastRow, lastCol).getValues();
+  const bgs = scoresSheet.getRange(2, 1, lastRow - 1, lastCol).getBackgrounds();
+  const headers = (table[0] || []).map(function(v) { return (v || '').toString().trim(); });
+  const reserved = { '학생이름': true, '합계': true, '마지막 업데이트': true };
+  const orange = { '#fb923c': true, '#ea580c': true, '#f59e0b': true, '#ff6b35': true };
+  for (let ri = 1; ri < table.length; ri++) {
+    const studentName = (table[ri][0] || '').toString().trim();
+    if (!studentName) continue;
+    const sRow = {};
+    const iRow = {};
+    headers.forEach(function(h, ci) {
+      if (!h || reserved[h] || ci === 0) return;
+      const v = Number(table[ri][ci]) || 0;
+      if (!v) return;
+      sRow[h] = v;
+      const bg = (bgs[ri - 1] && bgs[ri - 1][ci] || '').toString().trim().toLowerCase();
+      if (orange[bg]) iRow[h] = true;
+    });
+    out.scores[studentName] = sRow;
+    out.inspection[studentName] = iRow;
+  }
+  return out;
+}
+
+// missions 시트의 실시간 미션 이름 목록(위에서부터 순서대로).
+// 웹앱은 이것과 CSV 목록을 비교해서, CSV가 아직 갱신 전이면 동기화를 미룬다.
+function readLiveMissionNames_() {
+  const missionsSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('missions');
+  if (!missionsSheet) return [];
+  const last = missionsSheet.getLastRow();
+  if (last < 1) return [];
+  // getDisplayValues: 웹앱이 읽는 CSV와 같은 '보이는 글자'로 비교하기 위함(날짜형 셀 등)
+  const rowsRaw = missionsSheet.getRange(1, 1, last, Math.max(1, missionsSheet.getLastColumn())).getDisplayValues();
+  const first = (rowsRaw[0] || []).map(function(v) { return (v || '').toString().trim().toLowerCase(); });
+  const hasHeader = first.some(function(c) {
+    return c.indexOf('학생') > -1 || c.indexOf('이름') > -1 || c.indexOf('미션') > -1 || c.indexOf('과제') > -1 ||
+      c.indexOf('lock') > -1 || c.indexOf('description') > -1 || c.indexOf('완료') > -1 || c.indexOf('체크') > -1;
+  });
+  const rows = hasHeader ? rowsRaw.slice(1) : rowsRaw;
+  const usesCheckboxColumn = rows.some(function(row) {
+    const c0 = (row[0] || '').toString().trim().toLowerCase();
+    const c1 = (row[1] || '').toString().trim();
+    return !!c1 || c0 === 'true' || c0 === 'false' || c0 === '1' || c0 === '0' || c0 === '완료' || c0 === 'x';
+  });
+  return rows
+    .map(function(row) { return ((usesCheckboxColumn ? row[1] : row[0]) || '').toString().trim(); })
+    .filter(function(n) { return n && n.toLowerCase() !== 'true' && n.toLowerCase() !== 'false'; });
 }
 
 function findLastMissionDataRow_(sheet) {
@@ -319,7 +387,7 @@ function buildScoresPayloadFromCurrentSheet_() {
   return payload;
 }
 
-function writeScoresToSheet(allScores, inspectionMap) {
+function writeScoresToSheet(allScores, inspectionMap, byName) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   let scoresSheet = ss.getSheetByName('scores');
   if (!scoresSheet) scoresSheet = ss.insertSheet('scores');
@@ -371,7 +439,7 @@ function writeScoresToSheet(allScores, inspectionMap) {
     .filter(Boolean);
 
   const persistedInspection = readInspectionMapFromScoresSheet_();
-  const inspection = inspectionMap && typeof inspectionMap === 'object' ? inspectionMap : persistedInspection;
+  let inspection = inspectionMap && typeof inspectionMap === 'object' ? inspectionMap : persistedInspection;
 
   const usesCheckboxColumn = (missionRows || []).some(function(row) {
     var col0 = (row[0] || '').toString().trim().toLowerCase();
@@ -396,6 +464,27 @@ function writeScoresToSheet(allScores, inspectionMap) {
       return lower !== 'true' && lower !== 'false';
     });
   
+  // 웹앱이 이름 기준 데이터(byName)를 보냈으면 그것을 현재 시트 행 순서의 id로 다시 맞춘다.
+  // (웹앱의 m1과 시트의 m1이 다른 미션일 수 있기 때문: 새 미션이 맨 위에 추가된 직후 등)
+  if (byName && byName.scores && typeof byName.scores === 'object') {
+    const nameScores = byName.scores;
+    const nameInspection = byName.inspection && typeof byName.inspection === 'object' ? byName.inspection : {};
+    allScores = {};
+    inspection = {};
+    studentNames.forEach(function(studentName, si) {
+      const sid = 's' + (si + 1);
+      const sRow = nameScores[studentName] || {};
+      const iRow = nameInspection[studentName] || {};
+      allScores[sid] = {};
+      inspection[sid] = {};
+      missionData.forEach(function(m) {
+        const v = Number(sRow[m.name]) || 0;
+        if (v) allScores[sid][m.id] = v;
+        if (iRow[m.name]) inspection[sid][m.id] = true;
+      });
+    });
+  }
+
   // 미션을 활성(체크 안 함)과 완료(체크됨)로 분류
   const activeMissions = missionData.filter(function(m) { return !m.completed; });
   const completedMissions = missionData.filter(function(m) { return m.completed; });
