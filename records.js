@@ -37,7 +37,7 @@ export const RECORDS = [
     tags: "미술, 감상, 비평문, 내용과 형식, 명화, 5학년, 학습지",
     category: "class-tools",
     link: "./vibe-apps/art-appreciation/",
-    image: "img/art-appreciation.jpg",
+    image: "img-re/art-appreciation.avif",
   },
 
   {
