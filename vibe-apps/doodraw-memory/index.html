@@ -27,7 +27,9 @@ button{font-family:inherit;color:inherit;cursor:pointer;touch-action:manipulatio
 .screen.on{display:flex}
 
 /* ---------- 시작 화면 ---------- */
-#setup{justify-content:center;overflow-y:auto}
+#setup{justify-content:flex-start;overflow-y:auto}
+#setup>:first-child{margin-top:auto}#setup>:last-child{margin-bottom:auto}
+@media (max-height:900px) and (orientation:landscape){.logo{font-size:44px}.logo br{display:none}.sub{margin:4px 0 10px}.peek{margin-bottom:12px}.row{margin-bottom:10px}}
 .logo{font-size:clamp(38px,7vw,72px);line-height:1.05;text-align:center;margin:0 0 6px;letter-spacing:-1px}
 .logo span{display:inline-block;transform:rotate(-3deg);background:#ffd84d;padding:0 .18em;border-radius:12px;box-shadow:var(--shadow)}
 .sub{color:var(--soft);font-size:clamp(16px,2.4vw,22px);margin:6px 0 18px;text-align:center}
@@ -90,14 +92,14 @@ button{font-family:inherit;color:inherit;cursor:pointer;touch-action:manipulatio
 .rank div em{font-style:normal;width:36px;text-align:center}
 .rank div i{width:22px;height:22px;border-radius:50%;border:2px solid var(--ink)}
 .rank div span{flex:1}
-.gallery{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;width:min(620px,100%);margin:20px 0 4px}
+.gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(72px,96px));justify-content:center;gap:8px;width:min(620px,100%);margin:20px 0 4px}
 .gallery img{width:100%;aspect-ratio:1;border:3px solid var(--ink);border-radius:14px;background:#fff}
 .btns{display:flex;gap:10px;width:min(480px,100%)}
 .btns .big{flex:1;font-size:24px}
 .btns .big.ghost{background:#fff}
 canvas#fx{position:fixed;inset:0;pointer-events:none;z-index:7}
 
-@media (max-width:560px){.gallery{grid-template-columns:repeat(3,1fr)}.names{grid-template-columns:1fr}}
+@media (max-width:560px){.names{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -121,13 +123,14 @@ canvas#fx{position:fixed;inset:0;pointer-events:none;z-index:7}
     <div class="row">
       <div class="label">게임 방식</div>
       <div class="seg" id="modeSeg">
-        <button data-m="2" class="on">두 장 짝꿍<small>카드 12장</small></button>
-        <button data-m="3">세 장 짝꿍<small>카드 18장 · 어려움</small></button>
+        <button data-m="2" data-k="6" class="on">쉬움<small>두 장씩 · 12장</small></button>
+        <button data-m="2" data-k="10">보통<small>두 장씩 · 20장</small></button>
+        <button data-m="3" data-k="6">어려움<small>세 장씩 · 18장</small></button>
       </div>
     </div>
   </div>
   <button class="big" id="startBtn">시작하기</button>
-  <p class="credit">그림 · KIS 방과후 학교 두드로우 작품 6점</p>
+  <p class="credit">그림 · KIS 방과후 학교 두드로우 작품 34점 · 판마다 그림이 바뀌어요</p>
 </section>
 
 <!-- 게임 화면 -->
@@ -158,7 +161,8 @@ canvas#fx{position:fixed;inset:0;pointer-events:none;z-index:7}
 
 <script>
 (() => {
-  const IMGS = [1,2,3,4,5,6].map(n => `img/d${n}.webp`);
+  const POOL = Array.from({ length: 34 }, (_, i) => `img/d${String(i + 1).padStart(2, '0')}.webp`);
+  let IMGS = [], kinds = 6;
   const COLORS = ['var(--p1)','var(--p2)','var(--p3)','var(--p4)'];
   const HEX = ['#ff6b5a','#3aa3ff','#2fbf71','#a66bff'];
   const DEFAULT_NAMES = ['빨강','파랑','초록','보라'];
@@ -167,8 +171,8 @@ canvas#fx{position:fixed;inset:0;pointer-events:none;z-index:7}
   let count = 2, mode = 2, sound = true;
   let players = [], cur = 0, deck = [], open = [], lock = false, found = 0;
 
-  // 이미지 미리 불러오기 + 시작 화면 미리보기
-  IMGS.forEach(src => { const i = new Image(); i.src = src; i.alt = ''; $('peek').appendChild(i); });
+  // 시작 화면 미리보기 (무작위 6점)
+  shuffle([...POOL]).slice(0, 6).forEach(src => { const i = new Image(); i.src = src; i.alt = ''; $('peek').appendChild(i); });
 
   // 저장된 이름 불러오기
   let saved = [];
@@ -189,7 +193,11 @@ canvas#fx{position:fixed;inset:0;pointer-events:none;z-index:7}
     set(+b.dataset[attr]);
   });
   seg('countSeg', 'n', v => { count = v; syncNames(); });
-  seg('modeSeg', 'm', v => { mode = v; });
+  $('modeSeg').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    [...$('modeSeg').children].forEach(x => x.classList.toggle('on', x === b));
+    mode = +b.dataset.m; kinds = +b.dataset.k;
+  });
 
   // ---------- 소리 ----------
   let ac;
@@ -221,6 +229,8 @@ canvas#fx{position:fixed;inset:0;pointer-events:none;z-index:7}
     players = inputs.slice(0, count).map((inp, k) => ({ name: inp.value.trim() || DEFAULT_NAMES[k], score: 0, k }));
     try { localStorage.setItem('ddm-names', JSON.stringify(inputs.map(i => i.value.trim()))); } catch (e) {}
     cur = Math.random() * count | 0; open = []; lock = false; found = 0;
+    IMGS = shuffle([...POOL]).slice(0, kinds);
+    IMGS.forEach(src => { new Image().src = src; }); // 미리 불러오기
     deck = shuffle(IMGS.flatMap((src, id) => Array.from({ length: mode }, () => ({ id, src }))));
     show('game'); buildBoard(); renderScores(); layout();
     toast(`${players[cur].name}부터 시작해요`, 1300);
