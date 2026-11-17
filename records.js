@@ -32,6 +32,15 @@ export const RECORDS = [
   // ▼ 여기에 새 기록을 붙여넣으세요 (최신 항목을 맨 위에) ▼
 
   {
+    title: "단계별 미술 작품 감상",
+    desc: "5학년 미술 '작품 속 내용과 형식' 학습 자료다. 내용과 형식을 배우고 퀴즈로 확인한 뒤, 명화를 보며 알맞은 문장과 낱말을 골라 비평문을 완성한다. 교사용 강의 슬라이드와 인쇄용 학습지도 들어 있다.",
+    tags: "미술, 감상, 비평문, 내용과 형식, 명화, 5학년, 학습지",
+    category: "class-tools",
+    link: "./vibe-apps/art-appreciation/",
+    image: "img/art-appreciation.jpg",
+  },
+
+  {
     title: "3분 시험실",
     desc: "스마트 안경과 링을 쓴 응시생이 되어 감독관 몰래 3분을 버티는 1인칭 체험이다. 끝나면 감독관 시점 리플레이로 내 행동 단서를 확인하고, 감독관 지침과 사례 판단 연습으로 이어진다.",
     tags: "threejs, 3d, blender, proctor, exam, training, simulation, games",
