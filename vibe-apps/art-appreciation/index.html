@@ -1,0 +1,532 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>단계별 미술 작품 감상</title>
+<style>
+:root{
+  --bg:#f6f1e7; --paper:#fffdf8; --ink:#2b2622; --sub:#6f665c; --line:#e2d8c6;
+  --main:#2f5d8a; --main-soft:#e3edf6; --ok:#2e7d4f; --ok-soft:#e2f3e8; --no:#b8442f; --no-soft:#fbe6e1;
+  --c-color:#c8553d; --c-line:#2f6fae; --c-shape:#3c8a5a; --c-tex:#7a55a8; --c-comp:#c98312;
+  --r:14px;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Pretendard","Noto Sans KR","Malgun Gothic","Apple SD Gothic Neo",sans-serif;font-size:18px;line-height:1.65;word-break:keep-all}
+button{font:inherit;color:inherit;cursor:pointer}
+header{background:var(--paper);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
+.hd{max-width:1180px;margin:0 auto;padding:10px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.hd h1{font-size:20px;margin:0 8px 0 0;letter-spacing:-.02em}
+.hd h1 small{display:block;font-size:12px;font-weight:500;color:var(--sub);letter-spacing:0}
+nav{display:flex;gap:6px;flex-wrap:wrap;flex:1}
+nav button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 14px;font-size:15px;font-weight:600}
+nav button.on{background:var(--main);border-color:var(--main);color:#fff}
+nav button.t{margin-left:auto;border-style:dashed}
+main{max-width:1180px;margin:0 auto;padding:22px 16px 80px}
+h2{font-size:26px;margin:0 0 6px;letter-spacing:-.02em}
+h3{font-size:20px;margin:0 0 8px}
+.lead{color:var(--sub);margin:0 0 20px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:20px;margin-bottom:16px}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.g4{grid-template-columns:repeat(auto-fit,minmax(210px,1fr))}
+.g5{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.btn{border:0;background:var(--main);color:#fff;border-radius:10px;padding:10px 20px;font-weight:700}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.btn.ghost{background:#fff;color:var(--main);border:1px solid var(--main)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.num{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--main);color:#fff;font-weight:800;font-size:16px;margin-right:8px;flex:none}
+.stepcard h3{display:flex;align-items:center}
+.what{font-weight:800;color:var(--main)}
+.vs{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.vs>div{border-radius:12px;padding:16px;border:2px solid}
+.vs .c{border-color:#d9b25f;background:#fdf5df}.vs .f{border-color:#8fb4d8;background:var(--main-soft)}
+.vs b.big{font-size:22px;display:block}
+.eg{margin:6px 0 0;padding-left:20px}
+.lens{border-top:6px solid var(--lc);}
+.lens h3{color:var(--lc)}
+.lens svg{width:100%;height:auto;border-radius:8px;background:#fff;border:1px solid var(--line)}
+.badge{display:inline-block;font-size:13px;font-weight:800;color:#fff;background:var(--lc,var(--main));border-radius:6px;padding:1px 8px;margin-right:6px;vertical-align:2px}
+.words{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:4px 12px;font-size:16px}
+button.chip:hover{border-color:var(--main)}
+.chip.sel{background:var(--main);border-color:var(--main);color:#fff}
+.note{background:#fff7d6;border:1px solid #ecd98a;border-radius:10px;padding:12px 14px;font-size:16px}
+/* quiz */
+.qbox{max-width:760px;margin:0 auto;text-align:center}
+.qsent{font-size:26px;font-weight:700;margin:22px 0;min-height:84px;display:grid;place-items:center}
+.qchoices{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.qchoices button{min-width:130px;border:2px solid var(--line);background:#fff;border-radius:12px;padding:14px 18px;font-size:20px;font-weight:700}
+.qchoices button.ok{background:var(--ok-soft);border-color:var(--ok);color:var(--ok)}
+.qchoices button.no{background:var(--no-soft);border-color:var(--no);color:var(--no)}
+.fb{min-height:60px;margin:16px 0;font-size:17px}
+.fb.ok{color:var(--ok)}.fb.no{color:var(--no)}
+.bar{height:8px;background:var(--line);border-radius:9px;overflow:hidden}.bar i{display:block;height:100%;background:var(--main);transition:width .3s}
+/* works */
+.pick{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
+.pick button{border:1px solid var(--line);background:var(--paper);border-radius:var(--r);padding:0;overflow:hidden;text-align:left}
+.pick button:hover{border-color:var(--main);box-shadow:0 4px 14px rgba(0,0,0,.08)}
+.pick img{width:100%;height:150px;object-fit:cover;display:block}
+.pick span{display:block;padding:8px 12px;font-weight:700;font-size:16px}
+.pick small{display:block;font-weight:500;color:var(--sub)}
+.two{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:20px;align-items:start}
+.art{position:sticky;top:76px}
+.art img{width:100%;max-height:68vh;object-fit:contain;background:#fff;border:1px solid var(--line);border-radius:10px;cursor:zoom-in;display:block}
+.cap{font-size:14px;color:var(--sub);margin-top:6px}
+.dots{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.dots span{font-size:14px;font-weight:700;padding:3px 10px;border-radius:999px;background:#fff;border:1px solid var(--line);color:var(--sub)}
+.dots span.on{background:var(--main);color:#fff;border-color:var(--main)}.dots span.done{background:var(--ok-soft);color:var(--ok);border-color:var(--ok)}
+.q{border-top:1px dashed var(--line);padding:14px 0}
+.q:first-of-type{border-top:0}
+.q p{margin:0 0 8px;font-weight:700}
+.opts{display:grid;gap:8px}
+.opts button{text-align:left;border:2px solid var(--line);background:#fff;border-radius:10px;padding:9px 14px}
+.opts button:hover{border-color:var(--main)}
+.opts button.ok{background:var(--ok-soft);border-color:var(--ok)}
+.opts button.no{background:var(--no-soft);border-color:var(--no);animation:shake .3s}
+.opts.inline{display:flex;flex-wrap:wrap}
+.blank{display:inline-block;min-width:110px;border-bottom:3px solid var(--main);text-align:center;color:var(--main);font-weight:800;padding:0 6px}
+.blank.fill{border-color:var(--ok);color:var(--ok)}
+.hint{font-size:15px;color:var(--no);margin:6px 0 0;min-height:1.4em}
+.hint.ok{color:var(--ok)}
+@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.sent{background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:12px 0;font-size:19px}
+.essay{background:#fff;border:1px solid var(--line);border-radius:10px;padding:18px;font-size:19px;line-height:1.9;background-image:repeating-linear-gradient(transparent 0 35px,#ece4d4 35px 36px);background-position:0 16px}
+textarea{width:100%;font:inherit;border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-height:76px;resize:vertical;background:#fff}
+textarea:focus{outline:2px solid var(--main);border-color:transparent}
+.field{margin-bottom:18px}
+.field label{font-weight:800;display:flex;align-items:center;margin-bottom:4px}
+.field .tip{font-size:15px;color:var(--sub);margin:0 0 6px}
+.starter{font-size:14px;padding:2px 10px;border-style:dashed}
+.bank{background:var(--main-soft);border-radius:10px;padding:10px 12px;margin:8px 0}
+.bank .words{margin:2px 0 6px}
+.bank .chip{font-size:14px;padding:2px 10px}
+/* lightbox */
+#lb{position:fixed;inset:0;background:rgba(20,16,12,.9);display:none;z-index:50;place-items:center;cursor:zoom-out}
+#lb.on{display:grid}#lb img{max-width:96vw;max-height:96vh}
+/* deck */
+.deck{container-type:inline-size;background:#fffdf8;border:1px solid var(--line);border-radius:12px;aspect-ratio:16/9;position:relative;overflow:hidden}
+.deck:fullscreen{border-radius:0;width:100vw;height:100vh;aspect-ratio:auto}
+.slide{position:absolute;inset:0;padding:4cqw 5cqw 6cqw;font-size:2.1cqw;line-height:1.5;display:flex;flex-direction:column;justify-content:center}
+.slide h2{font-size:3.6cqw;margin:0 0 1.6cqw}
+.slide h2 small{font-size:1.8cqw;color:var(--main);display:block;font-weight:700}
+.slide ul{margin:0;padding-left:1.4em}.slide li{margin:.5cqw 0}
+.slide .cols{display:grid;grid-template-columns:1fr 1fr;gap:3cqw;align-items:center;min-height:0;flex:1}
+.slide .cols img{width:100%;max-height:100%;object-fit:contain;min-height:0}
+.slide .cols>div{min-height:0;max-height:100%;display:flex;flex-direction:column;justify-content:center}
+.slide svg{width:100%;height:auto;max-height:26cqw;border:1px solid var(--line);border-radius:8px;background:#fff}
+.slide .vs b.big{font-size:3cqw}.slide .vs>div{padding:2cqw}
+.slide .chip{font-size:1.8cqw;padding:.3cqw 1.2cqw}
+.slide .four{display:grid;grid-template-columns:repeat(4,1fr);gap:1.4cqw}
+.slide .four div{border:2px solid var(--main);border-radius:1cqw;padding:1.4cqw;background:#fff}
+.slide .four b{display:block;font-size:2.6cqw;color:var(--main)}
+.rev{border:2px dashed var(--line);background:#fff;border-radius:.8cqw;padding:.6cqw 1.2cqw;margin:.5cqw 0;text-align:left;font-size:1.9cqw;width:100%;display:flex;gap:1cqw;justify-content:space-between;align-items:center}
+.rev em{font-style:normal;font-weight:800;visibility:hidden;white-space:nowrap}
+.rev.on em{visibility:visible}.rev.on{border-style:solid}
+.rev.ans{display:block;font-size:1.45cqw;line-height:1.35;padding:.45cqw 1cqw;margin:.3cqw 0}.rev.ans span{display:block;color:var(--sub);font-size:1.2cqw}.rev.ans em{display:block;white-space:normal;color:var(--ok);font-weight:700}
+.dnav{position:absolute;left:0;right:0;bottom:1cqw;display:flex;justify-content:center;gap:1cqw;align-items:center;font-size:1.5cqw;color:var(--sub)}
+.dnav button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:.3cqw 1.4cqw;font-size:1.5cqw}
+#printArea{display:none}
+@media (max-width:820px){.two{grid-template-columns:1fr}.art{position:static}.art img{max-height:46vh}.vs{grid-template-columns:1fr}body{font-size:17px}}
+@media print{
+  header,.noprint,nav{display:none!important}
+  body{background:#fff;font-size:13pt}main{padding:0;max-width:none}
+  .card{border:0;padding:0}.art{position:static}.art img{max-height:9cm}
+  body.ws main{display:none}body.ws #printArea{display:block}
+  .ws-img{max-width:100%;max-height:9.5cm;display:block;margin:0 auto 4px}
+  .ws-h{display:flex;justify-content:space-between;border-bottom:2px solid #000;padding-bottom:4px;margin-bottom:8px}
+  .ws-box{border:1px solid #555;border-radius:6px;padding:6px 10px;margin-top:6px;break-inside:avoid}
+  .ws-box b{font-size:12pt}.ws-box small{display:block;color:#444}
+  .ws-line{border-bottom:1px solid #999;height:26px}
+  .ws-bank{font-size:10.5pt;margin-top:2px}
+}
+</style>
+</head>
+<body>
+<header><div class="hd">
+  <h1>단계별 미술 작품 감상<small>5학년 미술 · 작품 속 내용과 형식</small></h1>
+  <nav id="nav">
+    <button data-v="learn">① 배우기</button>
+    <button data-v="quiz">② 퀴즈</button>
+    <button data-v="guide">③ 단계별 학습지</button>
+    <button data-v="free">④ 감상 연습</button>
+    <button data-v="teacher" class="t">교사용 강의</button>
+  </nav>
+</div></header>
+<main id="main"></main>
+<div id="lb"><img alt=""></div>
+<div id="printArea"></div>
+
+<script>
+/* ---------- 자료 ---------- */
+const LENS=[
+ {k:'색',c:'var(--c-color)',q:'어떤 색을 썼나요?',d:'따뜻한지 차가운지, 밝은지 어두운지, 어떤 색끼리 만났는지 봅니다.',
+  w:['따뜻한 색','차가운 색','밝은','어두운','선명한','은은한','대비되는','비슷한 색끼리'],
+  svg:`<rect x="10" y="10" width="40" height="40" fill="#d8432e"/><rect x="50" y="10" width="40" height="40" fill="#ee8a2b"/><rect x="90" y="10" width="40" height="40" fill="#f3c93b"/><text x="70" y="64" text-anchor="middle" font-size="11">따뜻한 색</text><rect x="150" y="10" width="40" height="40" fill="#1f4f8f"/><rect x="190" y="10" width="40" height="40" fill="#3f8fc4"/><rect x="230" y="10" width="40" height="40" fill="#7fc4b8"/><text x="210" y="64" text-anchor="middle" font-size="11">차가운 색</text><rect x="10" y="76" width="120" height="34" fill="#1d2f5e"/><circle cx="70" cy="93" r="12" fill="#f6d743"/><text x="70" y="124" text-anchor="middle" font-size="11">대비되는 색</text><rect x="150" y="76" width="120" height="34" fill="#d9c9a8"/><circle cx="210" cy="93" r="12" fill="#c9b38a"/><text x="210" y="124" text-anchor="middle" font-size="11">비슷한 색</text>`},
+ {k:'선',c:'var(--c-line)',q:'어떤 선으로 그렸나요?',d:'곧은지 구불구불한지, 굵은지 가는지, 테두리가 뚜렷한지 봅니다.',
+  w:['곧은 선','구불구불한 선','굵은 선','가는 선','힘 있는','부드러운','뚜렷한 테두리'],
+  svg:`<g fill="none" stroke="#222" stroke-linecap="round"><path d="M20 24H130" stroke-width="3"/><path d="M150 24c15-18 25 18 40 0s25 18 40 0 25 18 40 0" stroke-width="3"/><path d="M20 82H130" stroke-width="10"/><path d="M150 82H270" stroke-width="1.2"/></g><text x="75" y="50" text-anchor="middle" font-size="11">곧은 선</text><text x="210" y="50" text-anchor="middle" font-size="11">구불구불한 선</text><text x="75" y="112" text-anchor="middle" font-size="11">굵은 선</text><text x="210" y="112" text-anchor="middle" font-size="11">가는 선</text>`},
+ {k:'형',c:'var(--c-shape)',q:'모양을 어떻게 나타냈나요?',d:'둥근지 각진지, 단순한지 자세한지, 실제보다 크게·작게 바꾸었는지 봅니다.',
+  w:['둥근','각진','단순한','자세한','크게','작게','과장된'],
+  svg:`<circle cx="45" cy="45" r="30" fill="#3c8a5a"/><text x="45" y="96" text-anchor="middle" font-size="11">둥근 형</text><path d="M110 75l30-60 30 60z" fill="#3c8a5a"/><text x="140" y="96" text-anchor="middle" font-size="11">각진 형</text><g fill="none" stroke="#222" stroke-width="2.5"><circle cx="230" cy="42" r="26"/><circle cx="221" cy="36" r="2.5" fill="#222"/><circle cx="239" cy="36" r="2.5" fill="#222"/><path d="M219 52q11 9 22 0"/></g><text x="230" y="96" text-anchor="middle" font-size="11">단순한 형</text>`},
+ {k:'질감·방법',c:'var(--c-tex)',q:'어떤 재료와 방법으로 나타냈나요?',d:'붓 자국이 보이는지, 점을 찍었는지, 판화로 찍었는지, 매끈한지 거친지 봅니다.',
+  w:['거친','매끈한','붓 자국이 보이는','점을 찍어','번지게','판화로 찍어','두껍게 칠해'],
+  svg:`<defs><pattern id="pd" width="8" height="8" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1.6" fill="#7a55a8"/><circle cx="6" cy="6" r="1.6" fill="#e0a12a"/></pattern><pattern id="ps" width="14" height="10" patternUnits="userSpaceOnUse"><path d="M1 7q4-6 9-2" stroke="#7a55a8" stroke-width="3" fill="none" stroke-linecap="round"/></pattern></defs><rect x="12" y="12" width="76" height="62" fill="url(#pd)"/><text x="50" y="94" text-anchor="middle" font-size="11">점을 찍어</text><rect x="102" y="12" width="76" height="62" fill="url(#ps)"/><text x="140" y="94" text-anchor="middle" font-size="11">붓 자국</text><rect x="192" y="12" width="76" height="62" fill="#7a55a8"/><text x="230" y="94" text-anchor="middle" font-size="11">매끈하게</text>`},
+ {k:'구도',c:'var(--c-comp)',q:'어디에, 얼마나 크게 놓았나요?',d:'가운데인지 한쪽인지, 앞뒤 크기가 다른지, 둥글게·비스듬하게 놓았는지, 배경을 비웠는지 봅니다.',
+  w:['가운데에','한쪽에','둥글게 둘러','대각선으로','앞은 크게 뒤는 작게','배경을 비워','화면 가득'],
+  svg:`<g fill="none" stroke="#999"><rect x="10" y="12" width="78" height="60"/><rect x="101" y="12" width="78" height="60"/><rect x="192" y="12" width="78" height="60"/></g><circle cx="49" cy="42" r="16" fill="#c98312"/><text x="49" y="92" text-anchor="middle" font-size="11">가운데에 크게</text><g fill="#c98312"><circle cx="140" cy="22" r="4"/><circle cx="160" cy="32" r="4"/><circle cx="164" cy="52" r="4"/><circle cx="140" cy="62" r="4"/><circle cx="118" cy="52" r="4"/><circle cx="116" cy="32" r="4"/></g><text x="140" y="92" text-anchor="middle" font-size="11">둥글게 둘러</text><path d="M196 68L266 16" stroke="#c98312" stroke-width="5"/><circle cx="208" cy="52" r="9" fill="#c98312"/><circle cx="254" cy="20" r="3" fill="#c98312"/><text x="231" y="92" text-anchor="middle" font-size="11">대각선·크기 차이</text>`}
+];
+const lens=k=>LENS.find(l=>l.k===k);
+const FEELS=['신나는','재미있는','평화로운','따뜻한','시원한','신기한','무서운','불안한','쓸쓸한','웅장한','활기찬','고요한'];
+const EVALS=['다른 사람에게 소개하고 싶은','오래 기억에 남을','볼수록 새로운 것이 보이는','나도 따라 표현해 보고 싶은'];
+
+const WORKS=[
+{id:'ssireum',img:'images/ssireum.jpg',t:'씨름',a:'김홍도',info:'김홍도(한국/1745~1806?) 씨름(종이에 수묵 담채/26.9×22.2cm/18세기 후반)',
+ reasons:['둘러앉아 구경하는 사람들','힘을 쓰는 두 씨름꾼','사람들의 여러 가지 표정','엿을 파는 아이'],
+ content:[{q:'무엇을 하는 장면인가요?',o:['사람들이 둥글게 둘러앉아 씨름 경기를 구경하고 있어요.','사람들이 교실에서 공부를 하고 있어요.','사람들이 시장에서 물건을 사고 있어요.']},
+          {q:'가운데 두 사람의 모습은 어떤가요?',o:['두 씨름꾼이 서로 붙잡고 힘을 겨루고 있어요.','두 사람이 나란히 앉아 쉬고 있어요.','두 사람이 춤을 추고 있어요.']}],
+ form:[{k:'색',pre:'',post:' 색을 조금만 써서 차분하고 소박한 느낌이 나요.',o:['옅은 갈색 계열의','화려한 무지개','어둡고 진한 검정'],h:'옷과 얼굴의 색을 보세요. 색이 진하고 많은가요, 옅고 적은가요?'},
+       {k:'선',pre:'붓으로 ',post:' 선을 그어 옷 주름과 움직임을 나타냈어요.',o:['굵기가 변하는 힘 있는','자로 그은 듯 곧은','점점이 끊어진'],h:'옷 주름의 선을 크게 확대해서 보세요. 굵기가 똑같은가요?'},
+       {k:'구도',pre:'구경꾼들을 ',post:' 배치해서 가운데 씨름꾼에게 눈길이 모여요.',o:['둥글게 둘러앉게','한 줄로 나란히','한쪽 구석에만'],h:'구경꾼들의 자리를 손가락으로 이어 보세요. 어떤 모양이 되나요?'},
+       {k:'구도',pre:'배경은 ',post:' 사람들의 모습이 더 잘 보여요.',o:['아무것도 그리지 않고 비워 두어서','나무와 집으로 가득 채워서','어두운 색으로 칠해서'],h:'사람들 뒤에 산이나 집이 그려져 있나요?'}],
+ meaning:[['미술가는 씨름을 즐기는 백성들의 활기찬 생활 모습을 생생하게 전하고 싶었던 것 같아요.',1],['미술가는 구경꾼 한 사람 한 사람의 표정까지 재미있게 보여 주고 싶었던 것 같아요.',1],['미술가는 무섭고 불안한 마음을 나타내고 싶었던 것 같아요.',0,'사람들의 표정과 분위기를 다시 보세요. 무섭고 불안해 보이나요?']],
+ imp:['둥글게 앉은 구도 덕분에 나도 구경꾼이 된 것 같은','간단한 선만으로 표정과 움직임이 살아 있는','배경을 비워서 사람들이 더 잘 보이는']},
+{id:'starry',img:'images/starry.jpg',t:'별이 빛나는 밤',a:'고흐',info:'고흐(네덜란드/1853~1890) 별이 빛나는 밤(캔버스에 유채/73.7×92.1cm/1889년 작)',
+ reasons:['소용돌이치는 밤하늘','크게 빛나는 별과 달','높이 솟은 검은 나무','조용히 잠든 마을'],
+ content:[{q:'무엇이 그려져 있나요?',o:['별과 달이 뜬 밤하늘 아래 작은 마을이 있어요.','해가 쨍쨍한 낮의 바닷가가 있어요.','눈이 내리는 숲속이 있어요.']},
+          {q:'그림 왼쪽 앞에는 무엇이 있나요?',o:['불꽃처럼 높이 솟은 나무가 있어요.','커다란 배가 떠 있어요.','사람들이 모여 춤추고 있어요.']}],
+ form:[{k:'색',pre:'',post:' 대비되어 별빛이 더 밝게 빛나 보여요.',o:['짙은 파란색과 노란색이','빨간색과 초록색이','흰색과 분홍색이'],h:'하늘의 색과 별의 색을 각각 말해 보세요.'},
+       {k:'선',pre:'하늘을 ',post:' 선으로 그려서 바람이 움직이는 것 같아요.',o:['소용돌이치듯 구불구불한','자로 그은 듯 반듯한','가늘고 흐릿한'],h:'하늘의 선을 손가락으로 따라 그려 보세요.'},
+       {k:'질감·방법',pre:'물감을 ',post:' 붓 자국이 그대로 보여요.',o:['짧고 두껍게 여러 번 칠해서','얇고 매끈하게 펴 발라서','작은 점으로만 찍어서'],h:'그림을 크게 확대해서 물감이 칠해진 모양을 보세요.'},
+       {k:'구도',pre:'나무는 ',post:' 그려서 하늘과 땅을 이어 주는 것 같아요.',o:['앞쪽에 크고 길게 세로로','멀리 아주 작게','화면 한가운데 둥글게'],h:'나무와 마을의 집 크기를 비교해 보세요.'}],
+ meaning:[['미술가는 밤하늘을 보며 느낀 벅차고 설레는 마음을 나타내고 싶었던 것 같아요.',1],['미술가는 눈에 보이는 그대로가 아니라 자신이 느낀 밤하늘의 힘을 표현하고 싶었던 것 같아요.',1],['미술가는 마을의 집이 몇 채인지 정확하게 기록하고 싶었던 것 같아요.',0,'하늘이 실제 모습과 똑같이 그려졌나요? 기록보다 느낌이 더 강하게 드러나요.']],
+ imp:['붓 자국 때문에 하늘이 살아 움직이는 것 같은','파란색 속에서 노란 별이 반짝이는','조용한 마을과 요동치는 하늘이 대비되는']},
+{id:'scream',img:'images/scream.jpg',t:'절규',a:'뭉크',info:'뭉크(노르웨이/1863~1944) 절규(판지에 유채·템페라·파스텔/91×73.5cm/1893년 작)',
+ reasons:['입을 벌리고 놀란 얼굴','핏빛처럼 붉은 하늘','구불구불 흔들리는 풍경','멀리 걸어가는 두 사람'],
+ content:[{q:'가운데 사람은 무엇을 하고 있나요?',o:['두 손으로 얼굴을 감싸고 입을 크게 벌리고 있어요.','웃으며 손을 흔들고 있어요.','앉아서 책을 읽고 있어요.']},
+          {q:'사람은 어디에 서 있나요?',o:['난간이 있는 다리 위에 서 있고, 뒤로 물과 하늘이 보여요.','꽃이 가득한 정원에 서 있어요.','방 안 창문 앞에 서 있어요.']}],
+ form:[{k:'색',pre:'하늘을 ',post:' 색으로 칠해서 불안한 느낌이 강해져요.',o:['붉은색과 주황색의 강렬한','연한 하늘색의 부드러운','초록색의 싱그러운'],h:'하늘의 색을 말해 보세요. 그 색은 어떤 느낌을 주나요?'},
+       {k:'선',pre:'하늘과 물은 ',post:' 선으로, 다리는 곧은 선으로 그려서 서로 대비돼요.',o:['구불구불 물결치는','짧게 끊어진 점 같은','반듯한 네모 모양'],h:'하늘의 선과 다리 난간의 선을 비교해 보세요.'},
+       {k:'형',pre:'얼굴을 ',post:' 그려서 놀란 표정이 한눈에 보여요.',o:['눈, 코, 입만 단순하게','머리카락 한 올까지 자세하게','작아서 보이지 않게'],h:'얼굴에 무엇무엇이 그려져 있는지 세어 보세요.'},
+       {k:'구도',pre:'다리를 ',post:' 그려서 깊이가 느껴지고 사람이 앞으로 다가오는 것 같아요.',o:['비스듬한 대각선으로','화면 아래 가로로 평평하게','둥근 원 모양으로'],h:'다리 난간이 어느 방향으로 뻗어 있나요?'}],
+ meaning:[['미술가는 마음속의 불안과 두려움을 나타내고 싶었던 것 같아요.',1],['미술가는 눈에 보이는 풍경보다 마음으로 느낀 감정을 표현하고 싶었던 것 같아요.',1],['미술가는 즐거운 소풍날의 추억을 나타내고 싶었던 것 같아요.',0,'색과 선, 인물의 표정이 즐거운 느낌을 주나요?']],
+ imp:['구불구불한 선 때문에 소리가 울려 퍼지는 것 같은','붉은 하늘이 불안한 마음을 잘 보여 주는','단순한 얼굴인데도 감정이 강하게 전해지는']},
+{id:'jatte',img:'images/jatte.jpg',t:'그랑드 자트섬의 일요일 오후',a:'쇠라',info:'쇠라(프랑스/1859~1891) 그랑드 자트섬의 일요일 오후(캔버스에 유채/207.5×308cm/1884~1886년 작)',
+ reasons:['햇살 가득한 강가 풍경','가만히 쉬고 있는 사람들','작은 점으로 이루어진 화면','양산을 쓴 사람들'],
+ content:[{q:'어떤 장면인가요?',o:['사람들이 강가 풀밭에서 한가롭게 쉬고 있어요.','사람들이 눈밭에서 썰매를 타고 있어요.','사람들이 공장에서 일하고 있어요.']},
+          {q:'그림 속에서 찾을 수 있는 것은 무엇인가요?',o:['양산을 쓴 사람, 강아지, 강 위의 배가 보여요.','호랑이와 까치가 보여요.','높은 빌딩과 자동차가 보여요.']}],
+ form:[{k:'질감·방법',pre:'',post:' 색칠해서 멀리서 보면 색이 섞여 보여요.',o:['작은 색점을 하나하나 찍어','넓은 붓으로 한 번에 쓱 칠해','먹물을 번지게 해서'],h:'그림을 크게 확대해서 풀밭을 살펴보세요.'},
+       {k:'색',pre:'햇빛이 드는 곳은 ',post:' 색으로 칠해서 밝고 어두운 곳이 뚜렷해요.',o:['밝은 색, 그늘은 어두운','어두운 색, 그늘도 똑같이 어두운','검은색, 그늘은 흰'],h:'풀밭의 앞쪽과 뒤쪽 색을 비교해 보세요.'},
+       {k:'형',pre:'사람들을 ',post:' 그려서 시간이 멈춘 것처럼 고요해요.',o:['인형처럼 단순하고 반듯하게','뛰고 구르는 모습으로 힘차게','흐릿하게 뭉개서'],h:'사람들의 자세를 따라 해 보세요. 움직이고 있나요?'},
+       {k:'구도',pre:'앞에 있는 사람은 ',post:' 그려서 멀고 가까움이 느껴져요.',o:['크게, 멀리 있는 사람은 작게','작게, 멀리 있는 사람은 크게','멀리 있는 사람과 같은 크기로'],h:'오른쪽 앞 사람과 멀리 있는 사람의 크기를 비교해 보세요.'}],
+ meaning:[['미술가는 휴일의 평화롭고 여유로운 분위기를 나타내고 싶었던 것 같아요.',1],['미술가는 점을 찍어 빛과 색을 나타내는 새로운 방법을 보여 주고 싶었던 것 같아요.',1],['미술가는 빠르게 달리는 사람들의 속도감을 나타내고 싶었던 것 같아요.',0,'사람들이 빠르게 움직이고 있나요? 형을 다시 살펴보세요.']],
+ imp:['수많은 점이 모여 하나의 그림이 되는','밝은 햇빛과 그늘이 잘 느껴지는','사람들이 멈춘 듯 고요한 분위기가 나는']},
+{id:'wave',img:'images/wave.jpg',t:'가나가와 해변의 높은 파도 아래',a:'호쿠사이',info:'가쓰시카 호쿠사이(일본/1760~1849) 가나가와 해변의 높은 파도 아래(다색 목판화/약 26×38cm/1831년경)',
+ reasons:['집어삼킬 듯한 큰 파도','파도 끝의 하얀 물거품','파도 속 작은 배들','멀리 보이는 작은 산'],
+ content:[{q:'어떤 장면인가요?',o:['커다란 파도가 배들을 덮치려 하고 있어요.','잔잔한 호수에서 사람들이 낚시를 하고 있어요.','배들이 항구에 가만히 묶여 있어요.']},
+          {q:'멀리 가운데에 무엇이 보이나요?',o:['눈 덮인 산이 작게 보여요.','커다란 성이 보여요.','무지개가 떠 있어요.']}],
+ form:[{k:'색',pre:'',post:' 써서 시원하고 힘찬 느낌이 나요.',o:['짙은 파란색과 흰색을 주로','빨간색과 노란색을 주로','여러 가지 색을 알록달록하게'],h:'파도에 쓰인 색을 세어 보세요.'},
+       {k:'선',pre:'파도 끝을 ',post:' 선으로 그려서 무엇이든 움켜쥘 것 같아요.',o:['발톱처럼 구부러진 뚜렷한','흐릿해서 잘 보이지 않는','곧고 반듯한'],h:'파도 끝의 하얀 물거품 모양을 확대해서 보세요.'},
+       {k:'구도',pre:'파도는 ',post:' 그려서 파도의 힘이 더 크게 느껴져요.',o:['아주 크게, 산은 아주 작게','작게, 산은 아주 크게','산과 같은 크기로'],h:'파도와 산의 크기를 비교해 보세요.'},
+       {k:'질감·방법',pre:'',post:' 색이 고르고 테두리가 또렷해요.',o:['나무판에 새겨 찍은 판화라서','두꺼운 물감을 덧칠한 그림이라서','색종이를 찢어 붙인 작품이라서'],h:'그림 아래 작품 정보에서 재료와 방법을 찾아보세요.'}],
+ meaning:[['미술가는 자연의 엄청난 힘을 나타내고 싶었던 것 같아요.',1],['미술가는 큰 자연 앞에서 사람이 얼마나 작은지 보여 주고 싶었던 것 같아요.',1],['미술가는 조용하고 잔잔한 바다의 평화로움을 나타내고 싶었던 것 같아요.',0,'파도의 크기와 선의 모양이 잔잔한 느낌을 주나요?']],
+ imp:['큰 파도와 작은 산의 크기 차이가 재미있는','파도 끝 모양이 살아 있는 손 같은','파란색과 흰색만으로 힘찬 바다를 나타낸']},
+{id:'dano',img:'images/dano.jpg',t:'단오풍정',a:'신윤복',info:'신윤복(한국/1758~?) 단오풍정(종이에 채색/28.2×35.6cm/18세기 후반~19세기 초)',
+ reasons:['그네를 타는 여인','냇가에서 씻는 사람들','바위 뒤에 숨어 보는 아이들','화사한 옷 색깔'],
+ content:[{q:'무엇을 하는 장면인가요?',o:['단옷날 여인들이 그네를 타고 냇물에 씻으며 놀고 있어요.','농부들이 논에서 모내기를 하고 있어요.','선비들이 방에서 글을 쓰고 있어요.']},
+          {q:'바위 뒤에는 누가 숨어 있나요?',o:['어린 스님 두 명이 몰래 엿보고 있어요.','호랑이가 낮잠을 자고 있어요.','씨름꾼이 씨름을 하고 있어요.']}],
+ form:[{k:'색',pre:'그네 타는 여인의 옷을 ',post:' 색으로 칠해서 가장 먼저 눈에 띄어요.',o:['빨강과 노랑의 선명한','회색의 흐릿한','배경과 똑같은'],h:'그림에서 가장 먼저 눈에 들어오는 색은 무엇인가요?'},
+       {k:'색',pre:'배경의 바위와 나무는 ',post:' 칠해서 사람들이 더 돋보여요.',o:['연하고 은은한 색으로','사람보다 더 진하고 화려하게','검은색으로 빈틈없이'],h:'바위와 나무의 색을 사람들의 옷 색과 비교해 보세요.'},
+       {k:'선',pre:'사람들을 ',post:' 선으로 그려서 우아하고 섬세한 느낌이 나요.',o:['가늘고 부드러운','굵고 거친','삐뚤빼뚤 끊어진'],h:'얼굴과 옷의 테두리 선을 확대해서 보세요.'},
+       {k:'구도',pre:'사람들을 ',post:' 배치해서 눈길이 그림 곳곳으로 옮겨 가요.',o:['여러 무리로 나누어 곳곳에','한가운데에만 모아서','한 줄로 나란히'],h:'사람들이 모여 있는 곳이 몇 군데인지 세어 보세요.'}],
+ meaning:[['미술가는 단옷날을 즐기는 사람들의 모습을 재미있게 전하고 싶었던 것 같아요.',1],['미술가는 옛사람들의 풍속과 멋을 아름답게 보여 주고 싶었던 것 같아요.',1],['미술가는 전쟁의 무서움을 알리고 싶었던 것 같아요.',0,'그림 속 사람들의 모습과 색이 무서운 느낌을 주나요?']],
+ imp:['선명한 옷 색깔이 그림을 화사하게 만드는','숨어서 보는 아이들이 웃음을 주는','가는 선으로 사람들을 섬세하게 그린']}
+];
+const EXTRA=[
+ {id:'inwang',img:'images/inwang.jpg',t:'인왕제색도',a:'정선',info:'정선(한국/1676~1759) 인왕제색도(종이에 수묵/79.2×138.2cm/1751년 작)'},
+ {id:'mondrian',img:'images/mondrian.jpg',t:'빨강, 파랑, 노랑의 구성 Ⅱ',a:'몬드리안',info:'몬드리안(네덜란드/1872~1944) 빨강, 파랑, 노랑의 구성 Ⅱ(캔버스에 유채/46×46cm/1930년 작)'}
+];
+const QUIZ=[
+ {name:'내용일까? 형식일까?',desc:'문장을 읽고 내용(무엇을)인지 형식(어떻게)인지 고르세요.',ch:['내용','형식'],items:[
+  ['사람들이 한복을 입고 있다.',0,'그림에 “무엇이” 있는지 말했으니 내용이에요. 형식으로 바꾸면 “한복을 굵은 선과 밝은 색으로 그렸다.”'],
+  ['굵고 진한 선으로 테두리를 그렸다.',1,'“어떻게” 그렸는지(선) 말했으니 형식이에요.'],
+  ['호랑이와 도깨비가 나온다.',0,'그려진 대상을 말했으니 내용이에요.'],
+  ['파란색과 회색을 많이 써서 차분하다.',1,'색에 대해 말했으니 형식이에요.'],
+  ['두 사람이 씨름을 하고 있다.',0,'어떤 장면인지 말했으니 내용이에요.'],
+  ['작은 점을 찍어서 색칠했다.',1,'표현 방법을 말했으니 형식이에요.'],
+  ['밤하늘에 별과 달이 떠 있다.',0,'무엇이 그려졌는지 말했으니 내용이에요.'],
+  ['가운데 사람을 가장 크게 그렸다.',1,'자리와 크기(구도)를 말했으니 형식이에요.'],
+  ['달걀 껍데기를 붙여서 닭을 만들었다.',1,'재료와 방법을 말했으니 형식이에요.'],
+  ['어미 닭이 병아리를 찾고 있는 것 같다.',0,'작품 속 이야기(주제)를 말했으니 내용이에요.']]},
+ {name:'어떤 돋보기일까?',desc:'형식을 말한 문장이에요. 다섯 가지 돋보기 중 무엇으로 본 것일까요?',ch:LENS.map(l=>l.k),items:[
+  ['따뜻한 색을 많이 써서 포근하다.',0,'색 돋보기로 보았어요.'],
+  ['구불구불한 선으로 물결을 나타냈다.',1,'선 돋보기로 보았어요.'],
+  ['얼굴을 동그랗고 단순하게 그렸다.',2,'모양을 말했으니 형 돋보기예요.'],
+  ['물감을 두껍게 칠해서 붓 자국이 보인다.',3,'재료와 표현 방법을 말했으니 질감·방법 돋보기예요.'],
+  ['주인공을 화면 가운데에 크게 놓았다.',4,'자리와 크기를 말했으니 구도 돋보기예요.'],
+  ['파란색과 노란색이 대비된다.',0,'색 돋보기로 보았어요.'],
+  ['배경을 비워 두어 사람이 잘 보인다.',4,'화면을 어떻게 짰는지 말했으니 구도 돋보기예요.'],
+  ['테두리를 굵고 뚜렷하게 그렸다.',1,'선 돋보기로 보았어요.']]},
+ {name:'어느 단계일까?',desc:'감상 문장을 읽고 네 단계 중 어디에 쓰면 좋을지 고르세요.',ch:['① 반응','② 분석','③ 의미 해석','④ 종합 평가'],items:[
+  ['작품을 보니 신기하고 금방 부서질 것 같아요.',0,'처음 보고 떠오른 느낌이니 반응하기예요.'],
+  ['잘 부서지는 달걀 껍데기를 재료로 썼어요.',1,'재료(형식)를 살폈으니 분석하기예요.'],
+  ['미술가는 아기를 사랑하는 엄마의 마음을 표현한 것 같아요.',2,'미술가의 의도를 짐작했으니 의미 해석하기예요.'],
+  ['재미있는 상상을 하게 해 주는 좋은 작품이라고 생각해요.',3,'앞의 내용을 모아 내 판단을 말했으니 종합 평가하기예요.'],
+  ['어미 닭이 고개를 들고 병아리를 찾고 있어요.',1,'무엇이 표현되었는지(내용) 살폈으니 분석하기예요.'],
+  ['왠지 쓸쓸한 기분이 들어요.',0,'떠오른 느낌이니 반응하기예요.']]}
+];
+const STARTERS={
+ react:['작품을 보니 ~ 느낌이 들어요.','~이/가 생각났어요.','가장 먼저 ~이/가 눈에 띄어요.'],
+ content:['작품에는 ~이/가 나와요.','~이/가 ~을/를 하고 있어요.','작품의 주제는 ~인 것 같아요.'],
+ form:['~ 색을 써서 ~ 느낌이 나요.','~ 선으로 ~을/를 그렸어요.','~을/를 (크게/작게/가운데에) 놓아서 ~ 보여요.','~(재료·방법)으로 표현해서 ~해요.'],
+ meaning:['미술가는 ~을/를 나타내고 싶었던 것 같아요.','왜냐하면 ~ 때문이에요.'],
+ eval:['~ 점이 가장 인상 깊었어요.','이 작품은 ~ 작품이라고 생각해요.']
+};
+
+/* ---------- 도구 ---------- */
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const main=$('#main');
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const svg=(l,vb='0 0 280 130')=>`<svg viewBox="${vb}" role="img" aria-label="${l.k} 예시">${l.svg}</svg>`;
+const badge=k=>`<span class="badge" style="--lc:${lens(k).c}">${k}</span>`;
+const artHTML=w=>`<div class="art"><img src="${w.img}" alt="${esc(w.t)}" data-zoom><div class="cap">${esc(w.info)} · 그림을 누르면 크게 볼 수 있어요</div></div>`;
+document.addEventListener('click',e=>{
+  if(e.target.matches('[data-zoom]')){$('#lb img').src=e.target.src;$('#lb').classList.add('on')}
+  else if(e.target.closest('#lb'))$('#lb').classList.remove('on');
+});
+const pickHTML=(list,extra='')=>`<div class="pick">${list.map(w=>`<button data-w="${w.id}"><img src="${w.img}" alt=""><span>${esc(w.t)}<small>${esc(w.a)}</small></span></button>`).join('')}${extra}</div>`;
+function copyText(t,btn){navigator.clipboard?.writeText(t).then(()=>{const o=btn.textContent;btn.textContent='복사했어요';setTimeout(()=>btn.textContent=o,1500)})}
+
+/* ---------- ① 배우기 ---------- */
+function vLearn(){
+ main.innerHTML=`
+ <h2>① 배우기 — 작품은 이렇게 감상해요</h2>
+ <p class="lead">작품 감상은 네 단계로 합니다. 차례대로 읽어 보세요.</p>
+ <div class="grid g4">
+  ${[['반응하기','작품을 보고 <b>떠오르는 생각이나 느낌</b>을 말해요.','“신기해요. 금방 부서질 것 같아요.”'],
+     ['분석하기','<b>내용</b>(무엇을)과 <b>형식</b>(어떻게)을 자세히 살펴봐요.','“달걀 껍데기를 재료로 썼어요.”'],
+     ['의미 해석하기','미술가가 <b>왜 이렇게 표현했는지</b> 짐작해요.','“엄마의 마음을 표현한 것 같아요.”'],
+     ['종합 평가하기','앞의 세 가지를 모아 <b>내 생각</b>을 정리해요.','“재미있는 상상을 하게 하는 작품이에요.”']]
+    .map((s,i)=>`<div class="card stepcard"><h3><span class="num">${i+1}</span>${s[0]}</h3><p style="margin:0">${s[1]}</p><p class="cap">${s[2]}</p></div>`).join('')}
+ </div>
+
+ <div class="card">
+  <h3>분석하기의 두 가지: 내용과 형식</h3>
+  <div class="vs">
+   <div class="c"><b class="big">내용 = <span class="what">무엇을</span> 표현했나?</b>그림에 나오는 것, 하고 있는 일, 이야기와 주제
+     <ul class="eg"><li>사람들이 한복을 입고 있다.</li><li>호랑이와 도깨비가 나온다.</li><li>탈놀이를 하는 장면이다.</li></ul></div>
+   <div class="f"><b class="big">형식 = <span class="what">어떻게</span> 표현했나?</b>색, 선, 형, 질감·방법, 구도
+     <ul class="eg"><li>파란색과 회색을 많이 썼다.</li><li>굵고 진한 선으로 테두리를 그렸다.</li><li>탈을 화면 가득 크게 그렸다.</li></ul></div>
+  </div>
+  <p class="note" style="margin:14px 0 0"><b>헷갈릴 때는 이렇게!</b> 그림을 보지 않은 친구에게 “뭐가 그려져 있어?”의 답이면 <b>내용</b>, “어떤 색이야? 어떤 선이야? 어디에 얼마나 크게 그렸어?”의 답이면 <b>형식</b>이에요.</p>
+ </div>
+
+ <h3 style="margin-top:26px">형식을 찾는 다섯 가지 돋보기</h3>
+ <p class="lead">형식이 어려우면 돋보기를 하나씩 대어 보세요. 돋보기마다 물음이 하나씩 있어요.</p>
+ <div class="grid g5">
+  ${LENS.map(l=>`<div class="card lens" style="--lc:${l.c}"><h3>${l.k}</h3><p style="margin:0 0 8px;font-weight:700">${l.q}</p>${svg(l)}<p class="cap">${l.d}</p><div class="words">${l.w.map(x=>`<span class="chip">${x}</span>`).join('')}</div></div>`).join('')}
+ </div>
+ <div class="card">
+  <h3>형식 문장 만드는 법</h3>
+  <p style="margin:0 0 8px">돋보기로 찾은 것 뒤에 <b>그래서 어떤 느낌인지</b>를 붙이면 좋은 형식 문장이 됩니다.</p>
+  <div class="sent"><span class="badge" style="--lc:var(--c-color)">색</span>짙은 파란색과 노란색이 대비되어 <b>+</b> 별빛이 더 밝게 빛나 보여요.</div>
+  <div class="sent"><span class="badge" style="--lc:var(--c-comp)">구도</span>구경꾼들을 둥글게 둘러앉게 배치해서 <b>+</b> 가운데 씨름꾼에게 눈길이 모여요.</div>
+ </div>
+ <div class="row noprint"><button class="btn" data-go="quiz">퀴즈로 확인하기 →</button></div>`;
+}
+
+/* ---------- ② 퀴즈 ---------- */
+function vQuiz(){
+ main.innerHTML=`<h2>② 퀴즈 — 배운 것 확인하기</h2><p class="lead">세 가지 퀴즈를 차례로 풀어 보세요.</p>
+ <div class="grid g2" style="grid-template-columns:repeat(auto-fit,minmax(240px,1fr))">${QUIZ.map((q,i)=>`<div class="card"><h3>퀴즈 ${i+1}. ${q.name}</h3><p class="cap">${q.desc}</p><button class="btn" data-quiz="${i}">시작 (${q.items.length}문제)</button></div>`).join('')}</div>`;
+ $$('[data-quiz]').forEach(b=>b.onclick=()=>runQuiz(+b.dataset.quiz));
+}
+function runQuiz(qi){
+ const Q=QUIZ[qi],items=shuffle(Q.items);let i=0,score=0,first=true;
+ const draw=()=>{
+  if(i>=items.length){
+   main.innerHTML=`<div class="card qbox"><h2>${Q.name}</h2><p class="qsent">${items.length}문제 중 ${score}문제를 한 번에 맞혔어요</p>
+   <p>${score===items.length?'완벽해요. 다음으로 넘어가도 좋아요.':score>=items.length*0.7?'잘했어요. 틀린 문제의 설명을 떠올려 보세요.':'① 배우기를 한 번 더 읽고 다시 도전해 보세요.'}</p>
+   <div class="row" style="justify-content:center"><button class="btn ghost" id="re">다시 풀기</button>${qi<QUIZ.length-1?`<button class="btn" id="nx">다음 퀴즈 →</button>`:`<button class="btn" data-go="guide">단계별 학습지로 →</button>`}<button class="btn ghost" data-go="quiz">퀴즈 목록</button></div></div>`;
+   $('#re').onclick=()=>runQuiz(qi); if($('#nx'))$('#nx').onclick=()=>runQuiz(qi+1); return;
+  }
+  const it=items[i];first=true;
+  main.innerHTML=`<div class="card qbox"><div class="row" style="justify-content:space-between"><b>퀴즈 ${qi+1}. ${Q.name}</b><span>${i+1} / ${items.length}</span></div>
+   <div class="bar"><i style="width:${i/items.length*100}%"></i></div>
+   <div class="qsent">“${it[0]}”</div>
+   <div class="qchoices">${Q.ch.map((c,k)=>`<button data-k="${k}">${c}</button>`).join('')}</div>
+   <div class="fb" id="fb"></div><button class="btn" id="next" disabled>다음 →</button></div>`;
+  $$('.qchoices button').forEach(b=>b.onclick=()=>{
+   const fb=$('#fb');
+   if(+b.dataset.k===it[1]){b.className='ok';fb.className='fb ok';fb.textContent='맞아요! '+it[2];if(first)score++;$$('.qchoices button').forEach(x=>x.disabled=true);$('#next').disabled=false}
+   else{b.className='no';b.disabled=true;first=false;fb.className='fb no';fb.textContent=qi===0?'다시 생각해 보세요. “무엇이 있는지”를 말했나요, “어떻게 그렸는지”를 말했나요?':'다시 생각해 보세요.'}
+  });
+  $('#next').onclick=()=>{i++;draw()};
+ };
+ draw();
+}
+
+/* ---------- ③ 단계별 학습지 ---------- */
+const GSTEPS=['① 반응하기','② 내용 분석','② 형식 분석','③ 의미 해석','④ 종합 평가','비평문 완성'];
+let G=null;
+function vGuide(){
+ G=null;
+ main.innerHTML=`<h2>③ 단계별 학습지 — 고르면서 감상하기</h2><p class="lead">작품을 하나 고르세요. 알맞은 문장과 낱말을 고르다 보면 비평문이 완성됩니다.</p>${pickHTML(WORKS)}`;
+ $$('.pick button').forEach(b=>b.onclick=()=>{const w=WORKS.find(x=>x.id===b.dataset.w);
+  G={w,step:0,feel:null,reason:null,meaning:null,imp:null,ev:null,cDone:w.content.map(()=>false),fDone:w.form.map(()=>false),
+     cOpts:w.content.map(c=>shuffle(c.o)),fOpts:w.form.map(f=>shuffle(f.o)),mOpts:shuffle(w.meaning)};drawG()});
+}
+function gReady(){const s=G.step;return s===0?G.feel&&G.reason:s===1?G.cDone.every(Boolean):s===2?G.fDone.every(Boolean):s===3?!!G.meaning:s===4?G.imp&&G.ev:true}
+function gSent(){const w=G.w;return{
+ react:`작품을 보니 ${G.feel} 느낌이 들어요. ${G.reason} 때문이에요.`,
+ content:w.content.map(c=>c.o[0]).join(' '),
+ form:w.form.map(f=>f.pre+f.o[0]+f.post).join(' '),
+ meaning:G.meaning,
+ ev:`${G.imp} 점이 가장 인상 깊었어요. 그래서 이 작품은 ${G.ev} 작품이라고 생각해요.`}}
+function drawG(){
+ const w=G.w,s=G.step;let body='';
+ if(s===0) body=`<h3>작품을 보고 떠오르는 느낌을 골라 보세요</h3><p class="cap">정답은 없어요. 내 마음에 가장 가까운 것을 고르세요.</p>
+   <p style="margin:10px 0 4px;font-weight:700">어떤 느낌이 드나요?</p><div class="words">${FEELS.map(f=>`<button class="chip ${G.feel===f?'sel':''}" data-feel="${f}">${f}</button>`).join('')}</div>
+   <p style="margin:14px 0 4px;font-weight:700">무엇 때문에 그런 느낌이 들었나요?</p><div class="words">${w.reasons.map(f=>`<button class="chip ${G.reason===f?'sel':''}" data-reason="${f}">${f}</button>`).join('')}</div>
+   <div class="sent">작품을 보니 <span class="blank ${G.feel?'fill':''}">${G.feel||'　'}</span> 느낌이 들어요. <span class="blank ${G.reason?'fill':''}">${G.reason||'　'}</span> 때문이에요.</div>`;
+ if(s===1) body=`<h3>무엇이 표현되었나요? <small class="cap">알맞은 문장 고르기</small></h3><p class="cap">그림을 잘 보고, 그림에 나오는 것을 바르게 말한 문장을 고르세요.</p>
+   ${w.content.map((c,i)=>`<div class="q"><p>${c.q}</p><div class="opts">${G.cOpts[i].map(o=>`<button data-c="${i}" class="${G.cDone[i]&&o===c.o[0]?'ok':''}" ${G.cDone[i]?'disabled':''}>${o}</button>`).join('')}</div><p class="hint" id="ch${i}"></p></div>`).join('')}`;
+ if(s===2) body=`<h3>어떻게 표현되었나요? <small class="cap">알맞은 낱말 고르기</small></h3><p class="cap">돋보기 이름을 보고, 빈칸에 알맞은 말을 고르세요. 그림을 눌러 크게 보면 더 잘 보여요.</p>
+   ${w.form.map((f,i)=>`<div class="q"><p>${badge(f.k)}${lens(f.k).q}</p><div class="sent" style="margin:0 0 8px">${f.pre}<span class="blank ${G.fDone[i]?'fill':''}">${G.fDone[i]?f.o[0]:'　'}</span>${f.post}</div>
+     <div class="opts inline">${G.fOpts[i].map(o=>`<button data-f="${i}" class="${G.fDone[i]&&o===f.o[0]?'ok':''}" ${G.fDone[i]?'disabled':''}>${o}</button>`).join('')}</div><p class="hint" id="fh${i}"></p></div>`).join('')}`;
+ if(s===3) body=`<h3>미술가는 왜 이렇게 표현했을까요?</h3><p class="cap">내가 고른 느낌과 분석한 내용을 떠올리며, 가장 그럴듯한 생각을 고르세요.</p>
+   <div class="note" style="margin-bottom:10px"><b>내가 분석한 형식</b><br>${gSent().form}</div>
+   <div class="opts">${G.mOpts.map((m,i)=>`<button data-m="${i}" class="${G.meaning===m[0]?'ok':''}">${m[0]}</button>`).join('')}</div><p class="hint" id="mh"></p>`;
+ if(s===4) body=`<h3>작품에 대한 내 생각을 정리해요</h3>
+   <p style="margin:10px 0 4px;font-weight:700">가장 인상 깊은 점은?</p><div class="opts">${w.imp.map(x=>`<button data-imp="${esc(x)}" class="${G.imp===x?'ok':''}">${x} 점</button>`).join('')}</div>
+   <p style="margin:14px 0 4px;font-weight:700">그래서 이 작품은?</p><div class="words">${EVALS.map(x=>`<button class="chip ${G.ev===x?'sel':''}" data-ev="${x}">${x} 작품</button>`).join('')}</div>
+   ${G.imp&&G.ev?`<div class="sent">${gSent().ev}</div>`:''}`;
+ if(s===5){const t=gSent();const full=[t.react,t.content,t.form,t.meaning,t.ev].join(' ');
+   body=`<h3>내가 완성한 비평문</h3><p class="cap">소리 내어 읽어 보세요. 반응 → 내용 → 형식 → 의미 → 평가 순서로 이어져 있어요.</p>
+   <div class="essay" id="essay">${full}</div>
+   <div class="row noprint" style="margin-top:14px"><button class="btn ghost" id="cp">복사하기</button><button class="btn ghost" onclick="print()">인쇄하기</button><button class="btn ghost" data-go="guide">다른 작품 하기</button><button class="btn" data-go="free">④ 감상 연습으로 →</button></div>`;}
+ main.innerHTML=`<div class="two">${artHTML(w)}<div>
+   <div class="dots noprint">${GSTEPS.map((n,i)=>`<span class="${i===s?'on':i<s?'done':''}">${n}</span>`).join('')}</div>
+   <div class="card">${body}</div>
+   ${s<5?`<div class="row noprint" style="justify-content:space-between"><button class="btn ghost" id="pv">${s===0?'작품 다시 고르기':'← 이전'}</button><button class="btn" id="nx" ${gReady()?'':'disabled'}>${s===4?'비평문 완성하기 →':'다음 →'}</button></div>`:''}
+ </div></div>`;
+ const on=(sel,fn)=>$$(sel).forEach(b=>b.onclick=()=>fn(b));
+ on('[data-feel]',b=>{G.feel=b.dataset.feel;drawG()});on('[data-reason]',b=>{G.reason=b.dataset.reason;drawG()});
+ on('[data-c]',b=>{const i=+b.dataset.c;if(b.textContent===w.content[i].o[0]){G.cDone[i]=true;drawG()}else{b.className='no';b.disabled=true;$('#ch'+i).textContent='그림을 다시 살펴보세요. 그림에 정말 나오나요?'}});
+ on('[data-f]',b=>{const i=+b.dataset.f;if(b.textContent===w.form[i].o[0]){G.fDone[i]=true;drawG()}else{b.className='no';b.disabled=true;$('#fh'+i).textContent='힌트: '+w.form[i].h}});
+ on('[data-m]',b=>{const m=G.mOpts[+b.dataset.m];if(m[1]){G.meaning=m[0];drawG()}else{b.className='no';b.disabled=true;$('#mh').textContent=m[2]}});
+ on('[data-imp]',b=>{G.imp=b.dataset.imp;drawG()});on('[data-ev]',b=>{G.ev=b.dataset.ev;drawG()});
+ if($('#pv'))$('#pv').onclick=()=>{if(s===0)vGuide();else{G.step--;drawG()}};
+ if($('#nx'))$('#nx').onclick=()=>{G.step++;drawG();scrollTo(0,0)};
+ if($('#cp'))$('#cp').onclick=e=>copyText($('#essay').textContent,e.target);
+}
+
+/* ---------- ④ 감상 연습 ---------- */
+const FKEYS=['색','선','붓','점','밝','어둡','어두','굵','가늘','가는','둥글','둥근','각진','단순','크게','작게','가운데','한쪽','대각선','대비','배경','구도','테두리','거친','매끈','판화','재료','찍','칠','물감','먹','번지','진하','연하','옅','선명','흐릿','화면','모양','질감','세로','가로'];
+function vFree(){
+ const all=[...WORKS,...EXTRA];
+ main.innerHTML=`<h2>④ 감상 연습 — 스스로 써 보기</h2><p class="lead">이번에는 직접 씁니다. 문장 틀과 낱말 은행을 눌러서 도움을 받을 수 있어요.</p>
+ ${pickHTML(all,`<button id="up" style="display:grid;place-items:center;min-height:200px;border-style:dashed"><span style="text-align:center">＋ 다른 작품 불러오기<small>내 컴퓨터의 그림 파일</small></span></button>`)}<input type="file" id="file" accept="image/*" hidden>`;
+ $$('.pick button[data-w]').forEach(b=>b.onclick=()=>drawFree(all.find(x=>x.id===b.dataset.w)));
+ $('#up').onclick=()=>$('#file').click();
+ $('#file').onchange=e=>{const f=e.target.files[0];if(f)drawFree({id:'my',img:URL.createObjectURL(f),t:f.name.replace(/\.[^.]+$/,''),a:'',info:'불러온 작품'})};
+}
+function drawFree(w){
+ const F=[['react','① 반응하기','작품을 보고 떠오르는 생각이나 느낌을 써요.'],['content','② 분석하기 — 내용','무엇이 표현되었나요? 그림에 나오는 것과 장면을 써요.'],
+  ['form','② 분석하기 — 형식','어떻게 표현되었나요? 색·선·형·질감·구도 돋보기로 찾은 것을 써요.'],['meaning','③ 의미 해석하기','미술가가 나타내려던 생각을 짐작해서 써요.'],['eval','④ 종합 평가하기','앞에서 쓴 것을 바탕으로 작품에 대한 내 생각을 써요.']];
+ main.innerHTML=`<div class="two">${artHTML(w)}<div>
+  <div class="card">
+  ${F.map(f=>`<div class="field"><label>${f[1]}</label><p class="tip">${f[2]}</p>
+    ${f[0]==='form'?`<div class="bank noprint"><b style="font-size:14px">형식 낱말 은행</b> <span class="cap">누르면 글에 들어가요</span>${LENS.map(l=>`<div class="words">${badge(l.k)}${l.w.map(x=>`<button class="chip" data-ins="form" data-t="${x} ">${x}</button>`).join('')}</div>`).join('')}</div>`:''}
+    <div class="words noprint" style="margin:0 0 6px">${STARTERS[f[0]].map(s=>`<button class="chip starter" data-ins="${f[0]}" data-t="${esc(s)} ">${esc(s)}</button>`).join('')}</div>
+    <textarea id="t_${f[0]}" ${f[0]==='form'?'style="min-height:120px"':''}></textarea>${f[0]==='form'?'<p class="hint" id="fcheck"></p>':''}</div>`).join('')}
+  <div class="row noprint"><button class="btn" id="mk">비평문 만들기</button><button class="btn ghost" data-go="free">다른 작품 고르기</button></div>
+  </div>
+  <div class="card" id="out" hidden><h3>${esc(w.t)} 비평문</h3><textarea id="essay" style="min-height:220px;font-size:19px;line-height:1.9"></textarea>
+   <p class="cap noprint">문장이 자연스럽게 이어지도록 고쳐 써도 좋아요.</p>
+   <div class="row noprint"><button class="btn ghost" id="cp">복사하기</button><button class="btn ghost" onclick="print()">인쇄하기</button></div></div>
+ </div></div>`;
+ $$('[data-ins]').forEach(b=>b.onclick=()=>{const t=$('#t_'+b.dataset.ins);t.value+=(t.value&&!/\s$/.test(t.value)?' ':'')+b.dataset.t;t.focus();if(b.dataset.ins==='form')chk()});
+ const chk=()=>{const v=$('#t_form').value.trim(),el=$('#fcheck');if(!v){el.textContent='';return true}
+  const ok=FKEYS.some(k=>v.includes(k));el.className='hint'+(ok?' ok':'');
+  el.textContent=ok?'좋아요. “어떻게” 표현했는지가 들어 있어요. 그래서 어떤 느낌인지도 붙여 보세요.':'혹시 “무엇이” 그려졌는지만 쓰지 않았나요? 색·선·형·질감·구도 낱말을 넣어 “어떻게” 그렸는지 써 보세요.';return ok};
+ $('#t_form').oninput=chk;
+ $('#mk').onclick=()=>{chk();const parts=F.map(f=>$('#t_'+f[0]).value.trim()).filter(Boolean);
+  if(!parts.length){alert('먼저 단계별로 글을 써 보세요.');return}
+  $('#out').hidden=false;$('#essay').value=parts.join(' ');$('#out').scrollIntoView({behavior:'smooth'})};
+ $('#cp').onclick=e=>copyText($('#essay').value,e.target);
+}
+
+/* ---------- 교사용 ---------- */
+let deckI=0,SLIDES=[];
+function buildSlides(){
+ const S=[];
+ S.push(`<h2><small>5학년 미술 · 작품 속 내용과 형식</small>단계별 작품 감상하기</h2><p>작품을 단계별로 감상하고 비평문을 써 봅시다.</p><p style="color:var(--sub)">오늘의 핵심: <b>내용(무엇을)</b>과 <b>형식(어떻게)</b>을 나누어 보기</p>`);
+ S.push(`<h2><small>생각 열기</small>이 문장은 어느 칸에 써야 할까요?</h2><button class="rev"><span>“사람들이 한복을 입고 있다.”</span><em style="color:#a9781c">내용 — 무엇이 그려졌는지</em></button><button class="rev"><span>“한복을 굵은 선과 밝은 색으로 그렸다.”</span><em style="color:var(--main)">형식 — 어떻게 그렸는지</em></button><p style="margin-top:1.5cqw;color:var(--sub)">형식 칸에 내용을 쓰는 경우가 많습니다. 문장을 눌러 답을 확인해 보세요.</p>`);
+ S.push(`<h2>감상의 네 단계</h2><div class="four">${[['① 반응','떠오르는 생각과 느낌'],['② 분석','내용과 형식 살펴보기'],['③ 의미 해석','미술가의 의도 짐작하기'],['④ 종합 평가','내 생각 정리하기']].map(x=>`<div><b>${x[0]}</b>${x[1]}</div>`).join('')}</div><p style="margin-top:2cqw">느낌 → 근거 찾기 → 까닭 짐작 → 내 판단 순서로 생각이 깊어집니다.</p>`);
+ S.push(`<h2>분석하기: 내용과 형식</h2><div class="vs"><div class="c"><b class="big">내용 = 무엇을?</b>그림에 나오는 것, 하는 일, 이야기와 주제<br><br>“뭐가 그려져 있어?”의 답</div><div class="f"><b class="big">형식 = 어떻게?</b>색, 선, 형, 질감·방법, 구도<br><br>“어떤 색·선으로, 어디에 얼마나 크게?”의 답</div></div>`);
+ LENS.forEach((l,i)=>S.push(`<h2 style="color:${l.c}"><small style="color:${l.c}">형식 돋보기 ${i+1} / 5</small>${l.k} — ${l.q}</h2><div class="cols"><div>${svg(l)}</div><div><p style="margin-top:0">${l.d}</p><div class="words">${l.w.map(x=>`<span class="chip">${x}</span>`).join('')}</div></div></div>`));
+ S.push(`<h2><small>함께 풀기</small>내용일까? 형식일까?</h2>${QUIZ[0].items.slice(0,7).map(q=>`<button class="rev"><span>${q[0]}</span><em style="color:${q[1]?'var(--main)':'#a9781c'}">${q[1]?'형식':'내용'}</em></button>`).join('')}`);
+ WORKS.forEach(w=>S.push(`<h2 style="font-size:2.8cqw;margin-bottom:1cqw"><small>함께 감상하기</small>${w.a}, 〈${w.t}〉</h2><div class="cols"><img src="${w.img}" alt="${esc(w.t)}" data-zoom style="cursor:zoom-in"><div>
+   <button class="rev ans"><span>반응 · 어떤 느낌이 드나요? 무엇 때문인가요?</span><em>(자유롭게 발표) 예: ${w.reasons[0]} 때문에 …</em></button>
+   <button class="rev ans"><span>내용 · ${w.content[0].q}</span><em>${w.content[0].o[0]}</em></button>
+   ${w.form.slice(0,2).map(f=>`<button class="rev ans"><span>형식(${f.k}) · ${f.h}</span><em>${f.pre+f.o[0]+f.post}</em></button>`).join('')}
+   <button class="rev ans"><span>의미 · 미술가는 왜 이렇게 표현했을까요?</span><em>${w.meaning[0][0]}</em></button></div></div>`));
+ S.push(`<h2>비평문은 이렇게 이어 써요</h2><ul><li><b>반응</b> 작품을 보니 ~ 느낌이 들어요.</li><li><b>내용</b> 작품에는 ~이/가 ~하고 있어요.</li><li><b>형식</b> ~ 색(선, 구도…)으로 표현해서 ~ 보여요.</li><li><b>의미</b> 미술가는 ~을/를 나타내고 싶었던 것 같아요.</li><li><b>평가</b> ~ 점이 인상 깊어서 ~ 작품이라고 생각해요.</li></ul><p style="color:var(--sub);margin-top:1.5cqw">이제 ③ 단계별 학습지 → ④ 감상 연습 순서로 스스로 해 봅시다.</p>`);
+ return S;
+}
+function vTeacher(){
+ SLIDES=buildSlides();
+ main.innerHTML=`<h2>교사용 강의 자료</h2><p class="lead">화면에 띄워 설명하는 슬라이드입니다. ← → 키로 넘기고, 점선 상자를 누르면 답이 나타납니다.</p>
+ <div class="deck" id="deck"><div class="slide" id="slide"></div><div class="dnav"><button id="dp">← 이전</button><span id="dn"></span><button id="dx">다음 →</button><button id="df">전체 화면</button></div></div>
+ <div class="grid g2" style="margin-top:18px">
+  <div class="card"><h3>수업 흐름 (2차시 예시)</h3><ol style="margin:0;padding-left:22px">
+   <li><b>1차시 도입(5분)</b> 슬라이드 2번으로 “내용/형식 헷갈림” 드러내기</li>
+   <li><b>설명(15분)</b> 네 단계 → 내용·형식 → 돋보기 다섯 가지</li>
+   <li><b>확인(10분)</b> 학생 기기로 ② 퀴즈 세 가지</li>
+   <li><b>함께 감상(10분)</b> 작품 슬라이드 한두 점을 발문하며 진행</li>
+   <li><b>2차시(40분)</b> ③ 단계별 학습지 2점 → ④ 감상 연습 1점 → 비평문 발표</li></ol></div>
+  <div class="card"><h3>형식 지도 도움말</h3><ul style="margin:0;padding-left:22px">
+   <li>“형식을 쓰세요” 대신 <b>돋보기 물음</b>으로 묻습니다. (어떤 색? 어떤 선? 어디에, 얼마나 크게?)</li>
+   <li>학생이 내용을 말하면 “그것을 <b>어떤 색과 선으로</b> 그렸나요?”로 되묻습니다.</li>
+   <li>형식 문장은 <b>찾은 것 + 그래서 어떤 느낌</b> 두 도막으로 쓰게 합니다.</li>
+   <li>그림을 눌러 확대해 붓 자국·점·선 굵기를 직접 보게 합니다.</li>
+   <li>④ 감상 연습의 “다른 작품 불러오기”로 교과서 작품 사진을 넣어 쓸 수 있습니다.</li></ul></div>
+ </div>
+ <div class="card"><h3>인쇄용 학습지</h3><p class="cap">작품을 고르면 낱말 은행이 들어간 A4 학습지를 인쇄합니다.</p>
+  <div class="row">${[...WORKS,...EXTRA].map(w=>`<button class="btn ghost" data-ws="${w.id}" style="padding:6px 14px;font-size:16px">${esc(w.t)}</button>`).join('')}</div></div>`;
+ deckI=Math.min(deckI,SLIDES.length-1);showSlide();
+ $('#dp').onclick=()=>moveSlide(-1);$('#dx').onclick=()=>moveSlide(1);
+ $('#df').onclick=()=>document.fullscreenElement?document.exitFullscreen():$('#deck').requestFullscreen?.();
+ $('#deck').addEventListener('click',e=>{const r=e.target.closest('.rev');if(r)r.classList.toggle('on')});
+ $$('[data-ws]').forEach(b=>b.onclick=()=>printWS([...WORKS,...EXTRA].find(w=>w.id===b.dataset.ws)));
+}
+function showSlide(){$('#slide').innerHTML=SLIDES[deckI];$('#dn').textContent=`${deckI+1} / ${SLIDES.length}`}
+function moveSlide(d){deckI=Math.max(0,Math.min(SLIDES.length-1,deckI+d));showSlide()}
+document.addEventListener('keydown',e=>{if(!$('#deck')||/TEXTAREA|INPUT/.test(e.target.tagName))return;
+ if(['ArrowRight','PageDown',' '].includes(e.key)){e.preventDefault();moveSlide(1)}if(['ArrowLeft','PageUp'].includes(e.key)){e.preventDefault();moveSlide(-1)}});
+function printWS(w){
+ const lines=n=>'<div class="ws-line"></div>'.repeat(n);
+ $('#printArea').innerHTML=`<div class="ws-h"><b style="font-size:16pt">단계별 작품 감상하기</b><span>&nbsp;&nbsp;학년 &nbsp;&nbsp;반 &nbsp;&nbsp;번 &nbsp; 이름:　　　　　　</span></div>
+  <img class="ws-img" src="${w.img}"><div style="font-size:10pt;text-align:center">${esc(w.info)}</div>
+  <div class="ws-box"><b>① 반응하기</b><small>작품을 보니 (　　　　) 느낌이 들어요. (　　　　　　　　) 때문이에요.</small>${lines(1)}</div>
+  <div class="ws-box"><b>② 분석하기 — 내용 (무엇을 표현했나요?)</b><small>작품에는 ~이/가 ~하고 있어요.</small>${lines(2)}</div>
+  <div class="ws-box"><b>② 분석하기 — 형식 (어떻게 표현했나요?)</b><small>~ 색(선, 형, 방법, 구도)으로 표현해서 ~ 느낌이 나요.</small>
+   <div class="ws-bank">${LENS.map(l=>`<b>${l.k}</b> ${l.w.join(', ')}`).join(' / ')}</div>${lines(3)}</div>
+  <div class="ws-box"><b>③ 의미 해석하기</b><small>미술가는 ~을/를 나타내고 싶었던 것 같아요.</small>${lines(2)}</div>
+  <div class="ws-box"><b>④ 종합 평가하기</b><small>~ 점이 인상 깊어서 ~ 작품이라고 생각해요.</small>${lines(2)}</div>`;
+ document.body.classList.add('ws');
+ const img=$('#printArea img');const go=()=>{print();document.body.classList.remove('ws')};
+ img.complete?go():img.onload=go;
+}
+
+/* ---------- 이동 ---------- */
+const VIEWS={learn:vLearn,quiz:vQuiz,guide:vGuide,free:vFree,teacher:vTeacher};
+function go(v){$$('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));VIEWS[v]();scrollTo(0,0);try{history.replaceState(null,'','#'+v)}catch(e){}}
+$('#nav').onclick=e=>{const b=e.target.closest('button');if(b)go(b.dataset.v)};
+main.addEventListener('click',e=>{const b=e.target.closest('[data-go]');if(b)go(b.dataset.go)});
+go(VIEWS[location.hash.slice(1)]?location.hash.slice(1):'learn');
+</script>
+</body>
+</html>
