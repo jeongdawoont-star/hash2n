@@ -89,21 +89,21 @@ async function station(){
     const code=norm($("#code").value), key=norm($("#key").value);
     const r=await open(D.blobs, `${D.salt}|${code}|${key}`);
     if(!r){ $("#msg").textContent="문이 열리지 않는다. 요원 코드·열쇠 낱말·지금 서 있는 장소를 다시 확인하라."; shake($("#f")); return; }
-    if(r.data.n===1 && !freshStart(code)) return;
+    if(r.data.n===1) freshStart(code);
     store.set("code",code); doorAnim(); setTimeout(()=>chapter(r.data, r.key, code), 500);
   };
 }
 
-/* 첫 문: 같은 코드로 앞 모둠이 남긴 기록(힌트·오답)이 있으면 새로 시작할지 묻는다 */
+/* 첫 문: 같은 코드로 남은 기록(힌트·오답)이 있으면 새 모둠인지 묻는다.
+   확인 → 이 태블릿 기록을 모두 지우고 새로 시작 / 취소 → 기록을 그대로 두고 이어서 */
 function freshStart(code){
   const p=store.get("p_"+code,null);
-  if(!p) return true;
+  if(!p) return;
   const h=Object.keys(p.h||{}).length, w=p.w||0;
-  if(!h && !w) return true;
-  const ok=confirm(`이 태블릿에 요원 코드 ${code}의 지난 기록이 남아 있다. (힌트 ${h}개 · 오답 ${w}번)\n\n새 모둠이면 [확인]: 기록을 지우고 처음부터 시작한다.\n같은 모둠이 이어서 하는 중이면 [취소]를 누른 뒤 지금 있는 문의 열쇠 낱말을 넣어라.`);
-  if(!ok) return false;
+  if(!h && !w) return;
+  const ok=confirm(`이 태블릿에 요원 코드 ${code}의 지난 기록이 남아 있다. (힌트 ${h}개 · 오답 ${w}번)\n\n새 모둠이면 [확인]: 앞 모둠 기록을 지우고 처음부터 시작한다.\n같은 모둠이 이어서 하는 중이면 [취소]: 기록을 그대로 두고 계속한다.`);
+  if(!ok) return;
   try{ Object.keys(localStorage).filter(k=>k.startsWith("ij_")).forEach(k=>localStorage.removeItem(k)); }catch(e){}
-  return true;
 }
 
 function chapter(c, k1, code){
