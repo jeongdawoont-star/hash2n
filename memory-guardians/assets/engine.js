@@ -16,8 +16,15 @@ async function idOf(keyBytes){ return hex(await sha("id|"+hex(keyBytes))).slice(
 async function decryptBlob(keyBytes, blob){
   const k=await crypto.subtle.importKey("raw", keyBytes, "AES-GCM", false, ["decrypt"]);
   const pt=await crypto.subtle.decrypt({name:"AES-GCM", iv:b64(blob.iv)}, k, b64(blob.ct));
-  return JSON.parse(dec.decode(pt));
+  return JSON.parse(fixText(dec.decode(pt)));
 }
+/* 이야기 속 특정 장소(벽화)를 어느 학교에서나 맞는 말로 바꾼다. 마지막 장소 이름은 places.js에서 화면에 따로 나온다. */
+const TEXT_FIX=[
+  ["훈민정음 벽화 앞에서","마지막 장소에서"],
+  ["벽화 앞으로","마지막 장소로"],
+  ["훈민정음 벽화의 글자들이","흩어졌던 글자들이"]
+];
+function fixText(s){ TEXT_FIX.forEach(([a,b])=>{ s=s.split(a).join(b); }); return s; }
 async function open(map, material){
   const k=await sha(material); const id=await idOf(k);
   if(!map[id]) return null;
