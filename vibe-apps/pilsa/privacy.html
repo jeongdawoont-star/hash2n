@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>개인정보처리방침 · 필사의 노력</title>
+<link rel="icon" type="image/png" sizes="32x32" href="icons/icon32.png">
+<style>
+:root { --primary: #3869FF; --text: #1C1C1E; --sub: #55555A; --bg: #F2F2F7; --card: #FFFFFF; --line: #E2E2E8; }
+@media (prefers-color-scheme: dark) { :root { --text: #F2F2F7; --sub: #B5B5BC; --bg: #111114; --card: #1C1C20; --line: #2E2E34; } }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font-family: "Pretendard Variable", Pretendard, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; line-height: 1.7; }
+main { max-width: 760px; margin: 0 auto; padding: 32px 16px 64px; }
+.card { background: var(--card); border-radius: 18px; padding: 28px 24px; }
+h1 { font-size: 24px; margin: 0 0 4px; }
+.meta { color: var(--sub); font-size: 13px; margin: 0 0 24px; }
+h2 { font-size: 17px; margin: 28px 0 8px; padding-top: 20px; border-top: 1px solid var(--line); }
+p, li { font-size: 14.5px; }
+ul { padding-left: 20px; }
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; margin: 8px 0; }
+th, td { border: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; }
+th { background: rgba(56,105,255,.08); }
+.table-wrap { overflow-x: auto; }
+.summary { background: rgba(56,105,255,.08); border-radius: 12px; padding: 14px 16px; font-size: 14px; }
+a { color: var(--primary); }
+.back { display: inline-block; margin-bottom: 16px; font-size: 14px; text-decoration: none; }
+</style>
+</head>
+<body>
+<main>
+<a class="back" href="./">← 필사의 노력으로 돌아가기</a>
+<div class="card">
+<h1>개인정보처리방침</h1>
+<p class="meta">시행일: 2026년 11월 18일</p>
+
+<div class="summary">
+<strong>한눈에 보기</strong>
+<ul>
+<li>필사의 노력은 <strong>서버가 없는 웹앱</strong>입니다. 운영자는 이용자의 개인정보를 수집하거나 보관하지 않습니다.</li>
+<li>이름·점수·설정은 <strong>이용자 기기의 브라우저 안에만</strong> 저장됩니다.</li>
+<li>손글씨 사진은 채점할 때만 이용자가 입력한 키로 <strong>Google Gemini</strong>에 직접 전송되며, 앱은 사진을 보관하지 않습니다.</li>
+<li>광고, 방문 분석 도구, 쿠키를 쓰지 않습니다.</li>
+</ul>
+</div>
+
+<h2>1. 처리하는 정보와 저장 위치</h2>
+<p>필사의 노력(이하 "앱")은 아래 정보를 이용자의 브라우저 저장소(localStorage)에만 저장합니다. 이 정보는 운영자에게 전송되지 않으며, 운영자는 이 정보를 볼 수 없습니다.</p>
+<div class="table-wrap">
+<table>
+<tr><th>정보</th><th>목적</th><th>저장 위치</th></tr>
+<tr><td>Gemini API 키, Vision OCR API 키(선택)</td><td>AI 채점 호출</td><td>이용자 브라우저</td></tr>
+<tr><td>이름 칸에 적은 이름 또는 별칭, 학생 번호와 명단</td><td>순위·기록 표시, 일괄 채점 결과 정리</td><td>이용자 브라우저</td></tr>
+<tr><td>점수, 등급, 지표별 단계, 채점 날짜</td><td>성장 기록, 지난번 점수와 비교</td><td>이용자 브라우저</td></tr>
+<tr><td>포트폴리오(번호별 날짜·점수·총평·지표 의견, 사진은 저장하지 않음)</td><td>학생별 성장 모음</td><td>이용자 브라우저</td></tr>
+</table>
+</div>
+<p>브라우저의 사이트 데이터 삭제, 설정 탭에서 키를 비우고 저장하기 등으로 이용자가 언제든 직접 삭제할 수 있습니다. [백업 저장]을 누르거나 일괄 채점을 마치면 포트폴리오와 명단이 담긴 백업 파일(JSON)이 이용자 기기에 내려받아지며, 이 파일의 관리 책임은 이용자에게 있습니다.</p>
+
+<h2>2. 외부로 전송되는 정보</h2>
+<div class="table-wrap">
+<table>
+<tr><th>받는 곳</th><th>전송 정보</th><th>언제</th></tr>
+<tr><td>Google LLC (Gemini API)</td><td>손글씨 사진, 채점 지시문, 이용자의 API 키</td><td>[AI 손글씨 채점하기], 일괄 채점을 누를 때</td></tr>
+<tr><td>Google LLC (Cloud Vision API)</td><td>손글씨 사진, 이용자의 Vision 키</td><td>Vision 키를 등록한 경우에만, 채점할 때</td></tr>
+<tr><td>Google Fonts, jsDelivr</td><td>접속 기기의 IP 주소 등 일반 접속 정보</td><td>글꼴을 불러올 때</td></tr>
+<tr><td>GitHub Pages (GitHub, Inc.)</td><td>접속 기기의 IP 주소 등 일반 접속 정보</td><td>앱 화면을 불러올 때</td></tr>
+</table>
+</div>
+<p>사진은 이용자의 기기에서 Google로 직접 전송되며 운영자의 서버를 거치지 않습니다. Google이 받은 정보를 처리하는 방식은 <a href="https://ai.google.dev/gemini-api/terms" target="_blank" rel="noopener">Gemini API 추가 서비스 약관</a>과 <a href="https://policies.google.com/privacy?hl=ko" target="_blank" rel="noopener">Google 개인정보처리방침</a>을 따릅니다. <strong>무료 등급 키를 쓰면 Google이 입력 내용을 서비스 개선에 사용할 수 있습니다.</strong> 학교에서 꾸준히 사용할 때는 결제가 등록된 키 사용을 권장합니다.</p>
+
+<h2>3. 아동의 정보 보호를 위한 권장 사항</h2>
+<p>앱은 선생님이 수업에서 사용하는 것을 전제로 합니다. 학생 정보를 보호하기 위해 다음을 권장합니다.</p>
+<ul>
+<li>사진에는 방안지만 나오게 찍고, 얼굴·이름표·학교명이 나오지 않게 해 주세요.</li>
+<li>이름 칸과 명단에는 실명 대신 번호나 별칭을 써 주세요.</li>
+<li>공용 기기에서는 수업이 끝난 뒤 키를 지우고, 필요하면 브라우저의 사이트 데이터를 삭제해 주세요.</li>
+<li>만 14세 미만 학생이 스스로 사용할 때는 보호자나 선생님의 안내 아래에서 사용해 주세요.</li>
+</ul>
+
+<h2>4. 보관 기간과 파기</h2>
+<p>운영자는 개인정보를 보관하지 않으므로 별도로 파기할 정보가 없습니다. 이용자 브라우저에 저장된 정보는 이용자가 삭제할 때까지 남아 있습니다.</p>
+
+<h2>5. 쿠키와 분석 도구</h2>
+<p>앱은 쿠키, 광고, 방문 분석 도구를 사용하지 않습니다. 오프라인에서도 화면이 열리도록 앱 파일(HTML·이미지 등)을 브라우저에 캐시하지만, 여기에는 이용자 정보가 포함되지 않습니다.</p>
+
+<h2>6. 이용자의 권리</h2>
+<p>이용자의 정보는 모두 이용자 기기에 있으므로, 이용자는 언제든 직접 조회·수정·삭제할 수 있습니다. 운영자에게 요청할 필요가 없습니다.</p>
+
+<h2>7. 문의</h2>
+<p>개인정보 관련 문의는 <a href="https://github.com/jeongdawoont-star/pilsa/issues" target="_blank" rel="noopener">GitHub 문의 게시판</a>에 남겨 주세요. 게시판은 공개되므로 개인정보는 적지 말아 주세요.</p>
+
+<h2>8. 방침의 변경</h2>
+<p>이 방침이 바뀌면 이 페이지에 시행일과 함께 알립니다.</p>
+</div>
+</main>
+</body>
+</html>

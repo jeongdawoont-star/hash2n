@@ -177,10 +177,10 @@ export const RECORDS = [
 
   {
     title: "필사의 노력",
-    desc: "손글씨를 정밀 진단해 6대 지표 점수와 맞춤 인증서를 발급하는 필사 도구다.\n도움: 정세훈 선생님",
+    desc: "손글씨 사진 한 장을 7가지로 진단하고, 딱 하나만 고칠 점과 인증서를 주는 손글씨 코치다.\n도움: 정세훈 선생님",
     tags: "handwriting, calligraphy, education, ai, ocr, certificate, class-tools",
     category: "class-tools",
-    link: "./vibe-apps/필사의노력.html",
+    link: "./vibe-apps/pilsa/",
     image: "img-re/pilsa.avif",
   },
 

@@ -1,0 +1,17 @@
+{
+  "name": "필사의 노력 · AI 손글씨 코치",
+  "short_name": "필사의 노력",
+  "description": "방안지 필사 사진 한 장으로 손글씨를 진단하고 처방과 인증서를 받는 손글씨 코치",
+  "lang": "ko",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#F2F2F7",
+  "theme_color": "#3869FF",
+  "icons": [
+    { "src": "icons/icon192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/maskable512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
